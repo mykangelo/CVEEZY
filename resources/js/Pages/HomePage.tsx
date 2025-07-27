@@ -83,7 +83,7 @@ const HomePage: React.FC = () => {
               clicks.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Link href="/choose-template">
+              <Link href="/choose-resume-maker">
                 <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
                   Create New Resume
                 </button>
@@ -186,7 +186,7 @@ const HomePage: React.FC = () => {
 
           {/* CTA Button */}
           <div className="mt-16">
-            <Link href="/choose-template">
+            <Link href="/choose-resume-maker">
               <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
                 Create My Resume
               </button>
@@ -212,7 +212,7 @@ const HomePage: React.FC = () => {
           <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 max-w-[90%] md:max-w-[700px] text-white">
             It's easier with CVeezy. Build a professional, job-winning resume in minutes!
           </p>
-          <Link href="/choose-template">
+          <Link href="/choose-resume-maker">
             <button
               style={{ backgroundColor: "#05A2FF" }}
               className="hover:bg-blue-600 text-white font-semibold py-2 px-4 md:py-3 md:px-6 rounded-lg shadow-lg transition duration-300 text-sm md:text-base"
