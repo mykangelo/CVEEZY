@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { Link, Head, router } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
+import Logo from "@/Components/Logo";
 
 const Uploader: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,14 +31,13 @@ const Uploader: React.FC = () => {
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
         <div className="flex items-center">
-          <img
-            src="/images/bettercv-logo.png"
-            alt="CVeezy Logo"
-            className="h-8 w-8 mr-3"
+          <Logo 
+            size="sm"
+            text="CVeezy"
+            imageSrc="/images/supsoft-logo.jpg"
+            imageAlt="CVeezy Logo"
+            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
-          <Link href="/" className="text-2xl font-bold text-[#222] font-sans hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition">
-            CVeezy
-          </Link>
         </div>
         <div className="flex items-center gap-4">
           <Link
