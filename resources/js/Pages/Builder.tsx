@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
 
 type Contact = {
@@ -569,9 +569,33 @@ const Builder: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-[#f4f6fb]">
+    <div className="flex flex-col h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Build Your Resume" />
-      {/* Left Side */}
+      
+      {/* Header with Back Button */}
+      <header className="w-full bg-white flex items-center justify-between px-8 py-4 shadow-sm">
+        <div className="flex items-center space-x-4">
+          <Link
+            href="/choose-resume-maker"
+            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span className="text-sm font-medium">Back</span>
+          </Link>
+          <h1 className="text-xl font-semibold text-gray-800">Resume Builder</h1>
+        </div>
+        <div className="flex items-center space-x-4">
+          <span className="text-sm text-gray-600">
+            Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
+          </span>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        {/* Left Side */}
         <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
             {/* Stepper */}
@@ -641,7 +665,8 @@ const Builder: React.FC = () => {
         </div>
 
         {/* Right Panel - Resume Preview */}
-        <div className="w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto mt-8">
+        <div className="lg:w-1/2 w-full p-4">
+          <div className="w-full max-w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto">
     {/* CONTACTS */}
     <h2 className="text-2xl font-bold mb-1">
       {contacts.firstName || "First"} {contacts.lastName || "Last"}
@@ -699,8 +724,9 @@ const Builder: React.FC = () => {
         </ul>
       </div>
     )}
-  </div>
-
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

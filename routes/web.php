@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,9 +65,13 @@ Route::post('/contact', [ContactController::class, 'contactPost'])->name('contac
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // User Dashboard
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Resume Management
+    Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
+    Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
+    Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
+    Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');
     
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
