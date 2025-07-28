@@ -1,21 +1,38 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/', function () {
-    return Inertia::render('HomePage');
+    return Inertia::render('HomePage', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
 });
 
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::get('/dashboard', function () {
+    return Inertia::render('Dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
-Route::inertia('/privacy-policy', 'PrivacyPolicy');
-Route::inertia('/contact', 'Contact');
-Route::inertia('/choose-template', 'ChooseTemplate');
-Route::inertia('/choose-resume-maker', 'ChooseResumeMaker');
-Route::inertia('/uploader', 'Uploader');
-Route::inertia('/builder', 'Builder');
-Route::inertia('/final-check', 'FinalCheck');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/admin/dashboard', function () {
+        return Inertia::render('AdminDashboard');
+    })->name('admin.dashboard');
+});
 
 
+
+
+
+require __DIR__.'/auth.php';
