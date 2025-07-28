@@ -1,18 +1,16 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import Logo from './Logo';
 
 const Header: React.FC = () => (
   <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
     <div className="flex items-center">
-      {/* Logo placeholder */}
-      <div className="h-8 w-8 mr-3 bg-gray-300 rounded flex items-center justify-center">
-        <span className="text-xs text-gray-500">Logo</span>
-      </div>
-      <Link href="/" className="text-2xl font-bold text-[#222] font-sans hover:text-[#2196f3] transition-colors">
-        CVeezy
-      </Link>
+      <Logo 
+            size="sm"
+            text="CVeezy"
+            imageSrc="/images/supsoft-logo.jpg"
+            imageAlt="CVeezy Logo"
+            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+          />
     </div>
   </header>
 );
-
-export default Header; 

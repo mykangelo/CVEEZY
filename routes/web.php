@@ -11,6 +11,7 @@ Route::get('/', function () {
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
 
 Route::inertia('/privacy-policy', 'PrivacyPolicy');
+Route::inertia('/cookie-policy', 'CookiePolicy'); 
 Route::inertia('/contact', 'Contact');
 Route::inertia('/choose-template', 'ChooseTemplate');
 Route::inertia('/choose-resume-maker', 'ChooseResumeMaker');

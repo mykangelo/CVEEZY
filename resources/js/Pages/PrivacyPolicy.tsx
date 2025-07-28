@@ -1,22 +1,23 @@
 import React from "react";
 import { Link, Head } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
+import Logo from "@/Components/Logo";
+
 
 const PrivacyPolicy: React.FC = () => {
   return (
-    <div className="min-h-screen bg-[#f4faff] flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       <Head title="CVeezy | Privacy Policy" />
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
         <div className="flex items-center">
-          <img
-            src="/images/bettercv-logo.png"
-            alt="CVeezy Logo"
-            className="h-8 w-8 mr-3"
+          <Logo 
+            size="sm"
+            text="CVeezy"
+            imageSrc="/images/supsoft-logo.jpg"
+            imageAlt="CVeezy Logo"
+            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
-          <Link href="/" className="text-2xl font-bold text-[#222] font-sans hover:underline focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition">
-            CVeezy
-          </Link>
         </div>
         <div className="flex items-center gap-4">
           <Link
@@ -37,36 +38,24 @@ const PrivacyPolicy: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col items-center justify-start px-4 py-16 md:py-24">
         <div className="max-w-3xl w-full mx-auto">
-          <h1
-            className="text-5xl md:text-6xl font-bold text-center mb-10"
-            style={{ fontFamily: "Roboto Serif, serif", color: "#2E404A" }}
-          >
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">
             Privacy Policy
           </h1>
-          <div
-            className="text-[#0A3370] text-lg leading-relaxed mb-12"
-            style={{ fontFamily: "Nunito, sans-serif" }}
-          >
+          <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
             <p className="mb-4">
-              This Privacy Policy (the “Policy”) governs your use of https://cveezy.com (the “Website”). This Policy explains how CVeezy handles certain information, including your personal information, when you visit, use or anyhow interact with the Service. It also describes certain legal rights you may have, subject to applicable law, and how you can exercise them. By accessing, using the Service, submitting your personal information to us or otherwise interacting with CVeezy you agree to any processing and transfer of your personal information in accordance with this Policy. Please be sure to carefully read the entirety of this Policy when using the Service.
+              This Privacy Policy (the "Policy") governs your use of https://cveezy.com (the "Website"). This Policy explains how CVeezy handles certain information, including your personal information, when you visit, use or anyhow interact with the Service. It also describes certain legal rights you may have, subject to applicable law, and how you can exercise them. By accessing, using the Service, submitting your personal information to us or otherwise interacting with CVeezy you agree to any processing and transfer of your personal information in accordance with this Policy. Please be sure to carefully read the entirety of this Policy when using the Service.
             </p>
             <p className="mb-4">
-              For the purposes of this Policy, “personal information” and/or "personal data" refers to data about identified or identifiable individuals (such as their name, mobile phone number, email address etc.); it may also include, where required by applicable law, the scope of the definition provided therein, e.g., as per the: 1) relevant U.S. federal or state legislation; and/or 2) the European Union's law.
+              For the purposes of this Policy, "personal information" and/or "personal data" refers to data about identified or identifiable individuals (such as their name, mobile phone number, email address etc.); it may also include, where required by applicable law, the scope of the definition provided therein, e.g., as per the: 1) relevant U.S. federal or state legislation; and/or 2) the European Union's law.
             </p>
             <p>
-              Check CVeezy Terms of Use & Service (the “Terms”) for the meaning of defined words (those with capital letters) not explicitly defined in the Policy.
+              Check CVeezy Terms of Use & Service (the "Terms") for the meaning of defined words (those with capital letters) not explicitly defined in the Policy.
             </p>
           </div>
-          <h2
-            className="text-4xl font-bold mb-8"
-            style={{ fontFamily: "Roboto Serif, serif", color: "#2E404A" }}
-          >
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
             1. Personal data controller
           </h2>
-          <div
-            className="text-[#0A3370] text-lg leading-relaxed mb-12"
-            style={{ fontFamily: "Nunito, sans-serif" }}
-          >
+          <div className="prose prose-lg max-w-none text-gray-700 space-y-6">
             <p>
               TSFF Holdings Limited, registered office 51, Agias Zonis, 23, Kotsios Court A, Limassol, 3027, Cyprus will be the controller of your personal data.
             </p>
@@ -74,78 +63,45 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 2 */}
           <section className="mb-10">
-            <h2
-              className="text-2xl font-bold mb-6"
-              style={{ fontFamily: "Roboto Serif, serif", color: "#2E204A" }}
-            >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               2. What categories of personal data do we collect?
             </h2>
 
-            <p
-              className="leading-relaxed mb-6"
-              style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-            >
+            <p className="text-lg leading-relaxed mb-6 text-gray-700">
               We collect data you make available to us voluntarily (for example, email address, phone number, name, date of birth). We also collect data automatically when you use the Website (for example, your IP address, device type).
             </p>
 
             <div className="mb-6">
-              <h3
-                className="text-xl font-semibold mb-4"
-                style={{ fontFamily: "Roboto Serif, serif", color: "#2E204A" }}
-              >
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 2.1. Data you provide to us
               </h3>
 
-              <p
-                className="leading-relaxed mb-4"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed mb-4 text-gray-700">
                 You provide us data about yourself when you register for and/or use the Website, for example, when you create a user profile ("Profile"), respond to our emails, or report a problem. The data that you provide to us includes:
               </p>
 
-              <p
-                className="leading-relaxed"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed text-gray-700">
                 <span className="font-semibold">Profile data and other materials you post on the Website.</span> This includes your name, username, date of birth, email address and phone number. You may also provide us additional data on your Profile. This may include, but is not limited to: your gender and age, other personal characteristics and demographic data, any ideas, comments, testimonials you share and post, as well as images, photographs and videos. By providing this information you agree and understand that this data may be publicly available (unless otherwise explicitly stated in a particular case). Please do not provide personal data to your profile that you would not want to be publicly available.
               </p>
             </div>
 
             <div className="mb-6">
-              <h3
-                className="text-xl font-semibold mb-4"
-                style={{ fontFamily: "Roboto Serif, serif", color: "#2E204A" }}
-              >
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
                 2.2. Data we collect automatically:
               </h3>
-              <p
-                className="leading-relaxed mb-4"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed mb-4 text-gray-700">
                 <span className="font-semibold">Data about how you found us.</span> We collect data about your referring URL (that is, the place on the Web where you were when you tapped on our ad).
               </p>
-              <p
-                className="leading-relaxed mb-4"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed mb-4 text-gray-700">
                 <span className="font-semibold">Cookies and other similar technologies.</span> As further described in our Cookie Policy, our Website use cookies that record data about the use of our website to distinguish you from other users. You can control cookies through your browser settings.
               </p>
-              <p
-                className="leading-relaxed mb-4"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed mb-4 text-gray-700">
                 <span className="font-semibold">Browser and Device data.</span> We collect data from or about the devices from which you access the Website, depending on the permissions you've granted. We may associate the data we collect from your different devices, which helps us provide consistent services across your devices Examples of such data include: language settings, IP address, location, time zone, type and model of a device, device settings, operating system, Internet service provider, mobile carrier, hardware ID, and Facebook ID. We also collect your Apple Identifier for Advertising (<span className="font-semibold">"IDFA"</span>) or Google Advertising ID (<span className="font-semibold">"AAID"</span>) (depending on the operating system of your device). You can typically reset these numbers through the settings of your device's operating system (but we do not control this).
               </p>
-              <p
-                className="leading-relaxed mb-4"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed mb-4 text-gray-700">
                 <span className="font-semibold">Transaction data.</span> When you make payments through the Website, you need to provide financial account data, such as your credit card number, to our third-party service providers. We do not collect or store full credit card number data, though we may receive credit card-related data and data about the transaction, including: date, time and amount of the transaction, and the type of payment method used.
               </p>
-              <p
-                className="leading-relaxed mb-4"
-                style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-              >
+              <p className="leading-relaxed mb-4 text-gray-700">
                 <span className="font-semibold">Usage data.</span> We record how you interact with our Website. For example, we log the features, and content you interact with, how often and long you use the Website, what sections you use, and other interactions.
               </p>
             </div>
@@ -153,24 +109,15 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 3 */}
           <section className="mb-10">
-            <h2
-              className="text-2xl font-bold mb-6"
-              style={{ fontFamily: "Roboto Serif, serif", color: "#2E204A" }}
-            >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               3. For what purposes do we process your personal data?
             </h2>
-            <p
-              className="leading-relaxed mb-4"
-              style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-            >
+            <p className="leading-relaxed mb-4 text-gray-700">
               We process your personal data:
             </p>
-            <ul
-              className="space-y-6"
-              style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370", listStyle: "none" }}
-            >
+            <ul className="space-y-6 text-gray-700" style={{ listStyle: "none" }}>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to provide services to you
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -180,7 +127,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to research and analyze your use of the Website
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -190,7 +137,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to customize the Website for you
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -200,7 +147,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to process your payments
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -210,7 +157,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to enforce the Terms and to prevent, detect, investigate, and resolve disputes and/or remediate malicious activities, fraud, other cybercrimes, take legally-required actions, or make sure you are a real person and avoid the creation of fake accounts
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -220,7 +167,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to communicate with you regarding your use of our Website
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -230,7 +177,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to show and/or send you marketing communications
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -240,7 +187,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to provide you customer service and support
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -250,7 +197,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to personalize our ads
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -260,7 +207,7 @@ const PrivacyPolicy: React.FC = () => {
                 </ul>
               </li>
               <li>
-                <h3 className="text-lg font-semibold mb-2" style={{ color: "#2E204A" }}>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
                   • to comply with legal obligations
                 </h3>
                 <ul className="ml-6" style={{ listStyle: "none" }}>
@@ -274,23 +221,14 @@ const PrivacyPolicy: React.FC = () => {
 
           {/* Section 4 */}
           <section className="mb-10">
-            <h2
-              className="text-2xl font-bold mb-6"
-              style={{ fontFamily: "Roboto Serif, serif", color: "#2E204A" }}
-            >
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">
               4. Legal basis for data processing
             </h2>
-            <p
-              className="leading-relaxed mb-4"
-              style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
-            >
+            <p className="leading-relaxed mb-4 text-gray-700">
               The laws in some jurisdictions require providing information with respect to the legal grounds for the usage and/or disclosure of personal information. To the extent those laws apply, our legal grounds are as follows:
             </p>
 
-            <ul
-              className="space-y-4"
-              style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370", listStyle: "none" }}
-            >
+            <ul className="space-y-4 text-gray-700" style={{ listStyle: "none" }}>
               <li>
                 <p className="leading-relaxed">
                   <span className="font-semibold">A. Consent</span>
@@ -355,4 +293,4 @@ const PrivacyPolicy: React.FC = () => {
   );
 };
 
-export default PrivacyPolicy; 
+export default PrivacyPolicy;

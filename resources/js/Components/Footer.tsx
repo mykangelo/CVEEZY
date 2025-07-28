@@ -8,9 +8,9 @@ const Footer: React.FC = () => (
       </div>
       <div className="flex flex-wrap justify-center gap-4">
         <a href="#" className="hover:underline">Terms & Conditions</a>
-        <a href="#" className="hover:underline">Privacy Policy</a>
-        <a href="#" className="hover:underline">Cookie Policy</a>
-        <a href="#" className="hover:underline">Contact us</a>
+        <a href="/privacy-policy" className="hover:underline">Privacy Policy</a>
+        <a href="/cookie-policy" className="hover:underline">Cookie Policy</a>
+        <a href="/contact" className="hover:underline">Contact us</a>
       </div>
     </div>
   </footer>
