@@ -18,4 +18,6 @@ Route::inertia('/uploader', 'Uploader');
 Route::inertia('/builder', 'Builder');
 Route::inertia('/final-check', 'FinalCheck');
 
+Route::inertia('/payment-terms', 'PaymentTerm');
+
 
