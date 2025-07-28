@@ -182,18 +182,18 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
    // Function to handle clicking the "Download PDF" button
   const handleDownloadButtonClick = () => {
-    setShowDownloadModal(true); // Show the modal
+    setShowDownloadModal(true);
   };
 
   // Function to handle closing the modal
   const handleModalClose = () => {
-    setShowDownloadModal(false); // Hide the modal
+    setShowDownloadModal(false);
   };
 
   // Function to handle the "Save & Next" action within the modal
   const handleModalSaveAndNext = () => {
-    // Here you would implement your logic for saving and proceeding
-    // For now, we'll just close the modal and show an alert
+    // implement the logic for saving and proceeding
+    // For now, we'll do nothing
     setShowDownloadModal(false); 
   };
 
