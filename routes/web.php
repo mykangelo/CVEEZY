@@ -11,11 +11,13 @@ Route::get('/', function () {
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
 
 Route::inertia('/privacy-policy', 'PrivacyPolicy');
+Route::inertia('/terms-and-conditions', 'TermsAndConditions');
 Route::inertia('/contact', 'Contact');
 Route::inertia('/choose-template', 'ChooseTemplate');
 Route::inertia('/choose-resume-maker', 'ChooseResumeMaker');
 Route::inertia('/uploader', 'Uploader');
 Route::inertia('/builder', 'Builder');
 Route::inertia('/final-check', 'FinalCheck');
+
 
 
