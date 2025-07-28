@@ -572,120 +572,135 @@ const Builder: React.FC = () => {
     <div className="flex flex-col lg:flex-row h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Build Your Resume" />
       {/* Left Side */}
-      <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
-          {/* Stepper */}
-          <div className="flex justify-between items-center mb-12">
-            {steps.map((step, index) => (
-              <div
-                key={index}
-                className={`flex flex-col items-center text-xs font-medium cursor-pointer ${index === currentStep ? 'text-blue-600' : 'text-gray-500'}`}
-                onClick={() => setCurrentStep(index)}
-              >
+        <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
+            {/* Stepper */}
+            <div className="flex justify-between items-center mb-12">
+              {steps.map((step, index) => (
                 <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
-                    index === currentStep
-                      ? "border-blue-500 bg-blue-100"
-                      : "border-gray-300 bg-white"
-                  }`}
+                  key={index}
+                  className={`flex flex-col items-center text-xs font-medium cursor-pointer ${index === currentStep ? 'text-blue-600' : 'text-gray-500'}`}
+                  onClick={() => setCurrentStep(index)}
                 >
-                  {index === currentStep && (
-                    <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                  )}
+                  <div
+                    className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
+                      index === currentStep
+                        ? "border-blue-500 bg-blue-100"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  >
+                    {index === currentStep && (
+                      <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
+                    )}
+                  </div>
+                  <span className="mt-1 text-center">{step}</span>
                 </div>
-                <span className="mt-1 text-center">{step}</span>
-              </div>
-            ))}
+              ))}
+            </div>
+
+            {renderStepContent()}
           </div>
 
-          {renderStepContent()}
+          <div className="w-full max-w-2xl mt-2 bg-white p-4 rounded-xl shadow-md flex justify-between">
+            {currentStep > 0 && (
+              <button
+                onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+                className="bg-gray-200 px-6 py-2 rounded-md text-gray-700 hover:bg-gray-300 transition-colors"
+              >
+                Previous
+              </button>
+            )}
+            {currentStep === 0 && <div></div>}
+            {currentStep === steps.length - 1 ? (
+              <button
+                onClick={() => {
+                  const resumeData = {
+                    contact: contacts,
+                    experiences,
+                    educations,
+                    skills,
+                    summary
+                  };
+                  // Store data in sessionStorage for the FinalCheck page
+                  sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
+                  window.location.href = '/final-check';
+                }}
+                className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors"
+              >
+                Finalize Resume
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                className="bg-blue-500 text-white px-6 py-2 rounded-md disabled:opacity-50"
+              >
+                Next: {steps[currentStep + 1] || "Done"}
+              </button>
+            )}
+          </div>
         </div>
 
-        <div className="w-full max-w-2xl mt-2 bg-white p-4 rounded-xl shadow-md flex justify-between">
-          {currentStep > 0 && (
-            <button
-              onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-              className="bg-gray-200 px-6 py-2 rounded-md text-gray-700 hover:bg-gray-300 transition-colors"
-            >
-              Previous
-            </button>
-          )}
-          {currentStep === 0 && <div></div>}
-          {currentStep === steps.length - 1 ? (
-            <button
-              onClick={() => {
-                const resumeData = {
-                  contact: contacts,
-                  experiences,
-                  educations,
-                  skills,
-                  summary
-                };
-                // Store data in sessionStorage for the FinalCheck page
-                sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
-                window.location.href = '/final-check';
-              }}
-              className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors"
-            >
-              Finalize Resume
-            </button>
-          ) : (
-            <button
-              onClick={handleNext}
-              className="bg-blue-500 text-white px-6 py-2 rounded-md disabled:opacity-50"
-            >
-              Next: {steps[currentStep + 1] || "Done"}
-            </button>
-          )}
-        </div>
+        {/* Right Panel - Resume Preview */}
+        <div className="w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto mt-8">
+    {/* CONTACTS */}
+    <h2 className="text-2xl font-bold mb-1">
+      {contacts.firstName || "First"} {contacts.lastName || "Last"}
+    </h2>
+    <p className="text-sm text-gray-600 mb-4">{contacts.desiredJobTitle}</p>
+    <p className="text-xs text-gray-500">{contacts.email} | {contacts.phone}</p>
+
+    {/* SUMMARY */}
+    {summary && (
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">SUMMARY</h3>
+        <p className="text-gray-700 text-sm whitespace-pre-line">{summary}</p>
       </div>
+    )}
 
-      {/* Right Panel - Resume Preview */}
-      <div className="lg:w-1/2 w-full bg-[#f4f6fb] relative p-4 flex items-center justify-center">
-        <div className="relative bg-slate-50 shadow-2xl rounded-2xl border border-gray-300 pt-10 w-[95%] max-w-[600px] mx-auto">
-          <div className="absolute top-4 left-0 w-full px-6 flex justify-between items-center text-sm font-medium text-gray-600">
-            <span className="bg-red-100 text-red-600 px-2 py-1 rounded-full font-bold mr-2">20%</span>
-            <span>Your resume score 🥸</span>
+    {/* EXPERIENCE */}
+    {experiences.length > 0 && (
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">EXPERIENCE</h3>
+        {experiences.map((exp) => (
+          <div key={exp.id} className="mb-2">
+            <p className="font-medium text-sm text-gray-800">{exp.jobTitle}, {exp.employer}</p>
+            <p className="text-xs text-gray-500 italic">{exp.startDate} - {exp.endDate}</p>
+            <p className="text-sm text-gray-700 whitespace-pre-line">{exp.description}</p>
           </div>
-
-          <div className="w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto mt-8">
-            <h2 className="text-2xl font-bold mb-4">YOUR NAME</h2>
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">SUMMARY</h3>
-              <p className="text-gray-600 text-sm">Use this section to give recruiters a quick glimpse of your professional profile. In just 3-4 lines, highlight your background, education and main skills</p>
-            </div>
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">EXPERIENCE</h3>
-              <p className="text-sm text-gray-700">• Job Title 1, Company Name</p>
-              <ul className="list-disc ml-6 text-sm text-gray-700">
-                <li>Responsibilities</li>
-                <li>Responsibilities</li>
-              </ul>
-              <p className="text-sm text-gray-700 mt-2">• Job Title 2, Company Name</p>
-              <ul className="list-disc ml-6 text-sm text-gray-700">
-                <li>Responsibilities</li>
-                <li>Responsibilities</li>
-              </ul>
-            </div>
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">EDUCATION</h3>
-              <p className="text-sm text-gray-700">• School Name</p>
-              <p className="text-xs text-gray-500 ml-4">Degree, Field of study</p>
-              <p className="text-sm text-gray-700 mt-2">• School Name</p>
-              <p className="text-xs text-gray-500 ml-4">Degree, Field of study</p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold">SKILLS</h3>
-              <ul className="list-disc ml-6 text-sm text-gray-700">
-                <li>Skill 1</li>
-                <li>Skill 2</li>
-                <li>Skill 3</li>
-                <li>Skill 4</li>
-              </ul>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
+    )}
+
+    {/* EDUCATION */}
+    {educations.length > 0 && (
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">EDUCATION</h3>
+        {educations.map((edu) => (
+          <div key={edu.id} className="mb-2">
+            <p className="font-medium text-sm text-gray-800">{edu.school}, {edu.location}</p>
+            <p className="text-xs text-gray-500 italic">{edu.degree} ({edu.startDate} - {edu.endDate})</p>
+            <p className="text-sm text-gray-700 whitespace-pre-line">{edu.description}</p>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* SKILLS */}
+    {skills.length > 0 && (
+      <div className="mt-4">
+        <h3 className="text-lg font-semibold">SKILLS</h3>
+        <ul className="list-disc ml-6 text-sm text-gray-700">
+          {skills.map(skill => (
+            <li key={skill.id}>
+              {skill.name}
+              {showExperienceLevel && skill.name && ` (${skill.level})`}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+  </div>
+
     </div>
   );
 };
