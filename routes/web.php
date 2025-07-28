@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ContactController;
 
 Route::get('/', function () {
     return Inertia::render('HomePage');
@@ -17,5 +18,7 @@ Route::inertia('/choose-resume-maker', 'ChooseResumeMaker');
 Route::inertia('/uploader', 'Uploader');
 Route::inertia('/builder', 'Builder');
 Route::inertia('/final-check', 'FinalCheck');
+
+Route::post('/contact', [ContactController::class, 'contactPost']);
 
 
