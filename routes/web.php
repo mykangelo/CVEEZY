@@ -5,6 +5,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ContactController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +52,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::inertia('/terms-and-conditions', 'TermsAndConditions')->name('terms.conditions');
 Route::inertia('/cookie-policy', 'CookiePolicy')->name('cookie.policy');
 Route::inertia('/payment-terms', 'PaymentTerm')->name('payment.terms');
+
+// Contact form submission
+Route::post('/contact', [ContactController::class, 'contactPost'])->name('contact.post');
 
 /*
 |--------------------------------------------------------------------------

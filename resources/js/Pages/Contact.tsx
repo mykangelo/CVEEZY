@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useForm } from "@inertiajs/react";
 import { Link, Head } from "@inertiajs/react";
+import { useState } from "react";
 import Footer from "@/Components/Footer";
 import FAQ from "./ContactsFAQ";
 import Logo from "@/Components/Logo";
@@ -29,23 +30,29 @@ const supportData = [
 ];
 
 const Contact: React.FC = () => {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  const { data, setData, post, processing, errors, reset } = useForm({
+    name: "",
+    email: "",
+    message: "",
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setName("");
-    setEmail("");
-    setMessage("");
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    post("/contact", {
+      onSuccess: () => {
+        reset();
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 3000);
+      },
+    });
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4faff] font-sans">
       <Head title="CVeezy | Contact Us" />
+
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
         <div className="flex items-center">
@@ -79,7 +86,8 @@ const Contact: React.FC = () => {
         <div className="text-center max-w-2xl">
           <h2 className="text-4xl font-bold text-gray-800 mb-2">Contact us</h2>
           <p className="text-gray-600 text-base">
-            If you need assistance with our service or have any questions, don't hesitate to get in touch with us.
+            If you need assistance with our service or have any questions,
+            don't hesitate to get in touch with us.
           </p>
         </div>
 
@@ -90,16 +98,17 @@ const Contact: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="w-full">
-                  <label className="block text-sm text-gray-700 mb-1">
-                    Name
-                  </label>
+                  <label className="block text-sm text-gray-700 mb-1">Name</label>
                   <input
                     type="text"
                     placeholder="Your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={data.name}
+                    onChange={(e) => setData("name", e.target.value)}
                     className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {errors.name && (
+                    <div className="text-red-500 text-sm mt-1">{errors.name}</div>
+                  )}
                 </div>
                 <div className="w-full">
                   <label className="block text-sm text-gray-700 mb-1">
@@ -109,32 +118,39 @@ const Contact: React.FC = () => {
                     type="email"
                     placeholder="you@example.com"
                     required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    value={data.email}
+                    onChange={(e) => setData("email", e.target.value)}
                     className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  {errors.email && (
+                    <div className="text-red-500 text-sm mt-1">{errors.email}</div>
+                  )}
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Message
-                </label>
+                <label className="block text-sm text-gray-700 mb-1">Message</label>
                 <textarea
                   placeholder="Type your message here..."
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  value={data.message}
+                  onChange={(e) => setData("message", e.target.value)}
                   rows={5}
                   className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
+                {errors.message && (
+                  <div className="text-red-500 text-sm mt-1">{errors.message}</div>
+                )}
               </div>
               <button
                 type="submit"
+                disabled={processing}
                 className="bg-[#2196f3] text-white w-full py-3 rounded-md font-semibold hover:bg-[#1976d2] transition"
               >
                 Submit
               </button>
               {submitted && (
-                <div className="text-green-600 text-center font-semibold mt-2">Thank you! Your message has been submitted.</div>
+                <div className="text-green-600 text-center font-semibold mt-2">
+                  Thank you! Your message has been submitted.
+                </div>
               )}
             </form>
           </div>
@@ -159,15 +175,10 @@ const Contact: React.FC = () => {
               key={i}
               className="border border-dashed border-[#2196f3] rounded-lg p-6 bg-blue-50 space-y-4"
             >
-              {/* Icon */}
               <div className="w-12 h-12 bg-[#2196f3] rounded-full flex items-center justify-center text-white text-xl">
                 {i === 0 ? "📄" : i === 1 ? "⚙️" : "📨"}
               </div>
-
-              {/* Title */}
               <h2 className="text-xl font-semibold">{item.title}</h2>
-
-              {/* Description or Details */}
               {item.description ? (
                 <p className="text-sm text-gray-700">{item.description}</p>
               ) : (
@@ -182,8 +193,6 @@ const Contact: React.FC = () => {
                   </div>
                 </div>
               )}
-
-              {/* Contact Info */}
               {item.phone && (
                 <div>
                   <p className="font-medium">Via phone:</p>
@@ -200,15 +209,19 @@ const Contact: React.FC = () => {
                   <span>{item.email}</span>
                 </div>
               </div>
-
-              {/* Buttons */}
               <div className="flex gap-3 mt-4">
                 {item.phone && (
-                  <a href={`tel:${item.phone}`} className="bg-[#2196f3] text-white px-4 py-2 rounded hover:bg-[#1976d2] transition">
+                  <a
+                    href={`tel:${item.phone}`}
+                    className="bg-[#2196f3] text-white px-4 py-2 rounded hover:bg-[#1976d2] transition"
+                  >
                     Call us
                   </a>
                 )}
-                <a href={`mailto:${item.email}`} className="bg-[#2196f3] text-white px-4 py-2 rounded hover:bg-[#1976d2] transition">
+                <a
+                  href={`mailto:${item.email}`}
+                  className="bg-[#2196f3] text-white px-4 py-2 rounded hover:bg-[#1976d2] transition"
+                >
                   Email us
                 </a>
               </div>
@@ -222,4 +235,4 @@ const Contact: React.FC = () => {
   );
 };
 
-export default Contact; 
+export default Contact;
