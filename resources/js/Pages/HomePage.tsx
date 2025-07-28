@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, Head } from '@inertiajs/react';
+import FAQ from './HomepageFAQ';
 
 const HomePage: React.FC = () => {
   const features = [
@@ -185,13 +186,16 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* CTA Button */}
-          <div className="mt-16">
+          <div className="mt-16   mb-10">
             <Link href="/choose-resume-maker">
               <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
                 Create My Resume
               </button>
             </Link>
           </div>
+
+          {/* FAQ Section */}
+          <FAQ />
         </div>
       </section>
 
