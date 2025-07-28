@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, Head } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
+import FAQ from "./ContactsFAQ";
 
 const supportData = [
   {
@@ -215,7 +216,7 @@ const Contact: React.FC = () => {
           ))}
         </div>
       </section>
-
+      <FAQ />
       <Footer />
     </div>
   );
