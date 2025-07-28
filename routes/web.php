@@ -49,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::inertia('/terms-and-conditions', 'TermsAndConditions')->name('terms.conditions');
 Route::inertia('/cookie-policy', 'CookiePolicy')->name('cookie.policy');
+Route::inertia('/payment-terms', 'PaymentTerm')->name('payment.terms');
 
 /*
 |--------------------------------------------------------------------------

@@ -1,9 +1,49 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { Link, Head } from '@inertiajs/react';
 import FAQ from './HomepageFAQ';
 import Logo from "@/Components/Logo";
+import Button from "../Components/PrimaryButton";
 
 const HomePage: React.FC = () => {
+  const templates = [
+  { name: "Cosmos", image: "/templates/cosmos.png" },
+  { name: "Celestial", image: "/templates/celestial.png" },
+  { name: "Galaxy", image: "/templates/galaxy.png" },
+  { name: "Astral", image: "/templates/astral.png" },
+  { name: "Astralis", image: "/templates/astralis.png" },
+  { name: "Daniel Gallego", image: "/templates/gallego.png" },
+];
+  const containerRef = useRef<HTMLDivElement>(null);
+  const ITEMS_PER_PAGE = 5;
+  const CARD_WIDTH = 280;
+
+  const [startIndex, setStartIndex] = useState(0);
+  const totalTemplates = templates.length;
+
+
+  const getVisibleTemplates = () => {
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    if (endIndex <= totalTemplates) {
+      return templates.slice(startIndex, endIndex);
+    } else {
+      // Wrap around
+      return [...templates.slice(startIndex), ...templates.slice(0, endIndex - totalTemplates)];
+    }
+  }
+
+  const scrollRight = () => {
+    setStartIndex((prevIndex) =>
+      (prevIndex + ITEMS_PER_PAGE) % templates.length
+    );
+  };
+
+  const scrollLeft = () => {
+    setStartIndex((prevIndex) =>
+      (prevIndex - ITEMS_PER_PAGE + templates.length) % templates.length
+    );
+  };
+  
+
   const features = [
     {
       icon: "/images/template-icon.png",
@@ -200,6 +240,72 @@ const HomePage: React.FC = () => {
           <FAQ />
         </div>
       </section>
+
+      {/* Templates Section */}
+      <section className="w-full bg-[#f4faff] py-20 mb-10 font-serif overflow-hidden">
+        <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-serif h-[700px]">
+          <h1 className="text-white text-4xl font-bold mb-4">
+            Choose your <span className="text-sky-400">resume template</span>, AI will do the rest
+          </h1>
+          <p className="text-white text-sm max-w-2xl mx-auto mb-6">
+            With CVeezy's AI resume generator, you'll get a professional, typo-free, and ATS-friendly resume ready in no time. Explore 40+ modern templates.
+          </p>
+          <Link href="/choose-template">
+
+            <button className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition-colors duration-300 mb-8">
+              View All Templates
+            </button>
+          </Link>
+          <div className="relative w-full max-w-[1400px] mx-auto">
+            {/* Left Arrow */}
+            <button
+              onClick={scrollLeft}
+              className="absolute left-[-100px] top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+
+            {/* Template Cards */}
+            <div
+              className="flex justify-center gap-6 overflow-hidden px-10"
+              style={{ width: `${CARD_WIDTH * ITEMS_PER_PAGE}px`, margin: "0 auto" }}
+            >
+              {getVisibleTemplates().map((template) => (
+                <div
+                  key={template.name}
+                  className="flex flex-col items-center"
+                  style={{ width: `${CARD_WIDTH}px`, flex: "0 0 auto" }}
+                >
+                  <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
+                    <img
+                      src={template.image}
+                      alt={template.name}
+                      className="w-full object-cover h-96"
+                    />
+                  </div>
+                  <div className="mt-2 text-center text-lg font-semibold text-slate-700">
+                    {template.name}
+                  </div>
+                </div>
+
+              ))}
+            </div>
+
+            {/* Right Arrow */}
+            <button
+              onClick={scrollRight}
+              className="absolute right-[-100px] top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow  hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
 
       {/* Banner Section */}
       <div className="relative w-full max-w-[1130px] h-[200px] sm:h-[280px] md:h-[356.6px] bg-[#2E404A] rounded-2xl shadow-lg overflow-hidden mt-[30px]">
@@ -480,10 +586,10 @@ const HomePage: React.FC = () => {
                 </li>
                 <li>
                   <Link
-                    href="/subscription-terms"
+                    href="/payment-terms"
                     className="hover:text-white transition-colors"
                   >
-                    Subscription Terms
+                    Payment Terms
                   </Link>
                 </li>
                 <li>
