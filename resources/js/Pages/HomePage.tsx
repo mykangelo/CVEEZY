@@ -6,12 +6,12 @@ import Button from "../Components/PrimaryButton";
 
 const HomePage: React.FC = () => {
   const templates = [
-  { name: "Cosmos", image: "/templates/cosmos.png" },
-  { name: "Celestial", image: "/templates/celestial.png" },
-  { name: "Galaxy", image: "/templates/galaxy.png" },
-  { name: "Astral", image: "/templates/astral.png" },
-  { name: "Astralis", image: "/templates/astralis.png" },
-  { name: "Daniel Gallego", image: "/templates/gallego.png" },
+  { name: "Cosmos", image: "/images/templates/template1.png" },
+  { name: "Celestial", image: "/images/templates/template2.png" },
+  { name: "Galaxy", image: "/images/templates/template3.jpg" },
+  { name: "Astral", image: "/images/templates/template4.jpg" },
+  { name: "Astralis", image: "/images/templates/template5.jpg" },
+  { name: "Daniel Gallego", image: "/images/templates/template6.jpg" },
 ];
   const containerRef = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 5;
@@ -153,7 +153,7 @@ const HomePage: React.FC = () => {
           <div className="flex-1 flex justify-center items-center mt-10 md:mt-0">
             <div className="relative w-[400px] h-[480px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center">
               <img
-                src="/images/resume-sample.png"
+                src="/images/TemplateHome"
                 alt="Resume Example"
                 className="w-[340px] h-[440px] object-cover rounded-xl shadow"
               />

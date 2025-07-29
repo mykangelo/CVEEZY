@@ -158,7 +158,7 @@ const Contact: React.FC = () => {
           {/* Illustration */}
           <div className="hidden md:block w-full max-w-md">
             <img
-              src="/images/contact-illustration.png"
+              src="/images/ContactUsImg"
               alt="Contact Illustration"
               className="w-full"
               style={{ minHeight: 200 }}
