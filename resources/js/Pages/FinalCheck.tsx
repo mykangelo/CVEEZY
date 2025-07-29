@@ -408,9 +408,11 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">C</span>
-              </div>
+              <img
+                src="/icons/favicon-32x32.png"
+                alt="CVeezy Logo"
+                className="w-8 h-8 rounded-lg object-cover"
+              />
               <span className="text-xl font-bold text-gray-800">CVeezy</span>
             </div>
           </div>
@@ -435,6 +437,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
             </button>
           </div>
         </div>
+
 
         {/* Resume Preview */}
         <div className="flex-1 p-6 flex items-center justify-center">
