@@ -1,8 +1,11 @@
 import React from "react";
-import { Link, Head } from "@inertiajs/react";
+import { Link, Head, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 
 const TermsAndConditions: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
+
   return (
     <div className="min-h-screen bg-[#f4faff] flex flex-col font-sans">
       <Head title="CVeezy | Terms and Conditions" />
@@ -23,12 +26,21 @@ const TermsAndConditions: React.FC = () => {
           </Link>
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            >
+              Login
+            </Link>
+          )}
           <Link
             href="/choose-template"
             className="bg-[#05A2FF] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#2196f3] transition"
@@ -78,7 +90,7 @@ const TermsAndConditions: React.FC = () => {
               className="leading-relaxed mb-6"
               style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
             >
-              These Terms of Use & Service (the “Terms” or the “Agreement”) are an agreement between You, as a user of the website https://cveezy.com (“Website”), and TSFF Holdings Limited, registered office 51, Agias Zonis, 23, Kotsios Court A, Limassol, 3027, Cyprus. (“CVeezy”, or “we”/“us”).
+              These Terms of Use & Service (the "Terms" or the "Agreement") are an agreement between You, as a user of the website https://cveezy.com ("Website"), and TSFF Holdings Limited, registered office 51, Agias Zonis, 23, Kotsios Court A, Limassol, 3027, Cyprus. ("CVeezy", or "we"/ "us").
             </p>
             <p
               className="leading-relaxed mb-6"
@@ -112,7 +124,7 @@ const TermsAndConditions: React.FC = () => {
               className="leading-relaxed mb-6"
               style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
             >
-              CVeezy allows its Users to access, fill out, edit and download various CV templates (“Service”). CVeezy does not warrant or guarantee that any CV Template is accurate, correct, complete, or reliable. CVeezy does not hold any responsibility in this regard. CVeezy shall not be liable for any loss or damage arising from your reliance on any CV Template.
+              CVeezy allows its Users to access, fill out, edit and download various CV templates ("Service"). CVeezy does not warrant or guarantee that any CV Template is accurate, correct, complete, or reliable. CVeezy does not hold any responsibility in this regard. CVeezy shall not be liable for any loss or damage arising from your reliance on any CV Template.
             </p>
           </section>
 
@@ -430,7 +442,7 @@ const TermsAndConditions: React.FC = () => {
               className="leading-relaxed mb-6"
               style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
             >
-              By agreeing to receive communications from CVeezy, you also consent to the use of an electronic record to document your agreement. You may withdraw your consent to the use of the electronic record by emailing CVeezy at help@cveezy.com with “Revoke Electronic Consent” in the subject line. To view and retain a copy of this disclosure or any information regarding your enrollment in this program, you will need (i) a device (such as a computer or mobile phone) with a web browser and Internet access and (ii) either a printer or storage space on such device. For a free paper copy, or to update our records of your contact information, email CVeezy at help@cveezy.com with contact information and the address for delivery.
+              By agreeing to receive communications from CVeezy, you also consent to the use of an electronic record to document your agreement. You may withdraw your consent to the use of the electronic record by emailing CVeezy at help@cveezy.com with "Revoke Electronic Consent" in the subject line. To view and retain a copy of this disclosure or any information regarding your enrollment in this program, you will need (i) a device (such as a computer or mobile phone) with a web browser and Internet access and (ii) either a printer or storage space on such device. For a free paper copy, or to update our records of your contact information, email CVeezy at help@cveezy.com with contact information and the address for delivery.
             </p>
             <p
               className="leading-relaxed mb-6"
@@ -519,7 +531,7 @@ const TermsAndConditions: React.FC = () => {
               className="leading-relaxed mb-6"
               style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
             >
-              For the purposes of these Terms: “Termination” means deletion of the account from the CVeezy servers and complete erasure of all data related to a User's profile. At a User's request, we may retrieve all personal data and provide it in a comprehensive and readable form. “Blocking” means temporary or permanent restriction of access to a User's profile for violation of these Terms. The decision regarding termination or blocking of the account is made each time by the CVeezy Customer Service at its sole discretion. In particular, termination of account is possible as a result of its inactivity for three months, violation of these Terms, security reasons, etc.
+              For the purposes of these Terms: "Termination" means deletion of the account from the CVeezy servers and complete erasure of all data related to a User's profile. At a User's request, we may retrieve all personal data and provide it in a comprehensive and readable form. "Blocking" means temporary or permanent restriction of access to a User's profile for violation of these Terms. The decision regarding termination or blocking of the account is made each time by the CVeezy Customer Service at its sole discretion. In particular, termination of account is possible as a result of its inactivity for three months, violation of these Terms, security reasons, etc.
             </p>
             <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: "Roboto Serif, serif", color: "#2E204A" }}>
               8.2. Termination as a Result of Death or Disability
@@ -556,7 +568,7 @@ const TermsAndConditions: React.FC = () => {
               className="leading-relaxed mb-6"
               style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
             >
-              Unless otherwise indicated, all content, information, and other materials on CVeezy (excluding Content), including, without limitation, trademarks and logos, the visual interfaces, graphics, design, compilation, information, software, computer code (including source code or object code), services, text, pictures, information, data, sound files, other files, and the selection and arrangement thereof (collectively, the “Materials”) are protected by relevant intellectual property and proprietary rights and laws. All Materials are the property of CVeezy or its subsidiaries or affiliated companies and/or third-party licensors. Unless otherwise expressly stated in writing by CVeezy, by agreeing to these Terms you are granted a revocable, limited, non-exclusive, royalty-free, non-sublicensable, non-transferrable license to access and use CVeezy.
+              Unless otherwise indicated, all content, information, and other materials on CVeezy (excluding Content), including, without limitation, trademarks and logos, the visual interfaces, graphics, design, compilation, information, software, computer code (including source code or object code), services, text, pictures, information, data, sound files, other files, and the selection and arrangement thereof (collectively, the "Materials") are protected by relevant intellectual property and proprietary rights and laws. All Materials are the property of CVeezy or its subsidiaries or affiliated companies and/or third-party licensors. Unless otherwise expressly stated in writing by CVeezy, by agreeing to these Terms you are granted a revocable, limited, non-exclusive, royalty-free, non-sublicensable, non-transferrable license to access and use CVeezy.
             </p>
             <p
               className="leading-relaxed mb-6"
@@ -662,7 +674,7 @@ const TermsAndConditions: React.FC = () => {
               className="leading-relaxed mb-6"
               style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}
             >
-              Except where otherwise inapplicable or prohibited by law to the fullest extent permitted by law, CVeezy services, software, and related documentation are provided “as is” and without any warranty of any kind either express or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. No information, whether oral or written, obtained by you from us through this Website shall create any warranty, representation or guarantee not expressly stated in these Terms.
+              Except where otherwise inapplicable or prohibited by law to the fullest extent permitted by law, CVeezy services, software, and related documentation are provided "as is" and without any warranty of any kind either express or implied, including, but not limited to, the implied warranties of merchantability and fitness for a particular purpose. No information, whether oral or written, obtained by you from us through this Website shall create any warranty, representation or guarantee not expressly stated in these Terms.
             </p>
             <p
               className="leading-relaxed mb-6"
@@ -779,7 +791,7 @@ const TermsAndConditions: React.FC = () => {
               If the parties do not reach an agreed-upon solution within a period of sixty (60) days from the time informal dispute resolution is initiated under the Initial Dispute Resolution provision above, then either party may initiate binding arbitration as the sole means to resolve claims subject to the terms set forth below. Specifically, all claims arising out of or relating to these Terms (including the Terms formation, performance, and breach), the parties relationship with each other, and/or your use of the Website will be finally settled by binding arbitration before one arbitrator administered by:
             </p>
             <ul className="list-disc list-inside ml-4 mb-6" style={{ fontFamily: "Nunito, sans-serif", color: "#0A3370" }}>
-              <li>(1) the London Court of International Arbitration (“LCIA”) if you are not a U.S. resident. Disputes are subject to the most current version of the LCIA Arbitration Rules when the notice of arbitration is submitted. Information about the LCIA's rules can be found at https://www.lcia.org/Dispute_Resolution_Services/LCIA_Arbitration.aspx; or</li>
+              <li>(1) the London Court of International Arbitration ("LCIA") if you are not a U.S. resident. Disputes are subject to the most current version of the LCIA Arbitration Rules when the notice of arbitration is submitted. Information about the LCIA's rules can be found at https://www.lcia.org/Dispute_Resolution_Services/LCIA_Arbitration.aspx; or</li>
               <li>(2) JAMS if you are a U.S. resident. Disputes involving claims and counterclaims under $250,000, not inclusive of attorneys' fees and interest, shall be subject to JAMS's most current version of the Streamlined Arbitration Rules and procedures available at http://www.jamsadr.com/rules-streamlined-arbitration/; all other claims shall be subject to JAMS's most current version of the Comprehensive Arbitration Rules and Procedures, available at http://www.jamsadr.com/rules-comprehensive-arbitration/. JAMS's rules are also available at www.jamsadr.com or by calling JAMS at 800-352-5267.</li>
             </ul>
             <p

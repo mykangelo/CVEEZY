@@ -1,10 +1,12 @@
 import React, { useRef, useState } from "react";
-import { Link, Head } from '@inertiajs/react';
+import { Link, Head, usePage } from '@inertiajs/react';
 import FAQ from './HomepageFAQ';
 import Logo from "@/Components/Logo";
 import Button from "../Components/PrimaryButton";
 
 const HomePage: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
   const templates = [
   { name: "Cosmos", image: "/images/templates/template1.png" },
   { name: "Celestial", image: "/images/templates/template2.png" },
@@ -99,12 +101,21 @@ const HomePage: React.FC = () => {
           >
             Contact us
           </Link>
-          <Link
-            href="/login"
-            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </header>
       

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, Head, router } from "@inertiajs/react";
+import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
@@ -23,6 +23,8 @@ const IMAGE_WIDTH = CARD_WIDTH - 40;
 const IMAGE_HEIGHT = CARD_HEIGHT - 70;
 
 const ChooseTemplate: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
   const [currentTab, setCurrentTab] = useState<"all" | "favorite">("all");
   const [favorites, setFavorites] = useState<number[]>([]);
 
@@ -58,12 +60,21 @@ const ChooseTemplate: React.FC = () => {
           >
             Contact us
           </Link>
-          <Link
-            href="/login"
-            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </header>
 
