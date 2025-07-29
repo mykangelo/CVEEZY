@@ -11,7 +11,7 @@ const TermsAndConditions: React.FC = () => {
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
         <div className="flex items-center">
           <img
-            src="/images/cveezy-logo.png"
+            src="/icons/favicon-32x32.png"
             alt="CVeezy Logo"
             className="h-8 w-8 mr-3"
           />
