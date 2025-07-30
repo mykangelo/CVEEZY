@@ -8,6 +8,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\SocialAuthController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -66,13 +68,13 @@ Route::post('/contact', [ContactController::class, 'contactPost'])->name('contac
 Route::middleware(['auth', 'verified'])->group(function () {
     // User Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Resume Management
     Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
     Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
     Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
     Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');
-    
+
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -90,6 +92,16 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         return Inertia::render('AdminDashboard');
     })->name('admin.dashboard');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Social Login Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider']);
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback']);
+
 
 /*
 |--------------------------------------------------------------------------
