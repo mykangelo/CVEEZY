@@ -24,6 +24,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'provider_id',
+        'provider_name',
     ];
 
     /**
@@ -48,6 +50,22 @@ class User extends Authenticatable
             'password' => 'hashed',
             'last_login_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Check if user has a password set
+     */
+    public function hasPassword(): bool
+    {
+        return !empty($this->password);
+    }
+
+    /**
+     * Check if user was created via social login
+     */
+    public function isSocialUser(): bool
+    {
+        return !empty($this->provider_id) && !empty($this->provider_name);
     }
 
     /**
