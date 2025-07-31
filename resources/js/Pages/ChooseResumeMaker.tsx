@@ -1,9 +1,12 @@
 import React from "react";
-import { Link, Head, router } from "@inertiajs/react";
+import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
 const ChooseResumeMaker: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
+  
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       <Head title="CVeezy | How will you make your resume?" />
@@ -11,15 +14,7 @@ const ChooseResumeMaker: React.FC = () => {
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
         <div className="flex items-center space-x-4">
           {/* Back Button */}
-          <Link
-            href="/choose-template"
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">Back to Templates</span>
-          </Link>
+
           
           <Logo 
             size="sm"
@@ -36,16 +31,35 @@ const ChooseResumeMaker: React.FC = () => {
           >
             Contact us
           </Link>
-          <Link
-            href="/login"
-            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </header>
 
       {/* Main Content */}
+        <Link
+          href="/choose-template"
+          className=" mt-8 ml-10 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+        >
+          <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+           </svg>
+          <span className="text-sm font-medium">Back to Templates</span>
+        </Link>
+
       <main className="flex-grow px-4 py-6 flex flex-col items-center">
 
 
@@ -65,7 +79,7 @@ const ChooseResumeMaker: React.FC = () => {
             aria-label="Upload your existing resume to make quick edits"
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.visit('/uploader'); }}
           >
-            <img src="/images/upload-resume-icon.png" alt="Upload Resume" className="w-16 h-16 mb-4" />
+            <img src="/images/AlreadyIcon" alt="Upload Resume" className="w-20 h-16 mb-4" />
             <h2 className="text-lg font-bold mb-1 text-[#2B2D42]">I already have a resume</h2>
             <p className="text-[#1a3c6c] text-base mb-2 text-center">Upload your existing resume to make quick edits</p>
           </div>
@@ -79,7 +93,7 @@ const ChooseResumeMaker: React.FC = () => {
             aria-label="Start from scratch with AI guidance"
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.visit('/builder'); }}
           >
-            <img src="/images/start-scratch-icon.png" alt="Start from Scratch" className="w-16 h-16 mb-4" />
+            <img src="/images/ScratchIcon" alt="Start from Scratch" className="w-20 h-16 mb-4" />
             <h2 className="text-lg font-bold mb-1 text-[#2B2D42]">Start from scratch</h2>
             <p className="text-[#1a3c6c] text-base mb-2 text-center">Our AI will guide you through creating a resume</p>
           </div>

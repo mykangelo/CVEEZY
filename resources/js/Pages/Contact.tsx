@@ -1,5 +1,5 @@
 import { useForm } from "@inertiajs/react";
-import { Link, Head } from "@inertiajs/react";
+import { Link, Head, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import Footer from "@/Components/Footer";
 import FAQ from "./ContactsFAQ";
@@ -30,6 +30,8 @@ const supportData = [
 ];
 
 const Contact: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
   const [submitted, setSubmitted] = useState(false);
 
   const { data, setData, post, processing, errors, reset } = useForm({
@@ -65,12 +67,21 @@ const Contact: React.FC = () => {
           />
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            >
+              Login
+            </Link>
+          )}
           <Link
             href="/choose-template"
             className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
@@ -158,7 +169,7 @@ const Contact: React.FC = () => {
           {/* Illustration */}
           <div className="hidden md:block w-full max-w-md">
             <img
-              src="/images/contact-illustration.png"
+              src="/images/ContactUsImg"
               alt="Contact Illustration"
               className="w-full"
               style={{ minHeight: 200 }}

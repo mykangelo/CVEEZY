@@ -1,11 +1,30 @@
 import React, { useState } from "react";
-import { Link, Head, router } from "@inertiajs/react";
+import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
-const templates: number[] = [1, 2, 3, 4, 5];
+// Template list
+const templates: number[] = [1, 2, 3, 4, 5, 6];
+
+// Template image map
+const templateImages: Record<number, string> = {
+  1: "/images/templates/template1.png",
+  2: "/images/templates/template2.png",
+  3: "/images/templates/template3.jpg",
+  4: "/images/templates/template4.jpg",
+  5: "/images/templates/template5.jpg",
+  6: "/images/templates/template6.jpg",
+};
+
+// Card size constants (change these to resize cards)
+const CARD_WIDTH = 480;
+const CARD_HEIGHT = 640;
+const IMAGE_WIDTH = CARD_WIDTH - 40;
+const IMAGE_HEIGHT = CARD_HEIGHT - 70;
 
 const ChooseTemplate: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
   const [currentTab, setCurrentTab] = useState<"all" | "favorite">("all");
   const [favorites, setFavorites] = useState<number[]>([]);
 
@@ -22,26 +41,16 @@ const ChooseTemplate: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-white font-sans">
       <Head title="CVeezy | Choose Resume Template" />
+
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
         <div className="flex items-center space-x-4">
-          {/* Back Button */}
-          <Link
-            href="/dashboard"
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">Back to Dashboard</span>
-          </Link>
-          
-         <Logo 
+          <Logo
             size="sm"
             text="CVeezy"
             imageSrc="/images/supsoft-logo.jpg"
             imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -51,14 +60,33 @@ const ChooseTemplate: React.FC = () => {
           >
             Contact us
           </Link>
-          <Link
-            href="/login"
-            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            >
+              Login
+            </Link>
+          )}
         </div>
       </header>
+
+      <Link
+        href="/dashboard"
+        className="mt-8 ml-10 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        <span className="text-sm font-medium">Back to Dashboard</span>
+      </Link>
 
       {/* Headline and Description */}
       <div className="flex flex-col items-center text-center mt-8">
@@ -108,9 +136,9 @@ const ChooseTemplate: React.FC = () => {
       </div>
 
       {/* Template Cards */}
-      <div className="flex justify-center flex-wrap gap-6 px-4 py-12 flex-grow">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-20 px-20 py-12 place-items-center">
         {visibleTemplates.length === 0 ? (
-          <p className="text-lg text-gray-400 mt-8">
+          <p className="text-lg text-gray-400 mt-8 col-span-full">
             {currentTab === "favorite"
               ? "You have no favorite templates yet."
               : "No templates found."}
@@ -120,19 +148,30 @@ const ChooseTemplate: React.FC = () => {
             <div
               key={num}
               onClick={() => router.visit("/choose-resume-maker")}
-              className="relative w-44 h-60 bg-white border border-gray-200 rounded-lg flex flex-col items-center justify-center font-medium cursor-pointer shadow hover:shadow-lg transition-transform duration-200 hover:scale-105"
+              className="relative bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer shadow hover:shadow-lg transition-transform duration-200 hover:scale-105 group"
+              style={{ width: `${CARD_WIDTH}px`, height: `${CARD_HEIGHT}px` }}
             >
-              {/* Placeholder for template preview */}
-              <div className="w-36 h-44 bg-[#f4faff] rounded-md mb-2 flex items-center justify-center text-2xl text-gray-400">
-                Template {num}
+              <img
+                src={templateImages[num]}
+                alt={`Template ${num}`}
+                className="object-cover rounded-md mb-2"
+                style={{ width: `${IMAGE_WIDTH}px`, height: `${IMAGE_HEIGHT}px`, marginTop: "20px" }}
+              />
+
+              {/* Hover Overlay */}
+              <div className="absolute inset-0 bg-opacity-0 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+                <span className="bg-[#2196f3] text-white px-4 py-2 rounded font-semibold text-sm shadow hover:bg-[#3073aa]">
+                  Use This Template
+                </span>
               </div>
-              {/* Heart Icon */}
+
+              {/* Favorite Icon */}
               <span
                 onClick={(e: React.MouseEvent<HTMLSpanElement>) => {
                   e.stopPropagation();
                   toggleFavorite(num);
                 }}
-                className={`absolute top-2 right-2 text-xl select-none transition-colors ${
+                className={`absolute top-2 right-2 text-2xl select-none transition-colors z-10 ${
                   favorites.includes(num) ? "text-red-500" : "text-gray-300"
                 }`}
                 role="button"
@@ -157,4 +196,4 @@ const ChooseTemplate: React.FC = () => {
   );
 };
 
-export default ChooseTemplate; 
+export default ChooseTemplate;

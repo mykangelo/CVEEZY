@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 
 class ContactController extends Controller
 {
-    function contactPost(Request $request)
+    public function contactPost(Request $request)
     {
         // Rate limiting - prevent spam
         $key = 'contact-form:' . $request->ip();
@@ -19,7 +19,7 @@ class ContactController extends Controller
             ]);
         }
 
-        // Enhanced validation with security rules
+        // Validation
         $validated = $request->validate([
             'name' => 'required|string|max:255|regex:/^[a-zA-Z\s]+$/',
             'email' => 'required|email:rfc,dns|max:255',
@@ -32,20 +32,20 @@ class ContactController extends Controller
         $sanitizedData = [
             'name' => strip_tags(trim($validated['name'])),
             'email' => filter_var($validated['email'], FILTER_SANITIZE_EMAIL),
-            'message' => strip_tags(trim($validated['message'])),
+            'body' => strip_tags(trim($validated['message'])), // renamed to avoid $message conflict
         ];
 
-        // Send email with proper templates and security
+        // Send email
         try {
             Mail::send('emails.contact', $sanitizedData, function ($message) use ($sanitizedData) {
-                $message->to(config('mail.admin_email', 'admin@cveezy.com'))
-                    ->subject('Contact Form: ' . $sanitizedData['name'])
-                    ->replyTo($sanitizedData['email'], $sanitizedData['name']);
+                $message->to('admin@cveezy.com') // ✅ correct recipient
+                        ->subject('Contact Form: ' . $sanitizedData['name'])
+                        ->replyTo($sanitizedData['email'], $sanitizedData['name']);
             });
 
             RateLimiter::clear($key);
             return redirect()->back()->with('success', 'Your message has been sent successfully!');
-            
+
         } catch (\Exception $e) {
             \Log::error('Contact form email failed: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Failed to send message. Please try again later.');

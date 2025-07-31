@@ -2,6 +2,8 @@ import { Head, Link, usePage } from "@inertiajs/react";
 import { useState } from "react";
 import { Resume } from "@/types/resume";
 import Logo from "@/Components/Logo";
+import Dropdown from "@/Components/Dropdown";
+import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
 
 interface DashboardProps {
     resumes?: Resume[];
@@ -10,6 +12,9 @@ interface DashboardProps {
 export default function Dashboard({ resumes = [] }: DashboardProps) {
     const { auth } = usePage().props as any;
     const user = auth.user;
+
+    // Add modal state
+    const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
 
     // Mock data for demonstration (replace with real data from backend)
     const mockResumes: Resume[] = resumes.length > 0 ? resumes : [
@@ -68,12 +73,13 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                             >
                                 Resume Review
                             </Link>
-                            <Link 
-                                href="/interview-preparation" 
+                            {/* Updated Interview Preparation button to trigger modal */}
+                            <button 
+                                onClick={() => setIsInterviewModalOpen(true)}
                                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
                             >
                                 Interview Preparation
-                            </Link>
+                            </button>
                         </nav>
 
                         {/* Right: Message Icon + User Menu */}
@@ -87,30 +93,29 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
 
                             {/* User Dropdown */}
                             <div className="relative">
-                                <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors">
-                                    <span className="font-medium">{user?.email || 'USER@EXAMPLE.COM'}</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                                
-                                {/* Dropdown Menu (hidden by default, you can add state to toggle) */}
-                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
-                                    <Link href="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        Profile Settings
-                                    </Link>
-                                    <Link href="/dashboard" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                        My Resumes
-                                    </Link>
-                                    <Link 
-                                        href="/logout" 
-                                        method="post" 
-                                        as="button"
-                                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                                    >
-                                        Logout
-                                    </Link>
-                                </div>
+                                <Dropdown>
+                                    <Dropdown.Trigger>
+                                        <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors">
+                                            <span className="font-medium">{user?.email || 'USER@EXAMPLE.COM'}</span>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                    </Dropdown.Trigger>
+                                    
+                                    <Dropdown.Content>
+                                        <Dropdown.Link href="/profile">
+                                            My Settings
+                                        </Dropdown.Link>
+                                        <Dropdown.Link 
+                                            href="/logout" 
+                                            method="post" 
+                                            as="button"
+                                        >
+                                            Log out
+                                        </Dropdown.Link>
+                                    </Dropdown.Content>
+                                </Dropdown>
                             </div>
                         </div>
                     </div>
@@ -338,10 +343,7 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                             </div>
 
                             <button
-                                onClick={() => {
-                                    // Implement interview guide functionality
-                                    console.log('Getting interview guide');
-                                }}
+                                onClick={() => setIsInterviewModalOpen(true)}
                                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center space-x-2"
                             >
                                 <span>Get it Now</span>
@@ -379,6 +381,12 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Interview Preparation Modal */}
+            <InterviewPrepPopUp 
+                isOpen={isInterviewModalOpen} 
+                onClose={() => setIsInterviewModalOpen(false)} 
+            />
         </div>
     );
 }

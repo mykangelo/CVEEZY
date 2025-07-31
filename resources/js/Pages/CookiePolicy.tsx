@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import Footer from '@/Components/Footer';
 import Logo from '@/Components/Logo'; // Adjust path as needed
 
 const CookiePolicy: React.FC = () => {
+  const { auth } = usePage().props as any;
+  const user = auth.user;
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
@@ -17,12 +20,21 @@ const CookiePolicy: React.FC = () => {
           />
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/login"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
-          >
-            Login
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            >
+              Dashboard
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            >
+              Login
+            </Link>
+          )}
           <Link
             href="/choose-template"
             className="bg-[#05A2FF] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#2196f3] transition"

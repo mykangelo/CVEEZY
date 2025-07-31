@@ -8,6 +8,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Auth\SocialAuthController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -66,13 +68,13 @@ Route::post('/contact', [ContactController::class, 'contactPost'])->name('contac
 Route::middleware(['auth', 'verified'])->group(function () {
     // User Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Resume Management
     Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
     Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
     Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
     Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');
-    
+
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -90,6 +92,83 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         return Inertia::render('AdminDashboard');
     })->name('admin.dashboard');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Social Login Routes
+|--------------------------------------------------------------------------
+*/
+
+Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])->name('social.redirect');
+Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])->name('social.callback');
+
+// Test route to check Google OAuth configuration
+Route::get('/test-google-config', function () {
+    try {
+        $config = config('services.google');
+        return response()->json([
+            'client_id' => $config['client_id'] ? 'Set' : 'Not set',
+            'client_secret' => $config['client_secret'] ? 'Set' : 'Not set',
+            'redirect' => $config['redirect'],
+            'provider' => 'google'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()]);
+    }
+});
+
+// Test route to simulate Google callback
+Route::get('/test-callback', function () {
+    return response()->json([
+        'message' => 'Callback route is accessible',
+        'url' => request()->url(),
+        'method' => request()->method()
+    ]);
+});
+
+// Test route to check if callback is being called
+Route::get('/auth/google/test', function () {
+    return response()->json([
+        'message' => 'Google callback test route',
+        'provider' => 'google',
+        'timestamp' => now()->toISOString()
+    ]);
+});
+
+// Test route to verify Google OAuth flow
+Route::get('/test-google-flow', function () {
+    try {
+        $config = config('services.google');
+        $redirectUrl = route('social.redirect', ['provider' => 'google']);
+        
+        return response()->json([
+            'status' => 'success',
+            'config' => [
+                'client_id' => $config['client_id'] ? 'Set' : 'Not set',
+                'client_secret' => $config['client_secret'] ? 'Set' : 'Not set',
+                'redirect' => $config['redirect'],
+            ],
+            'redirect_url' => $redirectUrl,
+            'callback_url' => route('social.callback', ['provider' => 'google']),
+            'dashboard_url' => route('dashboard'),
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Test route to check authentication
+Route::get('/test-auth', function () {
+    return response()->json([
+        'authenticated' => auth()->check(),
+        'user' => auth()->user(),
+        'session_id' => session()->getId(),
+    ]);
+});
+
 
 /*
 |--------------------------------------------------------------------------
