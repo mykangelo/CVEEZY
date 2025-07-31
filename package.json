@@ -29,7 +29,9 @@
     },
     "dependencies": {
         "@inertiajs/inertia": "^0.11.1",
-        "@inertiajs/inertia-react": "^0.8.1"
+        "@inertiajs/inertia-react": "^0.8.1",
+        "framer-motion": "^12.23.12",
+        "lucide-react": "^0.534.0"
     },
     "overrides": {
         "axios": "^1.11.0"
