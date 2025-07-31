@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Resume } from "@/types/resume";
 import Logo from "@/Components/Logo";
 import Dropdown from "@/Components/Dropdown";
+import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
 
 interface DashboardProps {
     resumes?: Resume[];
@@ -11,6 +12,9 @@ interface DashboardProps {
 export default function Dashboard({ resumes = [] }: DashboardProps) {
     const { auth } = usePage().props as any;
     const user = auth.user;
+
+    // Add modal state
+    const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
 
     // Mock data for demonstration (replace with real data from backend)
     const mockResumes: Resume[] = resumes.length > 0 ? resumes : [
@@ -69,12 +73,13 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                             >
                                 Resume Review
                             </Link>
-                            <Link 
-                                href="/interview-preparation" 
+                            {/* Updated Interview Preparation button to trigger modal */}
+                            <button 
+                                onClick={() => setIsInterviewModalOpen(true)}
                                 className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
                             >
                                 Interview Preparation
-                            </Link>
+                            </button>
                         </nav>
 
                         {/* Right: Message Icon + User Menu */}
@@ -338,10 +343,7 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                             </div>
 
                             <button
-                                onClick={() => {
-                                    // Implement interview guide functionality
-                                    console.log('Getting interview guide');
-                                }}
+                                onClick={() => setIsInterviewModalOpen(true)}
                                 className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center space-x-2"
                             >
                                 <span>Get it Now</span>
@@ -379,6 +381,12 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Interview Preparation Modal */}
+            <InterviewPrepPopUp 
+                isOpen={isInterviewModalOpen} 
+                onClose={() => setIsInterviewModalOpen(false)} 
+            />
         </div>
     );
 }
