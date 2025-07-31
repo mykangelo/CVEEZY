@@ -23,7 +23,7 @@
             <p><strong>Email:</strong> {{ $email }}</p>
             <p><strong>Message:</strong></p>
             <div style="background: white; padding: 15px; border-left: 4px solid #2196f3;">
-                {{ $message }}
+                {{ $body }}
             </div>
         </div>
         <div class="footer">
@@ -31,4 +31,4 @@
         </div>
     </div>
 </body>
-</html> 
+</html>
