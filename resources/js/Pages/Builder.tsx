@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Head, Link } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
+import { Trash2, Plus, GripVertical } from "lucide-react";
+import { motion } from "framer-motion";
 
 type Contact = {
   firstName: string;
@@ -310,7 +312,85 @@ interface SkillsSectionProps {
   setShowExperienceLevel: React.Dispatch<React.SetStateAction<boolean>>;
   errors: Record<string, string>;
 }
+
+const skillLevels = ["Novice", "Beginner", "Skillful", "Experienced", "Expert"];
+
+const getOpacity = (level: string): number => {
+  switch (level) {
+    case "Novice":
+      return 0.2;
+    case "Beginner":
+      return 0.4;
+    case "Skillful":
+      return 0.6;
+    case "Experienced":
+      return 0.8;
+    case "Expert":
+      return 1.0;
+    default:
+      return 0.3;
+  }
+};
+
+const SkillLevelSlider = ({
+  level,
+  onChange,
+  show = true,
+}: {
+  level: string;
+  onChange: (level: string) => void;
+  show?: boolean;
+}) => {
+  const isActive = show;
+
+  return (
+    <div
+      className={`flex flex-col items-center w-80 transition-opacity duration-300 ${
+        isActive ? "opacity-100" : "opacity-30 pointer-events-none"
+      }`}
+    >
+      <div className="text-sm font-medium text-gray-700 mb-1 w-full text-left">
+        Level - <span className="text-blue-500">{level}</span>
+      </div>
+      <div
+        className={`relative flex h-12 w-full ${
+          isActive ? "bg-blue-200" : "bg-slate-200"
+        } rounded-md overflow-hidden`}
+      >
+        {/* Animated Highlight */}
+        <motion.div
+          className="absolute top-0 bottom-0 rounded-md"
+          initial={false}
+          animate={{
+            left: `${skillLevels.indexOf(level) * 20}%`,
+            width: "20%",
+            backgroundColor: `rgba(96, 165, 250, ${getOpacity(level)})`,
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        />
+
+        {/* Clickable Segments */}
+        {skillLevels.map((skillLevel, index) => (
+          <div
+            key={skillLevel}
+            onClick={() => isActive && onChange(skillLevel)}
+            title={skillLevel}
+            className="flex-1 z-10 flex items-center justify-center cursor-pointer relative"
+          >
+            {/* Vertical divider */}
+            {index < skillLevels.length - 1 && (
+              <div className="absolute right-0 top-1/4 h-1/2 w-px bg-blue-400 opacity-70" />
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showExperienceLevel, setShowExperienceLevel, errors }) => {
+  const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  
   const addSkill = () => {
     setSkills([...skills, { id: Date.now(), name: "", level: "Novice" }]);
   };
@@ -320,55 +400,89 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
   const removeSkill = (id: number) => {
     setSkills(skills.filter(skill => skill.id !== id));
   };
+
+  const handleDragStart = (index: number) => setDraggedItem(index);
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedItem === null) return;
+    const newSkills = [...skills];
+    const [removed] = newSkills.splice(draggedItem, 1);
+    newSkills.splice(dropIndex, 0, removed);
+    setSkills(newSkills);
+    setDraggedItem(null);
+  };
+
+
   return (
-    <div>
+    <div className="skills-container">
       <h2 className="text-2xl font-bold mb-2">Skills</h2>
-      <p className="text-gray-600 mb-6">Add your most relevant professional skills.</p>
+      <p className="text-gray-600 mb-6">
+        Add your most relevant professional skills.
+      </p>
+
+      {/* Experience Level Toggle */}
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => setShowExperienceLevel(!showExperienceLevel)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showExperienceLevel ? 'bg-blue-600' : 'bg-gray-200'}`}
-          aria-label={showExperienceLevel ? "Hide experience levels" : "Show experience levels"}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+            showExperienceLevel ? "bg-blue-600" : "bg-gray-200"
+          }`}
         >
           <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${showExperienceLevel ? 'translate-x-6' : 'translate-x-1'}`}
+            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+              showExperienceLevel ? "translate-x-6" : "translate-x-1"
+            }`}
           />
         </button>
-        <span className="text-sm font-medium text-gray-700">Show experience level</span>
+        <span className="text-sm font-medium text-gray-700">
+          Show experience level
+        </span>
       </div>
+
+      {/* Skills List */}
       <div className="space-y-3 mb-4">
-        {skills.map((skill) => (
-          <div key={skill.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-            <span className="text-gray-400 cursor-move">&#8942;</span>
-            <input
-              type="text"
-              value={skill.name}
-              onChange={e => updateSkill(skill.id, 'name', e.target.value)}
-              placeholder="Enter skill"
-              className={`flex-1 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[`skill_${skill.id}_name`] ? 'border-red-500' : ''}`}
-              aria-label="Skill name"
-            />
-            {errors[`skill_${skill.id}_name`] && <p className="text-red-500 text-xs">{errors[`skill_${skill.id}_name`]}</p>}
-            {showExperienceLevel && (
+        {skills.map((skill, index) => (
+          <div
+            key={skill.id}
+            draggable
+            onDragStart={() => handleDragStart(index)}
+            onDragOver={handleDragOver}
+            onDrop={(e) => handleDrop(e, index)}
+            className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 cursor-move"
+          >
+            <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+            <div className="w-[50%] px-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Skill</label>
               <input
-                type="range"
-                min="0"
-                max="4"
-                value={['Novice', 'Beginner', 'Skillful', 'Experienced', 'Expert'].indexOf(skill.level)}
-                onChange={e => updateSkill(skill.id, 'level', ['Novice', 'Beginner', 'Skillful', 'Experienced', 'Expert'][parseInt(e.target.value)])}
-                className="w-32 mx-2"
+                type="text"
+                value={skill.name}
+                onChange={(e) =>
+                  updateSkill(skill.id, "name", e.target.value)
+                }
+                placeholder="Enter skill"
+                className="w-full h-12 p-2 border border-gray-200 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            )}
+            </div>
+            <SkillLevelSlider
+              level={skill.level}
+              onChange={(level) =>
+                updateSkill(skill.id, "level", level)
+              }
+              show={showExperienceLevel}
+            />
             <button
-              onClick={() => removeSkill(skill.id)}
-              className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
-              aria-label="Delete skill"
+              onClick={() => {
+                removeSkill(skill.id);}}
+              className="flex items-center mt-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
             >
               &#128465;
             </button>
+
           </div>
         ))}
       </div>
+      {/* Add Skill Button */}
       <button
         onClick={addSkill}
         className="flex items-center gap-2 w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
@@ -376,9 +490,11 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
       >
         + Add Skill
       </button>
+
     </div>
   );
 };
+
 
 // Summary Section
 const summarySuggestions = [
