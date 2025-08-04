@@ -38,9 +38,14 @@ class ContactController extends Controller
         // Send email
         try {
             Mail::send('emails.contact', $sanitizedData, function ($message) use ($sanitizedData) {
-                $message->to('admin@cveezy.com') // ✅ correct recipient
+                $message->to('cveezyad@gmail.com') // ✅ correct recipient
                         ->subject('Contact Form: ' . $sanitizedData['name'])
                         ->replyTo($sanitizedData['email'], $sanitizedData['name']);
+            });
+
+            Mail::send('emails.auto_reply', ['name' => $sanitizedData['name']], function ($message) use ($sanitizedData) {
+                $message->to($sanitizedData['email'], $sanitizedData['name'])
+                        ->subject('We received your message');
             });
 
             RateLimiter::clear($key);
