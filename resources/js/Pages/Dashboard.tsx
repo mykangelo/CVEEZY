@@ -1,10 +1,12 @@
-import { Head, Link, usePage } from "@inertiajs/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PaymentModal from '@/Components/PaymentModal';
 import { Resume } from "@/types/resume";
 import Logo from "@/Components/Logo";
 import Dropdown from "@/Components/Dropdown";
 import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
-import PaymentModal from "@/Components/PaymentModal";
 
 interface PaymentProof {
     id: number;
@@ -20,75 +22,76 @@ interface DashboardProps {
     success?: string;
 }
 
-export default function Dashboard({ resumes = [], paymentProofs = [], error, success }: DashboardProps) {
+export default function Dashboard({ resumes = [], paymentProofs: initialPaymentProofs = [], error, success }: DashboardProps) {
     const { auth } = usePage().props as any;
     const user = auth.user;
 
     // Add modal state
-    const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+    const [resumeList, setResumeList] = useState<Resume[]>(resumes);
+    const [paymentProofs, setPaymentProofs] = useState<PaymentProof[]>(initialPaymentProofs);
+    const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-    const [selectedResumeForPayment, setSelectedResumeForPayment] = useState<Resume | null>(null);
-    const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [selectedResumeId, setSelectedResumeId] = useState<number | undefined>(undefined);
+    const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
 
     // Check for error/success messages from props
     useEffect(() => {
         if (error) {
-            setNotification({
-                type: 'error',
-                message: error
-            });
+            setNotification({ type: 'error', message: error });
         } else if (success) {
-            setNotification({
-                type: 'success',
-                message: success
-            });
+            setNotification({ type: 'success', message: success });
         }
     }, [error, success]);
-
-    // Use real resumes from props, or create a default one if none exist
-    const [resumeList, setResumeList] = useState<Resume[]>(resumes);
 
     // Update resume list when props change
     useEffect(() => {
         setResumeList(resumes);
     }, [resumes]);
 
-    // Check if user has unpaid resumes
-    const hasUnpaidResumes = () => {
+    // Update payment proofs when props change
+    useEffect(() => {
+        setPaymentProofs(initialPaymentProofs);
+    }, [initialPaymentProofs]);
+
+    // Check if user has pending payments
+    const hasPendingPayments = () => {
         // If no resumes, allow creation
         if (resumeList.length === 0) {
             return false;
         }
         
-        // Check if all resumes have approved payment status
-        const allPaid = resumeList.every(resume => {
+        // Check if any resume has pending payment status
+        const hasPending = resumeList.some(resume => {
             const paymentStatus = getPaymentStatus(resume.id);
-            return paymentStatus === 'approved';
+            return paymentStatus === 'pending';
         });
         
-        return !allPaid; // Return true if NOT all are paid (i.e., has unpaid resumes)
+        return hasPending; // Return true if there are pending payments (restrict creation)
     };
 
     // Check if user can create new resume
     const canCreateNewResume = () => {
-        return !hasUnpaidResumes();
+        return !hasPendingPayments();
     };
 
 
     // Poll for payment status updates
     useEffect(() => {
-        const interval = setInterval(async () => {
+        const pollPaymentStatus = async () => {
             try {
                 const response = await fetch('/user/payment-proofs');
                 if (response.ok) {
                     const updatedPaymentProofs = await response.json();
-                    // Update payment proofs state if needed
-                    // This will trigger a re-render with updated status
+                    // Update the paymentProofs state with new data
+                    setPaymentProofs(updatedPaymentProofs);
                 }
             } catch (error) {
                 console.error('Error checking payment status:', error);
             }
-        }, 10000); // Check every 10 seconds
+        };
+
+        // Poll every 30 seconds
+        const interval = setInterval(pollPaymentStatus, 30000);
 
         return () => clearInterval(interval);
     }, []);
@@ -298,32 +301,32 @@ export default function Dashboard({ resumes = [], paymentProofs = [], error, suc
                             </p>
                         </div>
                         <div className="flex items-center space-x-4">
-                            {canCreateNewResume() ? (
-                                <Link
-                                    href="/choose-template"
-                                    className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center space-x-2"
-                                >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    <span>Create a New Resume</span>
-                                </Link>
-                            ) : (
-                                <div className="flex items-center space-x-2">
-                                    <button
-                                        disabled
-                                        className="bg-gray-400 text-white px-6 py-2 rounded-lg font-semibold cursor-not-allowed flex items-center space-x-2"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        <span>Create a New Resume</span>
-                                    </button>
-                                    <div className="text-sm text-orange-600 bg-orange-50 px-3 py-1 rounded-lg border border-orange-200">
-                                        ⚠️ Please complete payment for existing resumes first
-                                    </div>
-                                </div>
-                            )}
+                            {/* Create New Resume Button */}
+                <div className="mb-6">
+                    {canCreateNewResume() ? (
+                        <button
+                            onClick={() => router.visit('/choose-template')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create a New Resume
+                        </button>
+                    ) : (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+                            </div>
+                            <p className="text-yellow-700 text-sm">
+                                You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.
+                            </p>
+                        </div>
+                    )}
+                </div>
                         </div>
                     </div>
                 </div>
@@ -452,7 +455,7 @@ export default function Dashboard({ resumes = [], paymentProofs = [], error, suc
                                                 {getPaymentStatus(resume.id) !== 'approved' && (
                                                     <button
                                                         onClick={() => {
-                                                            setSelectedResumeForPayment(resume);
+                                                            setSelectedResumeId(resume.id);
                                                             setIsPaymentModalOpen(true);
                                                         }}
                                                         className="text-purple-600 hover:text-purple-900 inline-flex items-center space-x-1"
@@ -578,10 +581,10 @@ export default function Dashboard({ resumes = [], paymentProofs = [], error, suc
                 isOpen={isPaymentModalOpen}
                 onClose={() => {
                     setIsPaymentModalOpen(false);
-                    setSelectedResumeForPayment(null);
+                    setSelectedResumeId(undefined);
                 }}
-                resumeId={selectedResumeForPayment?.id}
-                resumeName={selectedResumeForPayment?.name}
+                resumeId={selectedResumeId}
+                resumeName={selectedResumeId ? resumeList.find(r => r.id === selectedResumeId)?.name : undefined}
                 onStatusChange={handlePaymentStatusChange}
             />
         </div>

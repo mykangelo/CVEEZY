@@ -302,4 +302,122 @@ class AdminController extends Controller
             return response()->json(['message' => 'Error rejecting payment: ' . $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Delete a resume
+     */
+    public function deleteResume($id)
+    {
+        try {
+            $resume = Resume::findOrFail($id);
+            
+            // Log the deletion
+            \Log::info('Resume deleted by admin', [
+                'resume_id' => $resume->id,
+                'resume_name' => $resume->name,
+                'user_id' => $resume->user_id,
+                'user_email' => $resume->user->email,
+                'admin_id' => auth()->id(),
+            ]);
+            
+            // Delete associated payment proofs first
+            $resume->paymentProofs()->delete();
+            
+            // Delete the resume
+            $resume->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Resume deleted successfully.',
+                'deleted_resume' => [
+                    'id' => $resume->id,
+                    'name' => $resume->name,
+                    'user_email' => $resume->user->email,
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error deleting resume', [
+                'resume_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete resume. Please try again.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard data for polling
+     */
+    public function dashboardData()
+    {
+        // Get updated stats
+        $stats = [
+            'total_users' => User::count(),
+            'total_resumes' => Resume::count(),
+            'total_payments' => PaymentProof::count(),
+            'pending_payments' => PaymentProof::where('status', 'pending')->count(),
+            'approved_payments' => PaymentProof::where('status', 'approved')->count(),
+            'rejected_payments' => PaymentProof::where('status', 'rejected')->count(),
+        ];
+
+        // Get updated users
+        $users = User::withCount('resumes')->latest()->get()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'created_at' => $user->created_at->toISOString(),
+                'resumes_count' => $user->resumes_count,
+                'is_admin' => $user->is_admin,
+            ];
+        });
+
+        // Get updated resumes
+        $resumes = Resume::with('user')->latest()->get()->map(function ($resume) {
+            return [
+                'id' => $resume->id,
+                'name' => $resume->name,
+                'user' => [
+                    'name' => $resume->user->name,
+                    'email' => $resume->user->email,
+                ],
+                'status' => $resume->status,
+                'is_paid' => $resume->is_paid,
+                'created_at' => $resume->created_at->toISOString(),
+            ];
+        });
+
+        // Get updated payment proofs
+        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->map(function ($proof) {
+            return [
+                'id' => $proof->id,
+                'user' => [
+                    'id' => $proof->user->id,
+                    'name' => $proof->user->name,
+                    'email' => $proof->user->email,
+                ],
+                'resume' => [
+                    'id' => $proof->resume->id,
+                    'name' => $proof->resume->name,
+                    'is_paid' => $proof->resume->is_paid,
+                ],
+                'file_path' => $proof->file_path,
+                'status' => $proof->status,
+                'created_at' => $proof->created_at->toISOString(),
+            ];
+        });
+
+        return response()->json([
+            'stats' => $stats,
+            'users' => $users,
+            'resumes' => $resumes,
+            'paymentProofs' => $paymentProofs,
+        ]);
+    }
 }

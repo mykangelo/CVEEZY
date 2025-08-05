@@ -12,23 +12,23 @@ class ChooseTemplateController extends Controller
     {
         $user = Auth::user();
         
-        // Check if user has unpaid resumes (resumes with pending or rejected payment proofs)
-        $unpaidResumes = $user->resumes()
+        // Check if user has pending payment proofs (only restrict on pending, not rejected)
+        $pendingResumes = $user->resumes()
             ->whereHas('paymentProofs', function($query) {
-                $query->whereIn('status', ['pending', 'rejected']);
+                $query->where('status', 'pending');
             })
             ->count();
         
-        $hasUnpaidResumes = $unpaidResumes > 0;
+        $hasPendingPayments = $pendingResumes > 0;
         
-        if ($hasUnpaidResumes) {
+        if ($hasPendingPayments) {
             // Redirect back to dashboard with error message
-            return redirect()->route('dashboard')->with('error', 'Please complete payment for your existing resumes before creating a new one.');
+            return redirect()->route('dashboard')->with('error', 'Please wait for admin approval of your pending payments before creating a new resume.');
         }
         
         return Inertia::render('ChooseTemplate', [
-            'hasUnpaidResumes' => $hasUnpaidResumes,
-            'unpaidResumesCount' => $unpaidResumes
+            'hasPendingPayments' => $hasPendingPayments,
+            'pendingResumesCount' => $pendingResumes
         ]);
     }
 } 

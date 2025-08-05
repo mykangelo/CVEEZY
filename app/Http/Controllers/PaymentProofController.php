@@ -130,4 +130,32 @@ class PaymentProofController extends Controller
 
         return response()->json($payments);
     }
+
+    /**
+     * Get user's payment proofs for polling
+     */
+    public function getUserPaymentProofs()
+    {
+        $user = Auth::user();
+        
+        $paymentProofs = $user->paymentProofs()
+            ->whereIn('id', function($query) use ($user) {
+                $query->selectRaw('MAX(id)')
+                    ->from('payment_proofs')
+                    ->where('user_id', $user->id)
+                    ->groupBy('resume_id');
+            })
+            ->get()
+            ->map(function ($proof) {
+                return [
+                    'id' => $proof->id,
+                    'resume_id' => $proof->resume_id,
+                    'status' => $proof->status,
+                    'created_at' => $proof->created_at->toISOString(),
+                    'updated_at' => $proof->updated_at->toISOString(),
+                ];
+            });
+
+        return response()->json($paymentProofs);
+    }
 }

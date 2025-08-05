@@ -82,11 +82,58 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
     const [viewingProof, setViewingProof] = useState<PaymentProof | null>(null);
     const [paymentList, setPaymentList] = useState<PaymentProof[]>(paymentProofs);
     const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [deletingResumeId, setDeletingResumeId] = useState<number | null>(null);
+    const [resumeList, setResumeList] = useState<Resume[]>(resumes);
+    const [userList, setUserList] = useState<User[]>(users);
+    const [dashboardStats, setDashboardStats] = useState<DashboardStats>(stats);
 
     // Update payment list when props change
     useEffect(() => {
         setPaymentList(paymentProofs);
     }, [paymentProofs]);
+
+    // Update resume list when props change
+    useEffect(() => {
+        setResumeList(resumes);
+    }, [resumes]);
+
+    // Update user list when props change
+    useEffect(() => {
+        setUserList(users);
+    }, [users]);
+
+    // Update stats when props change
+    useEffect(() => {
+        setDashboardStats(stats);
+    }, [stats]);
+
+    // Poll for admin dashboard updates
+    useEffect(() => {
+        const pollAdminData = async () => {
+            try {
+                setIsRefreshing(true);
+                const response = await fetch('/admin/dashboard-data');
+                if (response.ok) {
+                    const data = await response.json();
+                    // Update all dashboard data
+                    setPaymentList(data.paymentProofs);
+                    setResumeList(data.resumes);
+                    setUserList(data.users);
+                    setDashboardStats(data.stats);
+                }
+            } catch (error) {
+                console.error('Error polling admin data:', error);
+            } finally {
+                setIsRefreshing(false);
+            }
+        };
+
+        // Poll every 30 seconds for updates
+        const interval = setInterval(pollAdminData, 30000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const handlePaymentAction = async (paymentId: number, action: 'approve' | 'reject') => {
         setLoading(true);
@@ -149,9 +196,22 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                     )
                 );
                 
+                // Update stats to reflect the status change
+                setDashboardStats(prev => {
+                    const newStats = { ...prev };
+                    if (action === 'approve') {
+                        newStats.pending_payments = Math.max(0, prev.pending_payments - 1);
+                        newStats.approved_payments = prev.approved_payments + 1;
+                    } else {
+                        newStats.pending_payments = Math.max(0, prev.pending_payments - 1);
+                        newStats.rejected_payments = prev.rejected_payments + 1;
+                    }
+                    return newStats;
+                });
+                
                 setNotification({
                     type: 'success',
-                    message: `Payment ${action}d successfully.`
+                    message: `Payment ${action === 'approve' ? 'approved' : 'rejected'} successfully.`
                 });
             } else {
                 const errorData = await response.json();
@@ -169,6 +229,84 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
             });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteResume = async (resumeId: number) => {
+        if (!confirm('Are you sure you want to delete this resume? This action cannot be undone.')) {
+            return;
+        }
+
+        setDeletingResumeId(resumeId);
+        setNotification(null);
+        
+        try {
+            // Get CSRF token
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                csrfToken = document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN='))?.split('=')[1];
+                if (csrfToken) {
+                    csrfToken = decodeURIComponent(csrfToken);
+                }
+            }
+            
+            if (!csrfToken) {
+                throw new Error('CSRF token not found. Please refresh the page and try again.');
+            }
+            
+            const response = await fetch(`/admin/resumes/${resumeId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.status === 419) {
+                setNotification({
+                    type: 'error',
+                    message: 'Session expired. Please refresh the page and try again.'
+                });
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                return;
+            }
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Resume deleted successfully:', result);
+                
+                // Remove from local state
+                setResumeList(prev => prev.filter(resume => resume.id !== resumeId));
+                
+                // Update stats to reflect the deletion
+                setDashboardStats(prev => ({
+                    ...prev,
+                    total_resumes: prev.total_resumes - 1
+                }));
+                
+                setNotification({
+                    type: 'success',
+                    message: 'Resume deleted successfully.'
+                });
+            } else {
+                const errorData = await response.json();
+                console.error('Delete failed:', errorData);
+                setNotification({
+                    type: 'error',
+                    message: errorData.message || 'Failed to delete resume. Please try again.'
+                });
+            }
+        } catch (error) {
+            console.error('Error deleting resume:', error);
+            setNotification({
+                type: 'error',
+                message: error instanceof Error ? error.message : 'Error deleting resume. Please try again.'
+            });
+        } finally {
+            setDeletingResumeId(null);
         }
     };
 
@@ -249,7 +387,18 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                     
                     <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div className="p-6 text-gray-900">
-                            <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+                            <div className="flex items-center justify-between mb-8">
+                                <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+                                {isRefreshing && (
+                                    <div className="flex items-center text-blue-600 text-sm">
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Refreshing...
+                                    </div>
+                                )}
+                            </div>
 
                             {/* Statistics Cards */}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -259,7 +408,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         <Users className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="text-2xl font-bold">{stats.total_users}</div>
+                                        <div className="text-2xl font-bold">{dashboardStats.total_users}</div>
                                     </CardContent>
                                 </Card>
 
@@ -269,7 +418,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         <FileText className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="text-2xl font-bold">{stats.total_resumes}</div>
+                                        <div className="text-2xl font-bold">{dashboardStats.total_resumes}</div>
                                     </CardContent>
                                 </Card>
 
@@ -279,7 +428,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         <Clock className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="text-2xl font-bold text-yellow-600">{stats.pending_payments}</div>
+                                        <div className="text-2xl font-bold text-yellow-600">{dashboardStats.pending_payments}</div>
                                     </CardContent>
                                 </Card>
 
@@ -289,7 +438,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="text-2xl font-bold">{stats.total_payments}</div>
+                                        <div className="text-2xl font-bold">{dashboardStats.total_payments}</div>
                                     </CardContent>
                                 </Card>
                             </div>
@@ -387,11 +536,11 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
-                                                {users.length === 0 ? (
+                                                {userList.length === 0 ? (
                                                     <p className="text-gray-500 text-center py-8">No users found.</p>
                                                 ) : (
                                                     <div className="space-y-4">
-                                                        {users.map((user) => (
+                                                        {userList.map((user) => (
                                                             <div key={user.id} className="border rounded-lg p-4">
                                                                 <div className="flex items-center justify-between">
                                                                     <div className="flex-1">
@@ -444,11 +593,11 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
-                                                {resumes.length === 0 ? (
+                                                {resumeList.length === 0 ? (
                                                     <p className="text-gray-500 text-center py-8">No resumes found.</p>
                                                 ) : (
                                                     <div className="space-y-4">
-                                                        {resumes.map((resume) => (
+                                                        {resumeList.map((resume) => (
                                                             <div key={resume.id} className="border rounded-lg p-4">
                                                                 <div className="flex items-center justify-between">
                                                                     <div className="flex-1">
@@ -494,6 +643,27 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                                 Download PDF
                                                                             </Button>
                                                                         )}
+                                                                        <Button 
+                                                                            size="sm" 
+                                                                            variant="destructive"
+                                                                            onClick={() => handleDeleteResume(resume.id)}
+                                                                            disabled={deletingResumeId === resume.id}
+                                                                        >
+                                                                            {deletingResumeId === resume.id ? (
+                                                                                <div className="flex items-center">
+                                                                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                                    </svg>
+                                                                                    Deleting...
+                                                                                </div>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <Trash2 className="h-4 w-4 mr-1" />
+                                                                                    Delete
+                                                                                </>
+                                                                            )}
+                                                                        </Button>
                                                                     </div>
                                                                 </div>
                                                             </div>

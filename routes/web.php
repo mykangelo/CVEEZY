@@ -95,6 +95,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Payment proof routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/upload-payment-proof', [PaymentProofController::class, 'store'])->name('payment-proof.store');
+    Route::get('/user/payment-proofs', [PaymentProofController::class, 'getUserPaymentProofs'])->name('payment-proof.user');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Admin Routes
@@ -103,20 +109,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
-
-    // Admin Payment Management
+    Route::get('/admin/dashboard-data', [AdminController::class, 'dashboardData'])->name('admin.dashboard.data');
     Route::get('/admin/payments', [AdminController::class, 'index'])->name('admin.payments');
     Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve'])->name('admin.payment.approve');
     Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject'])->name('admin.payment.reject');
-
-    // Admin User Management
+    
+    // User and Resume Management
     Route::get('/admin/users/{id}', [AdminController::class, 'viewUser'])->name('admin.user.view');
-
-    // Admin Resume Management
     Route::get('/admin/resumes/{id}', [AdminController::class, 'viewResume'])->name('admin.resume.view');
     Route::get('/admin/resumes/{id}/download', [AdminController::class, 'downloadResume'])->name('admin.resume.download');
-
-    // Admin Data Endpoints
+    Route::delete('/admin/resumes/{id}', [AdminController::class, 'deleteResume'])->name('admin.resume.delete');
+    
+    // API endpoints for admin dashboard
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/admin/resumes', [AdminController::class, 'resumes'])->name('admin.resumes');
     Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');
