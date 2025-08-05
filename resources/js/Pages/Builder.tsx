@@ -784,18 +784,39 @@ const Builder: React.FC = () => {
           'Content-Type': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
-        body: JSON.stringify({
-          name: name
-        })
+        body: JSON.stringify({ name })
       });
       
       if (response.ok) {
         console.log('Resume name updated successfully');
-      } else {
-        console.error('Failed to update resume name');
       }
     } catch (error) {
       console.error('Error updating resume name:', error);
+    }
+  };
+
+  // Function to finalize resume
+  const finalizeResume = async (resumeIdToUse: number) => {
+    try {
+      console.log('Finalizing resume with ID:', resumeIdToUse);
+      
+      // Store data in sessionStorage for the FinalCheck page
+      const resumeData = {
+        contact: contacts,
+        experiences,
+        educations,
+        skills,
+        summary
+      };
+      sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
+      
+      // Navigate to Final Check with the resume ID
+      const finalCheckUrl = `/final-check?resume=${resumeIdToUse}`;
+      console.log('Navigating to:', finalCheckUrl);
+      window.location.href = finalCheckUrl;
+    } catch (error) {
+      console.error('Error finalizing resume:', error);
+      alert('Error finalizing resume. Please try again.');
     }
   };
 
@@ -965,35 +986,54 @@ const Builder: React.FC = () => {
                 <button
                   onClick={async () => {
                     if (!resumeId) {
-                      alert('Resume not ready yet. Please wait a moment and try again.');
-                      return;
-                    }
-                    
-                    try {
-                      console.log('Finalizing resume with ID:', resumeId);
-                      
-                      // Store data in sessionStorage for the FinalCheck page
-                      const resumeData = {
-                        contact: contacts,
-                        experiences,
-                        educations,
-                        skills,
-                        summary
-                      };
-                      sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
-                      
-                      // Navigate to Final Check with the existing resume ID
-                      const finalCheckUrl = `/final-check?resume=${resumeId}`;
-                      console.log('Navigating to:', finalCheckUrl);
-                      window.location.href = finalCheckUrl;
-                    } catch (error) {
-                      console.error('Error finalizing resume:', error);
-                      alert('Error finalizing resume. Please try again.');
+                      // Try to create resume if it doesn't exist
+                      try {
+                        console.log('No resume ID found, attempting to create resume...');
+                        const response = await fetch('/resumes', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                          },
+                          body: JSON.stringify({
+                            name: `${contacts.firstName} ${contacts.lastName}`.trim() || 'My Resume',
+                            template_id: templateId,
+                            resume_data: {
+                              contact: contacts,
+                              experiences,
+                              educations,
+                              skills,
+                              summary
+                            }
+                          })
+                        });
+                        
+                        if (response.ok) {
+                          const result = await response.json();
+                          console.log('Resume created with ID:', result.resume.id);
+                          setResumeId(result.resume.id);
+                          
+                          // Continue with finalization
+                          await finalizeResume(result.resume.id);
+                        } else {
+                          console.error('Failed to create resume');
+                          alert('Unable to create resume. Please try again.');
+                          return;
+                        }
+                      } catch (error) {
+                        console.error('Error creating resume:', error);
+                        alert('Error creating resume. Please try again.');
+                        return;
+                      }
+                    } else {
+                      // Resume ID exists, proceed with finalization
+                      await finalizeResume(resumeId);
                     }
                   }}
-                  className="bg-blue-500 px-6 py-2 rounded-md text-white hover:bg-blue-600 transition-colors"
+                  disabled={isLoading}
+                  className="bg-blue-500 px-6 py-2 rounded-md text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Finalize Resume
+                  {isLoading ? 'Creating Resume...' : 'Finalize Resume'}
                 </button>
               ) : (
                 <button
