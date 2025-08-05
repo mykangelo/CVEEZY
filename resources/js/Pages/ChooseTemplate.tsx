@@ -28,6 +28,14 @@ const ChooseTemplate: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<"all" | "favorite">("all");
   const [favorites, setFavorites] = useState<number[]>([]);
 
+  // Check if user has unpaid resumes (this would need to be passed as props)
+  // For now, we'll add a client-side check
+  const checkUnpaidResumes = () => {
+    // This would ideally be passed from the server
+    // For now, we'll redirect back to dashboard with a message
+    return false;
+  };
+
   const toggleFavorite = (templateId: number) => {
     setFavorites((prev) =>
       prev.includes(templateId)
@@ -147,7 +155,7 @@ const ChooseTemplate: React.FC = () => {
           visibleTemplates.map((num) => (
             <div
               key={num}
-              onClick={() => router.visit("/choose-resume-maker")}
+              onClick={() => router.visit(`/choose-resume-maker?template=${num}`)}
               className="relative bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer shadow hover:shadow-lg transition-transform duration-200 hover:scale-105 group"
               style={{ width: `${CARD_WIDTH}px`, height: `${CARD_HEIGHT}px` }}
             >

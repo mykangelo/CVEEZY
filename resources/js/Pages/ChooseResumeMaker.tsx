@@ -7,6 +7,10 @@ const ChooseResumeMaker: React.FC = () => {
   const { auth } = usePage().props as any;
   const user = auth.user;
   
+  // Get template ID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const templateId = urlParams.get('template') || '1';
+  
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       <Head title="CVeezy | How will you make your resume?" />
@@ -62,7 +66,6 @@ const ChooseResumeMaker: React.FC = () => {
 
       <main className="flex-grow px-4 py-6 flex flex-col items-center">
 
-
         {/* Title */}
         <h1 className="text-center text-3xl md:text-4xl font-bold mb-10 text-[#2B2D42]">
           How will you make your resume?
@@ -87,11 +90,11 @@ const ChooseResumeMaker: React.FC = () => {
           {/* Start from Scratch Card */}
           <div
             className="bg-white border border-[#f6c6d6] p-8 rounded-xl shadow-md cursor-pointer w-80 min-h-[220px] flex flex-col items-center hover:shadow-lg transition group"
-            onClick={() => router.visit("/builder")}
+            onClick={() => router.visit(`/builder?template=${templateId}`)}
             tabIndex={0}
             role="button"
             aria-label="Start from scratch with AI guidance"
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.visit('/builder'); }}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.visit(`/builder?template=${templateId}`); }}
           >
             <img src="/images/ScratchIcon" alt="Start from Scratch" className="w-20 h-16 mb-4" />
             <h2 className="text-lg font-bold mb-1 text-[#2B2D42]">Start from scratch</h2>
