@@ -91,7 +91,7 @@ const HomePage: React.FC = () => {
             text="CVeezy"
             imageSrc="/images/supsoft-logo.jpg"
             imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -124,15 +124,15 @@ const HomePage: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-7xl mx-auto">
           {/* Left Side */}
           <div className="flex-1 max-w-2xl">
-            <p className="text-[#3bb2f6] font-semibold mb-2 flex items-center text-lg">
+            <p className="text-[#2196f3] font-semibold mb-2 flex items-center text-lg">
               <span className="inline-block w-3 h-3 bg-[#3bb2f6] rounded-full mr-2 align-middle"></span>
               <span className="font-bold">50,435</span> resumes created today
             </p>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-[#222]">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
               Create your{" "}
               <span className="text-[#2196f3]">job-winning resume</span> in minutes
             </h1>
-            <p className="text-[#444] text-xl mb-8">
+            <p className="text-gray-600 text-xl mb-8">
               The first step to a better job? A better resume. Get yours in just a few
               clicks.
             </p>
@@ -205,7 +205,7 @@ const HomePage: React.FC = () => {
                 <span className="w-10 h-10 bg-white rounded-xl shadow"></span>
               </div>
               {/* Decorative sparkles */}
-              <div className="absolute right-16 top-[320px] text-[#3bb2f6] text-2xl">
+              <div className="absolute right-16 top-[320px] text-[#2196f3] text-2xl">
                 <span>✨</span>
               </div>
             </div>
@@ -216,7 +216,7 @@ const HomePage: React.FC = () => {
       {/* Features Section */}
       <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-serif">
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-[#222] mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
             Why use <span className="text-[#2196f3]">CVeezy's</span> Resume Builder?
           </h2>
 
@@ -232,8 +232,8 @@ const HomePage: React.FC = () => {
                   alt={`${feature.title} icon`}
                   className="w-16 h-16 mb-6 mx-auto"
                 />
-                <h3 className="text-2xl font-bold text-[#222] mb-3">{feature.title}</h3>
-                <p className="text-[#444] text-base leading-relaxed">{feature.description}</p>
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">{feature.title}</h3>
+                <p className="text-gray-600 text-base leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -267,11 +267,13 @@ const HomePage: React.FC = () => {
               View All Templates
             </button>
           </Link>
-          <div className="relative w-full max-w-[1400px] mx-auto">
+
+          
+          <div className="relative w-full flex justify-center">
             {/* Left Arrow */}
             <button
               onClick={scrollLeft}
-              className="absolute left-[-100px] top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
+              className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -296,7 +298,7 @@ const HomePage: React.FC = () => {
                       className="w-full object-cover h-96"
                     />
                   </div>
-                  <div className="mt-2 text-center text-lg font-semibold text-slate-700">
+                  <div className="mt-2 text-center text-lg font-semibold text-gray-800">
                     {template.name}
                   </div>
                 </div>
@@ -307,7 +309,7 @@ const HomePage: React.FC = () => {
             {/* Right Arrow */}
             <button
               onClick={scrollRight}
-              className="absolute right-[-100px] top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow  hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
+              className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow  hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

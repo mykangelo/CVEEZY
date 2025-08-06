@@ -39,7 +39,7 @@ const ChooseTemplate: React.FC = () => {
   const visibleTemplates = currentTab === "all" ? templates : favorites;
 
   return (
-    <div className="min-h-screen flex flex-col bg-white font-sans">
+    <div className="min-h-screen flex flex-col bg-white font-serif">
       <Head title="CVeezy | Choose Resume Template" />
 
       {/* Header */}
@@ -50,7 +50,7 @@ const ChooseTemplate: React.FC = () => {
             text="CVeezy"
             imageSrc="/images/supsoft-logo.jpg"
             imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -90,12 +90,12 @@ const ChooseTemplate: React.FC = () => {
 
       {/* Headline and Description */}
       <div className="flex flex-col items-center text-center mt-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-[#2B2D42] mb-2">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-700 mb-2">
           {currentTab === "all"
             ? "Job-winning templates for you"
             : "Your favorite templates"}
         </h2>
-        <p className="text-lg text-[#4A4A4A]">
+        <p className="text-lg text-gray-600">
           {currentTab === "all"
             ? "Simple to use and ready in minutes resume templates — give it a try for free now!"
             : "These templates bring out the best in you!"}
