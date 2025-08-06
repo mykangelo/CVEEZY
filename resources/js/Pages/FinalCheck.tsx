@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 
 type Contact = {
@@ -43,105 +43,80 @@ interface FinalCheckProps {
   educations?: Education[];
   skills?: Skill[];
   summary?: string;
+  resumeId?: number;
 }
 
-const DownloadModal = ({ onClose, onDownload }: { onClose: () => void; onDownload: () => void }) => (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(0,0,0,0.3)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 1000,
-    }}
-  >
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: "12px",
-        padding: "32px",
-        minWidth: "350px",
-        boxShadow: "0 2px 16px rgba(0,0,0,0.15)",
-        textAlign: "center",
-      }}
-    >
-      <h2 style={{ marginBottom: "16px" }}>Create an account to get your resume</h2>
-      <input
-        type="email"
-        placeholder="Email Address"
-        style={{
-          width: "90%",
-          padding: "10px",
-          marginBottom: "16px",
-          borderRadius: "6px",
-          border: "1px solid #ccc",
-        }}
-      />
-      <br />
-      <button
-        onClick={onDownload}
-        style={{
-          background: "#009cff",
-          color: "#fff",
-          border: "none",
-          borderRadius: "8px",
-          padding: "12px 24px",
-          fontWeight: "bold",
-          cursor: "pointer",
-          marginBottom: "12px",
-        }}
-      >
-        Save & Next
-      </button>
-      <br />
-      <a href="#" onClick={onClose} style={{ color: "#009cff", textDecoration: "underline" }}>
-        Already have an account?
-      </a>
-      <div style={{ marginTop: "18px", textAlign: "left" }}>
-        <div style={{ background: "#f5f7fa", borderRadius: "8px", padding: "12px" }}>
-          <b>Now for the finishing touches!</b>
-          <ul style={{ margin: "8px 0 0 18px", fontSize: "14px" }}>
-            <li>⭐ Use our variety of tools to create your professionally designed resume</li>
-            <li>⭐ Utilize expert pre-written content to match you to the right job</li>
-            <li>⭐ Download in PDF or Word format</li>
-            <li>⭐ All your information is safe every step of the way</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+
 
 const FinalCheck: React.FC<FinalCheckProps> = ({ 
   contact: propContact,
   experiences: propExperiences,
   educations: propEducations,
   skills: propSkills,
-  summary: propSummary
+  summary: propSummary,
+  resumeId
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>("templates");
-  const [showDownloadModal, setShowDownloadModal] = useState(false); 
-
+  
+  // Debug: Log the resumeId and other props
+  console.log('FinalCheck - Props received:', {
+    resumeId,
+    propContact,
+    propExperiences,
+    propEducations,
+    propSkills,
+    propSummary
+  });
+  
+  // Debug: Log URL parameters
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlResumeId = urlParams.get('resume');
+    console.log('FinalCheck - URL parameters:', {
+      resume: urlResumeId,
+      fullUrl: window.location.href
+    });
+    
+    // Show debug info in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('FinalCheck - Debug Info:', {
+        resumeId,
+        hasPropsData: !!(propContact && propExperiences && propEducations && propSkills && propSummary),
+        hasSessionData: !!sessionStorage.getItem('resumeData'),
+        urlResumeId
+      });
+    }
+  }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary]);
+  
   // Get data from sessionStorage or use props
   const getResumeData = () => {
+    // Prioritize props data (from database) over sessionStorage
+    if (propContact && propExperiences && propEducations && propSkills && propSummary) {
+      console.log('FinalCheck - Using props data from database');
+      return {
+        contact: propContact,
+        experiences: propExperiences,
+        educations: propEducations,
+        skills: propSkills,
+        summary: propSummary
+      };
+    }
+    
     try {
       const storedData = sessionStorage.getItem('resumeData');
       if (storedData) {
+        console.log('FinalCheck - Found resume data in sessionStorage');
         return JSON.parse(storedData);
       }
     } catch (error) {
       console.error('Error parsing resume data:', error);
     }
     
-    // Fallback to props or default values
+    console.log('FinalCheck - Using default data');
+    // Fallback to default values
     return {
-      contact: propContact || {
+      contact: {
         firstName: "",
         lastName: "",
         desiredJobTitle: "",
@@ -150,10 +125,10 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         address: "",
         websites: []
       },
-      experiences: propExperiences || [],
-      educations: propEducations || [],
-      skills: propSkills || [],
-      summary: propSummary || ""
+      experiences: [],
+      educations: [],
+      skills: [],
+      summary: ""
     };
   };
 
@@ -182,20 +157,24 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
    // Function to handle clicking the "Download PDF" button
   const handleDownloadButtonClick = () => {
-    setShowDownloadModal(true);
+    // Check if resumeId is available
+    if (!resumeId) {
+      console.error('No resume ID available');
+      alert('No resume ID available. Please go back and try again.');
+      return;
+    }
+    
+    // Get resume name from contact data
+    const resumeName = `${contact.firstName} ${contact.lastName}`.trim() || 'My Resume';
+    
+    console.log('Redirecting to payment with:', { resumeId, resumeName });
+    
+    // Redirect to payment page with correct parameters
+    const paymentUrl = `/payment?resumeId=${resumeId}&resumeName=${encodeURIComponent(resumeName)}`;
+    window.location.href = paymentUrl;
   };
 
-  // Function to handle closing the modal
-  const handleModalClose = () => {
-    setShowDownloadModal(false);
-  };
 
-  // Function to handle the "Save & Next" action within the modal
-  const handleModalSaveAndNext = () => {
-    // implement the logic for saving and proceeding
-    // For now, we'll do nothing
-    setShowDownloadModal(false); 
-  };
 
   const renderResumeContent = () => (
     <div className="w-full h-full bg-white p-6 overflow-auto">
@@ -448,13 +427,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
           </div>
         </div>
       </div>
-      {/* Conditional rendering of the DownloadModal */}
-      {showDownloadModal && (
-        <DownloadModal
-          onClose={handleModalClose}
-          onDownload={handleModalSaveAndNext}
-        />
-      )}
+
     </div>
   );
 };

@@ -8,7 +8,13 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PaymentProofController;
+use App\Http\Controllers\PaymentUploadController;
+use App\Http\Controllers\FinalCheckController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\ChooseTemplateController;
+use Illuminate\Http\Request;
 
 
 /*
@@ -39,11 +45,10 @@ Route::inertia('/contact', 'Contact')->name('contact');
 
 // Resume builder pages - require authentication for data persistence
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('/choose-template', 'ChooseTemplate')->name('choose.template');
+    Route::get('/choose-template', [ChooseTemplateController::class, 'index'])->name('choose.template');
     Route::inertia('/choose-resume-maker', 'ChooseResumeMaker')->name('choose.resume.maker');
     Route::inertia('/uploader', 'Uploader')->name('uploader');
     Route::inertia('/builder', 'Builder')->name('builder');
-    Route::inertia('/final-check', 'FinalCheck')->name('final.check');
 });
 
 /*
@@ -71,14 +76,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Resume Management
     Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
+    Route::get('/resumes/{resume}', [DashboardController::class, 'show'])->name('resumes.show');
+    Route::patch('/resumes/{resume}', [DashboardController::class, 'update'])->name('resumes.update');
     Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
     Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
     Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');
+
+    // Payment Proof Management
+    Route::post('/upload-payment-proof', [PaymentProofController::class, 'store'])->middleware(['auth', 'verified'])->name('payment.upload');
+    Route::get('/user/payment-proofs', [PaymentProofController::class, 'userPayments'])->name('payment.proofs');
+    Route::get('/payment-upload', [PaymentUploadController::class, 'index'])->name('payment.upload.page');
+    Route::get('/final-check', [FinalCheckController::class, 'index'])->name('final.check');
+    Route::get('/payment', [PaymentController::class, 'index'])->name('payment');
 
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// Payment proof routes
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::post('/upload-payment-proof', [PaymentProofController::class, 'store'])->name('payment-proof.store');
+    Route::get('/user/payment-proofs', [PaymentProofController::class, 'getUserPaymentProofs'])->name('payment-proof.user');
 });
 
 /*
@@ -88,9 +108,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 */
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    Route::get('/admin/dashboard', function () {
-        return Inertia::render('AdminDashboard');
-    })->name('admin.dashboard');
+    Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/admin/dashboard-data', [AdminController::class, 'dashboardData'])->name('admin.dashboard.data');
+    Route::get('/admin/payments', [AdminController::class, 'index'])->name('admin.payments');
+    Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve'])->name('admin.payment.approve');
+    Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject'])->name('admin.payment.reject');
+    
+    // User and Resume Management
+    Route::get('/admin/users/{id}', [AdminController::class, 'viewUser'])->name('admin.user.view');
+    Route::get('/admin/resumes/{id}', [AdminController::class, 'viewResume'])->name('admin.resume.view');
+    Route::get('/admin/resumes/{id}/download', [AdminController::class, 'downloadResume'])->name('admin.resume.download');
+    Route::delete('/admin/resumes/{id}', [AdminController::class, 'deleteResume'])->name('admin.resume.delete');
+    
+    // API endpoints for admin dashboard
+    Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
+    Route::get('/admin/resumes', [AdminController::class, 'resumes'])->name('admin.resumes');
+    Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');
 });
 
 /*
@@ -168,6 +201,21 @@ Route::get('/test-auth', function () {
         'session_id' => session()->getId(),
     ]);
 });
+
+// Test route to debug payment upload
+Route::post('/test-payment-upload', function (Request $request) {
+    \Log::info('Test payment upload', [
+        'request_data' => $request->all(),
+        'files' => $request->allFiles(),
+        'headers' => $request->headers->all()
+    ]);
+    
+    return response()->json([
+        'message' => 'Test upload received',
+        'data' => $request->all(),
+        'files' => $request->allFiles()
+    ]);
+})->middleware(['auth', 'verified']);
 
 
 /*
