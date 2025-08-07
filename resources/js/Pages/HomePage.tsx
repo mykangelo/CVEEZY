@@ -373,7 +373,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
 
       {/* Footer */}
-      <footer
+     <footer
         className="w-full bg-[#2E404A] mt-8 md:mt-20 py-8 md:py-16 px-4 md:px-8"
         style={{ fontFamily: "Nunito Sans, sans-serif" }}
       >
@@ -389,74 +389,13 @@ const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-xl font-bold">CVeezy</span>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">
-                We help job seekers stand out in the highly competitive labor market
+                We Help job seekers stand out in the highly competitive labor market
                 with CVeezy!
               </p>
             </div>
             <div className="grid grid-cols-2 gap-6 mb-6 justify-items-center">
               <div>
-                <h3 className="text-lg font-semibold mb-3">Resources</h3>
-                <ul className="space-y-1 text-sm text-gray-300">
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Builder
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Formatting
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Writing
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Writing Guide
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Professional Resume
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Entry-level Resume
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Student Resume
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Support</h3>
+                <h3 className="text-lg font-semibold mb-3">About</h3>
                 <ul className="space-y-1 text-sm text-gray-300">
                   <li>
                     <Link
@@ -484,10 +423,10 @@ const HomePage: React.FC<HomePageProps> = ({
                   </li>
                   <li>
                     <Link
-                      href="/subscription-terms"
+                      href="/payment-terms"
                       className="hover:text-white transition-colors"
                     >
-                      Subscription Terms
+                      Payment Terms
                     </Link>
                   </li>
                   <li>
@@ -502,23 +441,31 @@ const HomePage: React.FC<HomePageProps> = ({
               </div>
             </div>
             <div className="text-center">
-              <div className="text-sm text-gray-300 mb-3">
-                <p>© 2025. TSFF Holdings Limited,</p>
-                <p>Limassol, Cyprus. All rights reserved.</p>
-              </div>
               <div className="mb-3">
-                <p className="text-sm text-gray-300">Email: help@cveezy.com</p>
+                <h3 className="text-lg font-semibold mb-2">Need Help?</h3>
+                <p className="text-sm text-gray-300 mb-2">Email: help@cveezy.com</p>
+              </div>
+              <div className="text-sm text-gray-300 mb-3">
+                <div className="flex items-center justify-center mb-1">
+                  <img
+                    src="/images/certicode-logo.png"
+                    alt="Certicode Logo"
+                    className="w-4 h-4 rounded mr-2 object-contain"
+                  />
+                  <p>© 2025. Certicode.</p>
+                </div>
+                <p>All rights reserved.</p>
               </div>
               <div className="flex justify-center">
                 <img
                   src="/images/gcash-logo.png"
-                  alt="Payment Methods"
+                  alt="GCash"
                   className="h-5 object-contain"
                 />
               </div>
             </div>
           </div>
-          <div className="hidden md:grid grid-cols-4 gap-8">
+          <div className="hidden md:grid grid-cols-3 gap-8">
             <div className="col-span-1">
               <div className="flex items-center mb-6">
                 <img
@@ -529,73 +476,12 @@ const HomePage: React.FC<HomePageProps> = ({
                 <span className="text-2xl font-bold">CVeezy</span>
               </div>
               <p className="text-gray-300 text-base leading-relaxed">
-                We help job seekers stand out in the highly competitive labor market
+                We Help job seekers stand out in the highly competitive labor market
                 with CVeezy!
               </p>
             </div>
-            <div className="col-span-1">
-              <h3 className="text-xl font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2 text-base text-gray-300">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Builder
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Formatting
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Writing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Writing Guide
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Professional Resume
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Entry-level Resume
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Student Resume
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="col-span-1">
-              <h3 className="text-xl font-semibold mb-4">Support</h3>
+            <div className="col-span-1 ml-24">
+              <h3 className="text-xl font-semibold mb-4">About</h3>
               <ul className="space-y-2 text-base text-gray-300">
                 <li>
                   <Link
@@ -639,18 +525,26 @@ const HomePage: React.FC<HomePageProps> = ({
                 </li>
               </ul>
             </div>
-            <div className="col-span-1">
-              <div className="text-base text-gray-300 mb-4">
-                <p>© 2025. TSFF Holdings Limited,</p>
-                <p>Limassol, Cyprus. All rights reserved.</p>
-              </div>
+            <div className="col-span-1 ml-8">
+              <h3 className="text-xl font-semibold mb-4">Need Help?</h3>
               <div className="mb-4">
                 <p className="text-base text-gray-300">Email: help@cveezy.com</p>
               </div>
-              <div className="flex space-x-2">
+              <div className="text-base text-gray-300 mb-4">
+                <div className="flex items-center mb-1">
+                  <img
+                    src="\images\CerticodeLogo.jpg"
+                    alt="Certicode Logo"
+                    className="w-6 h-6 rounded mr-2 object-contain"
+                  />
+                  <p>© 2025. Certicode.</p>
+                </div>
+                <p>All rights reserved.</p>
+              </div>
+              <div className="flex">
                 <img
                   src="/images/gcash-logo.png"
-                  alt="Payment Methods"
+                  alt="GCash"
                   className="h-6 object-contain"
                 />
               </div>
