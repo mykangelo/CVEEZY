@@ -1,8 +1,27 @@
-import React, { useState } from "react";
-import { Head, Link } from "@inertiajs/react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
 import { Trash2, Plus, GripVertical } from "lucide-react";
 import { motion } from "framer-motion";
+import { debounce } from "lodash";
+import { ResumeData } from '@/types/resume';
+
+// Import all resume template components
+import Classic from '@/Components/Builder/Classic';
+import Modern from '@/Components/Builder/Modern';
+import Creative from '@/Components/Builder/Creative';
+import Elegant from '@/Components/Builder/Elegant';
+import Professional from '@/Components/Builder/Professional';
+import Minimal from '@/Components/Builder/Minimal';
+
+const templateComponents: Record<string, React.FC<{ resumeData: ResumeData }>> = {
+  classic: Classic,
+  modern: Modern,
+  creative: Creative,
+  elegant: Elegant,
+  professional: Professional,
+  minimal: Minimal,
+};
 
 type Contact = {
   firstName: string;
@@ -551,7 +570,7 @@ const finalizeSections = [
 const FinalizeSection = () => (
   <div>
     <h2 className="text-2xl font-bold mb-2">Finalize</h2>
-    <p className="text-gray-600 mb-6">Add certifications, languages, awards, or any extra details you want recruiters to see.</p>
+    <p className="text-gray-600 mb-6">Review your resume and proceed to download with payment.</p>
     <div className="space-y-3">
       {finalizeSections.map((sec, i) => (
         <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
@@ -559,15 +578,40 @@ const FinalizeSection = () => (
           <span className="font-medium text-gray-800">{sec.label}</span>
         </div>
       ))}
+      
+      {/* The resume will be created when the user clicks Finalize */}
+      {/* No need for a link here since the button above handles the creation */}
     </div>
   </div>
 );
 
 const steps = ["Contacts", "Experience", "Education", "Skills", "Summary", "Finalize"];
 
-const Builder: React.FC = () => {
+interface BuilderProps {
+  hasPendingPayments?: boolean;
+  pendingResumesCount?: number;
+}
+
+const Builder: React.FC<BuilderProps> = ({ 
+  hasPendingPayments = false, 
+  pendingResumesCount = 0 
+}) => {
+  const { url } = usePage();
+  const searchParams = new URLSearchParams(url.split('?')[1]);
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [resumeId, setResumeId] = useState<number | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Get template name and resume ID from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const defaultTemplateName = urlParams.get('template') || 'classic';
+  const existingResumeId = urlParams.get('resume');
+  
+  // State for template name - will be set from existing resume or URL parameter
+  const [templateName, setTemplateName] = useState(defaultTemplateName);
   
   // Contacts state
   const [contacts, setContacts] = useState<Contact>({
@@ -605,6 +649,262 @@ const Builder: React.FC = () => {
   const [skills, setSkills] = useState<Skill[]>([{ id: Date.now(), name: "", level: "Novice" }]);
   const [showExperienceLevel, setShowExperienceLevel] = useState(false);
   const [summary, setSummary] = useState("");
+
+  // ResumeData state for template system
+  const [resumeData, setResumeData] = useState<ResumeData>({
+    contact: {
+      firstName: '',
+      lastName: '',
+      desiredJobTitle: '',
+      phone: '',
+      email: '',
+      country: '',
+      city: '',
+      address: '',
+      postCode: '',
+    },
+    experiences: [],
+    education: [],
+    skills: [],
+    summary: '',
+    languages: [],
+    certifications: [],
+    awards: [],
+    websites: [],
+    references: [],
+    hobbies: [],
+    customSections: [],
+  });
+
+  const TemplateComponent = templateComponents[templateName] || Classic;
+
+  // Load existing resume or create new one
+  useEffect(() => {
+    const initializeResume = async () => {
+      try {
+        if (existingResumeId) {
+          // Load existing resume
+          console.log('Loading existing resume with ID:', existingResumeId);
+          const response = await fetch(`/resumes/${existingResumeId}`, {
+            headers: {
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            const resumeData = result.resume.resume_data;
+            
+            // Set resume ID
+            setResumeId(result.resume.id);
+            
+            // Set template name from existing resume
+            if (result.resume.template_name) {
+              setTemplateName(result.resume.template_name);
+            }
+            
+            // Load resume data
+            if (resumeData) {
+              if (resumeData.contact) {
+                setContacts(resumeData.contact);
+              }
+              if (resumeData.experiences) {
+                setExperiences(resumeData.experiences);
+              }
+              if (resumeData.educations) {
+                setEducations(resumeData.educations);
+              }
+              if (resumeData.skills) {
+                setSkills(resumeData.skills);
+              }
+              if (resumeData.summary) {
+                setSummary(resumeData.summary);
+              }
+            }
+          } else {
+            console.error('Failed to load existing resume');
+            // Fallback to creating new resume
+            await createNewResume();
+          }
+        } else {
+          // Create new resume
+          await createNewResume();
+        }
+      } catch (error) {
+        console.error('Error initializing resume:', error);
+        // Fallback to creating new resume
+        await createNewResume();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const createNewResume = async () => {
+      try {
+        console.log('Creating new resume...');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
+        
+        const requestBody = {
+          name: 'My Resume',
+          template_name: templateName,
+          resume_data: {
+            contact: contacts,
+            experiences,
+            educations,
+            skills,
+            summary
+          }
+        };
+        
+        console.log('Request body:', requestBody);
+        
+        const response = await fetch('/resumes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Resume created with ID:', result.resume.id);
+          setResumeId(result.resume.id);
+        } else {
+          const errorText = await response.text();
+          console.error('Failed to create initial resume. Status:', response.status);
+          console.error('Response text:', errorText);
+          
+          // Try to parse as JSON if possible
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.error('Error details:', errorJson);
+          } catch (e) {
+            console.error('Response is not JSON:', errorText.substring(0, 200));
+          }
+        }
+      } catch (error) {
+        console.error('Error creating initial resume:', error);
+      }
+    };
+
+    initializeResume();
+  }, [existingResumeId, templateName]);
+
+  // Function to update resume data in real-time
+  const updateResumeData = async (newData: any) => {
+    if (!resumeId || isUpdating) return;
+    
+    setIsUpdating(true);
+    try {
+      const response = await fetch(`/resumes/${resumeId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          resume_data: newData
+        })
+      });
+      
+      if (response.ok) {
+        console.log('Resume updated successfully');
+      } else {
+        console.error('Failed to update resume');
+      }
+    } catch (error) {
+      console.error('Error updating resume:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Debounced update function
+  const debouncedUpdate = useCallback(
+    debounce((newData: any) => {
+      updateResumeData(newData);
+    }, 1000),
+    [resumeId]
+  );
+
+  // Update resume whenever data changes
+  useEffect(() => {
+    if (resumeId) {
+      const resumeData = {
+        contact: contacts,
+        experiences,
+        educations,
+        skills,
+        summary
+      };
+      debouncedUpdate(resumeData);
+    }
+  }, [contacts, experiences, educations, skills, summary, resumeId, debouncedUpdate]);
+
+  // Update resume name when contact info changes
+  useEffect(() => {
+    if (resumeId && contacts.firstName && contacts.lastName) {
+      const resumeName = `${contacts.firstName} ${contacts.lastName}`.trim();
+      if (resumeName) {
+        updateResumeName(resumeName);
+      }
+    }
+  }, [contacts.firstName, contacts.lastName, resumeId]);
+
+  // Function to update resume name
+  const updateResumeName = async (name: string) => {
+    if (!resumeId || isUpdating) return;
+    
+    try {
+      const response = await fetch(`/resumes/${resumeId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ name })
+      });
+      
+      if (response.ok) {
+        console.log('Resume name updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating resume name:', error);
+    }
+  };
+
+  // Function to finalize resume
+  const finalizeResume = async (resumeIdToUse: number) => {
+    try {
+      console.log('Finalizing resume with ID:', resumeIdToUse);
+      
+      // Store data in sessionStorage for the FinalCheck page
+      const resumeData = {
+        contact: contacts,
+        experiences,
+        educations,
+        skills,
+        summary
+      };
+      sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
+      
+      // Navigate to Final Check with the resume ID
+      const finalCheckUrl = `/final-check?resume=${resumeIdToUse}`;
+      console.log('Navigating to:', finalCheckUrl);
+      window.location.href = finalCheckUrl;
+    } catch (error) {
+      console.error('Error finalizing resume:', error);
+      alert('Error finalizing resume. Please try again.');
+    }
+  };
 
   // Validation function
   const validateCurrentStep = (): boolean => {
@@ -678,20 +978,77 @@ const Builder: React.FC = () => {
       case 4:
         return <SummarySection summary={summary} setSummary={setSummary} errors={errors} />;
       case 5:
-        return <FinalizeSection />;
+        return <FinalizeSection />; // Resume will be created when user clicks Finalize
       default:
         return null;
     }
   };
 
+  // Synchronize old state with new resumeData for templates
+  useEffect(() => {
+    setResumeData(prev => ({
+      ...prev,
+      contact: {
+        firstName: contacts.firstName || '',
+        lastName: contacts.lastName || '',
+        desiredJobTitle: contacts.desiredJobTitle || '',
+        phone: contacts.phone || '',
+        email: contacts.email || '',
+        country: '',
+        city: '',
+        address: '',
+        postCode: '',
+      },
+      experiences: experiences.map(exp => ({
+        id: exp.id,
+        jobTitle: exp.jobTitle,
+        company: exp.company,
+        location: exp.employer,
+        startDate: exp.startDate,
+        endDate: exp.endDate,
+        description: exp.description,
+      })),
+      education: educations.map(edu => ({
+        id: edu.id,
+        school: edu.school,
+        location: edu.location,
+        degree: edu.degree,
+        startDate: edu.startDate,
+        endDate: edu.endDate,
+        description: edu.description,
+      })),
+      skills: skills.map(skill => ({
+        id: skill.id,
+        name: skill.name,
+      })),
+      summary: summary,
+    }));
+  }, [contacts, experiences, educations, skills, summary]);
+
   return (
     <div className="flex flex-col h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Build Your Resume" />
+      
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex items-center justify-center h-screen bg-[#f4f6fb]">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading resume...</p>
+          </div>
+        </div>
+      )}
       
       {/* Header with Back Button */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-4 shadow-sm">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-semibold text-gray-800">Resume Builder</h1>
+          {isUpdating && (
+            <div className="flex items-center space-x-2 text-blue-600">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-sm">Saving...</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center space-x-4">
           <span className="text-sm text-gray-600">
@@ -699,6 +1056,21 @@ const Builder: React.FC = () => {
           </span>
         </div>
       </header>
+
+      {/* Warning for pending payments */}
+      {hasPendingPayments && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+          </div>
+          <p className="text-yellow-700 text-sm">
+            You have {pendingResumesCount} resume(s) with pending payment reviews. Please wait for admin approval before creating new resumes.
+          </p>
+        </div>
+      )}
 
       {/* Main Content */}
         <Link
@@ -710,139 +1082,142 @@ const Builder: React.FC = () => {
             </svg>
             <span className="text-sm font-medium">Back</span>
           </Link>
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-        {/* Left Side */}
-        <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
-            {/* Stepper */}
-            <div className="flex justify-between items-center mb-12">
-              {steps.map((step, index) => (
-                <div
-                  key={index}
-                  className={`flex flex-col items-center text-xs font-medium cursor-pointer ${index === currentStep ? 'text-blue-600' : 'text-gray-500'}`}
-                  onClick={() => setCurrentStep(index)}
-                >
+      {!isLoading && (
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+          {/* Left Side */}
+          <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
+              {/* Stepper */}
+              <div className="flex justify-between items-center mb-12">
+                {steps.map((step, index) => (
                   <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
-                      index === currentStep
-                        ? "border-blue-500 bg-blue-100"
-                        : "border-gray-300 bg-white"
-                    }`}
+                    key={index}
+                    className={`flex flex-col items-center text-xs font-medium cursor-pointer ${index === currentStep ? 'text-blue-600' : 'text-gray-500'}`}
+                    onClick={() => setCurrentStep(index)}
                   >
-                    {index === currentStep && (
-                      <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                    )}
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
+                        index === currentStep
+                          ? "border-blue-500 bg-blue-100"
+                          : "border-gray-300 bg-white"
+                      }`}
+                    >
+                      {index === currentStep && (
+                        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
+                      )}
+                    </div>
+                    <span className="mt-1 text-center">{step}</span>
                   </div>
-                  <span className="mt-1 text-center">{step}</span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {renderStepContent()}
             </div>
 
-            {renderStepContent()}
+            <div className="w-full max-w-2xl mt-2 bg-white p-4 rounded-xl shadow-md flex justify-between">
+              {currentStep > 0 && (
+                <button
+                  onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
+                  className="bg-gray-200 px-6 py-2 rounded-md text-gray-700 hover:bg-gray-300 transition-colors"
+                >
+                  Previous
+                </button>
+              )}
+              {currentStep === 0 && <div></div>}
+              {currentStep === steps.length - 1 ? (
+                <button
+                  onClick={async () => {
+                    if (!resumeId) {
+                      // Try to create resume if it doesn't exist
+                      try {
+                        console.log('No resume ID found, attempting to create resume...');
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
+                        
+                        const requestBody = {
+                          name: `${contacts.firstName} ${contacts.lastName}`.trim() || 'My Resume',
+                          template_name: templateName,
+                          resume_data: {
+                            contact: contacts,
+                            experiences,
+                            educations,
+                            skills,
+                            summary
+                          }
+                        };
+                        
+                        console.log('Request body:', requestBody);
+                        
+                        const response = await fetch('/resumes', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                          },
+                          body: JSON.stringify(requestBody)
+                        });
+                        
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+                        
+                        if (response.ok) {
+                          const result = await response.json();
+                          console.log('Resume created with ID:', result.resume.id);
+                          setResumeId(result.resume.id);
+                          
+                          // Continue with finalization
+                          await finalizeResume(result.resume.id);
+                        } else {
+                          const errorText = await response.text();
+                          console.error('Failed to create resume. Status:', response.status);
+                          console.error('Response text:', errorText);
+                          
+                          // Try to parse as JSON if possible
+                          try {
+                            const errorJson = JSON.parse(errorText);
+                            console.error('Error details:', errorJson);
+                          } catch (e) {
+                            console.error('Response is not JSON:', errorText.substring(0, 200));
+                          }
+                          
+                          alert('Unable to create resume. Please try again.');
+                          return;
+                        }
+                      } catch (error) {
+                        console.error('Error creating resume:', error);
+                        alert('Error creating resume. Please try again.');
+                        return;
+                      }
+                    } else {
+                      // Resume ID exists, proceed with finalization
+                      await finalizeResume(resumeId);
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="bg-blue-500 px-6 py-2 rounded-md text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? 'Creating Resume...' : 'Finalize Resume'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="bg-blue-500 text-white px-6 py-2 rounded-md disabled:opacity-50"
+                >
+                  Next: {steps[currentStep + 1] || "Done"}
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="w-full max-w-2xl mt-2 bg-white p-4 rounded-xl shadow-md flex justify-between">
-            {currentStep > 0 && (
-              <button
-                onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-                className="bg-gray-200 px-6 py-2 rounded-md text-gray-700 hover:bg-gray-300 transition-colors"
-              >
-                Previous
-              </button>
-            )}
-            {currentStep === 0 && <div></div>}
-            {currentStep === steps.length - 1 ? (
-              <button
-                onClick={() => {
-                  const resumeData = {
-                    contact: contacts,
-                    experiences,
-                    educations,
-                    skills,
-                    summary
-                  };
-                  // Store data in sessionStorage for the FinalCheck page
-                  sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
-                  window.location.href = '/final-check';
-                }}
-                className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors"
-              >
-                Finalize Resume
-              </button>
-            ) : (
-              <button
-                onClick={handleNext}
-                className="bg-blue-500 text-white px-6 py-2 rounded-md disabled:opacity-50"
-              >
-                Next: {steps[currentStep + 1] || "Done"}
-              </button>
-            )}
+          {/* Right Panel - Dynamic Template Preview */}
+          <div className="lg:w-1/2 w-full p-4">
+            <div className="w-full max-w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto">
+              <TemplateComponent resumeData={resumeData} />
+            </div>
           </div>
         </div>
-
-        {/* Right Panel - Resume Preview */}
-        <div className="lg:w-1/2 w-full p-4">
-          <div className="w-full max-w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto">
-    {/* CONTACTS */}
-    <h2 className="text-2xl font-bold mb-1">
-      {contacts.firstName || "First"} {contacts.lastName || "Last"}
-    </h2>
-    <p className="text-sm text-gray-600 mb-4">{contacts.desiredJobTitle}</p>
-    <p className="text-xs text-gray-500">{contacts.email} | {contacts.phone}</p>
-
-    {/* SUMMARY */}
-    {summary && (
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">SUMMARY</h3>
-        <p className="text-gray-700 text-sm whitespace-pre-line">{summary}</p>
-      </div>
-    )}
-
-    {/* EXPERIENCE */}
-    {experiences.length > 0 && (
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">EXPERIENCE</h3>
-        {experiences.map((exp) => (
-          <div key={exp.id} className="mb-2">
-            <p className="font-medium text-sm text-gray-800">{exp.jobTitle}, {exp.employer}</p>
-            <p className="text-xs text-gray-500 italic">{exp.startDate} - {exp.endDate}</p>
-            <p className="text-sm text-gray-700 whitespace-pre-line">{exp.description}</p>
-          </div>
-        ))}
-      </div>
-    )}
-
-    {/* EDUCATION */}
-    {educations.length > 0 && (
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">EDUCATION</h3>
-        {educations.map((edu) => (
-          <div key={edu.id} className="mb-2">
-            <p className="font-medium text-sm text-gray-800">{edu.school}, {edu.location}</p>
-            <p className="text-xs text-gray-500 italic">{edu.degree} ({edu.startDate} - {edu.endDate})</p>
-            <p className="text-sm text-gray-700 whitespace-pre-line">{edu.description}</p>
-          </div>
-        ))}
-      </div>
-    )}
-
-    {/* SKILLS */}
-    {skills.length > 0 && (
-      <div className="mt-4">
-        <h3 className="text-lg font-semibold">SKILLS</h3>
-        <ul className="list-disc ml-6 text-sm text-gray-700">
-          {skills.map(skill => (
-            <li key={skill.id}>
-              {skill.name}
-              {showExperienceLevel && skill.name && ` (${skill.level})`}
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

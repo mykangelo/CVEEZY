@@ -75,11 +75,11 @@ class User extends Authenticatable
     public const ROLE_ADMIN = 'admin';
 
     /**
-     * Check if user is admin
+     * Check if user is admin (compatibility with both role and is_admin field)
      */
     public function isAdmin(): bool
     {
-        return $this->role === self::ROLE_ADMIN;
+        return $this->role === self::ROLE_ADMIN || $this->is_admin === true;
     }
 
     /**
@@ -128,6 +128,14 @@ class User extends Authenticatable
     public function resumes()
     {
         return $this->hasMany(Resume::class);
+    }
+
+    /**
+     * Get user's payment proofs
+     */
+    public function paymentProofs()
+    {
+        return $this->hasMany(PaymentProof::class);
     }
 
     /**

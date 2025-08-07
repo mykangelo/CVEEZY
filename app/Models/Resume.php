@@ -18,9 +18,11 @@ class Resume extends Model
         'user_id',
         'name',
         'template_id',
+        'template_name',
         'status',
         'resume_data',
         'settings',
+        'is_paid',
     ];
 
     /**
@@ -31,6 +33,7 @@ class Resume extends Model
         return [
             'resume_data' => 'array',
             'settings' => 'array',
+            'is_paid' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -61,6 +64,14 @@ class Resume extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relationship: Resume has many payment proofs
+     */
+    public function paymentProofs()
+    {
+        return $this->hasMany(PaymentProof::class);
     }
 
     /**
@@ -151,5 +162,29 @@ class Resume extends Model
         }
 
         return intval(($completedSections / $totalSections) * 100);
+    }
+
+    /**
+     * Check if resume is paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->is_paid === true;
+    }
+
+    /**
+     * Mark resume as paid
+     */
+    public function markAsPaid(): bool
+    {
+        return $this->update(['is_paid' => true]);
+    }
+
+    /**
+     * Get latest payment proof for this resume
+     */
+    public function getLatestPaymentProof()
+    {
+        return $this->paymentProofs()->latest()->first();
     }
 } 

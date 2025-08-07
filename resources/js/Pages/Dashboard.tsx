@@ -1,54 +1,237 @@
-import { Head, Link, usePage } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { PageProps } from '@/types';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import PaymentModal from '@/Components/PaymentModal';
 import { Resume } from "@/types/resume";
 import Logo from "@/Components/Logo";
 import Dropdown from "@/Components/Dropdown";
 import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
 
-interface DashboardProps {
-    resumes?: Resume[];
+interface PaymentProof {
+    id: number;
+    resume_id: number;
+    status: 'pending' | 'approved' | 'rejected';
+    created_at: string;
 }
 
-export default function Dashboard({ resumes = [] }: DashboardProps) {
+interface DashboardProps {
+    resumes?: Resume[];
+    paymentProofs?: PaymentProof[];
+    error?: string;
+    success?: string;
+}
+
+export default function Dashboard({ resumes = [], paymentProofs: initialPaymentProofs = [], error, success }: DashboardProps) {
     const { auth } = usePage().props as any;
     const user = auth.user;
 
     // Add modal state
+    const [resumeList, setResumeList] = useState<Resume[]>(resumes);
+    const [paymentProofs, setPaymentProofs] = useState<PaymentProof[]>(initialPaymentProofs);
+    const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [selectedResumeId, setSelectedResumeId] = useState<number | undefined>(undefined);
     const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
-    // Mock data for demonstration (replace with real data from backend)
-    const mockResumes: Resume[] = resumes.length > 0 ? resumes : [
-        {
-            id: 1,
-            name: "Resume_1",
-            creation_date: "17.07.2025",
-            updated_at: "2025-07-17T00:00:00Z",
-            status: "completed",
-            user_id: user?.id || 1
+    // Check for error/success messages from props
+    useEffect(() => {
+        if (error) {
+            setNotification({ type: 'error', message: error });
+        } else if (success) {
+            setNotification({ type: 'success', message: success });
         }
-    ];
+    }, [error, success]);
 
-    const [selectedResumes, setSelectedResumes] = useState<number[]>([]);
+    // Update resume list when props change
+    useEffect(() => {
+        setResumeList(resumes);
+    }, [resumes]);
 
-    const handleSelectResume = (resumeId: number) => {
-        setSelectedResumes(prev => 
-            prev.includes(resumeId) 
-                ? prev.filter(id => id !== resumeId)
-                : [...prev, resumeId]
-        );
+    // Update payment proofs when props change
+    useEffect(() => {
+        setPaymentProofs(initialPaymentProofs);
+    }, [initialPaymentProofs]);
+
+    // Initial data refresh when component mounts
+    useEffect(() => {
+        refreshDashboardData();
+    }, []);
+
+    // Check if user has pending payments
+    const hasPendingPayments = () => {
+        // If no resumes, allow creation
+        if (resumeList.length === 0) {
+            return false;
+        }
+        
+        // Check if any resume has pending payment status (only restrict on pending, not rejected)
+        const hasPending = resumeList.some(resume => {
+            const paymentStatus = getPaymentStatus(resume.id);
+            return paymentStatus === 'pending';
+        });
+        
+        return hasPending; // Return true if there are pending payments (restrict creation)
     };
 
-    const handleDeleteSelected = () => {
-        if (selectedResumes.length === 0) return;
+    // Check if user can create new resume
+    const canCreateNewResume = () => {
+        return !hasPendingPayments();
+    };
+
+
+    // Function to refresh dashboard data
+    const refreshDashboardData = async () => {
+        setIsRefreshing(true);
+        try {
+            // Refresh both resumes and payment proofs
+            const [dashboardResponse, paymentProofsResponse] = await Promise.all([
+                fetch('/dashboard/data'),
+                fetch('/user/payment-proofs')
+            ]);
+
+            if (dashboardResponse.ok) {
+                const dashboardData = await dashboardResponse.json();
+                if (dashboardData.resumes) {
+                    setResumeList(dashboardData.resumes);
+                }
+            }
+
+            if (paymentProofsResponse.ok) {
+                const updatedPaymentProofs = await paymentProofsResponse.json();
+                setPaymentProofs(updatedPaymentProofs);
+            }
+        } catch (error) {
+            console.error('Error refreshing dashboard data:', error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    // Poll for dashboard updates
+    useEffect(() => {
+        const pollDashboardData = async () => {
+            await refreshDashboardData();
+        };
+
+        // Poll every 30 seconds
+        const interval = setInterval(pollDashboardData, 30000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const handlePaymentStatusChange = (status: 'pending' | 'approved' | 'rejected') => {
+        if (status === 'approved') {
+            setNotification({
+                type: 'success',
+                message: '🎉 Your payment has been approved! You can now download your PDF resume.'
+            });
+            // Refresh dashboard data immediately when payment is approved
+            refreshDashboardData();
+        } else if (status === 'rejected') {
+            setNotification({
+                type: 'error',
+                message: '❌ Your payment was rejected. Please upload a new payment proof.'
+            });
+            // Refresh dashboard data immediately when payment is rejected
+            refreshDashboardData();
+        }
         
-        // Implement delete functionality
-        console.log("Deleting resumes:", selectedResumes);
-        setSelectedResumes([]);
+        // Clear notification after 5 seconds
+        setTimeout(() => setNotification(null), 5000);
+    };
+
+
+
+
+
+
+
+    // Function to get payment status for a resume
+    const getPaymentStatus = (resumeId: number) => {
+        const resume = resumeList.find(r => r.id === resumeId);
+        return resume?.payment_status || null; // Return null if no payment proof exists
+    };
+
+    // Function to check if resume can be downloaded
+    const canDownloadResume = (resumeId: number) => {
+        const paymentStatus = getPaymentStatus(resumeId);
+        return paymentStatus === 'approved';
+    };
+
+
+
+    const getPaymentStatusBadge = (resumeId: number) => {
+        const status = getPaymentStatus(resumeId);
+        
+        switch (status) {
+            case 'approved':
+                return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Payment Approved
+                </span>;
+            case 'rejected':
+                return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    Payment Rejected
+                </span>;
+            case 'pending':
+                return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Payment Pending
+                </span>;
+            default:
+                return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    No Payment
+                </span>;
+        }
     };
 
     return (
         <div className="min-h-screen bg-gray-50 font-serif">
             <Head title="CVeezy - My Dashboard" />
+
+            {/* Notification Display */}
+            {notification && (
+                <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg border shadow-lg ${
+                    notification.type === 'success' 
+                        ? 'bg-green-50 text-green-700 border-green-200' 
+                        : 'bg-red-50 text-red-700 border-red-200'
+                }`}>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            {notification.type === 'success' ? (
+                                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                            ) : (
+                                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                            )}
+                            <span className="font-medium">{notification.message}</span>
+                        </div>
+                        <button
+                            onClick={() => setNotification(null)}
+                            className="text-gray-400 hover:text-gray-600 ml-4"
+                        >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Custom Header */}
             <header className="bg-white border-b border-gray-200 shadow-sm">
@@ -135,15 +318,32 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                             </p>
                         </div>
                         <div className="flex items-center space-x-4">
-                            <Link
-                                href="/choose-template"
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200 flex items-center space-x-2"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            {/* Create New Resume Button */}
+                <div className="mb-6">
+                    {canCreateNewResume() ? (
+                        <button
+                            onClick={() => router.visit('/choose-template')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Create a New Resume
+                        </button>
+                    ) : (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span>Create a New Resume</span>
-                            </Link>
+                                <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+                            </div>
+                            <p className="text-yellow-700 text-sm">
+                                You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.
+                            </p>
+                        </div>
+                    )}
+                </div>
                         </div>
                     </div>
                 </div>
@@ -153,23 +353,22 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                 {/* My Recent Resumes Section */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
                     <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-gray-800">My Recent Resumes</h2>
-                            {selectedResumes.length > 0 && (
-                                <button
-                                    onClick={handleDeleteSelected}
-                                    className="text-red-600 hover:text-red-800 text-sm font-medium flex items-center space-x-1"
-                                >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    <span>Delete Selected ({selectedResumes.length})</span>
-                                </button>
-                            )}
-                        </div>
+                                            <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold text-gray-800">My Recent Resumes</h2>
+                        <button
+                            onClick={refreshDashboardData}
+                            disabled={isRefreshing}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                    </div>
                     </div>
 
-                    {mockResumes.length === 0 ? (
+                    {resumeList.length === 0 ? (
                         <div className="px-6 py-12 text-center">
                             <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -188,20 +387,6 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left">
-                                            <input
-                                                type="checkbox"
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                checked={selectedResumes.length === mockResumes.length}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setSelectedResumes(mockResumes.map(r => r.id));
-                                                    } else {
-                                                        setSelectedResumes([]);
-                                                    }
-                                                }}
-                                            />
-                                        </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Name
                                         </th>
@@ -212,21 +397,16 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Payment Status
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {mockResumes.map((resume) => (
+                                    {resumeList.map((resume) => (
                                         <tr key={resume.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4">
-                                                <input
-                                                    type="checkbox"
-                                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                                    checked={selectedResumes.includes(resume.id)}
-                                                    onChange={() => handleSelectResume(resume.id)}
-                                                />
-                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,7 +417,7 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                                                             {resume.name}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            Template {resume.template_id || 1}
+                                                            {resume.template_name ? resume.template_name.charAt(0).toUpperCase() + resume.template_name.slice(1) : 'Classic'} Template
                                                         </div>
                                                     </div>
                                                 </div>
@@ -256,28 +436,77 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
                                                     {resume.status.charAt(0).toUpperCase() + resume.status.slice(1)}
                                                 </span>
                                             </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                {getPaymentStatusBadge(resume.id)}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                <Link
-                                                    href={`/builder?resume=${resume.id}`}
-                                                    className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    <span>Edit</span>
-                                                </Link>
-                                                <button
-                                                    onClick={() => {
-                                                        // Implement download functionality
-                                                        console.log('Downloading resume:', resume.id);
-                                                    }}
-                                                    className="text-green-600 hover:text-green-900 inline-flex items-center space-x-1"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
-                                                    <span>Download</span>
-                                                </button>
+                                                {/* Edit functionality - users can edit resumes that are not approved */}
+                                                {!canDownloadResume(resume.id) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            router.visit(`/builder?resume=${resume.id}`);
+                                                        }}
+                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        </svg>
+                                                        <span>Edit Resume</span>
+                                                    </button>
+                                                )}
+                                                
+                                                {/* Download PDF functionality */}
+                                                {canDownloadResume(resume.id) ? (
+                                                    <button
+                                                        onClick={() => {
+                                                            // Download PDF functionality
+                                                            window.open(`/resume/download/${resume.id}`, '_blank');
+                                                        }}
+                                                        className="text-green-600 hover:text-green-900 inline-flex items-center space-x-1"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        <span>Download PDF</span>
+                                                    </button>
+                                                ) : (
+                                                    <span className="text-gray-400 inline-flex items-center space-x-1">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                        <span>Download PDF</span>
+                                                    </span>
+                                                )}
+                                                
+                                                {/* Payment actions */}
+                                                {(getPaymentStatus(resume.id) === 'pending' || getPaymentStatus(resume.id) === 'rejected') && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedResumeId(resume.id);
+                                                            setIsPaymentModalOpen(true);
+                                                        }}
+                                                        className="text-purple-600 hover:text-purple-900 inline-flex items-center space-x-1"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                        </svg>
+                                                        <span>Upload Payment</span>
+                                                    </button>
+                                                )}
+                                                {getPaymentStatus(resume.id) === null && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedResumeId(resume.id);
+                                                            setIsPaymentModalOpen(true);
+                                                        }}
+                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                        </svg>
+                                                        <span>Add Payment</span>
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -386,6 +615,18 @@ export default function Dashboard({ resumes = [] }: DashboardProps) {
             <InterviewPrepPopUp 
                 isOpen={isInterviewModalOpen} 
                 onClose={() => setIsInterviewModalOpen(false)} 
+            />
+
+            {/* Payment Modal */}
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => {
+                    setIsPaymentModalOpen(false);
+                    setSelectedResumeId(undefined);
+                }}
+                resumeId={selectedResumeId}
+                resumeName={selectedResumeId ? resumeList.find(r => r.id === selectedResumeId)?.name : undefined}
+                onStatusChange={handlePaymentStatusChange}
             />
         </div>
     );

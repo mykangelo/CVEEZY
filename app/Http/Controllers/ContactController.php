@@ -6,9 +6,35 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class ContactController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $hasPendingPayments = false;
+        $pendingResumesCount = 0;
+
+        if ($user) {
+            // Check if user has pending payment proofs (only restrict on pending, not rejected)
+            $pendingResumes = $user->resumes()
+                ->whereHas('paymentProofs', function($query) {
+                    $query->where('status', 'pending');
+                })
+                ->count();
+            
+            $hasPendingPayments = $pendingResumes > 0;
+            $pendingResumesCount = $pendingResumes;
+        }
+
+        return Inertia::render('Contact', [
+            'hasPendingPayments' => $hasPendingPayments,
+            'pendingResumesCount' => $pendingResumesCount,
+        ]);
+    }
+
     public function contactPost(Request $request)
     {
         // Rate limiting - prevent spam
@@ -38,9 +64,14 @@ class ContactController extends Controller
         // Send email
         try {
             Mail::send('emails.contact', $sanitizedData, function ($message) use ($sanitizedData) {
-                $message->to('admin@cveezy.com') // ✅ correct recipient
+                $message->to('cveezyad@gmail.com') // ✅ correct recipient
                         ->subject('Contact Form: ' . $sanitizedData['name'])
                         ->replyTo($sanitizedData['email'], $sanitizedData['name']);
+            });
+
+            Mail::send('emails.auto_reply', ['name' => $sanitizedData['name']], function ($message) use ($sanitizedData) {
+                $message->to($sanitizedData['email'], $sanitizedData['name'])
+                        ->subject('We received your message');
             });
 
             RateLimiter::clear($key);
