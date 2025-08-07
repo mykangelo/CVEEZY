@@ -33,6 +33,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedResumeId, setSelectedResumeId] = useState<number | undefined>(undefined);
     const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+    const [isRefreshing, setIsRefreshing] = useState(false);
 
     // Check for error/success messages from props
     useEffect(() => {
@@ -53,6 +54,11 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         setPaymentProofs(initialPaymentProofs);
     }, [initialPaymentProofs]);
 
+    // Initial data refresh when component mounts
+    useEffect(() => {
+        refreshDashboardData();
+    }, []);
+
     // Check if user has pending payments
     const hasPendingPayments = () => {
         // If no resumes, allow creation
@@ -60,7 +66,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
             return false;
         }
         
-        // Check if any resume has pending payment status
+        // Check if any resume has pending payment status (only restrict on pending, not rejected)
         const hasPending = resumeList.some(resume => {
             const paymentStatus = getPaymentStatus(resume.id);
             return paymentStatus === 'pending';
@@ -75,23 +81,42 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     };
 
 
-    // Poll for payment status updates
-    useEffect(() => {
-        const pollPaymentStatus = async () => {
-            try {
-                const response = await fetch('/user/payment-proofs');
-                if (response.ok) {
-                    const updatedPaymentProofs = await response.json();
-                    // Update the paymentProofs state with new data
-                    setPaymentProofs(updatedPaymentProofs);
+    // Function to refresh dashboard data
+    const refreshDashboardData = async () => {
+        setIsRefreshing(true);
+        try {
+            // Refresh both resumes and payment proofs
+            const [dashboardResponse, paymentProofsResponse] = await Promise.all([
+                fetch('/dashboard/data'),
+                fetch('/user/payment-proofs')
+            ]);
+
+            if (dashboardResponse.ok) {
+                const dashboardData = await dashboardResponse.json();
+                if (dashboardData.resumes) {
+                    setResumeList(dashboardData.resumes);
                 }
-            } catch (error) {
-                console.error('Error checking payment status:', error);
             }
+
+            if (paymentProofsResponse.ok) {
+                const updatedPaymentProofs = await paymentProofsResponse.json();
+                setPaymentProofs(updatedPaymentProofs);
+            }
+        } catch (error) {
+            console.error('Error refreshing dashboard data:', error);
+        } finally {
+            setIsRefreshing(false);
+        }
+    };
+
+    // Poll for dashboard updates
+    useEffect(() => {
+        const pollDashboardData = async () => {
+            await refreshDashboardData();
         };
 
         // Poll every 30 seconds
-        const interval = setInterval(pollPaymentStatus, 30000);
+        const interval = setInterval(pollDashboardData, 30000);
 
         return () => clearInterval(interval);
     }, []);
@@ -102,11 +127,15 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 type: 'success',
                 message: '🎉 Your payment has been approved! You can now download your PDF resume.'
             });
+            // Refresh dashboard data immediately when payment is approved
+            refreshDashboardData();
         } else if (status === 'rejected') {
             setNotification({
                 type: 'error',
                 message: '❌ Your payment was rejected. Please upload a new payment proof.'
             });
+            // Refresh dashboard data immediately when payment is rejected
+            refreshDashboardData();
         }
         
         // Clear notification after 5 seconds
@@ -121,12 +150,8 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
     // Function to get payment status for a resume
     const getPaymentStatus = (resumeId: number) => {
-        const paymentProof = paymentProofs.find(proof => {
-            return proof.resume_id === resumeId;
-        });
-        
-        const status = paymentProof ? paymentProof.status : null;
-        return status;
+        const resume = resumeList.find(r => r.id === resumeId);
+        return resume?.payment_status || null; // Return null if no payment proof exists
     };
 
     // Function to check if resume can be downloaded
@@ -139,14 +164,6 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
     const getPaymentStatusBadge = (resumeId: number) => {
         const status = getPaymentStatus(resumeId);
-        if (!status) {
-            return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                No Payment
-            </span>;
-        }
         
         switch (status) {
             case 'approved':
@@ -168,7 +185,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    Under Review
+                    Payment Pending
                 </span>;
             default:
                 return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
@@ -336,9 +353,19 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 {/* My Recent Resumes Section */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
                     <div className="px-6 py-4 border-b border-gray-200">
-                        <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-semibold text-gray-800">My Recent Resumes</h2>
-                        </div>
+                                            <div className="flex justify-between items-center">
+                        <h2 className="text-xl font-semibold text-gray-800">My Recent Resumes</h2>
+                        <button
+                            onClick={refreshDashboardData}
+                            disabled={isRefreshing}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                        </button>
+                    </div>
                     </div>
 
                     {resumeList.length === 0 ? (
@@ -390,7 +417,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                             {resume.name}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            Template {resume.template_id || 1}
+                                                            {resume.template_name ? resume.template_name.charAt(0).toUpperCase() + resume.template_name.slice(1) : 'Classic'} Template
                                                         </div>
                                                     </div>
                                                 </div>
@@ -413,29 +440,27 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                 {getPaymentStatusBadge(resume.id)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                {getPaymentStatus(resume.id) !== 'approved' ? (
-                                                    <Link
-                                                        href={`/builder?resume=${resume.id}`}
+                                                {/* Edit functionality - users can edit resumes that are not approved */}
+                                                {!canDownloadResume(resume.id) && (
+                                                    <button
+                                                        onClick={() => {
+                                                            router.visit(`/builder?resume=${resume.id}`);
+                                                        }}
                                                         className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
-                                                        <span>Edit</span>
-                                                    </Link>
-                                                ) : (
-                                                    <span className="text-gray-400 inline-flex items-center space-x-1">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                        <span>Edit</span>
-                                                    </span>
+                                                        <span>Edit Resume</span>
+                                                    </button>
                                                 )}
+                                                
+                                                {/* Download PDF functionality */}
                                                 {canDownloadResume(resume.id) ? (
                                                     <button
                                                         onClick={() => {
                                                             // Download PDF functionality
-                                                            window.open(`/resumes/${resume.id}/download`, '_blank');
+                                                            window.open(`/resume/download/${resume.id}`, '_blank');
                                                         }}
                                                         className="text-green-600 hover:text-green-900 inline-flex items-center space-x-1"
                                                     >
@@ -452,7 +477,9 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                         <span>Download PDF</span>
                                                     </span>
                                                 )}
-                                                {getPaymentStatus(resume.id) !== 'approved' && (
+                                                
+                                                {/* Payment actions */}
+                                                {(getPaymentStatus(resume.id) === 'pending' || getPaymentStatus(resume.id) === 'rejected') && (
                                                     <button
                                                         onClick={() => {
                                                             setSelectedResumeId(resume.id);
@@ -464,6 +491,20 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                                         </svg>
                                                         <span>Upload Payment</span>
+                                                    </button>
+                                                )}
+                                                {getPaymentStatus(resume.id) === null && (
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedResumeId(resume.id);
+                                                            setIsPaymentModalOpen(true);
+                                                        }}
+                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                                                    >
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                        </svg>
+                                                        <span>Add Payment</span>
                                                     </button>
                                                 )}
                                             </td>

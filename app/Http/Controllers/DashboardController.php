@@ -35,6 +35,7 @@ class DashboardController extends Controller
                     'updated_at' => $resume->updated_at->toISOString(),
                     'status' => $resume->status,
                     'template_id' => $resume->template_id,
+                    'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
                     'progress' => $resume->getProgressPercentage(),
                 ];
@@ -59,8 +60,24 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Create a map of resume_id to payment status for easy lookup
+        $paymentStatusMap = $paymentProofs->keyBy('resume_id')->map(function ($proof) {
+            return $proof['status'];
+        });
+
+        // Add payment status to each resume - only show pending if they have payment proofs
+        $resumesWithPaymentStatus = $resumes->map(function ($resume) use ($paymentStatusMap) {
+            // Only show payment status if the resume has a payment proof
+            if ($paymentStatusMap->has($resume['id'])) {
+                $resume['payment_status'] = $paymentStatusMap->get($resume['id']);
+            } else {
+                $resume['payment_status'] = null; // No payment proof exists
+            }
+            return $resume;
+        });
+
         return Inertia::render('Dashboard', [
-            'resumes' => $resumes,
+            'resumes' => $resumesWithPaymentStatus,
             'paymentProofs' => $paymentProofs,
             'stats' => [
                 'total_resumes' => $user->total_resumes_count,
@@ -77,44 +94,94 @@ class DashboardController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'template_id' => 'integer|min:1|max:10',
-            'resume_data' => 'array',
-        ]);
+        try {
+            \Log::info('Resume store request received', [
+                'method' => $request->method(),
+                'headers' => $request->headers->all(),
+                'data' => $request->all(),
+                'user' => Auth::id()
+            ]);
 
-        $user = Auth::user();
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'template_name' => 'string|max:255',
+                'template_id' => 'integer|min:1|max:10', // Keep for backward compatibility
+                'templateId' => 'integer|min:1|max:10', // Keep for backward compatibility
+                'resume_data' => 'array',
+            ]);
 
-        $resume = $user->resumes()->create([
-            'name' => $request->name,
-            'template_id' => $request->template_id ?? 1,
-            'status' => Resume::STATUS_DRAFT,
-            'resume_data' => $request->resume_data ?? [
-                'contact' => [
-                    'firstName' => '',
-                    'lastName' => '',
-                    'email' => $user->email,
-                    'phone' => '',
-                    'address' => '',
-                    'websites' => [],
+            $user = Auth::user();
+
+            if (!$user) {
+                \Log::error('No authenticated user found');
+                return response()->json(['error' => 'Authentication required'], 401);
+            }
+
+            // Check if user has pending payment proofs (only restrict on pending, not rejected)
+            $pendingResumes = $user->resumes()
+                ->whereHas('paymentProofs', function($query) {
+                    $query->where('status', 'pending');
+                })
+                ->count();
+            
+            if ($pendingResumes > 0) {
+                \Log::info('Resume creation blocked due to pending payments', [
+                    'user_id' => $user->id,
+                    'pending_count' => $pendingResumes
+                ]);
+                return response()->json([
+                    'error' => 'Cannot create new resume while payment is pending. Please wait for admin approval.',
+                    'message' => 'You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.'
+                ], 403);
+            }
+
+            // Handle template name (preferred) or fallback to template_id
+            $templateName = $request->template_name ?? 'classic';
+            $templateId = $request->template_id ?? $request->templateId ?? 1;
+
+            $resume = $user->resumes()->create([
+                'name' => $request->name,
+                'template_id' => $templateId,
+                'template_name' => $templateName,
+                'status' => Resume::STATUS_DRAFT,
+                'resume_data' => $request->resume_data ?? [
+                    'contact' => [
+                        'firstName' => '',
+                        'lastName' => '',
+                        'email' => $user->email,
+                        'phone' => '',
+                        'address' => '',
+                        'websites' => [],
+                    ],
+                    'experiences' => [],
+                    'educations' => [],
+                    'skills' => [],
+                    'summary' => '',
                 ],
-                'experiences' => [],
-                'educations' => [],
-                'skills' => [],
-                'summary' => '',
-            ],
-            'settings' => [
-                'theme' => 'default',
-                'font_size' => 'medium',
-                'layout' => 'standard',
-            ],
-        ]);
+                'settings' => [
+                    'theme' => 'default',
+                    'font_size' => 'medium',
+                    'layout' => 'standard',
+                ],
+            ]);
 
-        return response()->json([
-            'message' => 'Resume created successfully',
-            'resume' => $resume,
-            'redirect' => route('builder', ['resume' => $resume->id])
-        ]);
+            \Log::info('Resume created successfully', ['resume_id' => $resume->id]);
+
+            return response()->json([
+                'message' => 'Resume created successfully',
+                'resume' => $resume,
+                'redirect' => route('builder', ['resume' => $resume->id])
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error creating resume: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all()
+            ]);
+            
+            return response()->json([
+                'error' => 'Failed to create resume: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -132,6 +199,7 @@ class DashboardController extends Controller
                 'id' => $resume->id,
                 'name' => $resume->name,
                 'template_id' => $resume->template_id,
+                'template_name' => $resume->template_name,
                 'resume_data' => $resume->resume_data,
                 'status' => $resume->status,
                 'created_at' => $resume->created_at,
@@ -254,31 +322,153 @@ class DashboardController extends Controller
             'summary' => $resumeData['summary'] ?? '',
             'skills' => $resumeData['skills'] ?? [],
             'experiences' => array_map(function($exp) {
+                // Ensure we have all required fields with proper fallbacks
+                $jobTitle = $exp['jobTitle'] ?? '';
+                $company = $exp['company'] ?? $exp['employer'] ?? '';
+                $location = $exp['location'] ?? $exp['employer'] ?? $exp['company'] ?? '';
+                $startDate = $exp['startDate'] ?? '';
+                $endDate = $exp['endDate'] ?? '';
+                $description = $exp['description'] ?? '';
+                
                 return [
-                    'jobTitle' => $exp['jobTitle'] ?? '',
-                    'company' => $exp['employer'] ?? '',
-                    'location' => $exp['company'] ?? '',
-                    'startDate' => $exp['startDate'] ?? '',
-                    'endDate' => $exp['endDate'] ?? '',
-                    'description' => $exp['description'] ?? '',
+                    'jobTitle' => $jobTitle,
+                    'company' => $company,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
                 ];
             }, $resumeData['experiences'] ?? []),
             'education' => array_map(function($edu) {
+                // Ensure we have all required fields with proper fallbacks
+                $degree = $edu['degree'] ?? '';
+                $school = $edu['school'] ?? '';
+                $location = $edu['location'] ?? '';
+                $startDate = $edu['startDate'] ?? '';
+                $endDate = $edu['endDate'] ?? '';
+                $description = $edu['description'] ?? '';
+                
                 return [
-                    'degree' => $edu['degree'] ?? '',
-                    'school' => $edu['school'] ?? '',
-                    'location' => $edu['location'] ?? '',
-                    'startDate' => $edu['startDate'] ?? '',
-                    'endDate' => $edu['endDate'] ?? '',
-                    'description' => $edu['description'] ?? '',
+                    'degree' => $degree,
+                    'school' => $school,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
                 ];
             }, $resumeData['educations'] ?? []),
         ];
 
-        // Generate PDF
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('resume.pdf', ['resume' => $pdfData]);
+        // Generate PDF using the correct template
+        $templateName = $resume->template_name ?? 'classic';
+        $viewName = 'resume.' . $templateName;
         
-        return $pdf->download($resume->name . '_resume.pdf');
+        // Log the data for debugging
+        \Log::info('PDF Data being passed to template', [
+            'resume_id' => $resume->id,
+            'template_name' => $templateName,
+            'pdf_data' => $pdfData,
+            'original_resume_data' => $resumeData,
+            'experiences_count' => count($pdfData['experiences']),
+            'first_experience' => $pdfData['experiences'][0] ?? 'No experiences',
+            'original_experiences' => $resumeData['experiences'] ?? [],
+            'education_count' => count($pdfData['education']),
+            'first_education' => $pdfData['education'][0] ?? 'No education'
+        ]);
+        
+        // Fallback to classic if template view doesn't exist
+        if (!view()->exists($viewName)) {
+            $viewName = 'resume.classic';
+        }
+        
+        try {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($viewName, ['resume' => $pdfData]);
+            return $pdf->download($resume->name . '_resume.pdf');
+        } catch (\Exception $e) {
+            \Log::error('PDF Generation Error', [
+                'resume_id' => $resume->id,
+                'template_name' => $templateName,
+                'view_name' => $viewName,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'pdf_data' => $pdfData
+            ]);
+            
+            return response()->json([
+                'error' => 'Failed to generate resume PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get dashboard data as JSON for AJAX requests.
+     */
+    public function getDashboardData()
+    {
+        $user = Auth::user();
+        
+        // Get user's resumes with latest first
+        $resumes = $user->resumes()
+            ->latest()
+            ->get()
+            ->map(function ($resume) {
+                return [
+                    'id' => $resume->id,
+                    'name' => $resume->name,
+                    'creation_date' => $resume->formatted_creation_date,
+                    'updated_at' => $resume->updated_at->toISOString(),
+                    'status' => $resume->status,
+                    'template_id' => $resume->template_id,
+                    'template_name' => $resume->template_name,
+                    'user_id' => $resume->user_id,
+                    'progress' => $resume->getProgressPercentage(),
+                ];
+            });
+
+        // Get user's payment proofs - get the latest proof for each resume (including pending and rejected)
+        $paymentProofs = $user->paymentProofs()
+            ->whereIn('id', function($query) use ($user) {
+                $query->selectRaw('MAX(id)')
+                    ->from('payment_proofs')
+                    ->where('user_id', $user->id)
+                    ->groupBy('resume_id');
+            })
+            ->get()
+            ->map(function ($proof) {
+                return [
+                    'id' => $proof->id,
+                    'resume_id' => $proof->resume_id,
+                    'status' => $proof->status,
+                    'created_at' => $proof->created_at->toISOString(),
+                    'updated_at' => $proof->updated_at->toISOString(),
+                ];
+            });
+
+        // Create a map of resume_id to payment status for easy lookup
+        $paymentStatusMap = $paymentProofs->keyBy('resume_id')->map(function ($proof) {
+            return $proof['status'];
+        });
+
+        // Add payment status to each resume - only show pending if they have payment proofs
+        $resumesWithPaymentStatus = $resumes->map(function ($resume) use ($paymentStatusMap) {
+            // Only show payment status if the resume has a payment proof
+            if ($paymentStatusMap->has($resume['id'])) {
+                $resume['payment_status'] = $paymentStatusMap->get($resume['id']);
+            } else {
+                $resume['payment_status'] = null; // No payment proof exists
+            }
+            return $resume;
+        });
+
+        return response()->json([
+            'resumes' => $resumesWithPaymentStatus,
+            'paymentProofs' => $paymentProofs,
+            'stats' => [
+                'total_resumes' => $user->total_resumes_count,
+                'completed_resumes' => $user->completed_resumes_count,
+                'draft_resumes' => $user->resumes()->where('status', Resume::STATUS_DRAFT)->count(),
+            ],
+        ]);
     }
 
     /**

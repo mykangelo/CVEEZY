@@ -3,8 +3,51 @@ import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
-// Template list
-const templates: number[] = [1, 2, 3, 4, 5, 6];
+// Template list with names and descriptions
+const templates = [
+  { 
+    id: 1, 
+    name: 'classic',
+    displayName: 'Classic',
+    description: 'Soft neutral tones with refined typography for a sophisticated and professional feel.',
+    category: 'simple'
+  },
+  { 
+    id: 2, 
+    name: 'modern',
+    displayName: 'Modern',
+    description: 'A visually striking resume template, perfect for illustrating the breadth and depth of your expertise.',
+    category: 'modern'
+  },
+  { 
+    id: 3, 
+    name: 'creative',
+    displayName: 'Creative',
+    description: 'Includes a prominent profile image for a personal touch while maintaining professionalism.',
+    category: 'professional'
+  },
+  { 
+    id: 4, 
+    name: 'elegant',
+    displayName: 'Elegant',
+    description: 'Clean and sophisticated design with elegant typography for a polished professional appearance.',
+    category: 'professional'
+  },
+  { 
+    id: 5, 
+    name: 'professional',
+    displayName: 'Professional',
+    description: 'Classic professional layout optimized for ATS systems and traditional industries.',
+    category: 'ats'
+  },
+  { 
+    id: 6, 
+    name: 'minimal',
+    displayName: 'Minimal',
+    description: 'Clean and minimal design focusing on content with subtle visual elements.',
+    category: 'simple'
+  },
+];
 
 // Template image map
 const templateImages: Record<number, string> = {
@@ -16,25 +59,29 @@ const templateImages: Record<number, string> = {
   6: "/images/templates/template6.jpg",
 };
 
-// Card size constants (change these to resize cards)
-const CARD_WIDTH = 480;
-const CARD_HEIGHT = 640;
-const IMAGE_WIDTH = CARD_WIDTH - 40;
-const IMAGE_HEIGHT = CARD_HEIGHT - 70;
+// Filter categories
+const filterCategories = [
+  { id: 'all', name: 'All Templates'},
+  { id: 'favorites', name: 'Favorites'},
+  { id: 'simple', name: 'Simple'},
+  { id: 'modern', name: 'Modern'},
+  { id: 'professional', name: 'Professional'},
+  { id: 'ats', name: 'ATS'},
+];
 
-const ChooseTemplate: React.FC = () => {
+interface ChooseTemplateProps {
+  hasPendingPayments?: boolean;
+  pendingResumesCount?: number;
+}
+
+const ChooseTemplate: React.FC<ChooseTemplateProps> = ({ 
+  hasPendingPayments = false, 
+  pendingResumesCount = 0 
+}) => {
   const { auth } = usePage().props as any;
   const user = auth.user;
-  const [currentTab, setCurrentTab] = useState<"all" | "favorite">("all");
+  const [currentFilter, setCurrentFilter] = useState<string>("all");
   const [favorites, setFavorites] = useState<number[]>([]);
-
-  // Check if user has unpaid resumes (this would need to be passed as props)
-  // For now, we'll add a client-side check
-  const checkUnpaidResumes = () => {
-    // This would ideally be passed from the server
-    // For now, we'll redirect back to dashboard with a message
-    return false;
-  };
 
   const toggleFavorite = (templateId: number) => {
     setFavorites((prev) =>
@@ -44,11 +91,15 @@ const ChooseTemplate: React.FC = () => {
     );
   };
 
-  const visibleTemplates = currentTab === "all" ? templates : favorites;
+  const filteredTemplates = currentFilter === "all" 
+    ? templates 
+    : currentFilter === "favorites"
+    ? templates.filter(t => favorites.includes(t.id))
+    : templates.filter(t => t.category === currentFilter);
 
   return (
-    <div className="min-h-screen flex flex-col bg-white font-sans">
-      <Head title="CVeezy | Choose Resume Template" />
+    <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
+      <Head title="CVeezy | Resume Templates" />
 
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
@@ -86,117 +137,149 @@ const ChooseTemplate: React.FC = () => {
         </div>
       </header>
 
-      <Link
-        href="/dashboard"
-        className="mt-8 ml-10 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
-      >
-        <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        <span className="text-sm font-medium">Back to Dashboard</span>
-      </Link>
+      {/* Main Content */}
+      <div className="flex-1 px-8 py-8">
+        {/* Back Link */}
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-8"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-sm font-medium">Back to Dashboard</span>
+        </Link>
 
-      {/* Headline and Description */}
-      <div className="flex flex-col items-center text-center mt-8">
-        <h2 className="text-3xl md:text-4xl font-bold text-[#2B2D42] mb-2">
-          {currentTab === "all"
-            ? "Job-winning templates for you"
-            : "Your favorite templates"}
-        </h2>
-        <p className="text-lg text-[#4A4A4A]">
-          {currentTab === "all"
-            ? "Simple to use and ready in minutes resume templates — give it a try for free now!"
-            : "These templates bring out the best in you!"}
-        </p>
-        {currentTab === "all" && (
-          <button
-            type="button"
-            className="mt-2 text-[#2196f3] text-sm underline hover:text-[#1976d2]"
-            onClick={() => router.visit("/")}
+        {/* Header Section */}
+        <div className="text-center mb-8">
+          {hasPendingPayments && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-2xl mx-auto">
+              <p className="text-yellow-800 text-sm">
+              ⚠️ You have {pendingResumesCount} pending payment(s). Please wait for admin approval before creating a new resume.
+              </p>
+            </div>
+          )}
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Resume templates
+          </h1>
+          <p className="text-lg text-gray-600 mb-4">
+            Simple to use and ready in minutes resume templates — give it a try for free now!
+          </p>
+          <Link
+            href="/"
+            className="text-blue-600 underline hover:text-blue-800 text-sm"
           >
             Choose later
-          </button>
-        )}
-      </div>
+          </Link>
+        </div>
 
-      {/* Tabs */}
-      <div className="flex justify-center gap-8 mt-12 text-base">
-        <button
-          onClick={() => setCurrentTab("all")}
-          className={`pb-1 px-2 font-semibold transition border-b-2 ${
-            currentTab === "all"
-              ? "border-[#2196f3] text-[#2196f3]"
-              : "border-transparent text-gray-500"
-          }`}
-        >
-          All Templates
-        </button>
-        <button
-          onClick={() => setCurrentTab("favorite")}
-          className={`pb-1 px-2 font-semibold transition border-b-2 ${
-            currentTab === "favorite"
-              ? "border-[#2196f3] text-[#2196f3]"
-              : "border-transparent text-gray-500"
-          }`}
-        >
-          Favorite Templates
-        </button>
-      </div>
-
-      {/* Template Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-20 px-20 py-12 place-items-center">
-        {visibleTemplates.length === 0 ? (
-          <p className="text-lg text-gray-400 mt-8 col-span-full">
-            {currentTab === "favorite"
-              ? "You have no favorite templates yet."
-              : "No templates found."}
-          </p>
-        ) : (
-          visibleTemplates.map((num) => (
-            <div
-              key={num}
-              onClick={() => router.visit(`/choose-resume-maker?template=${num}`)}
-              className="relative bg-white border border-gray-200 rounded-lg overflow-hidden cursor-pointer shadow hover:shadow-lg transition-transform duration-200 hover:scale-105 group"
-              style={{ width: `${CARD_WIDTH}px`, height: `${CARD_HEIGHT}px` }}
-            >
-              <img
-                src={templateImages[num]}
-                alt={`Template ${num}`}
-                className="object-cover rounded-md mb-2"
-                style={{ width: `${IMAGE_WIDTH}px`, height: `${IMAGE_HEIGHT}px`, marginTop: "20px" }}
-              />
-
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-opacity-0 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-                <span className="bg-[#2196f3] text-white px-4 py-2 rounded font-semibold text-sm shadow hover:bg-[#3073aa]">
-                  Use This Template
-                </span>
-              </div>
-
-              {/* Favorite Icon */}
-              <span
-                onClick={(e: React.MouseEvent<HTMLSpanElement>) => {
-                  e.stopPropagation();
-                  toggleFavorite(num);
-                }}
-                className={`absolute top-2 right-2 text-2xl select-none transition-colors z-10 ${
-                  favorites.includes(num) ? "text-red-500" : "text-gray-300"
+        {/* Filter Bar */}
+        <div className="flex justify-center mb-12">
+          <div className="flex space-x-8 bg-white rounded-lg shadow-sm border border-gray-200 p-2">
+            {filterCategories.map((category) => (
+              <button
+                key={category.id}
+                onClick={() => setCurrentFilter(category.id)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${
+                  currentFilter === category.id
+                    ? "bg-blue-100 text-blue-600 border-b-2 border-blue-600"
+                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                 }`}
-                role="button"
-                aria-label={favorites.includes(num) ? "Remove from favorites" : "Add to favorites"}
-                tabIndex={0}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    toggleFavorite(num);
-                  }
-                }}
               >
-                ♥
-              </span>
+                <span className="font-medium text-sm">{category.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Template Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {filteredTemplates.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg text-gray-400">
+                No templates found for this category.
+              </p>
             </div>
-          ))
-        )}
+          ) : (
+            filteredTemplates.map((template) => (
+              <div
+                key={template.id}
+                className={`relative bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 group ${
+                  hasPendingPayments 
+                    ? 'cursor-not-allowed opacity-50' 
+                    : 'cursor-pointer hover:shadow-xl hover:scale-105'
+                }`}
+              >
+                {/* Template Preview */}
+                <div className="relative">
+                  <img
+                    src={templateImages[template.id]}
+                    alt={`${template.displayName} Template`}
+                    className="w-full h-64 object-cover"
+                  />
+                  
+                  {/* Overlay with "Use This Template" button */}
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center transition-all duration-300">
+                    {!hasPendingPayments && (
+                      <button
+                        onClick={() => router.visit(`/choose-resume-maker?template=${template.name}`)}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-700"
+                      >
+                        Use This Template
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Favorite Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(template.id);
+                    }}
+                    className={`absolute top-3 right-3 p-2 rounded-full bg-white shadow-md transition-colors ${
+                      favorites.includes(template.id) 
+                        ? "text-red-500" 
+                        : "text-gray-400 hover:text-red-500"
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill={favorites.includes(template.id) ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Template Info */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    {template.displayName} Template
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">
+                    {template.description}
+                  </p>
+
+                  {/* Color Options */}
+                  <div className="flex space-x-2 mb-4">
+                    <div className="w-6 h-6 rounded-full bg-black border-2 border-gray-300"></div>
+                    <div className="w-6 h-6 rounded-full bg-gray-600 border-2 border-gray-300"></div>
+                    <div className="w-6 h-6 rounded-full bg-gray-400 border-2 border-gray-300"></div>
+                    <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-gray-300"></div>
+                    <div className="w-6 h-6 rounded-full bg-teal-500 border-2 border-gray-300"></div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
+                    <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                      PDF
+                    </button>
+                    <button className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
+                      DOCX
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       <Footer />

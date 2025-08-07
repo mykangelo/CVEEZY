@@ -18,6 +18,7 @@ class Resume extends Model
         'user_id',
         'name',
         'template_id',
+        'template_name',
         'status',
         'resume_data',
         'settings',

@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
-class ChooseTemplateController extends Controller
+class UploaderController extends Controller
 {
     public function index(Request $request)
     {
@@ -24,10 +24,14 @@ class ChooseTemplateController extends Controller
             
             $hasPendingPayments = $pendingResumes > 0;
             $pendingResumesCount = $pendingResumes;
+            
+            // If user has pending payments, redirect them to dashboard with a message
+            if ($hasPendingPayments) {
+                return redirect()->route('dashboard')->with('error', 'Cannot access resume uploader while payment is pending. Please wait for admin approval.');
+            }
         }
         
-        // Always render the component, let it handle the UI based on pending payments
-        return Inertia::render('ChooseTemplate', [
+        return Inertia::render('Uploader', [
             'hasPendingPayments' => $hasPendingPayments,
             'pendingResumesCount' => $pendingResumesCount
         ]);
