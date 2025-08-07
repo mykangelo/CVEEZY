@@ -2,6 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Alte Haas Grotesk Font */
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskRegular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Alte Haas Grotesk';
+  src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskBold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Modern Font Styling */
+@layer base {
+  html {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  body {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500; /* Medium weight for better readability */
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700; /* Bold for headings */
+    letter-spacing: -0.025em;
+  }
+  
+  /* Buttons - regular weight */
+  button, .btn, .button {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 400; /* Regular weight for buttons */
+  }
+  
+  /* Form elements - medium weight for readability */
+  input, textarea, select, label {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500; /* Medium weight for better readability */
+  }
+  
+  /* Navigation and links - medium weight */
+  nav, a, .nav-link {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500; /* Medium weight for better readability */
+  }
+  
+  /* Body text - medium weight for readability */
+  p, span, div {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 500; /* Medium weight for better readability */
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -9,5 +69,28 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+  
+  /* Font utilities */
+  .font-alte {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  .font-display {
+    font-family: 'Alte Haas Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+  
+  .font-medium {
+    font-weight: 500;
+  }
+  
+  .font-regular {
+    font-weight: 400;
+  }
+  
+  .font-bold {
+    font-weight: 700;
   }
 }

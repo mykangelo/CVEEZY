@@ -198,7 +198,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 font-serif">
+        <div className="min-h-screen bg-gray-50 font-sans">
             <Head title="CVeezy - My Dashboard" />
 
             {/* Notification Display */}
@@ -219,7 +219,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                                 </svg>
                             )}
-                            <span className="font-medium">{notification.message}</span>
+                            <span className="font-medium text-base">{notification.message}</span>
                         </div>
                         <button
                             onClick={() => setNotification(null)}
@@ -252,14 +252,14 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                         <nav className="hidden md:flex items-center space-x-8">
                             <Link 
                                 href="/dashboard" 
-                                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                                className="text-gray-700 hover:text-blue-600 font-medium text-base transition-colors"
                             >
                                 Resume Review
                             </Link>
                             {/* Updated Interview Preparation button to trigger modal */}
                             <button 
                                 onClick={() => setIsInterviewModalOpen(true)}
-                                className="text-gray-700 hover:text-blue-600 font-medium transition-colors"
+                                className="text-gray-700 hover:text-blue-600 font-medium text-base transition-colors"
                             >
                                 Interview Preparation
                             </button>
@@ -279,7 +279,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                 <Dropdown>
                                     <Dropdown.Trigger>
                                         <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 transition-colors">
-                                            <span className="font-medium">{user?.email || 'USER@EXAMPLE.COM'}</span>
+                                            <span className="font-medium text-base">{user?.email || 'USER@EXAMPLE.COM'}</span>
                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                             </svg>

@@ -88,7 +88,7 @@ const HomePage: React.FC<HomePageProps> = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-serif px-0">
+    <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-sans px-0">
       <Head title="CVeezy | Build Your Job-Winning Resume" />
 
       {/* Header */}
@@ -238,7 +238,7 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* Features Section */}
-      <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-serif">
+              <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
             Why use <span className="text-[#2196f3]">CVeezy's</span> Resume Builder?
@@ -277,11 +277,11 @@ const HomePage: React.FC<HomePageProps> = ({
       </section>
 
       {/* Templates Section */}
-      <section className="w-full bg-[#f4faff] py-20 mb-10 font-serif overflow-hidden">
-        <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-serif h-[700px]">
-          <h1 className="text-white text-4xl font-bold mb-4">
-            Choose your <span className="text-sky-400">resume template</span>, AI will do the rest
-          </h1>
+              <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
+          <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
+                      <h1 className="text-white text-4xl font-bold mb-4">
+              Choose your <span className="text-sky-400">resume template</span>, AI will do the rest
+            </h1>
           <p className="text-white text-sm max-w-2xl mx-auto mb-6">
             With CVeezy's AI resume generator, you'll get a professional, typo-free, and ATS-friendly resume ready in no time. Explore 40+ modern templates.
           </p>

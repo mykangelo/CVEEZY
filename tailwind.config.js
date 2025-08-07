@@ -13,7 +13,17 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['Alte Haas Grotesk', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                display: ['Alte Haas Grotesk', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+            },
+            fontWeight: {
+                'display': '700',
+                'regular': '400',
+                'medium': '500',
+                'bold': '700',
+            },
+            letterSpacing: {
+                'tight': '-0.025em',
             },
         },
     },

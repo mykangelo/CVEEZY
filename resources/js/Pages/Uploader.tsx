@@ -36,7 +36,7 @@ const Uploader: React.FC<UploaderProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-white font-serif">
+            <div className="min-h-screen flex flex-col bg-white font-sans">
       <Head title="CVeezy | Improve Your Resume" />
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
