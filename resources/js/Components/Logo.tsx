@@ -46,9 +46,14 @@ const Logo: React.FC<LogoProps> = ({
 
       {/* Logo Text - Updated with BetterCV-style font */}
       {showText && (
-        <span className={`font-medium text-gray-800 tracking-tight leading-tight ${textSizeClasses[size]} font-sans`}>
-          {text}
-        </span>
+        <div className="flex flex-col leading-tight">
+          <span className={`font-heavybold text-gray-800 tracking-tight ${textSizeClasses[size]} font-sans`}>
+            {text}
+          </span>
+          <span className="text-xs text-gray-400 -mt-1.5 ml-2">
+            by Certicode
+          </span>
+        </div>
       )}
     </Link>
   );

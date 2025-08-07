@@ -198,7 +198,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 font-serif">
             <Head title="CVeezy - My Dashboard" />
 
             {/* Notification Display */}
@@ -244,7 +244,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                 text="CVeezy"
                                 imageSrc="/images/supsoft-logo.jpg"
                                 imageAlt="CVeezy Logo"
-                                className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                             />
                         </div>
 

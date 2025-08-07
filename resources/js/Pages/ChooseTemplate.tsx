@@ -109,7 +109,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
             text="CVeezy"
             imageSrc="/images/supsoft-logo.jpg"
             imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -136,13 +136,13 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
           )}
         </div>
       </header>
-
       {/* Main Content */}
       <div className="flex-1 px-8 py-8">
         {/* Back Link */}
         <Link
           href="/dashboard"
           className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-8"
+
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

@@ -42,7 +42,7 @@ const FAQ: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6">
+    <div className="w-full max-w-7xl mx-auto p-6 text-gray-800">
       <h2 className="text-3xl font-bold mb-4 text-center">Frequently Asked Questions</h2>
       {faqs.map((faq, index) => (
         <div key={index} className="border-b border-gray-300 pb-4 mb-4">

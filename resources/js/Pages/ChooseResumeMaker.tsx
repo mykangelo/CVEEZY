@@ -33,7 +33,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
             text="CVeezy"
             imageSrc="/images/supsoft-logo.jpg"
             imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         <div className="flex items-center gap-4">
@@ -75,7 +75,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
       <main className="flex-grow px-4 py-6 flex flex-col items-center">
 
         {/* Title */}
-        <h1 className="text-center text-3xl md:text-4xl font-bold mb-10 text-[#2B2D42]">
+        <h1 className="text-center text-3xl md:text-4xl font-bold mb-10 text-gray-700">
           How will you make your resume?
         </h1>
 
@@ -130,7 +130,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
             }}
           >
             <img src="/images/AlreadyIcon" alt="Upload Resume" className="w-20 h-16 mb-4" />
-            <h2 className="text-lg font-bold mb-1 text-[#2B2D42]">I already have a resume</h2>
+            <h2 className="text-lg font-bold mb-1 text-gray-700">I already have a resume</h2>
             <p className="text-[#1a3c6c] text-base mb-2 text-center">Upload your existing resume to make quick edits</p>
             {!user && (
               <p className="text-xs text-orange-600 mt-2 text-center">Login required to continue</p>
@@ -171,7 +171,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
             }}
           >
             <img src="/images/ScratchIcon" alt="Start from Scratch" className="w-20 h-16 mb-4" />
-            <h2 className="text-lg font-bold mb-1 text-[#2B2D42]">Start from scratch</h2>
+            <h2 className="text-lg font-bold mb-1 text-gray-700">Start from scratch</h2>
             <p className="text-[#1a3c6c] text-base mb-2 text-center">Our AI will guide you through creating a resume</p>
             {!user && (
               <p className="text-xs text-orange-600 mt-2 text-center">Login required to continue</p>

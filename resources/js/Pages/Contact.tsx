@@ -60,7 +60,7 @@ const Contact: React.FC<ContactProps> = ({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f4faff] font-sans">
+    <div className="min-h-screen flex flex-col bg-[#f4faff] font-serif ">
       <Head title="CVeezy | Contact Us" />
 
       {/* Header */}
@@ -71,7 +71,7 @@ const Contact: React.FC<ContactProps> = ({
             text="CVeezy"
             imageSrc="/images/supsoft-logo.jpg"
             imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         <div className="flex items-center gap-4">
