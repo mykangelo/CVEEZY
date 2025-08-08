@@ -1,30 +1,53 @@
-#!/usr/bin/env bash
-set -euo pipefail
-APP_DIR="/home/u850020960/cveezy"
+#!/bin/bash
 
-cd "$APP_DIR"
+# Exit on any error
+set -e
 
-composer install --no-dev --optimize-autoloader
+echo "Starting deployment..."
 
-[ -f .env ] || cp .env.example .env
-php artisan key:generate --force
+# Navigate to the project directory
+cd /home/u850020960/lime-hare-378630.hostingersite.com
 
-php artisan migrate --force || true
-php artisan storage:link || true
+# Install/update Composer dependencies
+echo "Installing Composer dependencies..."
+~/composer install --no-dev --optimize-autoloader
 
-# Build Vite only if Node exists; otherwise keep public/build committed
-if command -v npm >/dev/null 2>&1; then
-  npm ci
-  npm run build
+# Install/update Node.js dependencies and build assets
+echo "Installing Node.js dependencies..."
+npm install
+
+echo "Building frontend assets..."
+npm run build
+
+# Run Laravel commands
+echo "Running Laravel setup commands..."
+
+# Generate application key if not exists
+if [ ! -f .env ]; then
+    echo "Creating .env file..."
+    cp .env.example .env
 fi
 
+# Generate app key
+php artisan key:generate
+
+# Run database migrations
+echo "Running database migrations..."
+php artisan migrate --force
+
+# Create storage link
+echo "Creating storage link..."
+php artisan storage:link
+
+# Clear and cache configurations
+echo "Optimizing Laravel..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-php artisan optimize
 
-chmod -R 775 storage bootstrap/cache
-find storage -type d -exec chmod 775 {} \;
-find storage -type f -exec chmod 664 {} \;
+# Set proper permissions
+echo "Setting file permissions..."
+chmod -R 755 storage bootstrap/cache
+chmod -R 755 public/build
 
-echo "Deploy complete" 
+echo "Deployment completed successfully!" 
