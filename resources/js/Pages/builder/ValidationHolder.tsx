@@ -8,6 +8,10 @@ interface ValidationHolderProps {
     desiredJobTitle: string;
     phone: string;
     email: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postCode?: string;
   };
   setContacts: React.Dispatch<React.SetStateAction<{
     firstName: string;
@@ -15,6 +19,10 @@ interface ValidationHolderProps {
     desiredJobTitle: string;
     phone: string;
     email: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postCode?: string;
   }>>;
   errors: Record<string, string>;
 }
@@ -23,6 +31,8 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
   const updateContact = (field: keyof typeof contacts, value: string) => {
     setContacts(prev => ({ ...prev, [field]: value }));
   };
+
+  const [showAdditional, setShowAdditional] = React.useState(false);
 
   return (
     <div>
@@ -83,8 +93,55 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
         </div>
       </div>
       <div className="mb-4">
-        <a href="#" className="text-blue-500 hover:underline text-sm">Additional information</a>
+        <button
+          type="button"
+          onClick={() => setShowAdditional((s) => !s)}
+          className="text-blue-500 hover:underline text-sm"
+        >
+          {showAdditional ? 'Hide additional information' : 'Additional information'}
+        </button>
       </div>
+
+      {showAdditional && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-gray-700 mb-1">Country</label>
+            <input
+              className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+              placeholder="e.g. Philippines"
+              value={contacts.country || ''}
+              onChange={(e) => updateContact('country', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 mb-1">City</label>
+            <input
+              className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+              placeholder="e.g. Manila"
+              value={contacts.city || ''}
+              onChange={(e) => updateContact('city', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 mb-1">Address</label>
+            <input
+              className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+              placeholder="Street, Building, etc."
+              value={contacts.address || ''}
+              onChange={(e) => updateContact('address', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 mb-1">Post code</label>
+            <input
+              className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+              placeholder="e.g. 1000"
+              value={contacts.postCode || ''}
+              onChange={(e) => updateContact('postCode', e.target.value)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

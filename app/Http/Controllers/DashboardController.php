@@ -96,6 +96,9 @@ class DashboardController extends Controller
                     'email' => $user->email,
                     'phone' => '',
                     'address' => '',
+                        'city' => '',
+                        'country' => '',
+                        'postCode' => '',
                     'websites' => [],
                 ],
                 'experiences' => [],
@@ -257,7 +260,8 @@ class DashboardController extends Controller
                 return [
                     'jobTitle' => $exp['jobTitle'] ?? '',
                     'company' => $exp['employer'] ?? '',
-                    'location' => $exp['company'] ?? '',
+                    // location now stored in 'location', but support legacy 'company'
+                    'location' => $exp['location'] ?? ($exp['company'] ?? ''),
                     'startDate' => $exp['startDate'] ?? '',
                     'endDate' => $exp['endDate'] ?? '',
                     'description' => $exp['description'] ?? '',
@@ -273,6 +277,31 @@ class DashboardController extends Controller
                     'description' => $edu['description'] ?? '',
                 ];
             }, $resumeData['educations'] ?? []),
+            // Additional sections
+            'languages' => array_map(function($lang) {
+                return [
+                    'language' => $lang['content'] ?? ($lang['language'] ?? ''),
+                    'level' => $lang['level'] ?? '',
+                ];
+            }, $resumeData['languages'] ?? []),
+            'certifications' => array_map(function($cert) {
+                return [
+                    'name' => $cert['content'] ?? ($cert['name'] ?? ''),
+                    'issuer' => $cert['issuer'] ?? '',
+                ];
+            }, $resumeData['certifications'] ?? []),
+            'awards' => $resumeData['awards'] ?? [],
+            'websites' => array_map(function($web) {
+                if (is_array($web)) {
+                    $url = $web['url'] ?? '';
+                    $title = $web['title'] ?? '';
+                    return $url !== '' ? $url : $title;
+                }
+                return $web;
+            }, $resumeData['websites'] ?? []),
+            'showReferences' => $resumeData['showReferences'] ?? [],
+            'hobbies' => $resumeData['hobbies'] ?? [],
+            'customSections' => $resumeData['customSections'] ?? [],
         ];
 
         // Generate PDF

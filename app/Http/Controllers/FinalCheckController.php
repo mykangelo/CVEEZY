@@ -36,13 +36,35 @@ class FinalCheckController extends Controller
             $resumeData = json_decode($resumeData, true);
         }
 
+        // Normalize legacy fields
+        $experiences = $resumeData['experiences'] ?? [];
+        if (is_array($experiences)) {
+            $experiences = array_map(function ($exp) {
+                if (is_array($exp)) {
+                    // Map legacy 'company' to new 'location' if needed
+                    if (!isset($exp['location']) && isset($exp['company'])) {
+                        $exp['location'] = $exp['company'];
+                    }
+                }
+                return $exp;
+            }, $experiences);
+        }
+
         return Inertia::render('FinalCheck', [
             'resumeId' => $resume?->id,
             'contact' => $resumeData['contact'] ?? [],
-            'experiences' => $resumeData['experiences'] ?? [],
+            'experiences' => $experiences,
             'educations' => $resumeData['educations'] ?? [],
             'skills' => $resumeData['skills'] ?? [],
             'summary' => $resumeData['summary'] ?? '',
+            // Additional sections for Finalize step
+            'languages' => $resumeData['languages'] ?? [],
+            'certifications' => $resumeData['certifications'] ?? [],
+            'awards' => $resumeData['awards'] ?? [],
+            'websites' => $resumeData['websites'] ?? [],
+            'showReferences' => $resumeData['showReferences'] ?? [],
+            'hobbies' => $resumeData['hobbies'] ?? [],
+            'customSections' => $resumeData['customSections'] ?? [],
         ]);
     }
 } 

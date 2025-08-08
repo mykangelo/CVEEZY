@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Head, Link } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import { Trash2, Plus, GripVertical, ChevronDown, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 
@@ -11,13 +11,17 @@ type Contact = {
   desiredJobTitle: string;
   phone: string;
   email: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postCode?: string;
 };
 
 type Experience = {
   id: number;
   jobTitle: string;
   employer: string;
-  company: string;
+  location: string;
   startDate: string;
   endDate: string;
   description: string;
@@ -55,7 +59,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
         id: Date.now(),
         jobTitle: "",
         employer: "",
-        company: "",
+        location: "",
         startDate: "",
         endDate: "",
         description: "",
@@ -124,14 +128,14 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                 <div>
-                  <label className="block text-gray-700 mb-1">Company</label>
+                  <label className="block text-gray-700 mb-1">Location</label>
                   <input 
-                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_company`] ? 'border-red-500' : ''}`}
-                    value={exp.company} 
-                    onChange={e => updateExperience(exp.id, 'company', e.target.value)} 
-                    placeholder="ABC Corp" 
+                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_location`] ? 'border-red-500' : ''}`}
+                    value={exp.location} 
+                    onChange={e => updateExperience(exp.id, 'location', e.target.value)} 
+                    placeholder="New York, NY" 
                   />
-                  {errors[`exp_${exp.id}_company`] && <p className="text-red-500 text-xs mt-1">{errors[`exp_${exp.id}_company`]}</p>}
+                  {errors[`exp_${exp.id}_location`] && <p className="text-red-500 text-xs mt-1">{errors[`exp_${exp.id}_location`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">Start Date</label>
@@ -314,13 +318,13 @@ interface SkillsSectionProps {
   errors: Record<string, string>;
 }
 
-const skillLevels = ["Novice", "Beginner", "Skillful", "Experienced", "Expert"];
+const skillLevels = ["Beginner", "Novice", "Skillful", "Experienced", "Expert"];
 
 const getOpacity = (level: string): number => {
   switch (level) {
-    case "Novice":
-      return 0.2;
     case "Beginner":
+      return 0.2;
+    case "Novice":
       return 0.4;
     case "Skillful":
       return 0.6;
@@ -393,7 +397,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   
   const addSkill = () => {
-    setSkills([...skills, { id: Date.now(), name: "", level: "Novice" }]);
+    setSkills([...skills, { id: Date.now(), name: "", level: "Beginner" }]);
   };
   const updateSkill = (id: number, field: keyof Skill, value: string) => {
     setSkills(skills.map(skill => skill.id === id ? { ...skill, [field]: value } : skill));
@@ -462,8 +466,13 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
                   updateSkill(skill.id, "name", e.target.value)
                 }
                 placeholder="Enter skill"
-                className="w-full h-12 p-2 border border-gray-200 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full h-12 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors[`skill_${skill.id}_name`] ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-100'}`}
               />
+              {errors[`skill_${skill.id}_name`] && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors[`skill_${skill.id}_name`]}
+                </p>
+              )}
             </div>
             <SkillLevelSlider
               level={skill.level}
@@ -540,32 +549,684 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
 );
 
 // Finalize Section
-const finalizeSections = [
-  { icon: "🌐", label: "Languages" },
-  { icon: "📜", label: "Certifications and Licenses" },
-  { icon: "🏆", label: "Awards and Honors" },
-  { icon: "🌍", label: "Websites and Social Media" },
-  { icon: "👤", label: "References" },
-  { icon: "❤️", label: "Hobbies and Interests" },
-  { icon: "➕", label: "Custom Sections" },
-];
-const FinalizeSection = () => (
-  <div>
-    <h2 className="text-2xl font-bold mb-2">Finalize</h2>
-    <p className="text-gray-600 mb-6">Review your resume and proceed to download with payment.</p>
-    <div className="space-y-3">
-      {finalizeSections.map((sec, i) => (
-        <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <span className="text-2xl">{sec.icon}</span>
-          <span className="font-medium text-gray-800">{sec.label}</span>
+interface BaseSectionItem {
+  id: number;
+  content: string;
+}
+
+interface WebsiteItem extends BaseSectionItem {
+  title: string;
+  url: string;
+}
+
+type SectionItem = BaseSectionItem | LanguageItem | WebsiteItem;
+
+
+interface LanguageItem {
+  id: number;
+  content: string;
+  level: string;
+}
+
+interface CustomSection {
+  id: number;
+  sectionName: string;
+  description: string;
+}
+
+interface ReferenceItem {
+  id: number;
+  content: string;
+}
+
+interface HobbiesItem {
+  id: number;
+  content: string;
+}
+
+interface AwardsItem {
+  id: number;
+  content: string;
+}
+
+interface CertificationItem {
+  id: number;
+  content: string;
+}
+
+  const languageLevels = ["Elementary", "Intermediate", "Proficient", "Advanced", "Native"];
+
+  const getLanguageOpacity = (level: string): number => {
+    switch (level) {
+      case "Elementary":
+        return 0.2;
+      case "Intermediate":
+        return 0.4;
+      case "Proficient":
+        return 0.6;
+      case "Advanced":
+        return 0.8;
+      case "Native":
+        return 1.0;
+      default:
+        return 0.3;
+    }
+  };
+
+  const LanguageLevelSlider = ({
+    level,
+    onChange,
+    show = true,
+  }: {
+    level: string;
+    onChange: (level: string) => void;
+    show?: boolean;
+  }) => {
+    const isActive = show;
+
+    return (
+      <div
+        className={`flex flex-col items-center w-64 transition-opacity duration-300 ${
+          isActive ? "opacity-100" : "opacity-30 pointer-events-none"
+        }`}
+      >
+        <div className="text-sm font-medium text-gray-700 mb-1 w-full text-left">
+          Level - <span className="text-blue-500">{level}</span>
+        </div>
+        <div
+          className={`relative flex h-12 w-full ${
+            isActive ? "bg-blue-200" : "bg-slate-200"
+          } rounded-md overflow-hidden`}
+        >
+          {/* Animated Highlight */}
+          <motion.div
+            className="absolute top-0 bottom-0 rounded-md"
+            initial={false}
+            animate={{
+              left: `${languageLevels.indexOf(level) * 20}%`,
+              width: "20%",
+              backgroundColor: `rgba(96, 165, 250, ${getLanguageOpacity(level)})`,
+            }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
+
+          {/* Clickable Segments */}
+          {languageLevels.map((languageLevel, index) => (
+            <div
+              key={languageLevel}
+              onClick={() => isActive && onChange(languageLevel)}
+              title={languageLevel}
+              className="flex-1 z-10 flex items-center justify-center cursor-pointer relative"
+            >
+              {/* Vertical divider */}
+              {index < languageLevels.length - 1 && (
+                <div className="absolute right-0 top-1/4 h-1/2 w-px bg-blue-400 opacity-70" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+interface FinalizeSectionProps {
+  languages: LanguageItem[];
+  setLanguages: React.Dispatch<React.SetStateAction<LanguageItem[]>>;
+  certifications: CertificationItem[];
+  setCertifications: React.Dispatch<React.SetStateAction<CertificationItem[]>>;
+  awards: AwardsItem[];
+  setAwards: React.Dispatch<React.SetStateAction<AwardsItem[]>>;
+  websites: WebsiteItem[];
+  setWebsites: React.Dispatch<React.SetStateAction<WebsiteItem[]>>;
+  showReferences: ReferenceItem[];
+  setShowReferences: React.Dispatch<React.SetStateAction<ReferenceItem[]>>;
+  hobbies: HobbiesItem[];
+  setHobbies: React.Dispatch<React.SetStateAction<HobbiesItem[]>>;
+  customSections: CustomSection[];
+  setCustomSections: React.Dispatch<React.SetStateAction<CustomSection[]>>;
+
+}
+
+
+
+const FinalizeSection: React.FC<FinalizeSectionProps> = ({
+  languages, 
+  setLanguages,
+  certifications,
+  setCertifications,
+  awards,
+  setAwards,
+  websites,
+  setWebsites,
+  showReferences,
+  setShowReferences,
+  hobbies,
+  setHobbies,
+  customSections,
+  setCustomSections,
+}) => {
+
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  
+  const toggleExpand = (label: string) => {
+    setExpanded(prev => (prev === label ? null : label));
+  };
+
+  const updateLanguage = (id: number, field: keyof LanguageItem, value: string) => {
+    setLanguages(languages.map(lang =>
+      lang.id === id ? { ...lang, [field]: value } : lang
+    ));
+  };
+
+  const addLanguage = () => {
+    setLanguages((prev) => [
+      ...prev,
+      { id: Date.now(), content: "", level: "Elementary" },
+    ]);
+  };
+
+  const removeLanguage = (id: number) => {
+    setLanguages((prev) => prev.filter((lang) => lang.id !== id));
+  };
+
+
+  const addCertification = () => {
+    setCertifications((prev) => [
+      ...prev,
+      { id: Date.now(), content: "" },
+    ]);
+  };
+
+  const removeCertification = (id: number) => {
+    setCertifications((prev) => prev.filter((cert) => cert.id !== id));
+  };
+
+  useEffect(() => {
+  if (languages.length === 0) {
+    addLanguage();}
+
+  if (hobbies.length === 0) {
+      addHobbies();}
+
+  if (websites.length === 0) {
+      addWebsites();}
+
+  if (showReferences.length === 0) {
+      addshowReferences();}
+
+  if (customSections.length === 0) {
+      addCustomSections();}
+  }, []);
+
+
+
+  const addHobbies = () => {
+    setHobbies((prev) => [
+      ...prev,
+      { id: Date.now(), content: "" },
+    ]);
+  };
+
+  const removeHobbies = (id: number) => {
+    setHobbies((prev) => prev.filter((h) => h.id !== id));
+  };
+
+
+  const addWebsites = () => {
+    setWebsites((prev) => [
+      ...prev,
+      { id: Date.now(), title: "", url: "", content: "" },
+    ]);
+  };
+
+  const removeWebsites = (id: number) => {
+    setWebsites((prev) => prev.filter((item) => item.id !== id));
+  };
+
+
+  const addCustomSections = () => {
+    setCustomSections((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        sectionName: "",
+        description: "",
+      },
+    ]);
+  };
+
+  const removeCustomSections = (id: number) => {
+    setCustomSections((prev) => prev.filter((item) => item.id !== id));
+  };
+
+
+  const addshowReferences = () => {
+    setShowReferences((prev) => [
+      ...prev,
+      { id: Date.now(), content: "" },
+    ]);
+  };
+
+  const removeshowReferences = (id: number) => {
+    setShowReferences((prev) => prev.filter((item) => item.id !== id));
+  };
+
+
+
+
+  
+  const finalizeSections = [
+    { icon: "🌐", label: "Languages" },
+    { icon: "📜", label: "Certifications and Licenses" },
+    { icon: "🏆", label: "Awards and Honors" },
+    { icon: "🌍", label: "Websites and Social Media" },
+    { icon: "👤", label: "References" },
+    { icon: "❤️", label: "Hobbies and Interests" },
+    { icon: "➕", label: "Custom Sections" },
+  ];
+  
+  const renderSectionContent = (label: string) => {
+    switch (label) {
+      case "Languages":
+        return (
+          <div className="w-full max-w-xl mx-auto p-4">
+            {/* Iterate over each language */}
+            {languages.map((lang) => (
+              <div
+                key={lang.id}
+                className="grid grid-cols-2 gap-4 items-center mb-4"
+              >
+                {/* Column 1: Label + Input */}
+                <div className="flex flex-col w-full">
+                  <p className="text-base text-gray-800 mb-2 ">Languages</p>
+                  <input
+                    type="text"
+                    placeholder="Enter language"
+                    value={lang.content}
+                    onChange={(e) =>
+                      updateLanguage(lang.id, "content", e.target.value)}
+                    className="border p-2 rounded w-full"
+                  />
+                </div>
+
+                {/* Column 2: Slider + Delete */}
+                <div className="flex items-center w-full">
+                  <LanguageLevelSlider
+                    level={lang.level}
+                    onChange={(level) =>
+                      updateLanguage(lang.id, "level", level)
+                    }
+                  />
+                  <button
+                    onClick={() => removeLanguage(lang.id)}
+                    className="ml-4 whitespace-nowrap"
+                  >
+                    &#128465;
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Add Language Button (outside map) */}
+            <div className="flex justify-start mt-2">
+              <button
+                onClick={addLanguage}
+                className="px-3 py-1 text-[#2196f3] hover:text-[#1976d2] w-fit font-semibold"
+              >
+                + Add Language
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Certifications and Licenses":
+        return (
+          <div>
+            <p className="text-sm text-gray-500 italic mb-2">
+              This is the Certifications section
+            </p>
+
+            <ul className="ml-2 space-y-2">
+              {(certifications.length === 0
+                ? [{ id: 0, content: "" }]
+                : certifications
+              ).map((item) => (
+                <li key={item.id} className="flex items-center gap-2">
+                  <div className="flex items-center w-full">
+                    <input
+                      type="text"
+                      value={item.content}
+                      onChange={(e) => {
+                        if (item.id === 0) {
+                          // Convert initial input into a real certification
+                          setCertifications([
+                            { id: Date.now(), content: e.target.value },
+                          ]);
+                        } else {
+                          // Update existing certification
+                          const updated = certifications.map((cert) =>
+                            cert.id === item.id
+                              ? { ...cert, content: e.target.value }
+                              : cert
+                          );
+                          setCertifications(updated);
+                        }
+                      }}
+                      className="border px-2 py-1 rounded flex-grow"
+                      placeholder="Enter certification"
+                    />
+
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+
+
+      case "Awards and Honors":
+        return (
+          <div>
+            <p className="text-sm text-gray-500 italic mb-2">
+              This is the Award and Honors section
+            </p>
+
+            <ul className="ml-2 space-y-2">
+              {(awards.length === 0
+                ? [{ id: 0, content: "" }]
+                : awards
+              ).map((item) => (
+                <li key={item.id} className="flex items-center gap-2">
+                  <div className="flex items-center w-full">
+                    <input
+                      type="text"
+                      value={item.content}
+                      onChange={(e) => {
+                        if (item.id === 0) {
+                          // Convert initial input into a real certification
+                          setAwards([
+                            { id: Date.now(), content: e.target.value },
+                          ]);
+                        } else {
+                          // Update existing certification
+                          const updated = awards.map((awa) =>
+                            awa.id === item.id
+                              ? { ...awa, content: e.target.value }
+                              : awa
+                          );
+                          setAwards(updated);
+                        }
+                      }}
+                      className="border px-2 py-1 rounded flex-grow"
+                      placeholder="Enter Awards"
+                    />
+
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+
+      case "Websites and Social Media":
+        return (
+          <div>
+            <p className="text-sm text-gray-500 italic mb-2">
+              This is the Websites section
+            </p>
+
+            <ul className="ml-2 space-y-2">
+              {websites.map((item) => (
+                <li key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  {/* Column 1: Link Name */}
+                  <input
+                    type="text"
+                    value={item.title}
+                    onChange={(e) => {
+                      const updated = websites.map((web) =>
+                        web.id === item.id ? { ...web, title: e.target.value } : web
+                      );
+                      setWebsites(updated);
+                    }}
+                    className="border px-2 py-1 rounded w-full sm:w-1/2"
+                    placeholder="Link Name (e.g., LinkedIn)"
+                  />
+
+                  {/* Column 2: URL */}
+                  <div className="flex items-center w-full sm:w-1/2 gap-2">
+                    <input
+                      type="text"
+                      value={item.url}
+                      onChange={(e) => {
+                        const updated = websites.map((web) =>
+                          web.id === item.id ? { ...web, url: e.target.value } : web
+                        );
+                        setWebsites(updated);
+                      }}
+                      className="border px-2 py-1 rounded flex-grow"
+                      placeholder="https://example.com"
+                    />
+
+                    <button
+                      onClick={() => removeWebsites(item.id)}
+                      className="text-red-500 hover:text-red-700 text-xl"
+                      title="Delete"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex justify-start mt-2">
+              <button
+                onClick={addWebsites}
+                className="px-3 py-1 text-[#2196f3] hover:text-[#1976d2] w-fit font-semibold"
+              >
+                + Add Another Link
+              </button>
+            </div>
+          </div>
+        );
+
+
+      case "References":
+        return (
+          <div>
+            <p className="text-sm text-gray-500 italic mb-2">
+              This is the References section
+            </p>
+
+            <ul className="ml-2 space-y-2">
+              {showReferences.map((item) => (
+                <li key={item.id} className="flex items-center gap-2">
+                  <div className="flex items-center w-full">
+                    <input
+                      type="text"
+                      value={item.content}
+                      onChange={(e) => {
+                        const updated = showReferences.map((ref) =>
+                          ref.id === item.id
+                            ? { ...ref, content: e.target.value }
+                            : ref
+                        );
+                        setShowReferences(updated);
+                      }}
+                      className="border px-2 py-1 rounded flex-grow"
+                      placeholder="Enter References"
+                    />
+                    <button
+                      onClick={() => removeshowReferences(item.id)}
+                      className="ml-2 text-red-500 hover:text-red-700 text-xl"
+                      title="Delete"
+                    >
+                      &#128465;
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex justify-start mt-2">
+              <button
+                onClick={addshowReferences}
+                className="px-3 py-1 text-[#2196f3] hover:text-[#1976d2] w-fit font-semibold"
+              >
+                + Add References
+              </button>
+            </div>
+          </div>
+        );
+      case "Hobbies and Interests":
+        return (
+          <div>
+            <p className="text-sm text-gray-500 italic mb-2">
+              This is the Hobbies and Interest section
+            </p>
+
+            <ul className="ml-2 space-y-2">
+              {hobbies.map((item) => (
+                <li key={item.id} className="flex items-center gap-2">
+                  <div className="flex items-center w-full">
+                    <input
+                      type="text"
+                      value={item.content}
+                      onChange={(e) => {
+                        const updated = hobbies.map((h) =>
+                          h.id === item.id
+                            ? { ...h, content: e.target.value }
+                            : h
+                        );
+                        setHobbies(updated);
+                      }}
+                      className="border px-2 py-1 rounded flex-grow"
+                      placeholder="Enter Hobbies and Interest"
+                    />
+                    <button
+                      onClick={() => removeHobbies(item.id)}
+                      className="ml-2 text-red-500 hover:text-red-700 text-xl"
+                      title="Delete"
+                    >
+                      &#128465;
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex justify-start mt-2">
+              <button
+                onClick={addHobbies}
+                className="px-3 py-1 text-[#2196f3] hover:text-[#1976d2] w-fit font-semibold"
+              >
+                + Add Hobbies and Interest
+              </button>
+            </div>
+          </div>
+        );
+
+      case "Custom Sections":
+        return (
+          <div>
+            <p className="text-sm text-gray-500 italic mb-2">
+              This is the Custom Section
+            </p>
+
+            <ul className="ml-2 space-y-4">
+              {customSections.map((item) => (
+                <li key={item.id} className="flex flex-col gap-2">
+                  <div className="flex items-center w-full gap-2">
+                    <input
+                      type="text"
+                      value={item.sectionName}
+                      onChange={(e) => {
+                        const updated = customSections.map((cussec) =>
+                          cussec.id === item.id
+                            ? { ...cussec, sectionName: e.target.value }
+                            : cussec
+                        );
+                        setCustomSections(updated);
+                      }}
+                      className="border px-2 py-1 rounded w-1/2"
+                      placeholder="Enter Section Name"
+                    />
+
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => {
+                        const updated = customSections.map((cussec) =>
+                          cussec.id === item.id
+                            ? { ...cussec, description: e.target.value }
+                            : cussec
+                        );
+                        setCustomSections(updated);
+                      }}
+                      className="border px-2 py-1 rounded w-full"
+                      placeholder="Enter Description"
+                    />
+
+                    <button
+                      onClick={() => removeCustomSections(item.id)}
+                      className="text-red-500 hover:text-red-700 text-xl"
+                      title="Delete"
+                    >
+                      &#128465;
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="flex justify-start mt-2">
+              <button
+                onClick={addCustomSections}
+                className="px-3 py-1 text-[#2196f3] hover:text-[#1976d2] w-fit font-semibold"
+              >
+                + Add Custom Section
+              </button>
+            </div>
+          </div>
+        );
+
+
+      default:
+        return null;
+    }
+  };
+
+
+  return (
+    <div className="w-full space-y-4">
+      {finalizeSections.map(({ icon, label }) => (
+        <div key={label} className="border rounded-lg p-4">
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() => toggleExpand(label)}
+          >
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <span>{icon}</span> {label}
+            </h3>
+            {expanded === label ? <ChevronDown /> : <ChevronRight />}
+          </div>
+
+          {expanded === label && (
+            <div className="mt-4 p-2 border-t pt-4">
+              {renderSectionContent(label)}
+            </div>
+          )}
         </div>
       ))}
-      
-      {/* The resume will be created when the user clicks Finalize */}
-      {/* No need for a link here since the button above handles the creation */}
     </div>
-  </div>
-);
+  );
+};
+
+
+
+
+/*********************************************************************************************/
 
 const steps = ["Contacts", "Experience", "Education", "Skills", "Summary", "Finalize"];
 
@@ -595,7 +1256,7 @@ const Builder: React.FC = () => {
       id: Date.now(),
       jobTitle: "Software Developer",
       employer: "ABC Company",
-      company: "ABC Corp",
+      location: "New York, NY",
       startDate: "",
       endDate: "",
       description: "Sample Text",
@@ -614,9 +1275,20 @@ const Builder: React.FC = () => {
       expanded: true,
     },
   ]);
-  const [skills, setSkills] = useState<Skill[]>([{ id: Date.now(), name: "", level: "Novice" }]);
+  const [skills, setSkills] = useState<Skill[]>([{ id: Date.now(), name: "", level: "Beginner" }]);
   const [showExperienceLevel, setShowExperienceLevel] = useState(false);
   const [summary, setSummary] = useState("");
+  const skillLevels = ["Beginner", "Novice", "Skillful", "Experienced", "Expert"];
+  const languageLevels = ["Elementary", "Intermediate", "Proficient", "Advanced", "Native"];
+
+  const [languages, setLanguages] = useState<LanguageItem[]>([]);
+  const [certifications, setCertifications] = useState<CertificationItem[]>([]);
+  const [awards, setAwards] = useState<AwardsItem[]>([]);
+  const [websites, setWebsites] = useState<WebsiteItem[]>([]);
+  const [showReferences, setShowReferences] = useState<ReferenceItem[]>([]);
+  const [hobbies, setHobbies] = useState<HobbiesItem[]>([]);
+  const [customSections, setCustomSections] = useState<CustomSection[]>([]);
+
 
   // Load existing resume or create new one
   useEffect(() => {
@@ -656,6 +1328,27 @@ const Builder: React.FC = () => {
               if (resumeData.summary) {
                 setSummary(resumeData.summary);
               }
+              if (resumeData.languages) {
+                setLanguages(resumeData.languages);
+              }
+              if (resumeData.certifications) {
+                setCertifications(resumeData.certifications);
+              }
+              if (resumeData.awards) {
+                setAwards(resumeData.awards);
+              }
+              if (resumeData.websites) {
+                setWebsites(resumeData.websites);
+              }
+              if (resumeData.showReferences) {
+                setShowReferences(resumeData.showReferences);
+              }
+              if (resumeData.hobbies) {
+                setHobbies(resumeData.hobbies);
+              }
+              if (resumeData.customSections) {
+                setCustomSections(resumeData.customSections);
+              }
             }
           } else {
             console.error('Failed to load existing resume');
@@ -692,7 +1385,15 @@ const Builder: React.FC = () => {
               experiences,
               educations,
               skills,
-              summary
+              summary,
+
+              languages,
+              certifications,
+              awards,
+              websites,
+              showReferences,
+              hobbies,
+              customSections
             }
           })
         });
@@ -757,11 +1458,28 @@ const Builder: React.FC = () => {
         experiences,
         educations,
         skills,
-        summary
+        summary,
+
+        languages,
+        certifications,
+        awards,
+        websites,
+        showReferences,
+        hobbies,
+        customSections
       };
       debouncedUpdate(resumeData);
     }
-  }, [contacts, experiences, educations, skills, summary, resumeId, debouncedUpdate]);
+  }, [contacts, experiences, educations, skills, summary, resumeId,         
+        languages,
+        certifications,
+        awards,
+        websites,
+        showReferences,
+        hobbies,
+        customSections,
+
+        debouncedUpdate]);
 
   // Update resume name when contact info changes
   useEffect(() => {
@@ -806,7 +1524,15 @@ const Builder: React.FC = () => {
         experiences,
         educations,
         skills,
-        summary
+        summary,
+
+        languages,
+        certifications,
+        awards,
+        websites,
+        showReferences,
+        hobbies,
+        customSections 
       };
       sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
       
@@ -837,7 +1563,7 @@ const Builder: React.FC = () => {
         experiences.forEach((exp) => {
           if (!exp.jobTitle.trim()) newErrors[`exp_${exp.id}_jobTitle`] = "Job title is required";
           if (!exp.employer.trim()) newErrors[`exp_${exp.id}_employer`] = "Employer is required";
-          if (!exp.company.trim()) newErrors[`exp_${exp.id}_company`] = "Company is required";
+          if (!exp.location.trim()) newErrors[`exp_${exp.id}_location`] = "Location is required";
           if (!exp.startDate.trim()) newErrors[`exp_${exp.id}_startDate`] = "Start date is required";
           if (!exp.endDate.trim()) newErrors[`exp_${exp.id}_endDate`] = "End date is required";
           if (!exp.description.trim()) newErrors[`exp_${exp.id}_description`] = "Description is required";
@@ -879,6 +1605,9 @@ const Builder: React.FC = () => {
     }
   };
 
+
+
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
@@ -892,7 +1621,21 @@ const Builder: React.FC = () => {
       case 4:
         return <SummarySection summary={summary} setSummary={setSummary} errors={errors} />;
       case 5:
-        return <FinalizeSection />; // Resume will be created when user clicks Finalize
+        return   <FinalizeSection
+          languages={languages}
+          setLanguages={setLanguages}
+          certifications={certifications}
+          setCertifications={setCertifications}
+          awards={awards}
+          setAwards={setAwards}
+          websites={websites}
+          setWebsites={setWebsites}
+          showReferences={showReferences}
+          setShowReferences={setShowReferences}
+          hobbies={hobbies}
+          setHobbies={setHobbies}
+          customSections={customSections}
+          setCustomSections={setCustomSections}         />; // Resume will be created when user clicks Finalize
       default:
         return null;
     }
@@ -1003,7 +1746,15 @@ const Builder: React.FC = () => {
                               experiences,
                               educations,
                               skills,
-                              summary
+                              summary,
+                              
+                              languages,
+                              certifications,
+                              awards,
+                              websites,
+                              showReferences,
+                              hobbies,
+                              customSections 
                             }
                           })
                         });
@@ -1049,6 +1800,7 @@ const Builder: React.FC = () => {
           {/* Right Panel - Resume Preview */}
           <div className="lg:w-1/2 w-full p-4">
             <div className="w-full max-w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto">
+
       {/* CONTACTS */}
       <h2 className="text-2xl font-bold mb-1">
         {contacts.firstName || "First"} {contacts.lastName || "Last"}
@@ -1071,7 +1823,7 @@ const Builder: React.FC = () => {
           {experiences.map((exp) => (
             <div key={exp.id} className="mb-2">
               <p className="font-medium text-sm text-gray-800">{exp.jobTitle}, {exp.employer}</p>
-              <p className="text-xs text-gray-500 italic">{exp.startDate} - {exp.endDate}</p>
+              <p className="text-xs text-gray-500 italic">{exp.location} | {exp.startDate} - {exp.endDate}</p>
               <p className="text-sm text-gray-700 whitespace-pre-line">{exp.description}</p>
             </div>
           ))}
@@ -1096,13 +1848,174 @@ const Builder: React.FC = () => {
       {skills.length > 0 && (
         <div className="mt-4">
           <h3 className="text-lg font-semibold">SKILLS</h3>
-          <ul className="list-disc ml-6 text-sm text-gray-700">
-            {skills.map(skill => (
-              <li key={skill.id}>{skill.name}</li>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {skills.map((skill) => (
+              <li key={skill.id}>
+                <div className="flex items-center gap-3">
+                  <span>{skill.name}</span>
+
+                  {showExperienceLevel  && skill.name.trim() !== "" && (
+                    <div className="flex gap-1">
+                      {skillLevels.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-2 h-2 rounded-full ${
+                            idx <= skillLevels.indexOf(skill.level)
+                              ? "bg-gray-600"
+                              : "bg-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
             ))}
           </ul>
         </div>
       )}
+
+      {/* FINLAIZE */}
+      {/* LANGUAGES */}
+      {languages.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">LANGUAGES</h3>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {languages.map((lang) => (
+              <li key={lang.id}>
+                <div className="flex items-center gap-3">
+                  <span>{lang.content}</span>
+
+                  {lang.content.trim() !== "" && (
+                    <div className="flex gap-1">
+                      {languageLevels.map((_, idx) => (
+                        <div
+                          key={idx}
+                          className={`w-2 h-2 rounded-full ${
+                            idx <= languageLevels.indexOf(lang.level)
+                              ? "bg-gray-600"
+                              : "bg-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      {/* CERTIFICATIONS AND LICENSES */}
+      {certifications.some((cert) => cert.content.trim() !== "") && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">CERTIFICATIONS AND LICENSES</h3>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {certifications
+              .filter((cert) => cert.content.trim() !== "")
+              .map((cert) => (
+                <li key={cert.id}>
+                  <div className="flex items-center gap-3">
+                    <span>{cert.content}</span>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+      {/* AWARDS AND HONORS */}
+      {awards.some((awa) => awa.content.trim() !== "") && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">AWARDS AND HONORS</h3>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {awards
+              .filter((awa) => awa.content.trim() !== "")
+              .map((awa) => (
+                <li key={awa.id}>
+                  <div className="flex items-center gap-3">
+                    <span>{awa.content}</span>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {/* WEBSITES AND SOCIAL MEDIA */}
+      {websites.some((web) => web.title.trim() !== "" || web.url.trim() !== "") && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">WEBSITES AND SOCIAL MEDIA</h3>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {websites
+              .filter((web) => web.title.trim() !== "" || web.url.trim() !== "")
+              .map((web) => (
+                <li key={web.id}>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span className="font-medium">{web.title}</span>
+                    <a href={web.url} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
+                      {web.url}
+                    </a>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {/* REFERENCES */}
+      {showReferences.some((ref) => ref.content.trim() !== "") && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">REFERENCES</h3>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {showReferences
+              .filter((ref) => ref.content.trim() !== "")
+              .map((ref) => (
+                <li key={ref.id}>
+                  <div className="flex items-center gap-3">
+                    <span>{ref.content}</span>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {/* HOBBIES AND INTERESTS */}
+      {hobbies.some((h) => h.content.trim() !== "") && (
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold">HOBBIES AND INTERESTS</h3>
+          <ul className="ml-6 text-sm text-gray-700 space-y-2">
+            {hobbies
+              .filter((h) => h.content.trim() !== "")
+              .map((h) => (
+                <li key={h.id}>
+                  <div className="flex items-center gap-3">
+                    <span>{h.content}</span>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </div>
+      )}
+
+      {/* CUSTOM SECTION */}
+      {customSections
+        .filter(
+          (c) => c.sectionName.trim() !== "" || c.description.trim() !== ""
+        )
+        .map((c) => (
+          <div key={c.id} className="mt-4">
+            {c.sectionName.trim() !== "" && (
+              <h3 className="text-lg font-semibold">{c.sectionName}</h3>
+            )}
+            {c.description.trim() !== "" && (
+              <p className="ml-6 text-sm text-gray-700 mt-1">{c.description}</p>
+            )}
+          </div>
+      ))}
+
+
             </div>
           </div>
         </div>
