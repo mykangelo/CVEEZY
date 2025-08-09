@@ -4,7 +4,7 @@ import ValidationHolder from "./builder/ValidationHolder";
 import { Trash2, Plus, GripVertical } from "lucide-react";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
-import { ResumeData } from '@/types/resume';
+import { ResumeData, Language, Certification, Award, Website, Reference, Hobby, CustomSection } from '@/types/resume';
 
 // Import all resume template components
 import Classic from '@/Components/Builder/Classic';
@@ -29,6 +29,10 @@ type Contact = {
   desiredJobTitle: string;
   phone: string;
   email: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  postCode?: string;
 };
 
 type Experience = {
@@ -559,28 +563,594 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
 
 // Finalize Section
 const finalizeSections = [
-  { icon: "🌐", label: "Languages" },
-  { icon: "📜", label: "Certifications and Licenses" },
-  { icon: "🏆", label: "Awards and Honors" },
-  { icon: "🌍", label: "Websites and Social Media" },
-  { icon: "👤", label: "References" },
-  { icon: "❤️", label: "Hobbies and Interests" },
-  { icon: "➕", label: "Custom Sections" },
+  { icon: "🌐", label: "Languages", description: "Add languages you speak and proficiency levels" },
+  { icon: "📜", label: "Certifications", description: "Include professional certifications and licenses" },
+  { icon: "🏆", label: "Awards", description: "List awards, honors, and achievements" },
+  { icon: "🌍", label: "Websites", description: "Add portfolio, LinkedIn, or other professional links" },
+  { icon: "👤", label: "References", description: "Include professional references" },
+  { icon: "❤️", label: "Hobbies", description: "Add relevant hobbies and interests" },
+  { icon: "➕", label: "Custom Sections", description: "Create additional sections as needed" },
 ];
-const FinalizeSection = () => (
+
+interface FinalizeSectionProps {
+  onAddSection: (sectionType: string) => void;
+  languages: Language[];
+  setLanguages: React.Dispatch<React.SetStateAction<Language[]>>;
+  certifications: Certification[];
+  setCertifications: React.Dispatch<React.SetStateAction<Certification[]>>;
+  awards: Award[];
+  setAwards: React.Dispatch<React.SetStateAction<Award[]>>;
+  websites: Website[];
+  setWebsites: React.Dispatch<React.SetStateAction<Website[]>>;
+  references: Reference[];
+  setReferences: React.Dispatch<React.SetStateAction<Reference[]>>;
+  hobbies: Hobby[];
+  setHobbies: React.Dispatch<React.SetStateAction<Hobby[]>>;
+  customSections: CustomSection[];
+  setCustomSections: React.Dispatch<React.SetStateAction<CustomSection[]>>;
+}
+
+const FinalizeSection: React.FC<FinalizeSectionProps> = ({ 
+  onAddSection,
+  languages,
+  setLanguages,
+  certifications,
+  setCertifications,
+  awards,
+  setAwards,
+  websites,
+  setWebsites,
+  references,
+  setReferences,
+  hobbies,
+  setHobbies,
+  customSections,
+  setCustomSections
+}) => (
   <div>
-    <h2 className="text-2xl font-bold mb-2">Finalize</h2>
-    <p className="text-gray-600 mb-6">Review your resume and proceed to download with payment.</p>
-    <div className="space-y-3">
-      {finalizeSections.map((sec, i) => (
-        <div key={i} className="flex items-center gap-4 bg-gray-50 rounded-lg p-4 border border-gray-200">
-          <span className="text-2xl">{sec.icon}</span>
-          <span className="font-medium text-gray-800">{sec.label}</span>
-        </div>
-      ))}
+    <h2 className="text-2xl font-bold mb-2">Additional Sections</h2>
+    <p className="text-gray-600 mb-6">
+      Add certifications, languages, awards, or any extra details you want recruiters to see.
+    </p>
+    
+    {/* Currently Added Sections */}
+    <div className="mb-8">
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Currently Added Sections</h3>
       
-      {/* The resume will be created when the user clicks Finalize */}
-      {/* No need for a link here since the button above handles the creation */}
+      {/* Certifications Section */}
+      {certifications.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-lg">📜</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Certifications and licenses</h3>
+                <p className="text-sm text-gray-600">Add credentials that back up your expertise</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-gray-400 hover:text-gray-600">
+                <span>▼</span>
+              </button>
+              <button 
+                onClick={() => setCertifications([])}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {certifications.map((cert, index) => (
+              <div key={cert.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <input
+                  type="text"
+                  value={cert.title}
+                  onChange={(e) => {
+                    const newCerts = [...certifications];
+                    newCerts[index].title = e.target.value;
+                    setCertifications(newCerts);
+                  }}
+                  placeholder="Enter certification title"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setCertifications(certifications.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setCertifications([...certifications, { id: Date.now(), title: '' }])}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-sm"
+          >
+            + Add certification
+          </button>
+        </div>
+      )}
+
+      {/* Languages Section */}
+      {languages.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-lg">🌐</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Languages</h3>
+                <p className="text-sm text-gray-600">Add languages you speak and proficiency levels</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-gray-400 hover:text-gray-600">
+                <span>▼</span>
+              </button>
+              <button 
+                onClick={() => setLanguages([])}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {languages.map((lang, index) => (
+              <div key={lang.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <input
+                  type="text"
+                  value={lang.name}
+                  onChange={(e) => {
+                    const newLangs = [...languages];
+                    newLangs[index].name = e.target.value;
+                    setLanguages(newLangs);
+                  }}
+                  placeholder="Language"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <select
+                  value={lang.proficiency || ''}
+                  onChange={(e) => {
+                    const newLangs = [...languages];
+                    newLangs[index].proficiency = e.target.value;
+                    setLanguages(newLangs);
+                  }}
+                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                >
+                  <option value="">Select level</option>
+                  <option value="Native">Native</option>
+                  <option value="Fluent">Fluent</option>
+                  <option value="Advanced">Advanced</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Basic">Basic</option>
+                </select>
+                <button
+                  onClick={() => setLanguages(languages.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setLanguages([...languages, { id: Date.now(), name: '', proficiency: '' }])}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-sm"
+          >
+            + Add language
+          </button>
+        </div>
+      )}
+
+      {/* Awards Section */}
+      {awards.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-lg">🏆</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Awards and honors</h3>
+                <p className="text-sm text-gray-600">List awards, honors, and achievements</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-gray-400 hover:text-gray-600">
+                <span>▼</span>
+              </button>
+              <button 
+                onClick={() => setAwards([])}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {awards.map((award, index) => (
+              <div key={award.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <input
+                  type="text"
+                  value={award.title}
+                  onChange={(e) => {
+                    const newAwards = [...awards];
+                    newAwards[index].title = e.target.value;
+                    setAwards(newAwards);
+                  }}
+                  placeholder="Enter award title"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setAwards(awards.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setAwards([...awards, { id: Date.now(), title: '' }])}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-sm"
+          >
+            + Add award
+          </button>
+        </div>
+      )}
+
+      {/* Websites Section */}
+      {websites.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-lg">🔗</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Websites and social media</h3>
+                <p className="text-sm text-gray-600">Share your portfolio, blog, LinkedIn, or other related websites</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-gray-400 hover:text-gray-600">
+                <span>▼</span>
+              </button>
+              <button 
+                onClick={() => setWebsites([])}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {websites.map((site, index) => (
+              <div key={site.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <input
+                  type="text"
+                  value={site.label}
+                  onChange={(e) => {
+                    const newSites = [...websites];
+                    newSites[index].label = e.target.value;
+                    setWebsites(newSites);
+                  }}
+                  placeholder="Label (e.g., Portfolio, LinkedIn)"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <input
+                  type="url"
+                  value={site.url}
+                  onChange={(e) => {
+                    const newSites = [...websites];
+                    newSites[index].url = e.target.value;
+                    setWebsites(newSites);
+                  }}
+                  placeholder="URL"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setWebsites(websites.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setWebsites([...websites, { id: Date.now(), label: '', url: '' }])}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-sm"
+          >
+            + Add website
+          </button>
+        </div>
+      )}
+
+      {/* References Section */}
+      {references.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-lg">🤝</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">References</h3>
+                <p className="text-sm text-gray-600">Add professional references and contacts</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-gray-400 hover:text-gray-600">
+                <span>▼</span>
+              </button>
+              <button 
+                onClick={() => setReferences([])}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {references.map((ref, index) => (
+              <div key={ref.id} className="p-2 bg-gray-50 rounded space-y-2">
+                <input
+                  type="text"
+                  value={ref.name}
+                  onChange={(e) => {
+                    const newRefs = [...references];
+                    newRefs[index].name = e.target.value;
+                    setReferences(newRefs);
+                  }}
+                  placeholder="Reference name"
+                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <input
+                  type="text"
+                  value={ref.relationship || ''}
+                  onChange={(e) => {
+                    const newRefs = [...references];
+                    newRefs[index].relationship = e.target.value;
+                    setReferences(newRefs);
+                  }}
+                  placeholder="Relationship (e.g., Manager, Colleague)"
+                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <input
+                  type="text"
+                  value={ref.contactInfo || ''}
+                  onChange={(e) => {
+                    const newRefs = [...references];
+                    newRefs[index].contactInfo = e.target.value;
+                    setReferences(newRefs);
+                  }}
+                  placeholder="Contact info (email, phone)"
+                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setReferences(references.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  × Remove reference
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setReferences([...references, { id: Date.now(), name: '', relationship: '', contactInfo: '' }])}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-sm"
+          >
+            + Add reference
+          </button>
+        </div>
+      )}
+
+      {/* Hobbies Section */}
+      {hobbies.length > 0 && (
+        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <span className="text-blue-600 text-lg">🎮</span>
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-800">Hobbies and interests</h3>
+                <p className="text-sm text-gray-600">Share your personal interests and activities</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button className="text-gray-400 hover:text-gray-600">
+                <span>▼</span>
+              </button>
+              <button 
+                onClick={() => setHobbies([])}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <span>🗑️</span>
+              </button>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {hobbies.map((hobby, index) => (
+              <div key={hobby.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <input
+                  type="text"
+                  value={hobby.name}
+                  onChange={(e) => {
+                    const newHobbies = [...hobbies];
+                    newHobbies[index].name = e.target.value;
+                    setHobbies(newHobbies);
+                  }}
+                  placeholder="Enter hobby or interest"
+                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={() => setHobbies(hobbies.filter((_, i) => i !== index))}
+                  className="text-red-500 hover:text-red-700"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setHobbies([...hobbies, { id: Date.now(), name: '' }])}
+            className="mt-2 text-blue-500 hover:text-blue-700 text-sm"
+          >
+            + Add hobby
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* Sections to Add */}
+    <div>
+      <h3 className="text-lg font-semibold mb-4 text-gray-800">Sections to Add</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Certifications */}
+        {certifications.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-blue-600 text-lg">📜</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Certifications and licenses</h3>
+                  <p className="text-sm text-gray-600">Add credentials that back up your expertise</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setCertifications([{ id: Date.now(), title: '' }])}
+                className="text-blue-500 hover:text-blue-700 text-lg font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Languages */}
+        {languages.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-blue-600 text-lg">🌐</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Languages</h3>
+                  <p className="text-sm text-gray-600">Add languages you speak and proficiency levels</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setLanguages([{ id: Date.now(), name: '', proficiency: '' }])}
+                className="text-blue-500 hover:text-blue-700 text-lg font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Awards */}
+        {awards.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-blue-600 text-lg">🏆</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Awards and honors</h3>
+                  <p className="text-sm text-gray-600">List awards, honors, and achievements</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAwards([{ id: Date.now(), title: '' }])}
+                className="text-blue-500 hover:text-blue-700 text-lg font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Websites */}
+        {websites.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-blue-600 text-lg">🔗</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Websites and social media</h3>
+                  <p className="text-sm text-gray-600">Share your portfolio, blog, LinkedIn, or other related websites</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setWebsites([{ id: Date.now(), label: '', url: '' }])}
+                className="text-blue-500 hover:text-blue-700 text-lg font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* References */}
+        {references.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-blue-600 text-lg">🤝</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">References</h3>
+                  <p className="text-sm text-gray-600">Add professional references and contacts</p>
+                </div>
+              </div>
+                             <button
+                 onClick={() => setReferences([{ id: Date.now(), name: '', relationship: '', contactInfo: '' }])}
+                 className="text-blue-500 hover:text-blue-700 text-lg font-bold"
+               >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Hobbies */}
+        {hobbies.length === 0 && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <span className="text-blue-600 text-lg">🎮</span>
+                </div>
+                <div>
+                  <h3 className="font-medium text-gray-800">Hobbies and interests</h3>
+                  <p className="text-sm text-gray-600">Share your personal interests and activities</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setHobbies([{ id: Date.now(), name: '' }])}
+                className="text-blue-500 hover:text-blue-700 text-lg font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   </div>
 );
@@ -620,6 +1190,10 @@ const Builder: React.FC<BuilderProps> = ({
     desiredJobTitle: "",
     phone: "",
     email: "",
+    address: "",
+    city: "",
+    country: "",
+    postCode: "",
   });
   
   const [experiences, setExperiences] = useState<Experience[]>([
@@ -649,6 +1223,15 @@ const Builder: React.FC<BuilderProps> = ({
   const [skills, setSkills] = useState<Skill[]>([{ id: Date.now(), name: "", level: "Novice" }]);
   const [showExperienceLevel, setShowExperienceLevel] = useState(false);
   const [summary, setSummary] = useState("");
+  
+  // Additional sections state
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
+  const [awards, setAwards] = useState<Award[]>([]);
+  const [websites, setWebsites] = useState<Website[]>([]);
+  const [references, setReferences] = useState<Reference[]>([]);
+  const [hobbies, setHobbies] = useState<Hobby[]>([]);
+  const [customSections, setCustomSections] = useState<CustomSection[]>([]);
 
   // ResumeData state for template system
   const [resumeData, setResumeData] = useState<ResumeData>({
@@ -721,6 +1304,30 @@ const Builder: React.FC<BuilderProps> = ({
               if (resumeData.summary) {
                 setSummary(resumeData.summary);
               }
+              if (resumeData.showExperienceLevel !== undefined) {
+                setShowExperienceLevel(resumeData.showExperienceLevel);
+              }
+              if (resumeData.languages) {
+                setLanguages(resumeData.languages);
+              }
+              if (resumeData.certifications) {
+                setCertifications(resumeData.certifications);
+              }
+              if (resumeData.awards) {
+                setAwards(resumeData.awards);
+              }
+              if (resumeData.websites) {
+                setWebsites(resumeData.websites);
+              }
+              if (resumeData.references) {
+                setReferences(resumeData.references);
+              }
+              if (resumeData.hobbies) {
+                setHobbies(resumeData.hobbies);
+              }
+              if (resumeData.customSections) {
+                setCustomSections(resumeData.customSections);
+              }
             }
           } else {
             console.error('Failed to load existing resume');
@@ -754,7 +1361,15 @@ const Builder: React.FC<BuilderProps> = ({
             experiences,
             educations,
             skills,
-            summary
+            summary,
+            showExperienceLevel,
+            languages,
+            certifications,
+            awards,
+            websites,
+            references,
+            hobbies,
+            customSections
           }
         };
         
@@ -816,7 +1431,7 @@ const Builder: React.FC<BuilderProps> = ({
       });
       
       if (response.ok) {
-        console.log('Resume updated successfully');
+        console.log('Resume updated successfully with data:', newData);
       } else {
         console.error('Failed to update resume');
       }
@@ -843,11 +1458,19 @@ const Builder: React.FC<BuilderProps> = ({
         experiences,
         educations,
         skills,
-        summary
+        summary,
+        showExperienceLevel,
+        languages,
+        certifications,
+        awards,
+        websites,
+        references,
+        hobbies,
+        customSections
       };
       debouncedUpdate(resumeData);
     }
-  }, [contacts, experiences, educations, skills, summary, resumeId, debouncedUpdate]);
+  }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections, resumeId, debouncedUpdate]);
 
   // Update resume name when contact info changes
   useEffect(() => {
@@ -892,7 +1515,15 @@ const Builder: React.FC<BuilderProps> = ({
         experiences,
         educations,
         skills,
-        summary
+        summary,
+        showExperienceLevel,
+        languages,
+        certifications,
+        awards,
+        websites,
+        references,
+        hobbies,
+        customSections
       };
       sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
       
@@ -978,7 +1609,28 @@ const Builder: React.FC<BuilderProps> = ({
       case 4:
         return <SummarySection summary={summary} setSummary={setSummary} errors={errors} />;
       case 5:
-        return <FinalizeSection />; // Resume will be created when user clicks Finalize
+        return <FinalizeSection 
+          onAddSection={(sectionType) => {
+            // Handle adding different sections
+            console.log(`Adding section: ${sectionType}`);
+            // For now, just show an alert. In a full implementation, this would open a modal or navigate to a section editor
+            alert(`Adding ${sectionType} section - This feature will be implemented in the next update.`);
+          }}
+          languages={languages}
+          setLanguages={setLanguages}
+          certifications={certifications}
+          setCertifications={setCertifications}
+          awards={awards}
+          setAwards={setAwards}
+          websites={websites}
+          setWebsites={setWebsites}
+          references={references}
+          setReferences={setReferences}
+          hobbies={hobbies}
+          setHobbies={setHobbies}
+          customSections={customSections}
+          setCustomSections={setCustomSections}
+        />;
       default:
         return null;
     }
@@ -994,10 +1646,10 @@ const Builder: React.FC<BuilderProps> = ({
         desiredJobTitle: contacts.desiredJobTitle || '',
         phone: contacts.phone || '',
         email: contacts.email || '',
-        country: '',
-        city: '',
-        address: '',
-        postCode: '',
+        country: contacts.country || '',
+        city: contacts.city || '',
+        address: contacts.address || '',
+        postCode: contacts.postCode || '',
       },
       experiences: experiences.map(exp => ({
         id: exp.id,
@@ -1020,10 +1672,19 @@ const Builder: React.FC<BuilderProps> = ({
       skills: skills.map(skill => ({
         id: skill.id,
         name: skill.name,
+        level: skill.level,
       })),
       summary: summary,
+      showExperienceLevel: showExperienceLevel,
+      languages: languages,
+      certifications: certifications,
+      awards: awards,
+      websites: websites,
+      references: references,
+      hobbies: hobbies,
+      customSections: customSections,
     }));
-  }, [contacts, experiences, educations, skills, summary]);
+      }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections]);
 
   return (
     <div className="flex flex-col h-screen bg-[#f4f6fb]">

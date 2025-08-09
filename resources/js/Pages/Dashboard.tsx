@@ -460,7 +460,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                     <button
                                                         onClick={() => {
                                                             // Download PDF functionality
-                                                            window.open(`/resume/download/${resume.id}`, '_blank');
+                                                            window.open(`/resumes/${resume.id}/download`, '_blank');
                                                         }}
                                                         className="text-green-600 hover:text-green-900 inline-flex items-center space-x-1"
                                                     >

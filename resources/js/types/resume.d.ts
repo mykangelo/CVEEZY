@@ -45,6 +45,7 @@ export type Education = {
 export type Skill = {
   id: number;
   name: string;
+  level?: string;
 };
 
 export type Language = {
@@ -93,6 +94,7 @@ export type ResumeData = {
   education: Education[];
   skills: Skill[];
   summary: string;
+  showExperienceLevel?: boolean;
 
   templateId?: number;
 

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 // ValidationHolder component
 interface ValidationHolderProps {
@@ -8,6 +9,10 @@ interface ValidationHolderProps {
     desiredJobTitle: string;
     phone: string;
     email: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postCode?: string;
   };
   setContacts: React.Dispatch<React.SetStateAction<{
     firstName: string;
@@ -15,11 +20,17 @@ interface ValidationHolderProps {
     desiredJobTitle: string;
     phone: string;
     email: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postCode?: string;
   }>>;
   errors: Record<string, string>;
 }
 
 const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContacts, errors }) => {
+  const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
+
   const updateContact = (field: keyof typeof contacts, value: string) => {
     setContacts(prev => ({ ...prev, [field]: value }));
   };
@@ -82,8 +93,66 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
         </div>
       </div>
+      
+      {/* Additional Information Dropdown */}
       <div className="mb-4">
-        <a href="#" className="text-blue-500 hover:underline text-sm">Additional information</a>
+        <button
+          onClick={() => setShowAdditionalInfo(!showAdditionalInfo)}
+          className="flex items-center gap-2 text-blue-500 hover:text-blue-700 transition-colors"
+        >
+          <span className="text-sm font-medium">Additional Information</span>
+          {showAdditionalInfo ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+        
+        {/* Dropdown Content */}
+        <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          showAdditionalInfo ? 'max-h-96 opacity-100 mt-4' : 'max-h-0 opacity-0'
+        }`}>
+          <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
+            <div>
+              <label className="block text-gray-700 mb-1">Address</label>
+              <input 
+                className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+                placeholder="123 Main Street"
+                value={contacts.address || ''}
+                onChange={e => updateContact('address', e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-gray-700 mb-1">City</label>
+                <input 
+                  className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+                  placeholder="New York"
+                  value={contacts.city || ''}
+                  onChange={e => updateContact('city', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-1">Country</label>
+                <input 
+                  className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+                  placeholder="United States"
+                  value={contacts.country || ''}
+                  onChange={e => updateContact('country', e.target.value)}
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Postal Code</label>
+              <input 
+                className="w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400"
+                placeholder="10001"
+                value={contacts.postCode || ''}
+                onChange={e => updateContact('postCode', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ type Experience = {
   jobTitle: string;
   employer: string;
   company: string;
+  location: string;
   startDate: string;
   endDate: string;
   description: string;
@@ -90,27 +91,47 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary]);
   
   // Get data from sessionStorage or use props
+  const getSkillLevelBullets = (level: string): number => {
+    switch (level) {
+      case "Novice":
+        return 1;
+      case "Beginner":
+        return 2;
+      case "Skillful":
+        return 3;
+      case "Experienced":
+        return 4;
+      case "Expert":
+        return 5;
+      default:
+        return 1;
+    }
+  };
+
   const getResumeData = () => {
-    // Prioritize props data (from database) over sessionStorage
+    // First try to get data from sessionStorage (includes showExperienceLevel)
+    try {
+      const storedData = sessionStorage.getItem('resumeData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        console.log('FinalCheck - Found resume data in sessionStorage with showExperienceLevel:', parsedData.showExperienceLevel);
+        return parsedData;
+      }
+    } catch (error) {
+      console.error('Error parsing resume data from sessionStorage:', error);
+    }
+    
+    // Fallback to props data (from database) if no sessionStorage data
     if (propContact && propExperiences && propEducations && propSkills && propSummary) {
-      console.log('FinalCheck - Using props data from database');
+      console.log('FinalCheck - Using props data from database (no showExperienceLevel)');
       return {
         contact: propContact,
         experiences: propExperiences,
         educations: propEducations,
         skills: propSkills,
-        summary: propSummary
+        summary: propSummary,
+        showExperienceLevel: false // Default to false for database data
       };
-    }
-    
-    try {
-      const storedData = sessionStorage.getItem('resumeData');
-      if (storedData) {
-        console.log('FinalCheck - Found resume data in sessionStorage');
-        return JSON.parse(storedData);
-      }
-    } catch (error) {
-      console.error('Error parsing resume data:', error);
     }
     
     console.log('FinalCheck - Using default data');
@@ -128,12 +149,13 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       experiences: [],
       educations: [],
       skills: [],
-      summary: ""
+      summary: "",
+      showExperienceLevel: false
     };
   };
 
   const resumeData = getResumeData();
-  const { contact, experiences, educations, skills, summary } = resumeData;
+  const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections } = resumeData;
 
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -177,92 +199,265 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
 
   const renderResumeContent = () => (
-    <div className="w-full h-full bg-white p-6 overflow-auto">
+    <div className="w-full h-full bg-white p-6 overflow-auto space-y-6 text-gray-800">
       {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          {contact.firstName} {contact.lastName}
+      <div>
+        <h1 className="text-3xl font-bold text-center text-black mb-6">
+          This is the Professional Template
         </h1>
-        <p className="text-lg text-gray-600 mb-4">{contact.desiredJobTitle}</p>
-        
+
         {/* Contact Info */}
-        <div className="text-sm text-gray-600 space-y-1 mb-6">
-          <p>{contact.address}</p>
-          <p>{contact.email}</p>
-          <p>{contact.phone}</p>
+        <div>
+          <h2 className="text-2xl font-bold">
+            {contact.firstName} {contact.lastName}
+          </h2>
+          <p className="text-lg text-gray-600">
+            {contact.desiredJobTitle}
+          </p>
+          <div className="space-y-1 mt-2">
+            <p>
+              <strong>Phone:</strong> {contact.phone}
+            </p>
+            <p>
+              <strong>Email:</strong> {contact.email}
+            </p>
+            {(contact.address || contact.city || contact.country || contact.postCode) && (
+              <p>
+                <strong>Location:</strong>{" "}
+                {[
+                  contact.address,
+                  contact.city,
+                  contact.country,
+                  contact.postCode,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+            )}
+          </div>
         </div>
-        
-        <hr className="border-gray-300 mb-6" />
       </div>
 
-      {/* Websites and Social Links */}
-      {contact.websites && contact.websites.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">WEBSITES AND SOCIAL LINKS</h2>
-          <div className="space-y-1">
-            {contact.websites.map((website: string, index: number) => (
-              <p key={index} className="text-blue-600 underline text-sm">
-                {website}
-              </p>
+      {/* Experience */}
+      {experiences.length > 0 && (
+        <div>
+          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+            Experience
+          </h3>
+          <div className="space-y-4">
+            {experiences.map((exp: Experience) => (
+              <div key={exp.id} className="border-b pb-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold">
+                    {exp.jobTitle}
+                  </h4>
+                  <span className="text-sm text-gray-500">
+                    {exp.startDate} - {exp.endDate}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700 italic">
+                  {exp.company} — {exp.location}
+                </p>
+                {exp.description && (
+                  <p className="text-sm mt-1">
+                    {exp.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Education */}
+      {educations.length > 0 && (
+        <div>
+          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+            Education
+          </h3>
+          <div className="space-y-4">
+            {educations.map((edu: Education) => (
+              <div key={edu.id} className="border-b pb-2">
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold">{edu.degree}</h4>
+                  <span className="text-sm text-gray-500">
+                    {edu.startDate} - {edu.endDate}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-700 italic">
+                  {edu.school} — {edu.location}
+                </p>
+                {edu.description && (
+                  <p className="text-sm mt-1">
+                    {edu.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Skills */}
+      {skills.length > 0 && (
+        <div>
+          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+            Skills
+          </h3>
+          <div className="space-y-2">
+            {skills.map((skill: Skill) => (
+              <div key={skill.id} className="flex items-center gap-1">
+                <span className="text-sm text-gray-800 font-medium">
+                  {skill.name}
+                </span>
+                {skill.level && resumeData.showExperienceLevel && (
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                          i < getSkillLevelBullets(skill.level || "Novice")
+                            ? "bg-black"
+                            : "bg-gray-300"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
       )}
 
       {/* Summary */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">SUMMARY</h2>
-        <p className="text-sm text-gray-700 leading-relaxed">
-          {summary}
-        </p>
-      </div>
+      {summary && (
+        <div>
+          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+            Summary
+          </h3>
+          <p className="text-sm text-gray-800 whitespace-pre-line">
+            {summary}
+          </p>
+        </div>
+      )}
 
-      {/* Experience */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">EXPERIENCE</h2>
-        <div className="space-y-4">
-          {experiences.map((exp: Experience) => (
-            <div key={exp.id}>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-gray-800">{exp.jobTitle}</h3>
-                <span className="text-sm text-gray-600">{exp.startDate} - {exp.endDate}</span>
+      {/* Languages */}
+      {languages && languages.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">LANGUAGES</h2>
+          <div className="space-y-2">
+            {languages.map((lang: any) => (
+              <div key={lang.id} className="flex items-center gap-2">
+                <span className="text-sm text-gray-800 font-medium">
+                  {lang.name}
+                </span>
+                {lang.proficiency && (
+                  <span className="text-sm text-gray-600">- {lang.proficiency}</span>
+                )}
               </div>
-              <p className="text-sm text-gray-600 mb-2">{exp.company}</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{exp.description}</p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Certifications */}
+      {certifications && certifications.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">CERTIFICATIONS</h2>
+          <div className="space-y-2">
+            {certifications.map((cert: any) => (
+              <div key={cert.id}>
+                <p className="text-sm text-gray-800 font-medium">{cert.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Awards */}
+      {awards && awards.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">AWARDS & HONORS</h2>
+          <div className="space-y-2">
+            {awards.map((award: any) => (
+              <div key={award.id}>
+                <p className="text-sm text-gray-800 font-medium">{award.title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Websites */}
+      {websites && websites.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">WEBSITES & SOCIAL MEDIA</h2>
+          <div className="space-y-2">
+            {websites.map((site: any) => (
+              <div key={site.id}>
+                <p className="text-sm text-gray-800 font-medium">{site.label}:</p>
+                <a
+                  href={site.url}
+                  className="text-sm text-blue-600 underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {site.url}
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* References */}
+      {references && references.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">REFERENCES</h2>
+          <div className="space-y-3">
+            {references.map((ref: any) => (
+              <div key={ref.id}>
+                <p className="text-sm text-gray-800 font-medium">{ref.name}</p>
+                {ref.relationship && (
+                  <p className="text-sm text-gray-600">{ref.relationship}</p>
+                )}
+                {ref.contactInfo && (
+                  <p className="text-sm text-gray-600">{ref.contactInfo}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Hobbies */}
+      {hobbies && hobbies.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">HOBBIES & INTERESTS</h2>
+          <div className="space-y-2">
+            {hobbies.map((hobby: any) => (
+              <div key={hobby.id}>
+                <p className="text-sm text-gray-800 font-medium">{hobby.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Custom Sections */}
+      {customSections && customSections.length > 0 && (
+        <div className="mb-6">
+          {customSections.map((section: any) => (
+            <div key={section.id} className="mb-6">
+              <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">{section.title.toUpperCase()}</h2>
+              <div className="text-sm text-gray-700 leading-relaxed">
+                {section.content}
+              </div>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Education */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">EDUCATION</h2>
-        <div className="space-y-4">
-          {educations.map((edu: Education) => (
-            <div key={edu.id}>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="font-semibold text-gray-800">{edu.school}</h3>
-                <span className="text-sm text-gray-600">{edu.startDate} - {edu.endDate}</span>
-              </div>
-              <p className="text-sm text-gray-600 mb-2">{edu.location}</p>
-              <p className="text-sm text-gray-700 mb-2">{edu.degree}</p>
-              <p className="text-sm text-gray-700 leading-relaxed">{edu.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Skills */}
-      <div>
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">SKILLS</h2>
-        <div className="flex flex-wrap gap-2">
-          {skills.map((skill: Skill) => (
-            <span key={skill.id} className="bg-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
-              {skill.name}
-            </span>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 

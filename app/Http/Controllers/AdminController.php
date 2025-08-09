@@ -304,6 +304,43 @@ class AdminController extends Controller
     }
 
     /**
+     * View/download payment proof file
+     */
+    public function viewPaymentProof($id)
+    {
+        try {
+            $proof = PaymentProof::with('user', 'resume')->findOrFail($id);
+            
+            // Check if file exists
+            if (!Storage::disk('public')->exists($proof->file_path)) {
+                abort(404, 'Payment proof file not found.');
+            }
+            
+            // Get file path
+            $filePath = Storage::disk('public')->path($proof->file_path);
+            
+            // Get file info
+            $fileName = basename($proof->file_path);
+            $mimeType = Storage::disk('public')->mimeType($proof->file_path);
+            
+            // Return file for viewing/downloading
+            return response()->file($filePath, [
+                'Content-Type' => $mimeType,
+                'Content-Disposition' => 'inline; filename="' . $fileName . '"'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Error viewing payment proof', [
+                'payment_id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            abort(404, 'Payment proof not found.');
+        }
+    }
+
+    /**
      * Delete a resume
      */
     public function deleteResume($id)

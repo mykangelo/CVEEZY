@@ -80,11 +80,30 @@
     @if (!empty($resume['skills']))
         <div class="section">
             <h2>Skills</h2>
-            <ul>
-                @foreach ($resume['skills'] as $skill)
-                    <li>{{ $skill['name'] }}</li>
-                @endforeach
-            </ul>
+            @foreach ($resume['skills'] as $skill)
+                <div style="margin-bottom: 5px;">
+                    <span style="font-weight: bold;">{{ $skill['name'] }}</span>
+                    @if (isset($skill['level']) && ($resume['showExperienceLevel'] ?? false))
+                        <span style="margin-left: 10px;">
+                            @php
+                                $level = $skill['level'] ?? 'Novice';
+                                $bulletCount = 0;
+                                switch ($level) {
+                                    case 'Novice': $bulletCount = 1; break;
+                                    case 'Beginner': $bulletCount = 2; break;
+                                    case 'Skillful': $bulletCount = 3; break;
+                                    case 'Experienced': $bulletCount = 4; break;
+                                    case 'Expert': $bulletCount = 5; break;
+                                    default: $bulletCount = 1;
+                                }
+                            @endphp
+                            @for ($i = 0; $i < 5; $i++)
+                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 2px; background-color: {{ $i < $bulletCount ? '#000000' : '#cccccc' }};"></span>
+                            @endfor
+                        </span>
+                    @endif
+                </div>
+            @endforeach
         </div>
     @endif
 

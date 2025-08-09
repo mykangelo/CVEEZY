@@ -19,12 +19,28 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
     references,
     hobbies,
     customSections,
+    showExperienceLevel,
   } = resumeData;
 
   const hasLocationInfo =
     contact.address || contact.city || contact.country || contact.postCode;
 
-  // ... rest of your component
+  const getSkillLevelBullets = (level: string): number => {
+    switch (level) {
+      case "Novice":
+        return 1;
+      case "Beginner":
+        return 2;
+      case "Skillful":
+        return 3;
+      case "Experienced":
+        return 4;
+      case "Expert":
+        return 5;
+      default:
+        return 1;
+    }
+  };
 
 
     return (
@@ -130,13 +146,29 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
                     <h3 className="text-xl font-semibold mb-2 text-gray-700">
                         Skills
                     </h3>
-                    <ul className="list-disc list-inside space-y-1">
+                    <div className="space-y-2">
                         {skills.map((skill, index) => (
-                            <li key={index} className="text-sm text-gray-800">
-                                {skill.name}
-                            </li>
+                            <div key={index} className="flex items-center gap-1">
+                                <span className="text-sm text-gray-800 font-medium">
+                                    {skill.name}
+                                </span>
+                                {skill.level && showExperienceLevel && (
+                                    <div className="flex items-center gap-0.5">
+                                        {Array.from({ length: 5 }, (_, i) => (
+                                            <div
+                                                key={i}
+                                                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                                                    i < getSkillLevelBullets(skill.level || "Novice")
+                                                        ? "bg-black"
+                                                        : "bg-gray-300"
+                                                }`}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                 </div>
             )}
 

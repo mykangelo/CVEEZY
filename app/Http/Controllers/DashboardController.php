@@ -321,6 +321,14 @@ class DashboardController extends Controller
             ],
             'summary' => $resumeData['summary'] ?? '',
             'skills' => $resumeData['skills'] ?? [],
+            'showExperienceLevel' => $resumeData['showExperienceLevel'] ?? false,
+            'languages' => $resumeData['languages'] ?? [],
+            'certifications' => $resumeData['certifications'] ?? [],
+            'awards' => $resumeData['awards'] ?? [],
+            'websites' => $resumeData['websites'] ?? [],
+            'references' => $resumeData['references'] ?? [],
+            'hobbies' => $resumeData['hobbies'] ?? [],
+            'customSections' => $resumeData['customSections'] ?? [],
             'experiences' => array_map(function($exp) {
                 // Ensure we have all required fields with proper fallbacks
                 $jobTitle = $exp['jobTitle'] ?? '';
@@ -373,7 +381,14 @@ class DashboardController extends Controller
             'first_experience' => $pdfData['experiences'][0] ?? 'No experiences',
             'original_experiences' => $resumeData['experiences'] ?? [],
             'education_count' => count($pdfData['education']),
-            'first_education' => $pdfData['education'][0] ?? 'No education'
+            'first_education' => $pdfData['education'][0] ?? 'No education',
+            'languages_count' => count($pdfData['languages'] ?? []),
+            'certifications_count' => count($pdfData['certifications'] ?? []),
+            'awards_count' => count($pdfData['awards'] ?? []),
+            'websites_count' => count($pdfData['websites'] ?? []),
+            'references_count' => count($pdfData['references'] ?? []),
+            'hobbies_count' => count($pdfData['hobbies'] ?? []),
+            'customSections_count' => count($pdfData['customSections'] ?? [])
         ]);
         
         // Fallback to classic if template view doesn't exist

@@ -94,7 +94,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/save-resume', [ResumeController::class, 'store'])->name('resume.save');
     Route::get('/user/resume-status', [ResumeController::class, 'status'])->name('resume.status');
     Route::get('/resume/{id}', [ResumeController::class, 'show'])->name('resume.show');
-    Route::get('/resume/download/{id}', [ResumeController::class, 'download'])->name('resume.download');
+
     
 
 
@@ -154,6 +154,7 @@ Route::middleware(['auth'])->group(function () {
 
     // API routes for admin actions
     Route::get('/admin/payments', [AdminController::class, 'index']);
+    Route::get('/admin/payment/{id}/view', [AdminController::class, 'viewPaymentProof']);
     Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve']);
     Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject']);
 });
