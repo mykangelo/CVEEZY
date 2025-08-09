@@ -4,7 +4,15 @@ import FAQ from './HomepageFAQ';
 import Logo from "@/Components/Logo";
 import Button from "../Components/PrimaryButton";
 
-const HomePage: React.FC = () => {
+interface HomePageProps {
+  hasPendingPayments?: boolean;
+  pendingResumesCount?: number;
+}
+
+const HomePage: React.FC<HomePageProps> = ({ 
+  hasPendingPayments = false, 
+  pendingResumesCount = 0 
+}) => {
   const { auth } = usePage().props as any;
   const user = auth.user;
   const templates = [
@@ -80,7 +88,7 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-serif px-0">
+    <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-sans px-0">
       <Head title="CVeezy | Build Your Job-Winning Resume" />
 
       {/* Header */}
@@ -137,16 +145,32 @@ const HomePage: React.FC = () => {
               clicks.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              <Link href="/choose-template">
-                <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
-                  Create New Resume
-                </button>
-              </Link>
-              <Link href="/uploader">
-                <button className="bg-white border border-[#2196f3] text-[#2196f3] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
-                  Improve My Resume
-                </button>
-              </Link>
+              {user && hasPendingPayments ? (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+                  </div>
+                  <p className="text-yellow-700 text-sm">
+                    You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Link href="/choose-template">
+                    <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
+                      Create New Resume
+                    </button>
+                  </Link>
+                  <Link href="/uploader">
+                    <button className="bg-white border border-[#2196f3] text-[#2196f3] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
+                      Improve My Resume
+                    </button>
+                  </Link>
+                </>
+              )}
             </div>
             <div className="flex gap-12 mt-2 items-center">
               <div className="flex flex-col items-center">
@@ -214,7 +238,7 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-serif">
+              <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
         <div className="max-w-7xl mx-auto text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
             Why use <span className="text-[#2196f3]">CVeezy's</span> Resume Builder?
@@ -253,11 +277,11 @@ const HomePage: React.FC = () => {
       </section>
 
       {/* Templates Section */}
-      <section className="w-full bg-[#f4faff] py-20 mb-10 font-serif overflow-hidden">
-        <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-serif h-[700px]">
-          <h1 className="text-white text-4xl font-bold mb-4">
-            Choose your <span className="text-sky-400">resume template</span>, AI will do the rest
-          </h1>
+              <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
+          <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
+                      <h1 className="text-white text-4xl font-bold mb-4">
+              Choose your <span className="text-sky-400">resume template</span>, AI will do the rest
+            </h1>
           <p className="text-white text-sm max-w-2xl mx-auto mb-6">
             With CVeezy's AI resume generator, you'll get a professional, typo-free, and ATS-friendly resume ready in no time. Explore 40+ modern templates.
           </p>
@@ -349,7 +373,7 @@ const HomePage: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer
+     <footer
         className="w-full bg-[#2E404A] mt-8 md:mt-20 py-8 md:py-16 px-4 md:px-8"
         style={{ fontFamily: "Nunito Sans, sans-serif" }}
       >
@@ -365,74 +389,13 @@ const HomePage: React.FC = () => {
                 <span className="text-xl font-bold">CVeezy</span>
               </div>
               <p className="text-gray-300 text-sm leading-relaxed">
-                We help job seekers stand out in the highly competitive labor market
+                We Help job seekers stand out in the highly competitive labor market
                 with CVeezy!
               </p>
             </div>
             <div className="grid grid-cols-2 gap-6 mb-6 justify-items-center">
               <div>
-                <h3 className="text-lg font-semibold mb-3">Resources</h3>
-                <ul className="space-y-1 text-sm text-gray-300">
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Builder
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Formatting
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Writing
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Resume Writing Guide
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Professional Resume
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Entry-level Resume
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="hover:text-white transition-colors"
-                    >
-                      Student Resume
-                    </a>
-                  </li>
-                </ul>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Support</h3>
+                <h3 className="text-lg font-semibold mb-3">About</h3>
                 <ul className="space-y-1 text-sm text-gray-300">
                   <li>
                     <Link
@@ -460,10 +423,10 @@ const HomePage: React.FC = () => {
                   </li>
                   <li>
                     <Link
-                      href="/subscription-terms"
+                      href="/payment-terms"
                       className="hover:text-white transition-colors"
                     >
-                      Subscription Terms
+                      Payment Terms
                     </Link>
                   </li>
                   <li>
@@ -478,23 +441,31 @@ const HomePage: React.FC = () => {
               </div>
             </div>
             <div className="text-center">
-              <div className="text-sm text-gray-300 mb-3">
-                <p>© 2025. TSFF Holdings Limited,</p>
-                <p>Limassol, Cyprus. All rights reserved.</p>
-              </div>
               <div className="mb-3">
-                <p className="text-sm text-gray-300">Email: help@cveezy.com</p>
+                <h3 className="text-lg font-semibold mb-2">Need Help?</h3>
+                <p className="text-sm text-gray-300 mb-2">Email: help@cveezy.com</p>
+              </div>
+              <div className="text-sm text-gray-300 mb-3">
+                <div className="flex items-center justify-center mb-1">
+                  <img
+                    src="/images/certicode-logo.png"
+                    alt="Certicode Logo"
+                    className="w-4 h-4 rounded mr-2 object-contain"
+                  />
+                  <p>© 2025. Certicode.</p>
+                </div>
+                <p>All rights reserved.</p>
               </div>
               <div className="flex justify-center">
                 <img
                   src="/images/gcash-logo.png"
-                  alt="Payment Methods"
+                  alt="GCash"
                   className="h-5 object-contain"
                 />
               </div>
             </div>
           </div>
-          <div className="hidden md:grid grid-cols-4 gap-8">
+          <div className="hidden md:grid grid-cols-3 gap-8">
             <div className="col-span-1">
               <div className="flex items-center mb-6">
                 <img
@@ -505,73 +476,12 @@ const HomePage: React.FC = () => {
                 <span className="text-2xl font-bold">CVeezy</span>
               </div>
               <p className="text-gray-300 text-base leading-relaxed">
-                We help job seekers stand out in the highly competitive labor market
+                We Help job seekers stand out in the highly competitive labor market
                 with CVeezy!
               </p>
             </div>
-            <div className="col-span-1">
-              <h3 className="text-xl font-semibold mb-4">Resources</h3>
-              <ul className="space-y-2 text-base text-gray-300">
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Builder
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Formatting
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Writing
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Resume Writing Guide
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Professional Resume
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Entry-level Resume
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="hover:text-white transition-colors"
-                  >
-                    Student Resume
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div className="col-span-1">
-              <h3 className="text-xl font-semibold mb-4">Support</h3>
+            <div className="col-span-1 ml-24">
+              <h3 className="text-xl font-semibold mb-4">About</h3>
               <ul className="space-y-2 text-base text-gray-300">
                 <li>
                   <Link
@@ -615,18 +525,26 @@ const HomePage: React.FC = () => {
                 </li>
               </ul>
             </div>
-            <div className="col-span-1">
-              <div className="text-base text-gray-300 mb-4">
-                <p>© 2025. TSFF Holdings Limited,</p>
-                <p>Limassol, Cyprus. All rights reserved.</p>
-              </div>
+            <div className="col-span-1 ml-8">
+              <h3 className="text-xl font-semibold mb-4">Need Help?</h3>
               <div className="mb-4">
                 <p className="text-base text-gray-300">Email: help@cveezy.com</p>
               </div>
-              <div className="flex space-x-2">
+              <div className="text-base text-gray-300 mb-4">
+                <div className="flex items-center mb-1">
+                  <img
+                    src="\images\CerticodeLogo.jpg"
+                    alt="Certicode Logo"
+                    className="w-6 h-6 rounded mr-2 object-contain"
+                  />
+                  <p>© 2025. Certicode.</p>
+                </div>
+                <p>All rights reserved.</p>
+              </div>
+              <div className="flex">
                 <img
                   src="/images/gcash-logo.png"
-                  alt="Payment Methods"
+                  alt="GCash"
                   className="h-6 object-contain"
                 />
               </div>

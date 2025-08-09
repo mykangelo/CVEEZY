@@ -3,13 +3,21 @@ import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
-const ChooseResumeMaker: React.FC = () => {
+interface ChooseResumeMakerProps {
+  hasPendingPayments?: boolean;
+  pendingResumesCount?: number;
+}
+
+const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({ 
+  hasPendingPayments = false, 
+  pendingResumesCount = 0 
+}) => {
   const { auth } = usePage().props as any;
   const user = auth.user;
   
-  // Get template ID from URL parameters
+  // Get template name from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const templateId = urlParams.get('template') || '1';
+  const templateName = urlParams.get('template') || 'classic';
   
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
@@ -71,34 +79,103 @@ const ChooseResumeMaker: React.FC = () => {
           How will you make your resume?
         </h1>
 
+        {/* Warning for pending payments */}
+        {user && hasPendingPayments && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+            </div>
+            <p className="text-yellow-700 text-sm">
+              You have {pendingResumesCount} resume(s) with pending payment reviews. Please wait for admin approval before creating new resumes.
+            </p>
+          </div>
+        )}
+
         {/* Option Cards */}
         <div className="flex flex-wrap justify-center gap-8 mb-8">
           {/* Upload Resume Card */}
           <div
-            className="bg-white border border-[#bcd6f6] p-8 rounded-xl shadow-md cursor-pointer relative w-80 min-h-[220px] flex flex-col items-center hover:shadow-lg transition group"
-            onClick={() => router.visit("/uploader")}
+            className={`bg-white border border-[#bcd6f6] p-8 rounded-xl shadow-md relative w-80 min-h-[220px] flex flex-col items-center transition group ${
+              hasPendingPayments 
+                ? 'cursor-not-allowed opacity-50' 
+                : 'cursor-pointer hover:shadow-lg'
+            }`}
+            onClick={() => {
+              if (hasPendingPayments) {
+                return; // Do nothing if pending payments
+              }
+              if (user) {
+                router.visit("/uploader");
+              } else {
+                router.visit("/login?redirect=/uploader");
+              }
+            }}
             tabIndex={0}
             role="button"
             aria-label="Upload your existing resume to make quick edits"
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.visit('/uploader'); }}
+            onKeyDown={e => { 
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (hasPendingPayments) {
+                  return; // Do nothing if pending payments
+                }
+                if (user) {
+                  router.visit('/uploader');
+                } else {
+                  router.visit('/login?redirect=/uploader');
+                }
+              }
+            }}
           >
             <img src="/images/AlreadyIcon" alt="Upload Resume" className="w-20 h-16 mb-4" />
             <h2 className="text-lg font-bold mb-1 text-gray-700">I already have a resume</h2>
             <p className="text-[#1a3c6c] text-base mb-2 text-center">Upload your existing resume to make quick edits</p>
+            {!user && (
+              <p className="text-xs text-orange-600 mt-2 text-center">Login required to continue</p>
+            )}
           </div>
 
           {/* Start from Scratch Card */}
           <div
-            className="bg-white border border-[#f6c6d6] p-8 rounded-xl shadow-md cursor-pointer w-80 min-h-[220px] flex flex-col items-center hover:shadow-lg transition group"
-            onClick={() => router.visit(`/builder?template=${templateId}`)}
+            className={`bg-white border border-[#f6c6d6] p-8 rounded-xl shadow-md w-80 min-h-[220px] flex flex-col items-center transition group ${
+              hasPendingPayments 
+                ? 'cursor-not-allowed opacity-50' 
+                : 'cursor-pointer hover:shadow-lg'
+            }`}
+            onClick={() => {
+              if (hasPendingPayments) {
+                return; // Do nothing if pending payments
+              }
+              if (user) {
+                router.visit(`/builder?template=${templateName}`);
+              } else {
+                router.visit(`/login?redirect=/builder?template=${templateName}`);
+              }
+            }}
             tabIndex={0}
             role="button"
             aria-label="Start from scratch with AI guidance"
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.visit(`/builder?template=${templateId}`); }}
+            onKeyDown={e => { 
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (hasPendingPayments) {
+                  return; // Do nothing if pending payments
+                }
+                if (user) {
+                  router.visit(`/builder?template=${templateName}`);
+                } else {
+                  router.visit(`/login?redirect=/builder?template=${templateName}`);
+                }
+              }
+            }}
           >
             <img src="/images/ScratchIcon" alt="Start from Scratch" className="w-20 h-16 mb-4" />
             <h2 className="text-lg font-bold mb-1 text-gray-700">Start from scratch</h2>
             <p className="text-[#1a3c6c] text-base mb-2 text-center">Our AI will guide you through creating a resume</p>
+            {!user && (
+              <p className="text-xs text-orange-600 mt-2 text-center">Login required to continue</p>
+            )}
           </div>
         </div>
 

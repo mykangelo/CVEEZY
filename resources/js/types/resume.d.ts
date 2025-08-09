@@ -1,4 +1,5 @@
 export interface Resume {
+
   id: number;
   name: string;
   creation_date: string;
@@ -75,6 +76,7 @@ export interface ResumeData {
     description: string;
   }>;
 }
+
 
 export interface DashboardProps {
   resumes: Resume[];

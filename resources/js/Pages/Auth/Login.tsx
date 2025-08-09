@@ -12,9 +12,11 @@ import Header from "@/Components/Header";
 export default function Login({
     status,
     canResetPassword,
+    redirect,
 }: {
     status?: string;
     canResetPassword: boolean;
+    redirect?: string;
 }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
@@ -25,7 +27,9 @@ export default function Login({
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        post(route("login"), {
+        const url = redirect ? `${route("login")}?redirect=${encodeURIComponent(redirect)}` : route("login");
+        
+        post(url, {
             onFinish: () => reset("password"),
         });
     };

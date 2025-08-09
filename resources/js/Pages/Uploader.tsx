@@ -3,7 +3,15 @@ import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
-const Uploader: React.FC = () => {
+interface UploaderProps {
+  hasPendingPayments?: boolean;
+  pendingResumesCount?: number;
+}
+
+const Uploader: React.FC<UploaderProps> = ({ 
+  hasPendingPayments = false, 
+  pendingResumesCount = 0 
+}) => {
   const { auth } = usePage().props as any;
   const user = auth.user;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,7 +36,9 @@ const Uploader: React.FC = () => {
   };
 
   return (
+
     <div className="min-h-screen flex flex-col bg-white font-serif">
+
       <Head title="CVeezy | Improve Your Resume" />
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
@@ -75,6 +85,21 @@ const Uploader: React.FC = () => {
           <svg className="w-6 h-6 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
           Go Back
         </button>
+
+        {/* Warning for pending payments */}
+        {user && hasPendingPayments && (
+          <div className="mx-auto max-w-3xl mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+            </div>
+            <p className="text-yellow-700 text-sm">
+              You have {pendingResumesCount} resume(s) with pending payment reviews. Please wait for admin approval before creating new resumes.
+            </p>
+          </div>
+        )}
 
         {/* Upload Section */}
         <div className="flex items-center justify-center pt-20 pb-24">

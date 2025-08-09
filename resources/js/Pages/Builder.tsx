@@ -1,9 +1,27 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Head, Link } from "@inertiajs/react";
+import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
 import { Trash2, Plus, GripVertical, ChevronDown, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
+import { ResumeData } from '@/types/resume';
+
+// Import all resume template components
+import Classic from '@/Components/Builder/Classic';
+import Modern from '@/Components/Builder/Modern';
+import Creative from '@/Components/Builder/Creative';
+import Elegant from '@/Components/Builder/Elegant';
+import Professional from '@/Components/Builder/Professional';
+import Minimal from '@/Components/Builder/Minimal';
+
+const templateComponents: Record<string, React.FC<{ resumeData: ResumeData }>> = {
+  classic: Classic,
+  modern: Modern,
+  creative: Creative,
+  elegant: Elegant,
+  professional: Professional,
+  minimal: Minimal,
+};
 
 type Contact = {
   firstName: string;
@@ -1230,17 +1248,31 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
 
 const steps = ["Contacts", "Experience", "Education", "Skills", "Summary", "Finalize"];
 
-const Builder: React.FC = () => {
+interface BuilderProps {
+  hasPendingPayments?: boolean;
+  pendingResumesCount?: number;
+}
+
+const Builder: React.FC<BuilderProps> = ({ 
+  hasPendingPayments = false, 
+  pendingResumesCount = 0 
+}) => {
+  const { url } = usePage();
+  const searchParams = new URLSearchParams(url.split('?')[1]);
+  
   const [currentStep, setCurrentStep] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resumeId, setResumeId] = useState<number | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Get template ID and resume ID from URL parameters
+  // Get template name and resume ID from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
-  const templateId = parseInt(urlParams.get('template') || '1');
+  const defaultTemplateName = urlParams.get('template') || 'classic';
   const existingResumeId = urlParams.get('resume');
+  
+  // State for template name - will be set from existing resume or URL parameter
+  const [templateName, setTemplateName] = useState(defaultTemplateName);
   
   // Contacts state
   const [contacts, setContacts] = useState<Contact>({
@@ -1290,6 +1322,34 @@ const Builder: React.FC = () => {
   const [customSections, setCustomSections] = useState<CustomSection[]>([]);
 
 
+  // ResumeData state for template system
+  const [resumeData, setResumeData] = useState<ResumeData>({
+    contact: {
+      firstName: '',
+      lastName: '',
+      desiredJobTitle: '',
+      phone: '',
+      email: '',
+      country: '',
+      city: '',
+      address: '',
+      postCode: '',
+    },
+    experiences: [],
+    education: [],
+    skills: [],
+    summary: '',
+    languages: [],
+    certifications: [],
+    awards: [],
+    websites: [],
+    references: [],
+    hobbies: [],
+    customSections: [],
+  });
+
+  const TemplateComponent = templateComponents[templateName] || Classic;
+
   // Load existing resume or create new one
   useEffect(() => {
     const initializeResume = async () => {
@@ -1310,6 +1370,11 @@ const Builder: React.FC = () => {
             
             // Set resume ID
             setResumeId(result.resume.id);
+            
+            // Set template name from existing resume
+            if (result.resume.template_name) {
+              setTemplateName(result.resume.template_name);
+            }
             
             // Load resume data
             if (resumeData) {
@@ -1371,12 +1436,31 @@ const Builder: React.FC = () => {
     const createNewResume = async () => {
       try {
         console.log('Creating new resume...');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
+        
+        const requestBody = {
+          name: 'My Resume',
+          template_name: templateName,
+          resume_data: {
+            contact: contacts,
+            experiences,
+            educations,
+            skills,
+            summary
+          }
+        };
+        
+        console.log('Request body:', requestBody);
+        
         const response = await fetch('/resumes', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
           },
+
           body: JSON.stringify({
             name: 'My Resume',
             template_id: templateId,
@@ -1396,14 +1480,28 @@ const Builder: React.FC = () => {
               customSections
             }
           })
+
         });
+        
+        console.log('Response status:', response.status);
+        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
         
         if (response.ok) {
           const result = await response.json();
           console.log('Resume created with ID:', result.resume.id);
           setResumeId(result.resume.id);
         } else {
-          console.error('Failed to create initial resume');
+          const errorText = await response.text();
+          console.error('Failed to create initial resume. Status:', response.status);
+          console.error('Response text:', errorText);
+          
+          // Try to parse as JSON if possible
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.error('Error details:', errorJson);
+          } catch (e) {
+            console.error('Response is not JSON:', errorText.substring(0, 200));
+          }
         }
       } catch (error) {
         console.error('Error creating initial resume:', error);
@@ -1411,7 +1509,7 @@ const Builder: React.FC = () => {
     };
 
     initializeResume();
-  }, [existingResumeId, templateId]);
+  }, [existingResumeId, templateName]);
 
   // Function to update resume data in real-time
   const updateResumeData = async (newData: any) => {
@@ -1641,6 +1739,47 @@ const Builder: React.FC = () => {
     }
   };
 
+  // Synchronize old state with new resumeData for templates
+  useEffect(() => {
+    setResumeData(prev => ({
+      ...prev,
+      contact: {
+        firstName: contacts.firstName || '',
+        lastName: contacts.lastName || '',
+        desiredJobTitle: contacts.desiredJobTitle || '',
+        phone: contacts.phone || '',
+        email: contacts.email || '',
+        country: '',
+        city: '',
+        address: '',
+        postCode: '',
+      },
+      experiences: experiences.map(exp => ({
+        id: exp.id,
+        jobTitle: exp.jobTitle,
+        company: exp.company,
+        location: exp.employer,
+        startDate: exp.startDate,
+        endDate: exp.endDate,
+        description: exp.description,
+      })),
+      education: educations.map(edu => ({
+        id: edu.id,
+        school: edu.school,
+        location: edu.location,
+        degree: edu.degree,
+        startDate: edu.startDate,
+        endDate: edu.endDate,
+        description: edu.description,
+      })),
+      skills: skills.map(skill => ({
+        id: skill.id,
+        name: skill.name,
+      })),
+      summary: summary,
+    }));
+  }, [contacts, experiences, educations, skills, summary]);
+
   return (
     <div className="flex flex-col h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Build Your Resume" />
@@ -1672,6 +1811,21 @@ const Builder: React.FC = () => {
           </span>
         </div>
       </header>
+
+      {/* Warning for pending payments */}
+      {hasPendingPayments && (
+        <div className="bg-yellow-50 border border-yellow-200 p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+          </div>
+          <p className="text-yellow-700 text-sm">
+            You have {pendingResumesCount} resume(s) with pending payment reviews. Please wait for admin approval before creating new resumes.
+          </p>
+        </div>
+      )}
 
       {/* Main Content */}
         <Link
@@ -1732,12 +1886,31 @@ const Builder: React.FC = () => {
                       // Try to create resume if it doesn't exist
                       try {
                         console.log('No resume ID found, attempting to create resume...');
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        console.log('CSRF Token:', csrfToken ? 'Present' : 'Missing');
+                        
+                        const requestBody = {
+                          name: `${contacts.firstName} ${contacts.lastName}`.trim() || 'My Resume',
+                          template_name: templateName,
+                          resume_data: {
+                            contact: contacts,
+                            experiences,
+                            educations,
+                            skills,
+                            summary
+                          }
+                        };
+                        
+                        console.log('Request body:', requestBody);
+                        
                         const response = await fetch('/resumes', {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
                           },
+
                           body: JSON.stringify({
                             name: `${contacts.firstName} ${contacts.lastName}`.trim() || 'My Resume',
                             template_id: templateId,
@@ -1757,7 +1930,11 @@ const Builder: React.FC = () => {
                               customSections 
                             }
                           })
+
                         });
+                        
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', Object.fromEntries(response.headers.entries()));
                         
                         if (response.ok) {
                           const result = await response.json();
@@ -1767,7 +1944,18 @@ const Builder: React.FC = () => {
                           // Continue with finalization
                           await finalizeResume(result.resume.id);
                         } else {
-                          console.error('Failed to create resume');
+                          const errorText = await response.text();
+                          console.error('Failed to create resume. Status:', response.status);
+                          console.error('Response text:', errorText);
+                          
+                          // Try to parse as JSON if possible
+                          try {
+                            const errorJson = JSON.parse(errorText);
+                            console.error('Error details:', errorJson);
+                          } catch (e) {
+                            console.error('Response is not JSON:', errorText.substring(0, 200));
+                          }
+                          
                           alert('Unable to create resume. Please try again.');
                           return;
                         }
@@ -1797,9 +1985,10 @@ const Builder: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Panel - Resume Preview */}
+          {/* Right Panel - Dynamic Template Preview */}
           <div className="lg:w-1/2 w-full p-4">
             <div className="w-full max-w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto">
+
 
       {/* CONTACTS */}
       <h2 className="text-2xl font-bold mb-1">
@@ -2014,6 +2203,7 @@ const Builder: React.FC = () => {
             )}
           </div>
       ))}
+
 
 
             </div>
