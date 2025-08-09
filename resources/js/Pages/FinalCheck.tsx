@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
-import { Languages } from "lucide-react";
 
 type Contact = {
   firstName: string;
@@ -9,9 +8,6 @@ type Contact = {
   phone: string;
   email: string;
   address?: string;
-  city?: string;
-  country?: string;
-  postCode?: string;
   websites?: string[];
 };
 
@@ -19,7 +15,7 @@ type Experience = {
   id: number;
   jobTitle: string;
   employer: string;
-  location: string;
+  company: string;
   startDate: string;
   endDate: string;
   description: string;
@@ -41,56 +37,6 @@ type Skill = {
   level: string;
 };
 
-interface BaseSectionItem {
-  id: number;
-  content: string;
-}
-
-interface LanguageItem extends BaseSectionItem {
-  level: string;
-}
-
-interface WebsiteItem extends BaseSectionItem {
-  title: string;
-  url: string;
-}
-
-type SectionItem = BaseSectionItem | LanguageItem | WebsiteItem;
-
-
-interface LanguageItem {
-  id: number;
-  content: string;
-  level: string;
-}
-
-interface CustomSection {
-  id: number;
-  sectionName: string;
-  description: string;
-}
-
-interface ReferenceItem {
-  id: number;
-  content: string;
-}
-
-interface HobbiesItem {
-  id: number;
-  content: string;
-}
-
-interface AwardsItem {
-  id: number;
-  content: string;
-}
-
-interface CertificationItem {
-  id: number;
-  content: string;
-}
-
-
 interface FinalCheckProps {
   contact?: Contact;
   experiences?: Experience[];
@@ -98,18 +44,7 @@ interface FinalCheckProps {
   skills?: Skill[];
   summary?: string;
   resumeId?: number;
-
-  languages?: LanguageItem[];
-  certifications?: CertificationItem[];
-  awards?: AwardsItem[];
-  websites?: WebsiteItem[];
-  showReferences?: ReferenceItem[];
-  hobbies?: HobbiesItem[];
-  customSections?: CustomSection[];
-
 }
-
-
 
 
 
@@ -119,24 +54,11 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   educations: propEducations,
   skills: propSkills,
   summary: propSummary,
-  resumeId,
-
-  languages: propLanguageItem,
-  certifications: propCertificationItem,
-  awards: propAwardsItem,
-  websites: propWebsiteItem,
-  showReferences:propReferenceItem,
-  hobbies: propHobbiesItem,
-  customSections: propCustomSection,
-
-
+  resumeId
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>("templates");
-  const [showExperienceLevel, setShowExperienceLevel] = useState(true); // or false by default
-  const skillLevels = ["Beginner", "Novice", "Skillful", "Experienced", "Expert"];
-  const languageLevels = ["Elementary", "Intermediate", "Proficient", "Advanced", "Native"];
-
+  
   // Debug: Log the resumeId and other props
   console.log('FinalCheck - Props received:', {
     resumeId,
@@ -144,16 +66,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     propExperiences,
     propEducations,
     propSkills,
-    propSummary,
-
-    propLanguageItem,
-    propCertificationItem,
-    propAwardsItem,
-    propWebsiteItem,
-    propReferenceItem,
-    propHobbiesItem,
-    propCustomSection
-
+    propSummary
   });
   
   // Debug: Log URL parameters
@@ -169,57 +82,24 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     if (process.env.NODE_ENV === 'development') {
       console.log('FinalCheck - Debug Info:', {
         resumeId,
-        hasPropsData: !!(propContact && propExperiences && propEducations && propSkills && propSummary &&
-          propLanguageItem &&
-          propCertificationItem &&
-          propAwardsItem &&
-          propWebsiteItem &&
-          propReferenceItem &&
-          propHobbiesItem &&
-          propCustomSection
-        ),
+        hasPropsData: !!(propContact && propExperiences && propEducations && propSkills && propSummary),
         hasSessionData: !!sessionStorage.getItem('resumeData'),
         urlResumeId
       });
     }
-  }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary,
-      propLanguageItem,
-      propCertificationItem,
-      propAwardsItem,
-      propWebsiteItem,
-      propReferenceItem,
-      propHobbiesItem,
-      propCustomSection
-  ]);
+  }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary]);
   
   // Get data from sessionStorage or use props
   const getResumeData = () => {
     // Prioritize props data (from database) over sessionStorage
-    if (propContact && propExperiences && propEducations && propSkills && propSummary && 
-      propLanguageItem &&
-      propCertificationItem &&
-      propAwardsItem &&
-      propWebsiteItem &&
-      propReferenceItem &&
-      propHobbiesItem &&
-      propCustomSection
-    ) {
+    if (propContact && propExperiences && propEducations && propSkills && propSummary) {
       console.log('FinalCheck - Using props data from database');
       return {
         contact: propContact,
         experiences: propExperiences,
         educations: propEducations,
         skills: propSkills,
-        summary: propSummary,
-
-        languages: propLanguageItem,
-        certifications: propCertificationItem,
-        awards: propAwardsItem,
-        websites: propWebsiteItem,
-        showReferences:propReferenceItem,
-        hobbies: propHobbiesItem,
-        customSections: propCustomSection
-
+        summary: propSummary
       };
     }
     
@@ -248,29 +128,12 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       experiences: [],
       educations: [],
       skills: [],
-      summary: "",
-
-      languages: [],
-      certifications: [],
-      awards: [],
-      websites: [],
-      showReferences: [],
-      hobbies: [],
-      customSections: [],
-        };
+      summary: ""
+    };
   };
 
   const resumeData = getResumeData();
-  const { contact, experiences, educations, skills, summary, 
-      languages,
-      certifications,
-      awards,
-      websites,
-      showReferences,
-      hobbies,
-      customSections  } = resumeData;
-
-    
+  const { contact, experiences, educations, skills, summary } = resumeData;
 
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -312,55 +175,49 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   };
 
 
-const renderResumeContent = () => (
-  <div className="w-full h-full bg-white p-6 overflow-auto">
-    {/* Header */}
-    <div className="text-center mb-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">
-        {contact.firstName} {contact.lastName}
-      </h1>
-      <p className="text-lg text-gray-600 mb-4">{contact.desiredJobTitle}</p>
 
-      {/* Contact Info */}
-      <div className="text-sm text-gray-600 space-y-1 mb-6">
-        {contact.address && <p>{contact.address}</p>}
-        {(contact.city || contact.country) && (
-          <p>
-            {contact.city}{contact.city && contact.country ? ', ' : ''}{contact.country}
-          </p>
-        )}
-        {contact.postCode && <p>{contact.postCode}</p>}
-        {contact.email && <p>{contact.email}</p>}
-        {contact.phone && <p>{contact.phone}</p>}
-      </div>
-
-      <hr className="border-gray-300 mb-6" />
-    </div>
-
-    {/* Websites and Social Links */}
-    {contact.websites && contact.websites.length > 0 && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">WEBSITES AND SOCIAL LINKS</h2>
-        <div className="space-y-1">
-          {contact.websites.map((website: string, index: number) => (
-            <p key={index} className="text-blue-600 underline text-sm">
-              {website}
-            </p>
-          ))}
+  const renderResumeContent = () => (
+    <div className="w-full h-full bg-white p-6 overflow-auto">
+      {/* Header */}
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          {contact.firstName} {contact.lastName}
+        </h1>
+        <p className="text-lg text-gray-600 mb-4">{contact.desiredJobTitle}</p>
+        
+        {/* Contact Info */}
+        <div className="text-sm text-gray-600 space-y-1 mb-6">
+          <p>{contact.address}</p>
+          <p>{contact.email}</p>
+          <p>{contact.phone}</p>
         </div>
+        
+        <hr className="border-gray-300 mb-6" />
       </div>
-    )}
 
-    {/* Summary */}
-    {summary && (
+      {/* Websites and Social Links */}
+      {contact.websites && contact.websites.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">WEBSITES AND SOCIAL LINKS</h2>
+          <div className="space-y-1">
+            {contact.websites.map((website: string, index: number) => (
+              <p key={index} className="text-blue-600 underline text-sm">
+                {website}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Summary */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">SUMMARY</h2>
-        <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
+        <p className="text-sm text-gray-700 leading-relaxed">
+          {summary}
+        </p>
       </div>
-    )}
 
-    {/* Experience */}
-    {experiences && experiences.length > 0 && (
+      {/* Experience */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">EXPERIENCE</h2>
         <div className="space-y-4">
@@ -370,16 +227,14 @@ const renderResumeContent = () => (
                 <h3 className="font-semibold text-gray-800">{exp.jobTitle}</h3>
                 <span className="text-sm text-gray-600">{exp.startDate} - {exp.endDate}</span>
               </div>
-              <p className="text-sm text-gray-600 mb-2">{exp.location}</p>
+              <p className="text-sm text-gray-600 mb-2">{exp.company}</p>
               <p className="text-sm text-gray-700 leading-relaxed">{exp.description}</p>
             </div>
           ))}
         </div>
       </div>
-    )}
 
-    {/* Education */}
-    {educations && educations.length > 0 && (
+      {/* Education */}
       <div className="mb-6">
         <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">EDUCATION</h2>
         <div className="space-y-4">
@@ -396,167 +251,20 @@ const renderResumeContent = () => (
           ))}
         </div>
       </div>
-    )}
 
-    {/* Skills */}
-    {skills && skills.some((id: Skill) => id.name?.trim()) && (
-      <div className="mb-6">
+      {/* Skills */}
+      <div>
         <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">SKILLS</h2>
-        <ul className="ml-6 text-sm text-gray-700 space-y-2">
-          {skills
-            .filter((skill: Skill) => skill.name?.trim())
-            .map((skill: Skill) => (
-              <li key={skill.id}>
-                <div className="flex items-center gap-3">
-                  <span>{skill.name}</span>
-                  {showExperienceLevel && (
-                    <div className="flex gap-1">
-                      {skillLevels.map((_, idx) => (
-                        <div
-                          key={idx}
-                          className={`w-2 h-2 rounded-full mb-6 ${
-                            idx <= skillLevels.indexOf(skill.level) ? "bg-blue-500" : "bg-gray-300"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </li>
-            ))}
-        </ul>
-      </div>
-    )}
-
-
-    {/* References */}
-    {showReferences && showReferences.some((ref: ReferenceItem) => ref.content?.trim()) && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">References</h2>
-        <div className="space-y-4">
-          {showReferences
-            .filter((ref: ReferenceItem) => ref.content?.trim())
-            .map((ref: ReferenceItem) => (
-              <div
-                key={ref.id}
-                className="-mt-2 ml-4 flex justify-between mb-2 font-semibold text-gray-800"
-              >
-                <h3>{ref.content}</h3>
-              </div>
-            ))}
-        </div>
-      </div>
-    )}
-
-
-    {/* Hobbies */}
-    {hobbies.some((h: HobbiesItem) => h.content?.trim()) && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">Hobbies</h2>
-        <div className="space-y-4">
-          {hobbies.map((h: HobbiesItem) =>
-            h.content?.trim() && (
-              <div key={h.id} className="-mt-2 ml-4 flex justify-between mb-2 font-semibold text-gray-800">
-                <h3>{h.content}</h3>
-              </div>
-            )
-          )}
-        </div>
-      </div>
-    )}
-
-
-    {/* Websites */}
-    {websites && websites.some((web: WebsiteItem) => web.title?.trim() || web.url?.trim()) && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">Websites</h2>
-        <div className="space-y-4">
-          {websites.map((web: WebsiteItem) => (
-            <div key={web.id} className="-mt-2 ml-4 flex justify-between mb-2 font-semibold text-gray-800">
-              <h3>{web.title}</h3>
-              <h3>{web.url}</h3>
-            </div>
+        <div className="flex flex-wrap gap-2">
+          {skills.map((skill: Skill) => (
+            <span key={skill.id} className="bg-gray-200 px-3 py-1 rounded-full text-sm text-gray-700">
+              {skill.name}
+            </span>
           ))}
         </div>
       </div>
-    )}
-
-    {/* Awards */}
-    {awards.some((awa: AwardsItem) => awa.content?.trim()) && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">Awards and Honors</h2>
-        <div className="space-y-4">
-          {awards.map((awa: AwardsItem) => (
-            <div key={awa.id} className="-mt-2 ml-4 flex justify-between mb-2 font-semibold text-gray-800">
-              <h3>{awa.content}</h3>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Certificates */}
-    {certifications.some((cert: CertificationItem) => cert.content?.trim()) && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">Certificates</h2>
-        <div className="space-y-4">
-          {certifications.map((cert: CertificationItem) => (
-            <div key={cert.id} className="-mt-2 ml-4 flex justify-between mb-2 font-semibold text-gray-800">
-              <h3>{cert.content}</h3>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Languages */}
-    {languages && languages.some((lang: LanguageItem) => lang.content?.trim()) && (
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">Languages</h2>
-        <div className="space-y-4">
-          {languages.map((lang: LanguageItem) => (
-            <div key={lang.id} className="ml-4 mb-2">
-              <div className="flex justify-between font-semibold text-gray-800">
-                <h3>{lang.content}</h3>
-                <h3>{lang.level}</h3>
-              </div>
-              {lang.level && (
-                <div className="flex items-center space-x-2 mt-1">
-                  {languageLevels.map((_, idx) => (
-                    <div
-                      key={idx}
-                      className={`w-2 h-2 rounded-full ${
-                        idx <= languageLevels.indexOf(lang.level)
-                          ? "bg-blue-500"
-                          : "bg-gray-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-
-    {/* Custom Sections */}
-    {customSections && customSections.length > 0 && (
-      <div className="mb-6">
-        {customSections.map((section: CustomSection) => (
-          <div key={section.id} className="mb-6">
-            <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">{section.sectionName}</h2>
-            <p className="text-sm text-gray-700 leading-relaxed ml-4">{section.description}</p>
-          </div>
-        ))}
-      </div>
-    )}
-
-
-
-  </div>
-);
-
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-[#f4f6fb]">

@@ -135,23 +135,28 @@ class DashboardController extends Controller
                 ], 403);
             }
 
+            // Handle template name (preferred) or fallback to template_id
+            $templateName = $request->template_name ?? 'classic';
+            $templateId = $request->template_id ?? $request->templateId ?? 1;
 
-        $resume = $user->resumes()->create([
-            'name' => $request->name,
-            'template_id' => $request->template_id ?? 1,
-            'status' => Resume::STATUS_DRAFT,
-            'resume_data' => $request->resume_data ?? [
-                'contact' => [
-                    'firstName' => '',
-                    'lastName' => '',
-                    'email' => $user->email,
-                    'phone' => '',
-                    'address' => '',
-                        'city' => '',
-                        'country' => '',
-                        'postCode' => '',
-                    'websites' => [],
-
+            $resume = $user->resumes()->create([
+                'name' => $request->name,
+                'template_id' => $templateId,
+                'template_name' => $templateName,
+                'status' => Resume::STATUS_DRAFT,
+                'resume_data' => $request->resume_data ?? [
+                    'contact' => [
+                        'firstName' => '',
+                        'lastName' => '',
+                        'email' => $user->email,
+                        'phone' => '',
+                        'address' => '',
+                        'websites' => [],
+                    ],
+                    'experiences' => [],
+                    'educations' => [],
+                    'skills' => [],
+                    'summary' => '',
                 ],
                 'settings' => [
                     'theme' => 'default',
@@ -326,15 +331,13 @@ class DashboardController extends Controller
                 $description = $exp['description'] ?? '';
                 
                 return [
-  
-                    'jobTitle' => $exp['jobTitle'] ?? '',
-                    'company' => $exp['employer'] ?? '',
-                    // location now stored in 'location', but support legacy 'company'
-                    'location' => $exp['location'] ?? ($exp['company'] ?? ''),
-                    'startDate' => $exp['startDate'] ?? '',
-                    'endDate' => $exp['endDate'] ?? '',
-                    'description' => $exp['description'] ?? '',
-
+                    'jobTitle' => $jobTitle,
+                    'company' => $company,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
+                ];
             }, $resumeData['experiences'] ?? []),
             'education' => array_map(function($edu) {
                 // Ensure we have all required fields with proper fallbacks
@@ -354,31 +357,6 @@ class DashboardController extends Controller
                     'description' => $description,
                 ];
             }, $resumeData['educations'] ?? []),
-            // Additional sections
-            'languages' => array_map(function($lang) {
-                return [
-                    'language' => $lang['content'] ?? ($lang['language'] ?? ''),
-                    'level' => $lang['level'] ?? '',
-                ];
-            }, $resumeData['languages'] ?? []),
-            'certifications' => array_map(function($cert) {
-                return [
-                    'name' => $cert['content'] ?? ($cert['name'] ?? ''),
-                    'issuer' => $cert['issuer'] ?? '',
-                ];
-            }, $resumeData['certifications'] ?? []),
-            'awards' => $resumeData['awards'] ?? [],
-            'websites' => array_map(function($web) {
-                if (is_array($web)) {
-                    $url = $web['url'] ?? '';
-                    $title = $web['title'] ?? '';
-                    return $url !== '' ? $url : $title;
-                }
-                return $web;
-            }, $resumeData['websites'] ?? []),
-            'showReferences' => $resumeData['showReferences'] ?? [],
-            'hobbies' => $resumeData['hobbies'] ?? [],
-            'customSections' => $resumeData['customSections'] ?? [],
         ];
 
         // Generate PDF using the correct template
