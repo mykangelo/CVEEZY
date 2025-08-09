@@ -98,8 +98,10 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
     : templates.filter(t => t.category === currentFilter);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
-      <Head title="CVeezy | Resume Templates" />
+
+    <div className="min-h-screen flex flex-col bg-white font-serif">
+      <Head title="CVeezy | Choose Resume Template" />
+
 
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
@@ -142,6 +144,60 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
         <Link
           href="/dashboard"
           className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-8"
+
+
+      <Link
+        href="/dashboard"
+        className="mt-8 ml-10 flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+        <span className="text-sm font-medium">Back to Dashboard</span>
+      </Link>
+
+      {/* Headline and Description */}
+      <div className="flex flex-col items-center text-center mt-8">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-700 mb-2">
+          {currentTab === "all"
+            ? "Job-winning templates for you"
+            : "Your favorite templates"}
+        </h2>
+        <p className="text-lg text-gray-600">
+          {currentTab === "all"
+            ? "Simple to use and ready in minutes resume templates — give it a try for free now!"
+            : "These templates bring out the best in you!"}
+        </p>
+        {currentTab === "all" && (
+          <button
+            type="button"
+            className="mt-2 text-[#2196f3] text-sm underline hover:text-[#1976d2]"
+            onClick={() => router.visit("/")}
+          >
+            Choose later
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex justify-center gap-8 mt-12 text-base">
+        <button
+          onClick={() => setCurrentTab("all")}
+          className={`pb-1 px-2 font-semibold transition border-b-2 ${
+            currentTab === "all"
+              ? "border-[#2196f3] text-[#2196f3]"
+              : "border-transparent text-gray-500"
+          }`}
+        >
+          All Templates
+        </button>
+        <button
+          onClick={() => setCurrentTab("favorite")}
+          className={`pb-1 px-2 font-semibold transition border-b-2 ${
+            currentTab === "favorite"
+              ? "border-[#2196f3] text-[#2196f3]"
+              : "border-transparent text-gray-500"
+          }`}
 
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

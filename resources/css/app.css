@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 /* Custom Alte Haas Grotesk Font */
 @font-face {
   font-family: 'Alte Haas Grotesk';
@@ -62,6 +63,7 @@
   }
 }
 
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -70,6 +72,7 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
   
   /* Font utilities */
   .font-alte {
@@ -93,4 +96,5 @@
   .font-bold {
     font-weight: 700;
   }
+
 }

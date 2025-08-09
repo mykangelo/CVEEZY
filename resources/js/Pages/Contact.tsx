@@ -60,7 +60,9 @@ const Contact: React.FC<ContactProps> = ({
   };
 
   return (
-            <div className="min-h-screen flex flex-col bg-[#f4faff] font-sans ">
+
+    <div className="min-h-screen flex flex-col bg-[#f4faff] font-serif ">
+
       <Head title="CVeezy | Contact Us" />
 
       {/* Header */}

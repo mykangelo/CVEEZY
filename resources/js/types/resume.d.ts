@@ -1,117 +1,89 @@
 export interface Resume {
-    id: number;
-    name: string;
-    creation_date: string;
-    updated_at: string;
-    status: 'draft' | 'completed' | 'published';
-    template_id?: number;
-    template_name?: string;
-    user_id: number;
-    payment_status?: 'pending' | 'approved' | 'rejected' | null;
+
+  id: number;
+  name: string;
+  creation_date: string;
+  updated_at: string;
+  status: 'draft' | 'completed' | 'published';
+  template_id?: number;
+  user_id: number;
 }
 
-export type Contact = {
-  firstName: string;
-  lastName: string;
-  desiredJobTitle: string;
-  phone: string;
-  email: string;
-  country?: string;
-  city?: string;
-  address?: string;
-  postCode?: string;
-};
-
-export type Experience = {
-  id: number;
-  jobTitle: string;
-  company: string;
-  location: string;
-  startDate: string;
-  endDate: string;
-  description?: string;
-};
-
-export type Education = {
-  id: number;
-  school: string;
-  location: string;
-  degree: string;
-  startDate: string;
-  endDate: string;
-  description?: string;
-};
-
-export type Skill = {
-  id: number;
-  name: string;
-};
-
-export type Language = {
-  id: number;
-  name: string;
-  proficiency?: string; // e.g., Native, Fluent, Intermediate
-};
-
-export type Certification = {
-  id: number;
-  title: string;
-};
-
-export type Award = {
-  id: number;
-  title: string;
-};
-
-export type Website = {
-  id: number;
-  label: string;   // e.g., "Portfolio", "GitHub", "LinkedIn"
-  url: string;
-};
-
-export type Reference = {
-  id: number;
-  name: string;
-  relationship?: string;
-  contactInfo?: string;
-};
-
-export type Hobby = {
-  id: number;
-  name: string;
-};
-
-export type CustomSection = {
-  id: number;
-  title: string;
-  content: string;
-};
-
-export type ResumeData = {
-  contact: Contact;
-  experiences: Experience[];
-  education: Education[];
-  skills: Skill[];
+export interface ResumeData {
+  contact: {
+    firstName: string;
+    lastName: string;
+    desiredJobTitle: string;
+    email: string;
+    phone: string;
+    address?: string;
+    city?: string;
+    country?: string;
+    postCode?: string;
+    websites?: string[];
+  };
+  experiences: Array<{
+    id: number;
+    jobTitle: string;
+    employer: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+    current?: boolean;
+  }>;
+  educations: Array<{
+    id: number;
+    school: string;
+    degree: string;
+    location: string;
+    startDate: string;
+    endDate: string;
+    description: string;
+  }>;
+  skills: Array<{
+    id: number;
+    name: string;
+    level: 'Beginner' | 'Novice' | 'Skillful' | 'Experienced' | 'Expert';
+  }>;
   summary: string;
 
-  templateId?: number;
+  languages: Array<{
+    id: number;
+    content: string;
+    level: "Elementary" | "Intermediate" | "Proficient" | "Advanced" | "Native" ;
+  }>;
+  certifications: Array<{
+    id: number;
+    content: string;
+  }>;
+  awards: Array<{
+    id: number;
+    content: string;
+  }>;
+  websites: Array<{ id: number; title: string; url: string; content?: string }>;
+  showReferences: Array<{
+    id: number;
+    content: string;
+  }>;
+  hobbies: Array<{
+    id: number;
+    content: string;
+  }>;
+  customSections: Array<{
+    id: number;
+    sectionName: string;
+    description: string;
+  }>;
+}
 
-  // Optional extended sections
-  languages?: Language[];
-  certifications?: Certification[];
-  awards?: Award[];
-  websites?: Website[];
-  references?: Reference[];
-  hobbies?: Hobby[];
-  customSections?: CustomSection[];
-};
 
 export interface DashboardProps {
-    resumes: Resume[];
-    user: {
-        id: number;
-        name: string;
-        email: string;
-        role: string;
-    };
-} 
+  resumes: Resume[];
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
+}
