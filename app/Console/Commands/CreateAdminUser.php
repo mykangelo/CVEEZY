@@ -43,7 +43,6 @@ class CreateAdminUser extends Command
             'email' => $email,
             'password' => Hash::make($password),
             'role' => User::ROLE_ADMIN,
-            'is_admin' => true,
             'email_verified_at' => now(),
         ]);
 
@@ -51,7 +50,7 @@ class CreateAdminUser extends Command
         $this->info("Email: {$user->email}");
         $this->info("Name: {$user->name}");
         $this->info("Role: {$user->role}");
-        $this->info("Is Admin: " . ($user->is_admin ? 'Yes' : 'No'));
+        $this->info("Is Admin: " . ($user->isAdmin() ? 'Yes' : 'No'));
 
         return 0;
     }

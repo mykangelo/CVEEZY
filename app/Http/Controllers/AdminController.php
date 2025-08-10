@@ -81,7 +81,8 @@ class AdminController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'created_at' => $user->created_at->toISOString(),
-                'is_admin' => $user->is_admin,
+                'role' => $user->role,
+                'is_admin' => $user->isAdmin(),
                 'resumes' => $user->resumes->map(function ($resume) {
                     return [
                         'id' => $resume->id,
@@ -411,7 +412,8 @@ class AdminController extends Controller
                 'email' => $user->email,
                 'created_at' => $user->created_at->toISOString(),
                 'resumes_count' => $user->resumes_count,
-                'is_admin' => $user->is_admin,
+                'role' => $user->role,
+                'is_admin' => $user->isAdmin(),
             ];
         });
 

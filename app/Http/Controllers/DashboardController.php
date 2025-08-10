@@ -222,6 +222,7 @@ class DashboardController extends Controller
             'resume_data' => 'array',
             'name' => 'string|max:255',
             'template_id' => 'integer|min:1|max:10',
+            'template_name' => 'string|max:255',
         ]);
 
         $updateData = [];
@@ -236,6 +237,10 @@ class DashboardController extends Controller
         
         if ($request->has('template_id')) {
             $updateData['template_id'] = $request->template_id;
+        }
+        
+        if ($request->has('template_name')) {
+            $updateData['template_name'] = $request->template_name;
         }
 
         $resume->update($updateData);

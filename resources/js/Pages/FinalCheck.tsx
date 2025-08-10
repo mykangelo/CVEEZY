@@ -45,6 +45,7 @@ interface FinalCheckProps {
   skills?: Skill[];
   summary?: string;
   resumeId?: number;
+  templateName?: string;
 }
 
 
@@ -55,7 +56,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   educations: propEducations,
   skills: propSkills,
   summary: propSummary,
-  resumeId
+  resumeId,
+  templateName: propTemplateName
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>("templates");
@@ -67,7 +69,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     propExperiences,
     propEducations,
     propSkills,
-    propSummary
+    propSummary,
+    propTemplateName
   });
   
   // Debug: Log URL parameters
@@ -115,6 +118,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       if (storedData) {
         const parsedData = JSON.parse(storedData);
         console.log('FinalCheck - Found resume data in sessionStorage with showExperienceLevel:', parsedData.showExperienceLevel);
+        console.log('FinalCheck - Template name from sessionStorage:', parsedData.templateName);
         return parsedData;
       }
     } catch (error) {
@@ -124,13 +128,15 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     // Fallback to props data (from database) if no sessionStorage data
     if (propContact && propExperiences && propEducations && propSkills && propSummary) {
       console.log('FinalCheck - Using props data from database (no showExperienceLevel)');
+      console.log('FinalCheck - Template name from props:', propTemplateName);
       return {
         contact: propContact,
         experiences: propExperiences,
         educations: propEducations,
         skills: propSkills,
         summary: propSummary,
-        showExperienceLevel: false // Default to false for database data
+        showExperienceLevel: false, // Default to false for database data
+        templateName: propTemplateName || 'classic'
       };
     }
     
@@ -150,12 +156,13 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       educations: [],
       skills: [],
       summary: "",
-      showExperienceLevel: false
+      showExperienceLevel: false,
+      templateName: propTemplateName || 'classic'
     };
   };
 
   const resumeData = getResumeData();
-  const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections } = resumeData;
+  const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections, templateName } = resumeData;
 
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -169,13 +176,25 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   ];
 
   const templates = [
-    { name: "Template 1", hasImage: false },
-    { name: "Template 2", hasImage: false },
-    { name: "Template 3", hasImage: false },
-    { name: "Template 4", hasImage: false },
-    { name: "Template 5", hasImage: false },
-    { name: "Template 6", hasImage: true }
+    { name: "Classic", key: "classic", hasImage: false },
+    { name: "Modern", key: "modern", hasImage: false },
+    { name: "Creative", key: "creative", hasImage: true },
+    { name: "Elegant", key: "elegant", hasImage: false },
+    { name: "Professional", key: "professional", hasImage: false },
+    { name: "Minimal", key: "minimal", hasImage: false }
   ];
+
+  // Set the selected template based on the actual template name
+  const getSelectedTemplateIndex = () => {
+    const templateIndex = templates.findIndex(t => t.key === templateName);
+    return templateIndex >= 0 ? templateIndex : 0;
+  };
+
+  // Set the correct template when templateName changes
+  useEffect(() => {
+    const templateIndex = templates.findIndex(t => t.key === templateName);
+    setSelectedTemplate(templateIndex >= 0 ? templateIndex : 0);
+  }, [templateName]);
 
    // Function to handle clicking the "Download PDF" button
   const handleDownloadButtonClick = () => {
@@ -203,7 +222,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-center text-black mb-6">
-          This is the Professional Template
+          This is the {templateName?.charAt(0).toUpperCase() + templateName?.slice(1)} Template
         </h1>
 
         {/* Contact Info */}
@@ -592,6 +611,21 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                // Go back to builder with the current resume ID
+                if (resumeId) {
+                  window.location.href = `/builder?resume=${resumeId}`;
+                } else {
+                  window.location.href = '/builder';
+                }
+              }}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-lg">←</span>
+              <span className="font-medium">Back to Builder</span>
+            </button>
+
             <div className="flex items-center gap-2 text-green-600">
               <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-xs">✓</span>

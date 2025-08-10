@@ -82,6 +82,11 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
   const user = auth.user;
   const [currentFilter, setCurrentFilter] = useState<string>("all");
   const [favorites, setFavorites] = useState<number[]>([]);
+  
+  // Check if this is an imported resume
+  const urlParams = new URLSearchParams(window.location.search || '');
+  const resumeId = urlParams.get('resume');
+  const isImported = urlParams.get('imported') === 'true';
 
   const toggleFavorite = (templateId: number) => {
     setFavorites((prev) =>
@@ -89,6 +94,39 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
         ? prev.filter((id) => id !== templateId)
         : [...prev, templateId]
     );
+  };
+
+  const handleTemplateSelect = async (templateName: string) => {
+    if (isImported && resumeId) {
+      // For imported resumes, update the template and redirect to builder
+      try {
+        const response = await fetch(`/resumes/${resumeId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+          },
+          body: JSON.stringify({
+            template_name: templateName
+          })
+        });
+
+        if (response.ok) {
+          router.visit(`/builder?resume=${resumeId}`);
+        } else {
+          console.error('Failed to update template');
+          // Fallback to builder anyway
+          router.visit(`/builder?resume=${resumeId}`);
+        }
+      } catch (error) {
+        console.error('Error updating template:', error);
+        // Fallback to builder anyway
+        router.visit(`/builder?resume=${resumeId}`);
+      }
+    } else {
+      // Normal flow for new resumes
+      router.visit(`/choose-resume-maker?template=${templateName}`);
+    }
   };
 
   const filteredTemplates = currentFilter === "all" 
@@ -140,14 +178,15 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
       <div className="flex-1 px-8 py-8">
         {/* Back Link */}
         <Link
-          href="/dashboard"
+          href={isImported ? "/uploader" : "/dashboard"}
           className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-8"
-
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span className="text-sm font-medium">Back to Dashboard</span>
+          <span className="text-sm font-medium">
+            {isImported ? 'Back to Upload' : 'Back to Dashboard'}
+          </span>
         </Link>
 
         {/* Header Section */}
@@ -160,17 +199,29 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
             </div>
           )}
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Resume templates
+            {isImported ? 'Choose Your Template' : 'Resume templates'}
           </h1>
           <p className="text-lg text-gray-600 mb-4">
-            Simple to use and ready in minutes resume templates — give it a try for free now!
+            {isImported 
+              ? 'Your resume has been imported! Now choose a template to style your content.'
+              : 'Simple to use and ready in minutes resume templates — give it a try for free now!'
+            }
           </p>
-          <Link
-            href="/"
-            className="text-blue-600 underline hover:text-blue-800 text-sm"
-          >
-            Choose later
-          </Link>
+          {isImported ? (
+            <button
+              onClick={() => router.visit(`/builder?resume=${resumeId}`)}
+              className="text-blue-600 underline hover:text-blue-800 text-sm"
+            >
+              Skip template selection
+            </button>
+          ) : (
+            <Link
+              href="/"
+              className="text-blue-600 underline hover:text-blue-800 text-sm"
+            >
+              Choose later
+            </Link>
+          )}
         </div>
 
         {/* Filter Bar */}
@@ -222,10 +273,10 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center transition-all duration-300">
                     {!hasPendingPayments && (
                       <button
-                        onClick={() => router.visit(`/choose-resume-maker?template=${template.name}`)}
+                        onClick={() => handleTemplateSelect(template.name)}
                         className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-700"
                       >
-                        Use This Template
+                        {isImported ? 'Apply Template' : 'Use This Template'}
                       </button>
                     )}
                   </div>

@@ -1160,11 +1160,19 @@ const steps = ["Contacts", "Experience", "Education", "Skills", "Summary", "Fina
 interface BuilderProps {
   hasPendingPayments?: boolean;
   pendingResumesCount?: number;
+  editingResumeId?: number;
+  editingResumeName?: string;
+  editingResumeData?: any;
+  editingTemplateName?: string;
 }
 
 const Builder: React.FC<BuilderProps> = ({ 
   hasPendingPayments = false, 
-  pendingResumesCount = 0 
+  pendingResumesCount = 0,
+  editingResumeId,
+  editingResumeName,
+  editingResumeData,
+  editingTemplateName
 }) => {
   const { url } = usePage();
   const searchParams = new URLSearchParams(url.split('?')[1]);
@@ -1182,6 +1190,15 @@ const Builder: React.FC<BuilderProps> = ({
   
   // State for template name - will be set from existing resume or URL parameter
   const [templateName, setTemplateName] = useState(defaultTemplateName);
+  
+  // Add debugging for template initialization
+  console.log('Builder - Template initialization:', {
+    defaultTemplateName,
+    existingResumeId,
+    editingResumeId,
+    editingResumeData: editingResumeData ? 'present' : 'not present',
+    editingTemplateName
+  });
   
   // Contacts state
   const [contacts, setContacts] = useState<Contact>({
@@ -1265,26 +1282,26 @@ const Builder: React.FC<BuilderProps> = ({
   useEffect(() => {
     const initializeResume = async () => {
       try {
-        if (existingResumeId) {
-          // Load existing resume
-          console.log('Loading existing resume with ID:', existingResumeId);
-          const response = await fetch(`/resumes/${existingResumeId}`, {
-            headers: {
-              'Accept': 'application/json',
-              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-            },
-          });
+        // Check if we're editing an existing resume (from props or URL)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlResumeId = urlParams.get('resume');
+        const resumeIdToUse = editingResumeId || (urlResumeId ? parseInt(urlResumeId) : null) || existingResumeId;
+        
+        if (resumeIdToUse) {
+          console.log('Loading existing resume with ID:', resumeIdToUse);
           
-          if (response.ok) {
-            const result = await response.json();
-            const resumeData = result.resume.resume_data;
+          // If we have editing data from props, use it
+          if (editingResumeData) {
+            console.log('Using editing data from props:', editingResumeData);
+            const resumeData = editingResumeData;
             
             // Set resume ID
-            setResumeId(result.resume.id);
+            setResumeId(Number(resumeIdToUse));
             
-            // Set template name from existing resume
-            if (result.resume.template_name) {
-              setTemplateName(result.resume.template_name);
+            // Set template name from props (highest priority)
+            if (editingTemplateName) {
+              console.log('Builder - Setting template from props:', editingTemplateName);
+              setTemplateName(editingTemplateName);
             }
             
             // Load resume data
@@ -1329,10 +1346,83 @@ const Builder: React.FC<BuilderProps> = ({
                 setCustomSections(resumeData.customSections);
               }
             }
+            
+            console.log('Loaded existing resume data from props:', resumeData);
+            console.log('Builder - Template from props (editingResumeData):', editingResumeData?.templateName);
           } else {
-            console.error('Failed to load existing resume');
-            // Fallback to creating new resume
-            await createNewResume();
+            // Load existing resume data from API
+            const response = await fetch(`/resumes/${resumeIdToUse}`, {
+              headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+              },
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              const resumeData = result.resume.resume_data;
+              
+              // Set resume ID
+              setResumeId(Number(result.resume.id));
+              
+              // Set template name from existing resume
+              console.log('Builder - Loading template from database:', result.resume.template_name);
+              if (result.resume.template_name) {
+                setTemplateName(result.resume.template_name);
+                console.log('Builder - Template set to:', result.resume.template_name);
+              } else {
+                console.log('Builder - No template_name in database, keeping current:', templateName);
+              }
+              
+              // Load resume data
+              if (resumeData) {
+                if (resumeData.contact) {
+                  setContacts(resumeData.contact);
+                }
+                if (resumeData.experiences) {
+                  setExperiences(resumeData.experiences);
+                }
+                if (resumeData.educations) {
+                  setEducations(resumeData.educations);
+                }
+                if (resumeData.skills) {
+                  setSkills(resumeData.skills);
+                }
+                if (resumeData.summary) {
+                  setSummary(resumeData.summary);
+                }
+                if (resumeData.showExperienceLevel !== undefined) {
+                  setShowExperienceLevel(resumeData.showExperienceLevel);
+                }
+                if (resumeData.languages) {
+                  setLanguages(resumeData.languages);
+                }
+                if (resumeData.certifications) {
+                  setCertifications(resumeData.certifications);
+                }
+                if (resumeData.awards) {
+                  setAwards(resumeData.awards);
+                }
+                if (resumeData.websites) {
+                  setWebsites(resumeData.websites);
+                }
+                if (resumeData.references) {
+                  setReferences(resumeData.references);
+                }
+                if (resumeData.hobbies) {
+                  setHobbies(resumeData.hobbies);
+                }
+                if (resumeData.customSections) {
+                  setCustomSections(resumeData.customSections);
+                }
+              }
+              
+              console.log('Loaded existing resume data from API:', resumeData);
+            } else {
+              console.error('Failed to load existing resume');
+              // Fallback to creating new resume
+              await createNewResume();
+            }
           }
         } else {
           // Create new resume
@@ -1426,7 +1516,8 @@ const Builder: React.FC<BuilderProps> = ({
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify({
-          resume_data: newData
+          resume_data: newData,
+          template_name: templateName
         })
       });
       
@@ -1471,6 +1562,32 @@ const Builder: React.FC<BuilderProps> = ({
       debouncedUpdate(resumeData);
     }
   }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections, resumeId, debouncedUpdate]);
+
+  // Update template name when it changes
+  useEffect(() => {
+    if (resumeId) {
+      const updateTemplateName = async () => {
+        try {
+          const response = await fetch(`/resumes/${resumeId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+            },
+            body: JSON.stringify({ template_name: templateName })
+          });
+          
+          if (response.ok) {
+            console.log('Template name updated successfully:', templateName);
+          }
+        } catch (error) {
+          console.error('Error updating template name:', error);
+        }
+      };
+      
+      updateTemplateName();
+    }
+  }, [templateName, resumeId]);
 
   // Update resume name when contact info changes
   useEffect(() => {
@@ -1523,7 +1640,8 @@ const Builder: React.FC<BuilderProps> = ({
         websites,
         references,
         hobbies,
-        customSections
+        customSections,
+        templateName
       };
       sessionStorage.setItem('resumeData', JSON.stringify(resumeData));
       

@@ -38,6 +38,7 @@ class FinalCheckController extends Controller
 
         return Inertia::render('FinalCheck', [
             'resumeId' => $resume?->id,
+            'templateName' => $resume?->template_name ?? 'classic',
             'contact' => $resumeData['contact'] ?? [],
             'experiences' => $resumeData['experiences'] ?? [],
             'educations' => $resumeData['educations'] ?? [],

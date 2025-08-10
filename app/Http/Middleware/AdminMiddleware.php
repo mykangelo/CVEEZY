@@ -22,7 +22,7 @@ class AdminMiddleware
 
         $user = Auth::user();
         
-        // Check if user is admin (using both role and is_admin field for compatibility)
+        // Check if user is admin
         if (!$user->isAdmin()) {
             abort(403, 'Unauthorized access. Admin privileges required.');
         }
