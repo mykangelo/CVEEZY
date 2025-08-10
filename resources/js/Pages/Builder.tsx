@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
-import { Trash2, Plus, GripVertical } from "lucide-react";
+import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera } from "lucide-react";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { ResumeData, Language, Certification, Award, Website, Reference, Hobby, CustomSection } from '@/types/resume';
+import PhotoUpload from '@/Components/PhotoUpload';
 
 // Import all resume template components
 import Classic from '@/Components/Builder/Classic';
@@ -21,6 +22,100 @@ const templateComponents: Record<string, React.FC<{ resumeData: ResumeData }>> =
   elegant: Elegant,
   professional: Professional,
   minimal: Minimal,
+};
+
+// Resume Score Component
+interface ResumeScoreProps {
+  resumeData: ResumeData;
+}
+
+const ResumeScore: React.FC<ResumeScoreProps> = ({ resumeData }) => {
+  const calculateScore = () => {
+    let score = 0;
+    const maxScore = 100;
+    
+    // Contact info (20 points)
+    if (resumeData.contact.firstName && resumeData.contact.lastName) score += 5;
+    if (resumeData.contact.email) score += 5;
+    if (resumeData.contact.phone) score += 5;
+    if (resumeData.contact.desiredJobTitle) score += 5;
+    
+    // Experience (25 points)
+    if (resumeData.experiences.length > 0) {
+      score += 10;
+      const hasDetailedExp = resumeData.experiences.some(exp => 
+        exp.description && exp.description.length > 50
+      );
+      if (hasDetailedExp) score += 15;
+    }
+    
+    // Education (20 points)
+    if (resumeData.education.length > 0) {
+      score += 10;
+      const hasDetailedEdu = resumeData.education.some(edu => 
+        edu.description && edu.description.length > 20
+      );
+      if (hasDetailedEdu) score += 10;
+    }
+    
+    // Skills (15 points)
+    if (resumeData.skills.length >= 3) score += 8;
+    if (resumeData.skills.length >= 6) score += 7;
+    
+    // Summary (10 points)
+    if (resumeData.summary && resumeData.summary.length > 50) score += 10;
+    
+    // Additional sections (10 points)
+    if (resumeData.certifications && resumeData.certifications.length > 0) score += 3;
+    if (resumeData.languages && resumeData.languages.length > 0) score += 2;
+    if (resumeData.websites && resumeData.websites.length > 0) score += 2;
+    if (resumeData.awards && resumeData.awards.length > 0) score += 3;
+    
+    return Math.min(score, maxScore);
+  };
+  
+  const score = calculateScore();
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+  
+  const getScoreEmoji = (score: number) => {
+    if (score >= 90) return <Flame className="w-5 h-5 text-orange-500" />;
+    if (score >= 80) return <Star className="w-5 h-5 text-yellow-500" />;
+    if (score >= 60) return <CheckCircle className="w-5 h-5 text-green-500" />;
+    return <AlertCircle className="w-5 h-5 text-red-500" />;
+  };
+  
+  return (
+    <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4 mb-6 border border-green-200">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-white rounded-full p-2 shadow-sm">
+            {getScoreEmoji(score)}
+          </div>
+          <div>
+            <h3 className="font-semibold text-gray-800">Your resume score</h3>
+            <p className="text-sm text-gray-600">Based on recruiter feedback</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className={`text-3xl font-bold ${getScoreColor(score)}`}>
+            {score}%
+          </div>
+          <div className="w-16 h-2 bg-gray-200 rounded-full mt-1">
+            <div 
+              className={`h-2 rounded-full transition-all duration-500 ${
+                score >= 80 ? 'bg-green-500' : score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+              }`}
+              style={{ width: `${score}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 type Contact = {
@@ -1183,6 +1278,88 @@ const Builder: React.FC<BuilderProps> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
+  // Preview zoom and scroll states
+  const [zoomLevel, setZoomLevel] = useState(0.6); // Start with a smaller zoom to see full resume
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isZooming, setIsZooming] = useState(false);
+
+
+  
+  // Zoom control functions with smooth transitions
+  const handleZoomIn = () => {
+    setIsZooming(true);
+    setZoomLevel(prev => Math.min(prev + 0.2, 2));
+    setTimeout(() => setIsZooming(false), 300);
+  };
+  
+  const handleZoomOut = () => {
+    setIsZooming(true);
+    setZoomLevel(prev => Math.max(prev - 0.2, 0.25));
+    setTimeout(() => setIsZooming(false), 300);
+  };
+  
+  const handleZoomReset = () => {
+    setIsZooming(true);
+    setZoomLevel(1);
+    setTimeout(() => setIsZooming(false), 300);
+  };
+  
+  const handleFitToScreen = () => {
+    setIsZooming(true);
+    // Calculate fit-to-screen zoom level based on available container size
+    const containerHeight = isFullscreen ? window.innerHeight - 60 : 600; // Account for control panel height
+    const containerWidth = isFullscreen ? window.innerWidth - 40 : 400;
+    const resumeHeight = 297 * 3.78; // A4 height in pixels
+    const resumeWidth = 210 * 3.78; // A4 width in pixels
+    
+    // Calculate zoom to fit both width and height with padding
+    const heightFit = containerHeight / resumeHeight;
+    const widthFit = containerWidth / resumeWidth;
+    const fitZoom = Math.min(heightFit, widthFit);
+    const finalZoom = Math.max(fitZoom * 0.85, 0.25);
+    
+    setZoomLevel(finalZoom); // 85% of fit size for comfortable padding
+    setTimeout(() => setIsZooming(false), 300);
+  };
+  
+  const toggleFullscreen = () => {
+    setIsFullscreen(prev => !prev);
+  };
+  
+  // Keyboard shortcuts for zoom controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case '+':
+          case '=':
+            e.preventDefault();
+            handleZoomIn();
+            break;
+          case '-':
+            e.preventDefault();
+            handleZoomOut();
+            break;
+          case '0':
+            e.preventDefault();
+            handleZoomReset();
+            break;
+        }
+      }
+      if (e.key === 'F11') {
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      if (e.key === 'Escape' && isFullscreen) {
+        e.preventDefault();
+        setIsFullscreen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+  
   // Get template name and resume ID from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const defaultTemplateName = urlParams.get('template') || 'classic';
@@ -1249,6 +1426,10 @@ const Builder: React.FC<BuilderProps> = ({
   const [references, setReferences] = useState<Reference[]>([]);
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [customSections, setCustomSections] = useState<CustomSection[]>([]);
+  
+  // Photo upload state
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
   // ResumeData state for template system
   const [resumeData, setResumeData] = useState<ResumeData>({
@@ -1274,6 +1455,7 @@ const Builder: React.FC<BuilderProps> = ({
     references: [],
     hobbies: [],
     customSections: [],
+    profilePhoto: null,
   });
 
   const TemplateComponent = templateComponents[templateName] || Classic;
@@ -1285,9 +1467,11 @@ const Builder: React.FC<BuilderProps> = ({
         // Check if we're editing an existing resume (from props or URL)
         const urlParams = new URLSearchParams(window.location.search);
         const urlResumeId = urlParams.get('resume');
-        const resumeIdToUse = editingResumeId || (urlResumeId ? parseInt(urlResumeId) : null) || existingResumeId;
+        const urlTemplate = urlParams.get('template');
+        const resumeIdToUse = editingResumeId || (urlResumeId ? parseInt(urlResumeId) : null);
         
         if (resumeIdToUse) {
+          // We have a specific resume ID - load it (either from URL or props)
           console.log('Loading existing resume with ID:', resumeIdToUse);
           
           // If we have editing data from props, use it
@@ -1344,6 +1528,9 @@ const Builder: React.FC<BuilderProps> = ({
               }
               if (resumeData.customSections) {
                 setCustomSections(resumeData.customSections);
+              }
+              if (resumeData.profilePhoto) {
+                setProfilePhoto(resumeData.profilePhoto);
               }
             }
             
@@ -1415,6 +1602,9 @@ const Builder: React.FC<BuilderProps> = ({
                 if (resumeData.customSections) {
                   setCustomSections(resumeData.customSections);
                 }
+                if (resumeData.profilePhoto) {
+                  setProfilePhoto(resumeData.profilePhoto);
+                }
               }
               
               console.log('Loaded existing resume data from API:', resumeData);
@@ -1424,9 +1614,84 @@ const Builder: React.FC<BuilderProps> = ({
               await createNewResume();
             }
           }
-        } else {
-          // Create new resume
+        } else if (urlTemplate) {
+          // User came with template parameter - they want to create a NEW resume
+          console.log('User creating new resume with template:', urlTemplate);
+          console.log('Ignoring any existing resume data from server');
           await createNewResume();
+        } else {
+          // No resume ID and no template - this is likely a refresh scenario
+          // Check if we have editing data from props (server-side loaded recent draft)
+          if (editingResumeId && editingResumeData) {
+            console.log('Loading recent draft from server props (refresh scenario):', editingResumeId);
+            setResumeId(editingResumeId);
+            
+            // Update URL to include the resume ID to prevent issues on refresh
+            const currentUrl = new URL(window.location.href);
+            if (!currentUrl.searchParams.has('resume')) {
+              currentUrl.searchParams.set('resume', editingResumeId.toString());
+              window.history.replaceState({}, '', currentUrl.toString());
+              console.log('Updated URL to include resume ID:', editingResumeId);
+            }
+            
+            // Set template name from props
+            if (editingTemplateName) {
+              console.log('Builder - Setting template from props (recent draft):', editingTemplateName);
+              setTemplateName(editingTemplateName);
+            }
+            
+            // Load resume data
+            const resumeData = editingResumeData;
+            if (resumeData) {
+              if (resumeData.contact) {
+                setContacts(resumeData.contact);
+              }
+              if (resumeData.experiences) {
+                setExperiences(resumeData.experiences);
+              }
+              if (resumeData.educations) {
+                setEducations(resumeData.educations);
+              }
+              if (resumeData.skills) {
+                setSkills(resumeData.skills);
+              }
+              if (resumeData.summary) {
+                setSummary(resumeData.summary);
+              }
+              if (resumeData.showExperienceLevel !== undefined) {
+                setShowExperienceLevel(resumeData.showExperienceLevel);
+              }
+              if (resumeData.languages) {
+                setLanguages(resumeData.languages);
+              }
+              if (resumeData.certifications) {
+                setCertifications(resumeData.certifications);
+              }
+              if (resumeData.awards) {
+                setAwards(resumeData.awards);
+              }
+              if (resumeData.websites) {
+                setWebsites(resumeData.websites);
+              }
+              if (resumeData.references) {
+                setReferences(resumeData.references);
+              }
+              if (resumeData.hobbies) {
+                setHobbies(resumeData.hobbies);
+              }
+              if (resumeData.customSections) {
+                setCustomSections(resumeData.customSections);
+              }
+              if (resumeData.profilePhoto) {
+                setProfilePhoto(resumeData.profilePhoto);
+              }
+            }
+            
+            console.log('Loaded recent draft from server props:', resumeData);
+          } else {
+            // Only create new resume as last resort
+          await createNewResume();
+          }
         }
       } catch (error) {
         console.error('Error initializing resume:', error);
@@ -1482,6 +1747,12 @@ const Builder: React.FC<BuilderProps> = ({
           const result = await response.json();
           console.log('Resume created with ID:', result.resume.id);
           setResumeId(result.resume.id);
+          
+          // Update URL to include the new resume ID
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('resume', result.resume.id.toString());
+          window.history.replaceState({}, '', currentUrl.toString());
+          console.log('Updated URL with new resume ID:', result.resume.id);
         } else {
           const errorText = await response.text();
           console.error('Failed to create initial resume. Status:', response.status);
@@ -1532,6 +1803,85 @@ const Builder: React.FC<BuilderProps> = ({
       setIsUpdating(false);
     }
   };
+
+  // Photo handling functions
+  const handlePhotoSave = (photoData: string) => {
+    setProfilePhoto(photoData);
+    
+    // Update resume data to include photo
+    const updatedData = {
+      contact: contacts,
+      experiences,
+      educations,
+      skills,
+      summary,
+      showExperienceLevel,
+      languages,
+      certifications,
+      awards,
+      websites,
+      references,
+      hobbies,
+      customSections,
+      profilePhoto: photoData
+    };
+    
+    setResumeData(prev => ({
+      ...prev,
+      profilePhoto: photoData
+    }));
+    
+    updateResumeData(updatedData);
+  };
+
+  const handleRemovePhoto = () => {
+    setProfilePhoto(null);
+    
+    // Update resume data to remove photo
+    const updatedData = {
+      contact: contacts,
+      experiences,
+      educations,
+      skills,
+      summary,
+      showExperienceLevel,
+      languages,
+      certifications,
+      awards,
+      websites,
+      references,
+      hobbies,
+      customSections,
+      profilePhoto: null
+    };
+    
+    setResumeData(prev => ({
+      ...prev,
+      profilePhoto: null
+    }));
+    
+    updateResumeData(updatedData);
+  };
+
+  // Keep resumeData state in sync with form state for template preview
+  useEffect(() => {
+    setResumeData({
+      contact: contacts,
+      experiences: experiences as any, // Temporary fix for type mismatch
+      education: educations,
+      skills,
+      summary,
+      showExperienceLevel,
+      languages,
+      certifications,
+      awards,
+      websites,
+      references,
+      hobbies,
+      customSections,
+      profilePhoto,
+    });
+  }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections, profilePhoto]);
 
   // Debounced update function
   const debouncedUpdate = useCallback(
@@ -1633,6 +1983,7 @@ const Builder: React.FC<BuilderProps> = ({
         educations,
         skills,
         summary,
+        profilePhoto,
         showExperienceLevel,
         languages,
         certifications,
@@ -1658,66 +2009,141 @@ const Builder: React.FC<BuilderProps> = ({
   // Validation function
   const validateCurrentStep = (): boolean => {
     const newErrors: Record<string, string> = {};
+    
+    console.log('Validating step:', currentStep);
+    console.log('Current contacts data:', contacts);
 
     switch (currentStep) {
       case 0: // Contacts
-        if (!contacts.firstName.trim()) newErrors.firstName = "First name is required";
-        if (!contacts.lastName.trim()) newErrors.lastName = "Last name is required";
-        if (!contacts.desiredJobTitle.trim()) newErrors.desiredJobTitle = "Desired job title is required";
-        if (!contacts.phone.trim()) newErrors.phone = "Phone number is required";
-        if (!contacts.email.trim()) newErrors.email = "Email is required";
+        if (!contacts.firstName || !contacts.firstName.trim()) newErrors.firstName = "First name is required";
+        if (!contacts.lastName || !contacts.lastName.trim()) newErrors.lastName = "Last name is required";
+        if (!contacts.desiredJobTitle || !contacts.desiredJobTitle.trim()) newErrors.desiredJobTitle = "Desired job title is required";
+        if (!contacts.phone || !contacts.phone.trim()) newErrors.phone = "Phone number is required";
+        if (!contacts.email || !contacts.email.trim()) newErrors.email = "Email is required";
         break;
 
       case 1: // Experience
         experiences.forEach((exp) => {
-          if (!exp.jobTitle.trim()) newErrors[`exp_${exp.id}_jobTitle`] = "Job title is required";
-          if (!exp.employer.trim()) newErrors[`exp_${exp.id}_employer`] = "Employer is required";
-          if (!exp.company.trim()) newErrors[`exp_${exp.id}_company`] = "Company is required";
-          if (!exp.startDate.trim()) newErrors[`exp_${exp.id}_startDate`] = "Start date is required";
-          if (!exp.endDate.trim()) newErrors[`exp_${exp.id}_endDate`] = "End date is required";
-          if (!exp.description.trim()) newErrors[`exp_${exp.id}_description`] = "Description is required";
+          if (!exp.jobTitle || !exp.jobTitle.trim()) newErrors[`exp_${exp.id}_jobTitle`] = "Job title is required";
+          if (!exp.employer || !exp.employer.trim()) newErrors[`exp_${exp.id}_employer`] = "Employer is required";
+          if (!exp.company || !exp.company.trim()) newErrors[`exp_${exp.id}_company`] = "Company is required";
+          if (!exp.startDate || !exp.startDate.trim()) newErrors[`exp_${exp.id}_startDate`] = "Start date is required";
+          if (!exp.endDate || !exp.endDate.trim()) newErrors[`exp_${exp.id}_endDate`] = "End date is required";
+          if (!exp.description || !exp.description.trim()) newErrors[`exp_${exp.id}_description`] = "Description is required";
         });
         break;
 
       case 2: // Education
         educations.forEach((edu) => {
-          if (!edu.school.trim()) newErrors[`edu_${edu.id}_school`] = "School name is required";
-          if (!edu.location.trim()) newErrors[`edu_${edu.id}_location`] = "Location is required";
-          if (!edu.degree.trim()) newErrors[`edu_${edu.id}_degree`] = "Degree is required";
-          if (!edu.startDate.trim()) newErrors[`edu_${edu.id}_startDate`] = "Start date is required";
-          if (!edu.endDate.trim()) newErrors[`edu_${edu.id}_endDate`] = "End date is required";
-          if (!edu.description.trim()) newErrors[`edu_${edu.id}_description`] = "Description is required";
+          if (!edu.school || !edu.school.trim()) newErrors[`edu_${edu.id}_school`] = "School name is required";
+          if (!edu.location || !edu.location.trim()) newErrors[`edu_${edu.id}_location`] = "Location is required";
+          if (!edu.degree || !edu.degree.trim()) newErrors[`edu_${edu.id}_degree`] = "Degree is required";
+          if (!edu.startDate || !edu.startDate.trim()) newErrors[`edu_${edu.id}_startDate`] = "Start date is required";
+          if (!edu.endDate || !edu.endDate.trim()) newErrors[`edu_${edu.id}_endDate`] = "End date is required";
+          if (!edu.description || !edu.description.trim()) newErrors[`edu_${edu.id}_description`] = "Description is required";
         });
         break;
 
       case 3: // Skills
         skills.forEach((skill) => {
-          if (!skill.name.trim()) newErrors[`skill_${skill.id}_name`] = "Skill name is required";
+          if (!skill.name || !skill.name.trim()) newErrors[`skill_${skill.id}_name`] = "Skill name is required";
         });
         break;
 
       case 4: // Summary
-        if (!summary.trim()) newErrors.summary = "Summary is required";
+        if (!summary || !summary.trim()) newErrors.summary = "Summary is required";
         break;
 
       case 5: // Finalize - no validation needed
         break;
     }
 
+    console.log('Validation errors found:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  // Function to clear individual field errors
+  const clearError = (field: string) => {
+    setErrors(prev => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+  };
+
+
+
   const handleNext = () => {
-    if (validateCurrentStep()) {
+    console.log('handleNext called');
+    
+    // Get validation result and error count directly
+    const newErrors: Record<string, string> = {};
+    
+    switch (currentStep) {
+      case 0: // Contacts
+        if (!contacts.firstName || !contacts.firstName.trim()) newErrors.firstName = "First name is required";
+        if (!contacts.lastName || !contacts.lastName.trim()) newErrors.lastName = "Last name is required";
+        if (!contacts.desiredJobTitle || !contacts.desiredJobTitle.trim()) newErrors.desiredJobTitle = "Desired job title is required";
+        if (!contacts.phone || !contacts.phone.trim()) newErrors.phone = "Phone number is required";
+        if (!contacts.email || !contacts.email.trim()) newErrors.email = "Email is required";
+        break;
+      case 1: // Experience
+        experiences.forEach((exp) => {
+          if (!exp.jobTitle || !exp.jobTitle.trim()) newErrors[`exp_${exp.id}_jobTitle`] = "Job title is required";
+          if (!exp.employer || !exp.employer.trim()) newErrors[`exp_${exp.id}_employer`] = "Employer is required";
+          if (!exp.company || !exp.company.trim()) newErrors[`exp_${exp.id}_company`] = "Company is required";
+          if (!exp.startDate || !exp.startDate.trim()) newErrors[`exp_${exp.id}_startDate`] = "Start date is required";
+          if (!exp.endDate || !exp.endDate.trim()) newErrors[`exp_${exp.id}_endDate`] = "End date is required";
+          if (!exp.description || !exp.description.trim()) newErrors[`exp_${exp.id}_description`] = "Description is required";
+        });
+        break;
+      case 2: // Education
+        educations.forEach((edu) => {
+          if (!edu.school || !edu.school.trim()) newErrors[`edu_${edu.id}_school`] = "School name is required";
+          if (!edu.location || !edu.location.trim()) newErrors[`edu_${edu.id}_location`] = "Location is required";
+          if (!edu.degree || !edu.degree.trim()) newErrors[`edu_${edu.id}_degree`] = "Degree is required";
+          if (!edu.startDate || !edu.startDate.trim()) newErrors[`edu_${edu.id}_startDate`] = "Start date is required";
+          if (!edu.endDate || !edu.endDate.trim()) newErrors[`edu_${edu.id}_endDate`] = "End date is required";
+          if (!edu.description || !edu.description.trim()) newErrors[`edu_${edu.id}_description`] = "Description is required";
+        });
+        break;
+      case 3: // Skills
+        skills.forEach((skill) => {
+          if (!skill.name || !skill.name.trim()) newErrors[`skill_${skill.id}_name`] = "Skill name is required";
+        });
+        break;
+      case 4: // Summary
+        if (!summary || !summary.trim()) newErrors.summary = "Summary is required";
+        break;
+    }
+    
+    console.log('New errors found:', newErrors);
+    setErrors(newErrors);
+    
+    const isValid = Object.keys(newErrors).length === 0;
+    console.log('Validation result:', isValid);
+    
+    if (isValid) {
       setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
+    } else {
+      // Scroll to top to show validation errors
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <ValidationHolder contacts={contacts} setContacts={setContacts} errors={errors} />;
+        return <ValidationHolder 
+          contacts={contacts} 
+          setContacts={setContacts} 
+          errors={errors}
+          profilePhoto={profilePhoto || undefined}
+          onPhotoUpload={() => setIsPhotoModalOpen(true)}
+          onPhotoRemove={handleRemovePhoto}
+          onClearError={clearError}
+        />;
       case 1:
         return <ExperienceSection experiences={experiences} setExperiences={setExperiences} errors={errors} />;
       case 2:
@@ -1890,6 +2316,11 @@ const Builder: React.FC<BuilderProps> = ({
                 ))}
               </div>
 
+              {/* Resume Score Display */}
+              {currentStep === 5 && (
+                <ResumeScore resumeData={resumeData} />
+              )}
+
               {renderStepContent()}
             </div>
 
@@ -1897,9 +2328,10 @@ const Builder: React.FC<BuilderProps> = ({
               {currentStep > 0 && (
                 <button
                   onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-                  className="bg-gray-200 px-6 py-2 rounded-md text-gray-700 hover:bg-gray-300 transition-colors"
+                  className="bg-gray-100 hover:bg-gray-200 px-8 py-3 rounded-lg text-gray-700 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
                 >
-                  Previous
+                  <span className="text-lg">←</span>
+                  Back
                 </button>
               )}
               {currentStep === 0 && <div></div>}
@@ -1974,29 +2406,201 @@ const Builder: React.FC<BuilderProps> = ({
                     }
                   }}
                   disabled={isLoading}
-                  className="bg-blue-500 px-6 py-2 rounded-md text-white hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {isLoading ? 'Creating Resume...' : 'Finalize Resume'}
+                  {isLoading ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Creating Resume...
+                    </>
+                  ) : (
+                    <>
+                      Next: Download
+                      <span className="text-lg">→</span>
+                    </>
+                  )}
                 </button>
               ) : (
                 <button
                   onClick={handleNext}
-                  className="bg-blue-500 text-white px-6 py-2 rounded-md disabled:opacity-50"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
                 >
                   Next: {steps[currentStep + 1] || "Done"}
+                  <span className="text-lg">→</span>
                 </button>
               )}
             </div>
           </div>
 
-          {/* Right Panel - Dynamic Template Preview */}
-          <div className="lg:w-1/2 w-full p-4">
-            <div className="w-full max-w-[525px] h-[772px] bg-white shadow-lg p-6 mx-auto overflow-auto">
-              <TemplateComponent resumeData={resumeData} />
+          {/* Right Panel - Clean Resume Preview */}
+          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-100' : 'lg:w-1/2 w-full'} ${isFullscreen ? 'p-0' : 'p-6'} flex flex-col`}>
+            
+            {/* Compact Control Panel */}
+            <div className="flex-shrink-0 mb-3">
+              {/* Unified Control Bar */}
+              <motion.div
+                className="flex items-center justify-between bg-white/95 backdrop-blur-md border border-gray-100 rounded-xl px-4 py-2.5 shadow-lg shadow-gray-200/50 mx-4"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+              >
+                {/* Left: Live Status */}
+                <div className="flex items-center gap-2.5">
+                  <motion.div 
+                    className="w-2 h-2 bg-emerald-500 rounded-full"
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      boxShadow: ["0 0 0 0 rgba(16, 185, 129, 0.4)", "0 0 0 3px rgba(16, 185, 129, 0.1)", "0 0 0 0 rgba(16, 185, 129, 0.4)"]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  />
+                  <span className="text-xs font-semibold text-gray-800">LIVE</span>
+                  <motion.div 
+                    className="flex items-center gap-1.5 ml-1"
+                    key={zoomLevel}
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <span className="text-xs font-mono font-bold text-slate-700" title={`Exact: ${zoomLevel.toFixed(2)}`}>
+                      {Math.round(zoomLevel * 100)}%
+                    </span>
+                    <div className="w-8 h-1 bg-gray-100 rounded-full overflow-hidden">
+                      <motion.div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
+                        style={{ width: `${Math.min((zoomLevel / 2) * 100, 100)}%` }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                      />
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Right: Control Groups */}
+                <div className="flex items-center gap-2">
+                  {/* Zoom Controls */}
+                  <div className="flex items-center bg-gray-50/50 rounded-lg overflow-hidden">
+                    <motion.button
+                      onClick={handleZoomOut}
+                      disabled={zoomLevel <= 0.25}
+                      className="p-2 hover:bg-white/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
+                      title="Zoom Out (Ctrl -)"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <ZoomOut className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                    </motion.button>
+                    <div className="w-px h-4 bg-gray-300"></div>
+                    <motion.button
+                      onClick={handleZoomIn}
+                      disabled={zoomLevel >= 2}
+                      className="p-2 hover:bg-white/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
+                      title="Zoom In (Ctrl +)"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <ZoomIn className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                    </motion.button>
+                  </div>
+
+                  {/* View Controls */}
+                  <div className="flex items-center bg-gray-50/50 rounded-lg overflow-hidden">
+                    <motion.button
+                      onClick={handleFitToScreen}
+                      className="p-2 hover:bg-white/80 transition-all duration-200 group"
+                      title="Fit to Screen"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Square className="w-3.5 h-3.5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                    </motion.button>
+                    <div className="w-px h-4 bg-gray-300"></div>
+                    <motion.button
+                      onClick={handleZoomReset}
+                      className="p-2 hover:bg-white/80 transition-all duration-200 group"
+                      title="Reset Zoom (100%)"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-600 transition-colors" />
+                    </motion.button>
+                  </div>
+
+                  {/* Fullscreen Control */}
+                  <div className="bg-gray-50/50 rounded-lg overflow-hidden">
+                    <motion.button
+                      onClick={toggleFullscreen}
+                      className="p-2 hover:bg-white/80 transition-all duration-200 group"
+                      title={isFullscreen ? "Exit Fullscreen (F11)" : "Fullscreen (F11)"}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {isFullscreen ? (
+                        <Minimize2 className="w-3.5 h-3.5 text-slate-600 group-hover:text-red-600 transition-colors" />
+                      ) : (
+                        <Maximize2 className="w-3.5 h-3.5 text-slate-600 group-hover:text-violet-600 transition-colors" />
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
             </div>
+
+            {/* Enhanced Preview Container */}
+            <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl relative border border-gray-200/50 shadow-inner mx-4">
+              {/* Aligned preview container */}
+              <div className="min-h-full flex justify-center py-6 px-4">
+                {/* Premium Resume Document */}
+                <motion.div 
+                  className="bg-white shadow-2xl border border-gray-100 relative rounded-lg overflow-hidden"
+                  style={{ 
+                    width: `${210 * 3.78}px`, // A4 width in pixels (210mm)
+                    minHeight: `${297 * 3.78}px`, // A4 height in pixels (297mm)
+                    maxWidth: 'none',
+                    padding: '40px',
+                    marginBottom: `${150 * zoomLevel}px`, // Dynamic bottom margin to ensure full visibility
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)',
+                    transformOrigin: 'top center'
+                  }}
+                  initial={{ opacity: 0, y: 30, scale: 0.6 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: 0, 
+                    scale: zoomLevel 
+                  }}
+                  transition={{ 
+                    opacity: { duration: 0.5 },
+                    y: { duration: 0.5 },
+                    scale: { duration: 0.3, ease: "easeOut" }
+                  }}
+                  key={`zoom-${zoomLevel}`}
+                >
+              <TemplateComponent resumeData={resumeData} />
+                </motion.div>
+            </div>
+            </div>
+
+            {/* Zoom level indicator when zooming */}
+            {isZooming && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-black/80 text-white px-4 py-2 rounded-lg text-lg font-medium backdrop-blur-sm"
+              >
+                {Math.round(zoomLevel * 100)}%
+              </motion.div>
+            )}
           </div>
         </div>
       )}
+
+      {/* Photo Upload Modal */}
+      <PhotoUpload
+        isOpen={isPhotoModalOpen}
+        onClose={() => setIsPhotoModalOpen(false)}
+        onSave={handlePhotoSave}
+        currentPhoto={profilePhoto || undefined}
+      />
     </div>
   );
 };

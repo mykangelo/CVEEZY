@@ -20,6 +20,7 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
     hobbies,
     customSections,
     showExperienceLevel,
+    profilePhoto,
   } = resumeData;
 
   const hasLocationInfo =
@@ -50,14 +51,15 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
             </h1>
 
             {/* Contact Info */}
-            <div>
-                <h2 className="text-2xl font-bold">
-                    {contact.firstName} {contact.lastName}
-                </h2>
-                <p className="text-lg text-gray-600">
-                    {contact.desiredJobTitle}
-                </p>
-                <div className="space-y-1 mt-2">
+            <div className="flex items-start gap-6">
+                <div className="flex-1">
+                    <h2 className="text-2xl font-bold">
+                        {contact.firstName} {contact.lastName}
+                    </h2>
+                    <p className="text-lg text-gray-600">
+                        {contact.desiredJobTitle}
+                    </p>
+                    <div className="space-y-1 mt-2">
                     <p>
                         <strong>Phone:</strong> {contact.phone}
                     </p>
@@ -77,7 +79,19 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
                                 .join(", ")}
                         </p>
                     )}
+                    </div>
                 </div>
+                
+                {/* Profile Photo */}
+                {profilePhoto && (
+                    <div className="flex-shrink-0">
+                        <img 
+                            src={profilePhoto} 
+                            alt="Profile" 
+                            className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+                        />
+                    </div>
+                )}
             </div>
 
             {/* Experience */}

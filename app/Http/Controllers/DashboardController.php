@@ -28,16 +28,21 @@ class DashboardController extends Controller
             ->latest()
             ->get()
             ->map(function ($resume) {
+                $progress = $resume->getProgressPercentage();
+                
+                // Determine accurate status based on progress and payment
+                $actualStatus = $this->determineResumeStatus($resume, $progress);
+                
                 return [
                     'id' => $resume->id,
                     'name' => $resume->name,
                     'creation_date' => $resume->formatted_creation_date,
                     'updated_at' => $resume->updated_at->toISOString(),
-                    'status' => $resume->status,
+                    'status' => $actualStatus,
                     'template_id' => $resume->template_id,
                     'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
-                    'progress' => $resume->getProgressPercentage(),
+                    'progress' => $progress,
                 ];
             });
 
@@ -432,16 +437,21 @@ class DashboardController extends Controller
             ->latest()
             ->get()
             ->map(function ($resume) {
+                $progress = $resume->getProgressPercentage();
+                
+                // Determine accurate status based on progress and payment
+                $actualStatus = $this->determineResumeStatus($resume, $progress);
+                
                 return [
                     'id' => $resume->id,
                     'name' => $resume->name,
                     'creation_date' => $resume->formatted_creation_date,
                     'updated_at' => $resume->updated_at->toISOString(),
-                    'status' => $resume->status,
+                    'status' => $actualStatus,
                     'template_id' => $resume->template_id,
                     'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
-                    'progress' => $resume->getProgressPercentage(),
+                    'progress' => $progress,
                 ];
             });
 
@@ -510,5 +520,33 @@ class DashboardController extends Controller
             'message' => 'Resume duplicated successfully',
             'resume' => $duplicatedResume
         ]);
+    }
+
+    /**
+     * Determine the actual status of a resume based on its progress and payment status.
+     */
+    private function determineResumeStatus($resume, $progress)
+    {
+        // Get payment status for this resume
+        $latestPaymentProof = $resume->paymentProofs()->latest()->first();
+        $paymentStatus = $latestPaymentProof?->status;
+        
+        // If resume has been paid and approved, it's published
+        if ($paymentStatus === 'approved') {
+            return Resume::STATUS_PUBLISHED;
+        }
+        
+        // If resume has substantial content (80%+ complete), consider it completed
+        if ($progress >= 80) {
+            return Resume::STATUS_COMPLETED;
+        }
+        
+        // If resume has some content (20%+ complete), it's in progress
+        if ($progress >= 20) {
+            return Resume::STATUS_IN_PROGRESS;
+        }
+        
+        // Otherwise, it's still a draft
+        return Resume::STATUS_DRAFT;
     }
 } 

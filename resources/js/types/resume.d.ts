@@ -3,7 +3,7 @@ export interface Resume {
     name: string;
     creation_date: string;
     updated_at: string;
-    status: 'draft' | 'completed' | 'published';
+    status: 'draft' | 'in_progress' | 'completed' | 'published';
     template_id?: number;
     template_name?: string;
     user_id: number;
@@ -106,6 +106,7 @@ export type ResumeData = {
   references?: Reference[];
   hobbies?: Hobby[];
   customSections?: CustomSection[];
+  profilePhoto?: string | null;
 };
 
 export interface DashboardProps {

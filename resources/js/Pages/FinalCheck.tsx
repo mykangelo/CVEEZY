@@ -46,6 +46,7 @@ interface FinalCheckProps {
   summary?: string;
   resumeId?: number;
   templateName?: string;
+  profilePhoto?: string | null;
 }
 
 
@@ -57,7 +58,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   skills: propSkills,
   summary: propSummary,
   resumeId,
-  templateName: propTemplateName
+  templateName: propTemplateName,
+  profilePhoto: propProfilePhoto
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>("templates");
@@ -135,6 +137,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         educations: propEducations,
         skills: propSkills,
         summary: propSummary,
+        profilePhoto: propProfilePhoto,
         showExperienceLevel: false, // Default to false for database data
         templateName: propTemplateName || 'classic'
       };
@@ -162,7 +165,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   };
 
   const resumeData = getResumeData();
-  const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections, templateName } = resumeData;
+  const { contact, experiences, educations, skills, summary, profilePhoto, languages, certifications, awards, websites, references, hobbies, customSections, templateName } = resumeData;
 
   const [selectedTemplate, setSelectedTemplate] = useState(0);
   const [selectedColor, setSelectedColor] = useState(0);
@@ -226,34 +229,47 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         </h1>
 
         {/* Contact Info */}
-        <div>
-          <h2 className="text-2xl font-bold">
-            {contact.firstName} {contact.lastName}
-          </h2>
-          <p className="text-lg text-gray-600">
-            {contact.desiredJobTitle}
-          </p>
-          <div className="space-y-1 mt-2">
-            <p>
-              <strong>Phone:</strong> {contact.phone}
+        <div className="flex items-start gap-6">
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold">
+              {contact.firstName} {contact.lastName}
+            </h2>
+            <p className="text-lg text-gray-600">
+              {contact.desiredJobTitle}
             </p>
-            <p>
-              <strong>Email:</strong> {contact.email}
-            </p>
-            {(contact.address || contact.city || contact.country || contact.postCode) && (
+            <div className="space-y-1 mt-2">
               <p>
-                <strong>Location:</strong>{" "}
-                {[
-                  contact.address,
-                  contact.city,
-                  contact.country,
-                  contact.postCode,
-                ]
-                  .filter(Boolean)
-                  .join(", ")}
+                <strong>Phone:</strong> {contact.phone}
               </p>
-            )}
+              <p>
+                <strong>Email:</strong> {contact.email}
+              </p>
+              {(contact.address || contact.city || contact.country || contact.postCode) && (
+                <p>
+                  <strong>Location:</strong>{" "}
+                  {[
+                    contact.address,
+                    contact.city,
+                    contact.country,
+                    contact.postCode,
+                  ]
+                    .filter(Boolean)
+                    .join(", ")}
+                </p>
+              )}
+            </div>
           </div>
+          
+          {/* Profile Photo */}
+          {profilePhoto && (
+            <div className="flex-shrink-0">
+              <img 
+                src={profilePhoto} 
+                alt="Profile" 
+                className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
+              />
+            </div>
+          )}
         </div>
       </div>
 

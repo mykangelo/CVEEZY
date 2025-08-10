@@ -20,7 +20,10 @@ import {
     ArrowLeft,
     User,
     Calendar,
-    Mail
+    Mail,
+    AlertTriangle,
+    Filter,
+    ChevronDown
 } from 'lucide-react';
 
 interface PaymentProof {
@@ -87,6 +90,10 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
     const [resumeList, setResumeList] = useState<Resume[]>(resumes);
     const [userList, setUserList] = useState<User[]>(users);
     const [dashboardStats, setDashboardStats] = useState<DashboardStats>(stats);
+    const [bulkDeleting, setBulkDeleting] = useState(false);
+    const [showTimeFilterModal, setShowTimeFilterModal] = useState(false);
+    const [selectedTimeFilter, setSelectedTimeFilter] = useState('1_hour');
+    const [selectedProgressThreshold, setSelectedProgressThreshold] = useState(75);
 
     // Update payment list when props change
     useEffect(() => {
@@ -310,6 +317,94 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
         }
     };
 
+    const handleBulkDeleteUnfinishedResumes = async () => {
+        setBulkDeleting(true);
+        setNotification(null);
+        setShowTimeFilterModal(false);
+        
+        const timeLabels = {
+            '7_days': '7 days',
+            '14_days': '14 days',
+            '30_days': '30 days',
+            '60_days': '60 days',
+            '90_days': '90 days',
+            '6_months': '6 months',
+            '1_year': '1 year',
+            'all': 'any age'
+        };
+        
+        try {
+            // Get CSRF token
+            let csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            
+            if (!csrfToken) {
+                // Try to get it from the page props or make a request to get it
+                const metaResponse = await fetch('/');
+                const metaText = await metaResponse.text();
+                const csrfMatch = metaText.match(/<meta name="csrf-token" content="([^"]+)"/);
+                csrfToken = csrfMatch ? csrfMatch[1] : '';
+            }
+
+            const response = await fetch('/admin/resumes/bulk-delete/unfinished', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken || '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    time_filter: selectedTimeFilter,
+                    progress_threshold: selectedProgressThreshold
+                })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                setNotification({
+                    type: 'error',
+                    message: errorData.message || 'Failed to delete resumes. Please try again.'
+                });
+                return;
+            }
+
+            const result = await response.json();
+            
+            if (result.success) {
+                // Log debug info to console for troubleshooting
+                console.log('Bulk delete result:', result);
+                
+                let message = result.message || `Successfully deleted ${result.deleted_count} unfinished resumes.`;
+                
+                setNotification({
+                    type: 'success',
+                    message: message
+                });
+                
+                // Refresh the page to show updated counts
+                setTimeout(() => {
+                    router.visit('/admin/dashboard', { preserveState: false });
+                }, 2500); // Longer delay to read debug info
+            } else {
+                setNotification({
+                    type: 'error',
+                    message: result.message || 'Failed to delete resumes.'
+                });
+            }
+        } catch (error) {
+            console.error('Error bulk deleting resumes:', error);
+            setNotification({
+                type: 'error',
+                message: error instanceof Error ? error.message : 'Error deleting resumes. Please try again.'
+            });
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
+    const openTimeFilterModal = () => {
+        setShowTimeFilterModal(true);
+    };
+
     const viewPaymentProof = (payment: PaymentProof) => {
         // Open payment proof file in new tab
         const fileUrl = `/storage/${payment.file_path}`;
@@ -458,17 +553,17 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
-                                                {paymentList.length === 0 ? (
+                                                {!paymentList || paymentList.length === 0 ? (
                                                     <p className="text-gray-500 text-center py-8">No payment proofs found.</p>
                                                 ) : (
                                                     <div className="space-y-4">
-                                                        {paymentList.map((payment) => (
+                                                        {paymentList.map((payment) => payment ? (
                                                             <div key={payment.id} className="border rounded-lg p-4 space-y-3">
                                                                 <div className="flex items-center justify-between">
                                                                     <div className="flex-1">
-                                                                        <h3 className="font-semibold">{payment.user.name}</h3>
-                                                                        <p className="text-sm text-gray-600">{payment.user.email}</p>
-                                                                        <p className="text-sm text-gray-500">Resume: {payment.resume.name}</p>
+                                                                        <h3 className="font-semibold">{payment.user?.name || 'Unknown User'}</h3>
+                                                                        <p className="text-sm text-gray-600">{payment.user?.email || 'No email'}</p>
+                                                                        <p className="text-sm text-gray-500">Resume: {payment.resume?.name || 'Unknown Resume'}</p>
                                                                         <p className="text-sm text-gray-500">Submitted: {formatDate(payment.created_at)}</p>
                                                                     </div>
                                                                     <div className="flex items-center space-x-2">
@@ -521,7 +616,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                        ))}
+                                                        ) : null)}
                                                     </div>
                                                 )}
                                             </div>
@@ -536,7 +631,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
-                                                {userList.length === 0 ? (
+                                                {!userList || userList.length === 0 ? (
                                                     <p className="text-gray-500 text-center py-8">No users found.</p>
                                                 ) : (
                                                     <div className="space-y-4">
@@ -588,12 +683,36 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
 
                                 <TabsContent value="resumes" className="space-y-4">
                                     <Card>
-                                        <CardHeader>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                                             <CardTitle>Resume Management</CardTitle>
+                                            <Button 
+                                                variant="destructive"
+                                                size="sm"
+                                                onClick={openTimeFilterModal}
+                                                disabled={bulkDeleting}
+                                                className="flex items-center gap-2"
+                                            >
+                                                {bulkDeleting ? (
+                                                    <>
+                                                        <div className="flex items-center">
+                                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                            </svg>
+                                                            Cleaning up...
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Filter className="h-4 w-4" />
+                                                        Clean Up Unfinished
+                                                    </>
+                                                )}
+                                            </Button>
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
-                                                {resumeList.length === 0 ? (
+                                                {!resumeList || resumeList.length === 0 ? (
                                                     <p className="text-gray-500 text-center py-8">No resumes found.</p>
                                                 ) : (
                                                     <div className="space-y-4">
@@ -603,7 +722,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                     <div className="flex-1">
                                                                         <div className="flex items-center gap-3 mb-2">
                                                                             <FileText className="h-5 w-5 text-gray-400" />
-                                                                            <h3 className="font-semibold">{resume.name}</h3>
+                                                                            <h3 className="font-semibold">{resume.name || 'Untitled Resume'}</h3>
                                                                             {resume.is_paid && (
                                                                                 <Badge className="bg-green-100 text-green-800">Paid</Badge>
                                                                             )}
@@ -611,11 +730,11 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                         <div className="flex items-center gap-4 text-sm text-gray-600">
                                                                             <div className="flex items-center gap-1">
                                                                                 <User className="h-4 w-4" />
-                                                                                By: {resume.user.name}
+                                                                                By: {resume.user?.name || 'Unknown User'}
                                                                             </div>
                                                                             <div className="flex items-center gap-1">
                                                                                 <Mail className="h-4 w-4" />
-                                                                                {resume.user.email}
+                                                                                {resume.user?.email || 'No email'}
                                                                             </div>
                                                                             <div className="flex items-center gap-1">
                                                                                 <Calendar className="h-4 w-4" />
@@ -681,6 +800,125 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
             </main>
             
             <Footer />
+
+            {/* Time Filter Modal */}
+            {showTimeFilterModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Clean Up Settings</h3>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setShowTimeFilterModal(false)}
+                            >
+                                <XCircle className="h-4 w-4" />
+                            </Button>
+                        </div>
+
+                        <div className="space-y-4">
+                            {/* Time Filter Selection */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Delete resumes older than:
+                                </label>
+                                <select
+                                    value={selectedTimeFilter}
+                                    onChange={(e) => setSelectedTimeFilter(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="1_minute">1 minute (testing)</option>
+                                    <option value="1_hour">1 hour (testing)</option>
+                                    <option value="1_day">1 day (testing)</option>
+                                    <option value="7_days">7 days (newest)</option>
+                                    <option value="14_days">14 days (recent)</option>
+                                    <option value="30_days">30 days (default)</option>
+                                    <option value="60_days">60 days</option>
+                                    <option value="90_days">90 days (old)</option>
+                                    <option value="6_months">6 months (very old)</option>
+                                    <option value="1_year">1 year (ancient)</option>
+                                    <option value="all">Any age (all time)</option>
+                                </select>
+                            </div>
+
+                            {/* Progress Threshold */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Progress threshold (less than):
+                                </label>
+                                <select
+                                    value={selectedProgressThreshold}
+                                    onChange={(e) => setSelectedProgressThreshold(Number(e.target.value))}
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value={10}>10% (barely started)</option>
+                                    <option value={20}>20% (default)</option>
+                                    <option value={30}>30%</option>
+                                    <option value={50}>50% (half complete)</option>
+                                    <option value={75}>75% (mostly complete)</option>
+                                    <option value={100}>100% (include all)</option>
+                                </select>
+                            </div>
+
+                            {/* Preview/Warning */}
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                                <div className="flex">
+                                    <AlertTriangle className="h-5 w-5 text-yellow-400 mr-2 flex-shrink-0 mt-0.5" />
+                                    <div className="text-sm">
+                                        <p className="text-yellow-800 font-medium">This will delete:</p>
+                                        <ul className="text-yellow-700 mt-1 list-disc list-inside">
+                                            <li>Draft and unpaid resumes</li>
+                                            <li>Older than {selectedTimeFilter === '1_minute' ? '1 minute' :
+                                                selectedTimeFilter === '1_hour' ? '1 hour' :
+                                                selectedTimeFilter === '1_day' ? '1 day' :
+                                                selectedTimeFilter === '7_days' ? '7 days' : 
+                                                selectedTimeFilter === '14_days' ? '14 days' :
+                                                selectedTimeFilter === '30_days' ? '30 days' :
+                                                selectedTimeFilter === '60_days' ? '60 days' :
+                                                selectedTimeFilter === '90_days' ? '90 days' :
+                                                selectedTimeFilter === '6_months' ? '6 months' :
+                                                selectedTimeFilter === '1_year' ? '1 year' : 'any age'}</li>
+                                            <li>With less than {selectedProgressThreshold}% progress</li>
+                                        </ul>
+                                        <p className="text-yellow-800 font-medium mt-2">This action cannot be undone!</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-end space-x-3 mt-6">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowTimeFilterModal(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                variant="destructive"
+                                onClick={handleBulkDeleteUnfinishedResumes}
+                                disabled={bulkDeleting}
+                                className="flex items-center gap-2"
+                            >
+                                {bulkDeleting ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Deleting...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Trash2 className="h-4 w-4" />
+                                        Delete Resumes
+                                    </>
+                                )}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

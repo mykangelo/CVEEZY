@@ -427,13 +427,18 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                                    resume.status === 'completed' 
+                                                    resume.status === 'published' 
+                                                        ? 'bg-purple-100 text-purple-800'
+                                                        : resume.status === 'completed' 
                                                         ? 'bg-green-100 text-green-800' 
-                                                        : resume.status === 'draft'
-                                                        ? 'bg-yellow-100 text-yellow-800'
-                                                        : 'bg-blue-100 text-blue-800'
+                                                        : resume.status === 'in_progress'
+                                                        ? 'bg-blue-100 text-blue-800'
+                                                        : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
-                                                    {resume.status.charAt(0).toUpperCase() + resume.status.slice(1)}
+                                                    {resume.status === 'in_progress' 
+                                                        ? 'In Progress' 
+                                                        : resume.status.charAt(0).toUpperCase() + resume.status.slice(1)
+                                                    }
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">

@@ -140,6 +140,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/resumes/{id}', [AdminController::class, 'viewResume'])->name('admin.resume.view');
     Route::get('/admin/resumes/{id}/download', [AdminController::class, 'downloadResume'])->name('admin.resume.download');
     Route::delete('/admin/resumes/{id}', [AdminController::class, 'deleteResume'])->name('admin.resume.delete');
+    Route::delete('/admin/resumes/bulk-delete/unfinished', [AdminController::class, 'bulkDeleteUnfinishedResumes'])->name('admin.resumes.bulk-delete-unfinished');
+    Route::get('/admin/resumes/debug', [AdminController::class, 'debugResumes'])->name('admin.resumes.debug');
     
     // Statistics
     Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');

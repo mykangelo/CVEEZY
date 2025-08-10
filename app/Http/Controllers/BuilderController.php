@@ -14,6 +14,7 @@ class BuilderController extends Controller
         $hasPendingPayments = false;
         $pendingResumesCount = 0;
         $resumeId = $request->get('resume');
+        $templateName = $request->get('template');
         $resume = null;
         $resumeData = null;
         
@@ -48,6 +49,34 @@ class BuilderController extends Controller
                         'resume_name' => $resume->name
                     ]);
                 }
+            } elseif (!$templateName) {
+                // Only auto-load recent draft if user didn't come from template selection
+                // This means they're refreshing an existing editing session
+                $latestDraft = $user->resumes()
+                    ->where('status', 'draft')
+                    ->orderBy('updated_at', 'desc')
+                    ->first();
+                
+                if ($latestDraft) {
+                    $resume = $latestDraft;
+                    $resumeData = $resume->resume_data;
+                    if (is_string($resumeData)) {
+                        $resumeData = json_decode($resumeData, true);
+                    }
+                    
+                    \Log::info('Auto-loading most recent draft resume (refresh scenario)', [
+                        'user_id' => $user->id,
+                        'resume_id' => $latestDraft->id,
+                        'resume_name' => $latestDraft->name,
+                        'last_updated' => $latestDraft->updated_at
+                    ]);
+                }
+            } else {
+                // User came with a template parameter, they want to create a new resume
+                \Log::info('User creating new resume with template', [
+                    'user_id' => $user->id,
+                    'template' => $templateName
+                ]);
             }
         }
         

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Camera, X } from "lucide-react";
 
 // ValidationHolder component
 interface ValidationHolderProps {
@@ -26,19 +26,48 @@ interface ValidationHolderProps {
     postCode?: string;
   }>>;
   errors: Record<string, string>;
+  profilePhoto?: string | null;
+  onPhotoUpload?: () => void;
+  onPhotoRemove?: () => void;
+  onClearError?: (field: string) => void;
 }
 
-const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContacts, errors }) => {
+const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContacts, errors, profilePhoto, onPhotoUpload, onPhotoRemove, onClearError }) => {
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
 
   const updateContact = (field: keyof typeof contacts, value: string) => {
     setContacts(prev => ({ ...prev, [field]: value }));
+    
+    // Clear the error for this field when user starts typing
+    if (errors[field] && onClearError) {
+      onClearError(field);
+    }
   };
 
+  console.log('ValidationHolder rendering with errors:', errors);
+  console.log('ValidationHolder contacts:', contacts);
+  
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2">Contacts</h2>
       <p className="text-gray-600 mb-6">Add your up-to-date contact information so employers and recruiters can easily reach you.</p>
+      
+      {/* Validation Error Summary */}
+      {Object.keys(errors).length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-bold">!</span>
+            </div>
+            <h3 className="text-red-800 font-semibold">Please fix the following errors:</h3>
+          </div>
+          <ul className="text-red-700 text-sm space-y-1">
+            {Object.entries(errors).map(([field, message]) => (
+              <li key={field}>• {message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-gray-700 mb-1">First name</label>
@@ -61,16 +90,7 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
           {errors.lastName && <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>}
         </div>
       </div>
-      <div className="mb-4">
-        <label className="block text-gray-700 mb-1">Desired job title</label>
-        <input 
-          className={`w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400 ${errors.desiredJobTitle ? 'border-red-500' : ''}`}
-          placeholder="Accountant"
-          value={contacts.desiredJobTitle}
-          onChange={e => updateContact('desiredJobTitle', e.target.value)}
-        />
-        {errors.desiredJobTitle && <p className="text-red-500 text-xs mt-1">{errors.desiredJobTitle}</p>}
-      </div>
+      {/* Phone and Email Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-gray-700 mb-1">Phone</label>
@@ -91,6 +111,64 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
             onChange={e => updateContact('email', e.target.value)}
           />
           {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+        </div>
+      </div>
+
+      {/* Desired Job Title and Photo Upload Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-gray-700 mb-1">Desired job title</label>
+          <input 
+            className={`w-full border rounded-md p-3 focus:ring-2 focus:ring-blue-400 ${errors.desiredJobTitle ? 'border-red-500' : ''}`}
+            placeholder="Computer Engineer"
+            value={contacts.desiredJobTitle}
+            onChange={e => updateContact('desiredJobTitle', e.target.value)}
+          />
+          {errors.desiredJobTitle && <p className="text-red-500 text-xs mt-1">{errors.desiredJobTitle}</p>}
+        </div>
+        
+        {/* Photo Upload Section */}
+        <div className="flex items-center justify-center">
+          <div className="text-center">
+            {profilePhoto ? (
+              <div className="relative inline-block">
+                <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-gray-200 bg-gray-50 shadow-sm">
+                  <img 
+                    src={profilePhoto} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="mt-1 flex gap-1 justify-center text-xs">
+                  <button
+                    onClick={onPhotoUpload}
+                    className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
+                  >
+                    Change
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    onClick={onPhotoRemove}
+                    className="text-red-500 hover:text-red-600 font-medium transition-colors"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="inline-block">
+                <div 
+                  className="flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-dashed border-blue-300 bg-blue-50 cursor-pointer hover:border-blue-400 hover:bg-blue-100 transition-all duration-200"
+                  onClick={onPhotoUpload}
+                >
+                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Camera className="h-4 w-4 text-blue-500" />
+                  </div>
+                  <span className="text-blue-500 font-medium text-sm">Upload photo</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
       

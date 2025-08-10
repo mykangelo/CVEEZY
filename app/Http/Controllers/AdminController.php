@@ -459,4 +459,125 @@ class AdminController extends Controller
             'paymentProofs' => $paymentProofs,
         ]);
     }
+
+    /**
+     * Bulk delete unfinished and unpaid resumes
+     */
+    public function bulkDeleteUnfinishedResumes(Request $request)
+    {
+        try {
+            // Get time filter from request
+            $timeFilter = $request->input('time_filter', '30_days');
+            $progressThreshold = $request->input('progress_threshold', 20);
+            
+            // Define time ranges
+            $timeRanges = [
+                '1_minute' => now()->subMinutes(1),
+                '1_hour' => now()->subHours(1),
+                '1_day' => now()->subDays(1),
+                '7_days' => now()->subDays(7),
+                '14_days' => now()->subDays(14),
+                '30_days' => now()->subDays(30),
+                '60_days' => now()->subDays(60),
+                '90_days' => now()->subDays(90),
+                '6_months' => now()->subMonths(6),
+                '1_year' => now()->subYear(),
+                'all' => null // No time limit
+            ];
+            
+            $cutoffDate = $timeRanges[$timeFilter] ?? $timeRanges['30_days'];
+            $deletedCount = 0;
+            
+            // Build query for resumes that meet cleanup criteria
+            $query = Resume::where(function($baseQuery) {
+                $baseQuery->where('status', Resume::STATUS_DRAFT)
+                          ->orWhere('is_paid', false);
+            });
+            
+            // Apply time filter if specified
+            if ($cutoffDate) {
+                $query->where('created_at', '<', $cutoffDate);
+            }
+            
+            $resumesToDelete = $query->get();
+            
+            // Filter by progress threshold
+            $finalResumesToDelete = $resumesToDelete->filter(function($resume) use ($progressThreshold) {
+                $progress = $resume->getProgressPercentage();
+                return $progress < $progressThreshold;
+            });
+            
+            // Delete the resumes
+            foreach ($finalResumesToDelete as $resume) {
+                $resume->delete(); // This will soft delete
+                $deletedCount++;
+            }
+            
+            // Prepare response message based on filter
+            $timeLabel = [
+                '1_minute' => '1 minute',
+                '1_hour' => '1 hour',
+                '1_day' => '1 day',
+                '7_days' => '7 days',
+                '14_days' => '14 days',
+                '30_days' => '30 days',
+                '60_days' => '60 days',
+                '90_days' => '90 days',
+                '6_months' => '6 months',
+                '1_year' => '1 year',
+                'all' => 'any age'
+            ][$timeFilter] ?? '30 days';
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully deleted {$deletedCount} unfinished resumes older than {$timeLabel}",
+                'deleted_count' => $deletedCount,
+                'time_filter' => $timeFilter,
+                'progress_threshold' => $progressThreshold,
+                'debug_info' => [
+                    'matching_criteria' => $resumesToDelete->count(),
+                    'after_progress_filter' => $finalResumesToDelete->count()
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Bulk delete error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting resumes: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Debug method to check resume status
+     */
+    public function debugResumes()
+    {
+        $resumes = Resume::all();
+        $debug_info = [];
+        
+        foreach ($resumes as $resume) {
+            $debug_info[] = [
+                'id' => $resume->id,
+                'user_id' => $resume->user_id,
+                'status' => $resume->status,
+                'is_paid' => $resume->is_paid,
+                'progress' => $resume->getProgressPercentage(),
+                'created_at' => $resume->created_at,
+                'resume_data_exists' => !empty($resume->resume_data),
+                'resume_data_content' => $resume->resume_data ? array_keys($resume->resume_data) : []
+            ];
+        }
+        
+        return response()->json([
+            'total_resumes' => $resumes->count(),
+            'resumes' => $debug_info,
+            'constants' => [
+                'STATUS_DRAFT' => Resume::STATUS_DRAFT,
+                'STATUS_COMPLETED' => Resume::STATUS_COMPLETED,
+                'STATUS_PUBLISHED' => Resume::STATUS_PUBLISHED
+            ]
+        ]);
+    }
 }
