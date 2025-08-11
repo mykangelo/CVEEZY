@@ -5,7 +5,7 @@ import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, Zoom
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { ResumeData, Language, Certification, Award, Website, Reference, Hobby, CustomSection } from '@/types/resume';
-import PhotoUpload from '@/Components/PhotoUpload';
+
 
 // Import all resume template components
 import Classic from '@/Components/Builder/Classic';
@@ -1427,9 +1427,8 @@ const Builder: React.FC<BuilderProps> = ({
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [customSections, setCustomSections] = useState<CustomSection[]>([]);
   
-  // Photo upload state
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
-  const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+
+
 
   // ResumeData state for template system
   const [resumeData, setResumeData] = useState<ResumeData>({
@@ -1455,7 +1454,7 @@ const Builder: React.FC<BuilderProps> = ({
     references: [],
     hobbies: [],
     customSections: [],
-    profilePhoto: null,
+
   });
 
   const TemplateComponent = templateComponents[templateName] || Classic;
@@ -1529,9 +1528,7 @@ const Builder: React.FC<BuilderProps> = ({
               if (resumeData.customSections) {
                 setCustomSections(resumeData.customSections);
               }
-              if (resumeData.profilePhoto) {
-                setProfilePhoto(resumeData.profilePhoto);
-              }
+
             }
             
             console.log('Loaded existing resume data from props:', resumeData);
@@ -1602,9 +1599,7 @@ const Builder: React.FC<BuilderProps> = ({
                 if (resumeData.customSections) {
                   setCustomSections(resumeData.customSections);
                 }
-                if (resumeData.profilePhoto) {
-                  setProfilePhoto(resumeData.profilePhoto);
-                }
+
               }
               
               console.log('Loaded existing resume data from API:', resumeData);
@@ -1614,9 +1609,9 @@ const Builder: React.FC<BuilderProps> = ({
               await createNewResume();
             }
           }
-        } else if (urlTemplate) {
+        } else if (searchParams.get('template')) {
           // User came with template parameter - they want to create a NEW resume
-          console.log('User creating new resume with template:', urlTemplate);
+          console.log('User creating new resume with template:', searchParams.get('template'));
           console.log('Ignoring any existing resume data from server');
           await createNewResume();
         } else {
@@ -1682,9 +1677,7 @@ const Builder: React.FC<BuilderProps> = ({
               if (resumeData.customSections) {
                 setCustomSections(resumeData.customSections);
               }
-              if (resumeData.profilePhoto) {
-                setProfilePhoto(resumeData.profilePhoto);
-              }
+
             }
             
             console.log('Loaded recent draft from server props:', resumeData);
@@ -1772,7 +1765,7 @@ const Builder: React.FC<BuilderProps> = ({
     };
 
     initializeResume();
-  }, [existingResumeId, templateName]);
+  }, [editingResumeId, editingResumeData, editingTemplateName]);
 
   // Function to update resume data in real-time
   const updateResumeData = async (newData: any) => {
@@ -1804,64 +1797,7 @@ const Builder: React.FC<BuilderProps> = ({
     }
   };
 
-  // Photo handling functions
-  const handlePhotoSave = (photoData: string) => {
-    setProfilePhoto(photoData);
-    
-    // Update resume data to include photo
-    const updatedData = {
-      contact: contacts,
-      experiences,
-      educations,
-      skills,
-      summary,
-      showExperienceLevel,
-      languages,
-      certifications,
-      awards,
-      websites,
-      references,
-      hobbies,
-      customSections,
-      profilePhoto: photoData
-    };
-    
-    setResumeData(prev => ({
-      ...prev,
-      profilePhoto: photoData
-    }));
-    
-    updateResumeData(updatedData);
-  };
 
-  const handleRemovePhoto = () => {
-    setProfilePhoto(null);
-    
-    // Update resume data to remove photo
-    const updatedData = {
-      contact: contacts,
-      experiences,
-      educations,
-      skills,
-      summary,
-      showExperienceLevel,
-      languages,
-      certifications,
-      awards,
-      websites,
-      references,
-      hobbies,
-      customSections,
-      profilePhoto: null
-    };
-    
-    setResumeData(prev => ({
-      ...prev,
-      profilePhoto: null
-    }));
-    
-    updateResumeData(updatedData);
-  };
 
   // Keep resumeData state in sync with form state for template preview
   useEffect(() => {
@@ -1879,9 +1815,9 @@ const Builder: React.FC<BuilderProps> = ({
       references,
       hobbies,
       customSections,
-      profilePhoto,
+
     });
-  }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections, profilePhoto]);
+  }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections]);
 
   // Debounced update function
   const debouncedUpdate = useCallback(
@@ -1983,7 +1919,7 @@ const Builder: React.FC<BuilderProps> = ({
         educations,
         skills,
         summary,
-        profilePhoto,
+  
         showExperienceLevel,
         languages,
         certifications,
@@ -2139,9 +2075,6 @@ const Builder: React.FC<BuilderProps> = ({
           contacts={contacts} 
           setContacts={setContacts} 
           errors={errors}
-          profilePhoto={profilePhoto || undefined}
-          onPhotoUpload={() => setIsPhotoModalOpen(true)}
-          onPhotoRemove={handleRemovePhoto}
           onClearError={clearError}
         />;
       case 1:
@@ -2594,13 +2527,7 @@ const Builder: React.FC<BuilderProps> = ({
         </div>
       )}
 
-      {/* Photo Upload Modal */}
-      <PhotoUpload
-        isOpen={isPhotoModalOpen}
-        onClose={() => setIsPhotoModalOpen(false)}
-        onSave={handlePhotoSave}
-        currentPhoto={profilePhoto || undefined}
-      />
+
     </div>
   );
 };

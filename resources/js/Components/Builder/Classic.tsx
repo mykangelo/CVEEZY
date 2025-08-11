@@ -20,7 +20,7 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
     hobbies,
     customSections,
     showExperienceLevel,
-    profilePhoto,
+
   } = resumeData;
 
   const hasLocationInfo =
@@ -84,16 +84,7 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
                     </div>
                 </div>
                 
-                {/* Profile Photo */}
-                {profilePhoto && (
-                    <div className="flex-shrink-0">
-                        <img 
-                            src={profilePhoto} 
-                            alt="Profile" 
-                            className="w-32 h-32 object-cover rounded-lg border-2 border-gray-200"
-                        />
-                    </div>
-                )}
+
             </div>
 
             {/* Experience */}

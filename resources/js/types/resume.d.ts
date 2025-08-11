@@ -106,7 +106,7 @@ export type ResumeData = {
   references?: Reference[];
   hobbies?: Hobby[];
   customSections?: CustomSection[];
-  profilePhoto?: string | null;
+
 };
 
 export interface DashboardProps {
