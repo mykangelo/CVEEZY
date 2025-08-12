@@ -201,11 +201,32 @@
                     <hr class="subdivider" />
                     <div class="block">
                         <div class="heading">Skills</div>
-                        <ul class="mt-1">
+                        <div class="mt-1">
                             @foreach ($skills as $skill)
-                                <li>{{ $skill['name'] }}</li>
+                                @php
+                                    $level = $skill['level'] ?? 'Novice';
+                                    $dotCount = 0;
+                                    switch($level) {
+                                        case 'Novice': $dotCount = 1; break;
+                                        case 'Beginner': $dotCount = 2; break;
+                                        case 'Skillful': $dotCount = 3; break;
+                                        case 'Experienced': $dotCount = 4; break;
+                                        case 'Expert': $dotCount = 5; break;
+                                        default: $dotCount = 1;
+                                    }
+                                @endphp
+                                <table style="width: 100%; margin-bottom: 8px;">
+                                    <tr>
+                                        <td style="font-size: 13px; width: 60%;">{{ $skill['name'] }}</td>
+                                        <td style="text-align: right; width: 40%;">
+                                            @for ($i = 0; $i < 5; $i++)
+                                                <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: {{ $i < $dotCount ? '#333333' : '#D3D3D3' }}; margin-left: 2px;"></span>
+                                            @endfor
+                                        </td>
+                                    </tr>
+                                </table>
                             @endforeach
-                        </ul>
+                        </div>
                     </div>
                 @endif
 

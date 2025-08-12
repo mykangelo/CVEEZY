@@ -168,11 +168,25 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
             {skills.length > 0 && (
               <div className="py-5 pr-6">
                 <h3 className="elegant-section-title mb-3">Skills</h3>
-                <ul className="list-disc pl-5 text-[13px] space-y-1">
+                <div className="space-y-3">
                   {skills.map((skill, index) => (
-                    <li key={index}>{skill.name}</li>
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-[13px]">{skill.name}</span>
+                      <div className="flex gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-2 h-2 rounded-full ${
+                              i < getSkillLevelBullets(skill.level || 'Novice')
+                                ? 'bg-[#333333]'
+                                : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
             {languages && languages.length > 0 && <div className="border-t border-gray-300" />}
