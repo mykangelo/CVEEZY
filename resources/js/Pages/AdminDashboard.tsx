@@ -94,6 +94,10 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
     const [showTimeFilterModal, setShowTimeFilterModal] = useState(false);
     const [selectedTimeFilter, setSelectedTimeFilter] = useState('1_hour');
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['draft']);
+    const [storagePathModal, setStoragePathModal] = useState({
+        isOpen: false,
+        data: null as any
+    });
 
     // Update payment list when props change
     useEffect(() => {
@@ -410,6 +414,63 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
         }
     };
 
+    const handleOpenStorageFolder = async () => {
+        try {
+            const response = await fetch('/admin/open-storage-folder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                setNotification({ 
+                    type: 'success', 
+                    message: `Folder opened successfully! Path: ${data.path}` 
+                });
+            } else {
+                setNotification({ 
+                    type: 'error', 
+                    message: data.error || 'Failed to open storage folder' 
+                });
+            }
+        } catch (error) {
+            console.error('Error opening storage folder:', error);
+            setNotification({ 
+                type: 'error', 
+                message: 'An error occurred while trying to open the storage folder' 
+            });
+        }
+    };
+
+    const handleShowStoragePath = async () => {
+        try {
+            const response = await fetch('/admin/payment-storage-path');
+            const data = await response.json();
+            
+            if (response.ok) {
+                setStoragePathModal({
+                    isOpen: true,
+                    data: data
+                });
+            } else {
+                setNotification({ 
+                    type: 'error', 
+                    message: data.error || 'Failed to get storage path information' 
+                });
+            }
+        } catch (error) {
+            console.error('Error getting storage path:', error);
+            setNotification({ 
+                type: 'error', 
+                message: 'An error occurred while fetching storage path information' 
+            });
+        }
+    };
+
     const openTimeFilterModal = () => {
         setShowTimeFilterModal(true);
     };
@@ -557,8 +618,30 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
 
                                 <TabsContent value="payments" className="space-y-4">
                                     <Card>
-                                        <CardHeader>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle>Payment Proof Management</CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={handleOpenStorageFolder}
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors"
+                                                    title="Open storage folder in file explorer"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1M10 6V5a2 2 0 112 0v1M10 6h4M14 10l2-2m0 0l2-2m-2 2v8" />
+                                                    </svg>
+                                                    Open Folder
+                                                </button>
+                                                <button
+                                                    onClick={handleShowStoragePath}
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors"
+                                                    title="Show storage location info"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                    Info
+                                                </button>
+                                            </div>
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
@@ -938,6 +1021,125 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                     </>
                                 )}
                             </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Storage Path Modal */}
+            {storagePathModal.isOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-96 overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900">Payment Proof Storage Location</h3>
+                            <button
+                                onClick={() => setStoragePathModal({ isOpen: false, data: null })}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        {storagePathModal.data && (
+                            <div className="space-y-4">
+                                <div className="bg-gray-50 p-4 rounded-lg">
+                                    <h4 className="font-medium text-gray-900 mb-2">Storage Information</h4>
+                                    <div className="grid grid-cols-1 gap-3 text-sm">
+                                        <div>
+                                            <span className="font-medium text-gray-600">Full Path:</span>
+                                            <div className="mt-1 p-2 bg-gray-100 rounded border font-mono text-xs break-all">
+                                                {storagePathModal.data.storage_path}
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <span className="font-medium text-gray-600">Relative Path:</span>
+                                            <div className="mt-1 p-2 bg-gray-100 rounded border font-mono text-xs">
+                                                {storagePathModal.data.relative_path}
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <span className="font-medium text-gray-600">Directory Status:</span>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    {storagePathModal.data.exists ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Exists
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Not Found
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            <div>
+                                                <span className="font-medium text-gray-600">Write Access:</span>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    {storagePathModal.data.writable ? (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Writable
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Read Only
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <span className="font-medium text-gray-600">Files Count:</span>
+                                            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                                {storagePathModal.data.file_count} files
+                                            </span>
+                                        </div>
+                                        
+                                        <div>
+                                            <span className="font-medium text-gray-600">Storage Disk:</span>
+                                            <span className="ml-2 px-2 py-1 bg-gray-100 text-gray-800 rounded text-xs font-medium">
+                                                {storagePathModal.data.disk}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="bg-blue-50 p-4 rounded-lg">
+                                    <h4 className="font-medium text-blue-900 mb-2">Access Information</h4>
+                                    <p className="text-sm text-blue-700 mb-2">
+                                        Payment proof files are accessible via web at:
+                                    </p>
+                                    <div className="p-2 bg-blue-100 rounded border font-mono text-xs break-all text-blue-800">
+                                        {storagePathModal.data.url_prefix}[filename]
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="flex justify-end mt-6">
+                            <button
+                                onClick={() => setStoragePathModal({ isOpen: false, data: null })}
+                                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                            >
+                                Close
+                            </button>
                         </div>
                     </div>
                 </div>

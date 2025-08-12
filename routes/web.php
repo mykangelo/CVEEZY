@@ -132,6 +132,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/payment/{id}/view', [AdminController::class, 'viewPaymentProof'])->name('admin.payment.view');
     Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve'])->name('admin.payment.approve');
     Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject'])->name('admin.payment.reject');
+    Route::get('/admin/payment-storage-path', [AdminController::class, 'getStoragePath'])->name('admin.payment.storage-path');
+    Route::post('/admin/open-storage-folder', [AdminController::class, 'openStorageFolder'])->name('admin.payment.open-folder');
     
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');

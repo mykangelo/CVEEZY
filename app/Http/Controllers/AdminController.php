@@ -316,6 +316,109 @@ class AdminController extends Controller
     }
 
     /**
+     * Get payment proof storage path information
+     */
+    public function getStoragePath()
+    {
+        try {
+            $storagePath = storage_path('app/public/proofs');
+            $absolutePath = realpath($storagePath) ?: $storagePath;
+            
+            // Count files in directory
+            $fileCount = 0;
+            if (is_dir($storagePath)) {
+                $files = scandir($storagePath);
+                $fileCount = count(array_filter($files, function($file) use ($storagePath) {
+                    return $file !== '.' && $file !== '..' && is_file($storagePath . DIRECTORY_SEPARATOR . $file);
+                }));
+            }
+            
+            return response()->json([
+                'storage_path' => $absolutePath,
+                'relative_path' => 'storage/app/public/proofs',
+                'exists' => is_dir($storagePath),
+                'writable' => is_writable($storagePath),
+                'file_count' => $fileCount,
+                'disk' => 'public',
+                'url_prefix' => asset('storage/proofs/')
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Unable to get storage path: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Open storage folder in file explorer
+     */
+    public function openStorageFolder()
+    {
+        try {
+            $storagePath = storage_path('app/public/proofs');
+            $absolutePath = realpath($storagePath) ?: $storagePath;
+            
+            // Check if directory exists
+            if (!is_dir($storagePath)) {
+                return response()->json([
+                    'error' => 'Storage directory does not exist: ' . $absolutePath
+                ], 404);
+            }
+            
+            // Detect OS and execute appropriate command
+            $os = PHP_OS_FAMILY;
+            $command = '';
+            
+            switch (strtolower($os)) {
+                case 'windows':
+                    $command = 'explorer "' . str_replace('/', '\\', $absolutePath) . '"';
+                    break;
+                case 'darwin': // macOS
+                    $command = 'open "' . $absolutePath . '"';
+                    break;
+                case 'linux':
+                    // Try common file managers
+                    $fileManagers = ['xdg-open', 'nautilus', 'dolphin', 'thunar', 'pcmanfm'];
+                    foreach ($fileManagers as $fm) {
+                        if (shell_exec("which $fm")) {
+                            $command = "$fm \"$absolutePath\"";
+                            break;
+                        }
+                    }
+                    if (!$command) {
+                        $command = 'xdg-open "' . $absolutePath . '"'; // Fallback
+                    }
+                    break;
+                default:
+                    return response()->json([
+                        'error' => 'Unsupported operating system: ' . $os
+                    ], 400);
+            }
+            
+            // Execute command in background
+            if ($os === 'Windows') {
+                pclose(popen("start /B $command", "r"));
+            } else {
+                shell_exec("$command > /dev/null 2>&1 &");
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Folder opened successfully',
+                'path' => $absolutePath,
+                'os' => $os,
+                'command' => $command
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Unable to open folder: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * View/download payment proof file
      */
     public function viewPaymentProof($id)

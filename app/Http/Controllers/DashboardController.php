@@ -72,19 +72,10 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Create a map of resume_id to payment status for easy lookup
-        $paymentStatusMap = $paymentProofs->keyBy('resume_id')->map(function ($proof) {
-            return $proof['status'];
-        });
-
-        // Add payment status to each resume - only show pending if they have payment proofs
-        $resumesWithPaymentStatus = $resumes->map(function ($resume) use ($paymentStatusMap) {
-            // Only show payment status if the resume has a payment proof
-            if ($paymentStatusMap->has($resume['id'])) {
-                $resume['payment_status'] = $paymentStatusMap->get($resume['id']);
-            } else {
-                $resume['payment_status'] = null; // No payment proof exists
-            }
+        // Add payment status to each resume using the detailed status
+        $resumesWithPaymentStatus = $resumes->map(function ($resume) {
+            // Use the detailed payment status from the Resume model
+            $resume['payment_status'] = $resume['payment_status_detailed'];
             return $resume;
         });
 
@@ -495,19 +486,10 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Create a map of resume_id to payment status for easy lookup
-        $paymentStatusMap = $paymentProofs->keyBy('resume_id')->map(function ($proof) {
-            return $proof['status'];
-        });
-
-        // Add payment status to each resume - only show pending if they have payment proofs
-        $resumesWithPaymentStatus = $resumes->map(function ($resume) use ($paymentStatusMap) {
-            // Only show payment status if the resume has a payment proof
-            if ($paymentStatusMap->has($resume['id'])) {
-                $resume['payment_status'] = $paymentStatusMap->get($resume['id']);
-            } else {
-                $resume['payment_status'] = null; // No payment proof exists
-            }
+        // Add payment status to each resume using the detailed status
+        $resumesWithPaymentStatus = $resumes->map(function ($resume) {
+            // Use the detailed payment status from the Resume model
+            $resume['payment_status'] = $resume['payment_status_detailed'];
             return $resume;
         });
 

@@ -307,6 +307,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                     </svg>
                     Payment Pending
                 </span>;
+            case 'unpaid':
             default:
                 return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -696,7 +697,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                         return null;
                                                     }
                                                     
-                                                    // Show upload payment button for modified paid resumes
+                                                    // Show appropriate payment button based on status
                                                     if (paymentStatus === 'needs_payment_modified') {
                                                         return (
                                                             <button
@@ -714,17 +715,12 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                         );
                                                     }
                                                     
-                                                    // Show upload payment button for pending/rejected status
                                                     if (paymentStatus === 'pending') {
                                                         return (
                                                             <button
-                                                                onClick={() => {
-                                                                    setSelectedResumeId(resume.id);
-                                                                    setIsPaymentModalOpen(true);
-                                                                }}
-                                                                className="text-yellow-600 hover:text-yellow-900 inline-flex items-center space-x-1"
                                                                 disabled
                                                                 title="Payment proof is pending review"
+                                                                className="text-yellow-600 hover:text-yellow-900 inline-flex items-center space-x-1 opacity-60 cursor-not-allowed"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -752,7 +748,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                     }
                                                     
                                                     // Show add payment for resumes without payment proof or needing payment
-                                                    if (paymentStatus === null || paymentStatus === 'needs_payment') {
+                                                    if (paymentStatus === null || paymentStatus === 'needs_payment' || paymentStatus === 'unpaid') {
                                                         return (
                                                             <button
                                                                 onClick={() => {
