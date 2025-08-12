@@ -7,6 +7,9 @@ import { Resume } from "@/types/resume";
 import Logo from "@/Components/Logo";
 import Dropdown from "@/Components/Dropdown";
 import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
+import ToastContainer from '@/Components/ToastContainer';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import { ToastProps } from '@/Components/Toast';
 
 interface PaymentProof {
     id: number;
@@ -34,13 +37,45 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     const [selectedResumeId, setSelectedResumeId] = useState<number | undefined>(undefined);
     const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    
+    // Toast and modal states
+    const [toasts, setToasts] = useState<ToastProps[]>([]);
+    const [confirmationModal, setConfirmationModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
 
-    // Check for error/success messages from props
+    // Toast management functions
+    const addToast = (toast: Omit<ToastProps, 'id' | 'onClose'>) => {
+        const id = Math.random().toString(36).substring(2, 9);
+        setToasts(prev => [...prev, { ...toast, id, onClose: removeToast }]);
+    };
+
+    const removeToast = (id: string) => {
+        setToasts(prev => prev.filter(toast => toast.id !== id));
+    };
+
+    // Check for error/success messages from props and convert to toasts
     useEffect(() => {
         if (error) {
-            setNotification({ type: 'error', message: error });
+            addToast({
+                type: 'error',
+                title: 'Error',
+                message: error
+            });
         } else if (success) {
-            setNotification({ type: 'success', message: success });
+            addToast({
+                type: 'success',
+                title: 'Success',
+                message: success
+            });
         }
     }, [error, success]);
 
@@ -123,23 +158,24 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
     const handlePaymentStatusChange = (status: 'pending' | 'approved' | 'rejected') => {
         if (status === 'approved') {
-            setNotification({
+            addToast({
                 type: 'success',
-                message: '🎉 Your payment has been approved! You can now download your PDF resume.'
+                title: 'Payment Approved!',
+                message: 'Your payment has been approved! You can now download your PDF resume.',
+                duration: 8000
             });
             // Refresh dashboard data immediately when payment is approved
             refreshDashboardData();
         } else if (status === 'rejected') {
-            setNotification({
+            addToast({
                 type: 'error',
-                message: '❌ Your payment was rejected. Please upload a new payment proof.'
+                title: 'Payment Rejected',
+                message: 'Your payment was rejected. Please upload a new payment proof.',
+                duration: 8000
             });
             // Refresh dashboard data immediately when payment is rejected
             refreshDashboardData();
         }
-        
-        // Clear notification after 5 seconds
-        setTimeout(() => setNotification(null), 5000);
     };
 
 
@@ -156,14 +192,25 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
     // Function to check if resume can be downloaded
     const canDownloadResume = (resumeId: number) => {
-        const paymentStatus = getPaymentStatus(resumeId);
-        return paymentStatus === 'approved';
+        const resume = resumeList.find(r => r.id === resumeId);
+        return resume?.is_downloadable || false;
     };
 
 
 
     const getPaymentStatusBadge = (resumeId: number) => {
-        const status = getPaymentStatus(resumeId);
+        const resume = resumeList.find(r => r.id === resumeId);
+        const status = resume?.payment_status_detailed || resume?.payment_status;
+        
+        // Priority: Check if needs payment due to modifications
+        if (resume?.needs_payment) {
+            return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Needs Payment (Modified)
+            </span>;
+        }
         
         switch (status) {
             case 'approved':
@@ -445,20 +492,42 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                 {getPaymentStatusBadge(resume.id)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                {/* Edit functionality - users can edit resumes that are not approved */}
-                                                {!canDownloadResume(resume.id) && (
-                                                    <button
-                                                        onClick={() => {
+                                                {/* Edit functionality - users can edit all resumes, with warning for paid ones */}
+                                                <button
+                                                    onClick={() => {
+                                                        const isPaid = canDownloadResume(resume.id);
+                                                        if (isPaid) {
+                                                            setConfirmationModal({
+                                                                isOpen: true,
+                                                                title: 'Edit Paid Resume',
+                                                                message: 'This resume is already paid for. If you edit it, you will need to pay again to download the updated version. Do you want to continue?',
+                                                                onConfirm: () => {
+                                                                    addToast({
+                                                                        type: 'warning',
+                                                                        title: 'Resume Opened for Editing',
+                                                                        message: 'Remember: You\'ll need to pay again to download after making changes.'
+                                                                    });
+                                                                    router.visit(`/builder?resume=${resume.id}`);
+                                                                }
+                                                            });
+                                                        } else {
                                                             router.visit(`/builder?resume=${resume.id}`);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                        <span>Edit Resume</span>
-                                                    </button>
-                                                )}
+                                                        }
+                                                    }}
+                                                    className={`${
+                                                        canDownloadResume(resume.id) 
+                                                            ? 'text-amber-600 hover:text-amber-900' 
+                                                            : 'text-blue-600 hover:text-blue-900'
+                                                    } inline-flex items-center space-x-1 transition-colors duration-200`}
+                                                    title={canDownloadResume(resume.id) ? 'Edit will require new payment' : 'Edit resume'}
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                    <span>
+                                                        Edit
+                                                    </span>
+                                                </button>
                                                 
                                                 {/* Download PDF functionality */}
                                                 {canDownloadResume(resume.id) ? (
@@ -632,6 +701,24 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 resumeId={selectedResumeId}
                 resumeName={selectedResumeId ? resumeList.find(r => r.id === selectedResumeId)?.name : undefined}
                 onStatusChange={handlePaymentStatusChange}
+            />
+
+            {/* Toast Container */}
+            <ToastContainer 
+                toasts={toasts} 
+                onCloseToast={removeToast} 
+            />
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={confirmationModal.isOpen}
+                onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmationModal.onConfirm}
+                title={confirmationModal.title}
+                message={confirmationModal.message}
+                confirmText="Continue Editing"
+                cancelText="Cancel"
+                type="warning"
             />
         </div>
     );

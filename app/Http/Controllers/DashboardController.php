@@ -43,6 +43,13 @@ class DashboardController extends Controller
                     'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
                     'progress' => $progress,
+                    'is_paid' => $resume->is_paid,
+                    'needs_payment' => $resume->needsPayment(),
+                    'is_downloadable' => $resume->isDownloadable(),
+                    'can_be_edited' => $resume->canBeEdited(),
+                    'payment_status_detailed' => $resume->getPaymentStatus(),
+                    'last_paid_at' => $resume->last_paid_at?->toISOString(),
+                    'last_modified_at' => $resume->last_modified_at?->toISOString(),
                 ];
             });
 
@@ -249,10 +256,15 @@ class DashboardController extends Controller
         }
 
         $resume->update($updateData);
+        
+        // Mark resume as modified (this will handle payment status logic)
+        $resume->markAsModified();
 
         return response()->json([
             'message' => 'Resume updated successfully',
-            'resume' => $resume
+            'resume' => $resume,
+            'needs_payment' => $resume->needsPayment(),
+            'payment_status' => $resume->getPaymentStatus()
         ]);
     }
 
@@ -298,16 +310,18 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized access to resume.');
         }
 
-        // Check if there's an approved payment proof for this resume
-        $approvedPayment = $resume->paymentProofs()
-            ->where('status', 'approved')
-            ->first();
-
-        if (!$approvedPayment) {
-            return response()->json([
-                'error' => 'Payment required to download PDF',
-                'message' => 'Please complete payment and wait for admin approval to download your resume as PDF.'
-            ], 403);
+        // Check if resume is downloadable (paid and not modified)
+        if (!$resume->isDownloadable()) {
+            if ($resume->needsPayment()) {
+                return response()->json([
+                    'error' => 'Resume was modified after payment. Please make a new payment to download the updated version.',
+                ], 403);
+            } else {
+                return response()->json([
+                    'error' => 'Payment required to download PDF',
+                    'message' => 'Please complete payment and wait for admin approval to download your resume as PDF.'
+                ], 403);
+            }
         }
 
         // Get resume data
@@ -452,6 +466,13 @@ class DashboardController extends Controller
                     'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
                     'progress' => $progress,
+                    'is_paid' => $resume->is_paid,
+                    'needs_payment' => $resume->needsPayment(),
+                    'is_downloadable' => $resume->isDownloadable(),
+                    'can_be_edited' => $resume->canBeEdited(),
+                    'payment_status_detailed' => $resume->getPaymentStatus(),
+                    'last_paid_at' => $resume->last_paid_at?->toISOString(),
+                    'last_modified_at' => $resume->last_modified_at?->toISOString(),
                 ];
             });
 

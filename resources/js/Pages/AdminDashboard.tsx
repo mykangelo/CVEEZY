@@ -93,7 +93,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
     const [bulkDeleting, setBulkDeleting] = useState(false);
     const [showTimeFilterModal, setShowTimeFilterModal] = useState(false);
     const [selectedTimeFilter, setSelectedTimeFilter] = useState('1_hour');
-    const [selectedProgressThreshold, setSelectedProgressThreshold] = useState(75);
+    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(['draft']);
 
     // Update payment list when props change
     useEffect(() => {
@@ -318,6 +318,15 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
     };
 
     const handleBulkDeleteUnfinishedResumes = async () => {
+        // Validation: ensure at least one status is selected
+        if (selectedStatuses.length === 0) {
+            setNotification({
+                type: 'error',
+                message: 'Please select at least one resume status to delete.'
+            });
+            return;
+        }
+        
         setBulkDeleting(true);
         setNotification(null);
         setShowTimeFilterModal(false);
@@ -354,7 +363,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                 },
                 body: JSON.stringify({
                     time_filter: selectedTimeFilter,
-                    progress_threshold: selectedProgressThreshold
+                    statuses: selectedStatuses
                 })
             });
 
@@ -841,23 +850,38 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                 </select>
                             </div>
 
-                            {/* Progress Threshold */}
+                            {/* Status Selection */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Progress threshold (less than):
+                                    Resume statuses to delete:
                                 </label>
-                                <select
-                                    value={selectedProgressThreshold}
-                                    onChange={(e) => setSelectedProgressThreshold(Number(e.target.value))}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                >
-                                    <option value={10}>10% (barely started)</option>
-                                    <option value={20}>20% (default)</option>
-                                    <option value={30}>30%</option>
-                                    <option value={50}>50% (half complete)</option>
-                                    <option value={75}>75% (mostly complete)</option>
-                                    <option value={100}>100% (include all)</option>
-                                </select>
+                                <div className="space-y-2">
+                                    {[
+                                        { value: 'draft', label: 'Draft', description: 'Barely started resumes' },
+                                        { value: 'in_progress', label: 'In Progress', description: 'Partially completed resumes' },
+                                        { value: 'completed', label: 'Completed', description: 'Finished but not published' },
+                                        { value: 'published', label: 'Published', description: 'Live and accessible resumes' }
+                                    ].map((status) => (
+                                        <label key={status.value} className="flex items-start space-x-3 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedStatuses.includes(status.value)}
+                                                onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setSelectedStatuses([...selectedStatuses, status.value]);
+                                                    } else {
+                                                        setSelectedStatuses(selectedStatuses.filter(s => s !== status.value));
+                                                    }
+                                                }}
+                                                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="text-sm font-medium text-gray-900">{status.label}</div>
+                                                <div className="text-xs text-gray-500">{status.description}</div>
+                                            </div>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
 
                             {/* Preview/Warning */}
@@ -867,7 +891,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                     <div className="text-sm">
                                         <p className="text-yellow-800 font-medium">This will delete:</p>
                                         <ul className="text-yellow-700 mt-1 list-disc list-inside">
-                                            <li>Draft and unpaid resumes</li>
+                                            <li>Resumes with status: {selectedStatuses.length === 0 ? 'None selected' : selectedStatuses.join(', ')}</li>
                                             <li>Older than {selectedTimeFilter === '1_minute' ? '1 minute' :
                                                 selectedTimeFilter === '1_hour' ? '1 hour' :
                                                 selectedTimeFilter === '1_day' ? '1 day' :
@@ -878,7 +902,6 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                 selectedTimeFilter === '90_days' ? '90 days' :
                                                 selectedTimeFilter === '6_months' ? '6 months' :
                                                 selectedTimeFilter === '1_year' ? '1 year' : 'any age'}</li>
-                                            <li>With less than {selectedProgressThreshold}% progress</li>
                                         </ul>
                                         <p className="text-yellow-800 font-medium mt-2">This action cannot be undone!</p>
                                     </div>
@@ -897,7 +920,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                             <Button
                                 variant="destructive"
                                 onClick={handleBulkDeleteUnfinishedResumes}
-                                disabled={bulkDeleting}
+                                disabled={bulkDeleting || selectedStatuses.length === 0}
                                 className="flex items-center gap-2"
                             >
                                 {bulkDeleting ? (

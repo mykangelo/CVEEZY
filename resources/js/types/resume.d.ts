@@ -8,6 +8,13 @@ export interface Resume {
     template_name?: string;
     user_id: number;
     payment_status?: 'pending' | 'approved' | 'rejected' | null;
+    is_paid?: boolean;
+    needs_payment?: boolean;
+    is_downloadable?: boolean;
+    can_be_edited?: boolean;
+    payment_status_detailed?: string;
+    last_paid_at?: string;
+    last_modified_at?: string;
 }
 
 export type Contact = {

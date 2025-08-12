@@ -6,6 +6,7 @@ use App\Models\PaymentProof;
 use App\Models\Resume;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -30,7 +31,10 @@ class AdminController extends Controller
 
         $users = User::withCount('resumes')->latest()->get();
         $resumes = Resume::with('user')->latest()->get();
-        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get();
+        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->filter(function ($proof) {
+            // Only include payment proofs that have both user and resume
+            return $proof->user && $proof->resume;
+        })->values();
 
         return Inertia::render('AdminDashboard', [
             'stats' => $stats,
@@ -230,8 +234,7 @@ class AdminController extends Controller
             
             // Update resume payment status
             if ($proof->resume) {
-                $proof->resume->is_paid = true;
-                $proof->resume->save();
+                $proof->resume->markAsPaidWithTimestamp();
             }
             
             \Log::info('Payment proof approved successfully', [
@@ -433,7 +436,10 @@ class AdminController extends Controller
         });
 
         // Get updated payment proofs
-        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->map(function ($proof) {
+        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->filter(function ($proof) {
+            // Only include payment proofs that have both user and resume
+            return $proof->user && $proof->resume;
+        })->map(function ($proof) {
             return [
                 'id' => $proof->id,
                 'user' => [
@@ -450,7 +456,7 @@ class AdminController extends Controller
                 'status' => $proof->status,
                 'created_at' => $proof->created_at->toISOString(),
             ];
-        });
+        })->values();
 
         return response()->json([
             'stats' => $stats,
@@ -466,9 +472,18 @@ class AdminController extends Controller
     public function bulkDeleteUnfinishedResumes(Request $request)
     {
         try {
-            // Get time filter from request
+            // Get filters from request
             $timeFilter = $request->input('time_filter', '30_days');
-            $progressThreshold = $request->input('progress_threshold', 20);
+            $statusesToDelete = $request->input('statuses', [Resume::STATUS_DRAFT]);
+            
+            // Validate statuses
+            $validStatuses = [Resume::STATUS_DRAFT, Resume::STATUS_IN_PROGRESS, Resume::STATUS_COMPLETED, Resume::STATUS_PUBLISHED];
+            $statusesToDelete = array_intersect($statusesToDelete, $validStatuses);
+            
+            // If no valid statuses provided, default to draft
+            if (empty($statusesToDelete)) {
+                $statusesToDelete = [Resume::STATUS_DRAFT];
+            }
             
             // Define time ranges
             $timeRanges = [
@@ -489,10 +504,7 @@ class AdminController extends Controller
             $deletedCount = 0;
             
             // Build query for resumes that meet cleanup criteria
-            $query = Resume::where(function($baseQuery) {
-                $baseQuery->where('status', Resume::STATUS_DRAFT)
-                          ->orWhere('is_paid', false);
-            });
+            $query = Resume::whereIn('status', $statusesToDelete);
             
             // Apply time filter if specified
             if ($cutoffDate) {
@@ -501,14 +513,8 @@ class AdminController extends Controller
             
             $resumesToDelete = $query->get();
             
-            // Filter by progress threshold
-            $finalResumesToDelete = $resumesToDelete->filter(function($resume) use ($progressThreshold) {
-                $progress = $resume->getProgressPercentage();
-                return $progress < $progressThreshold;
-            });
-            
             // Delete the resumes
-            foreach ($finalResumesToDelete as $resume) {
+            foreach ($resumesToDelete as $resume) {
                 $resume->delete(); // This will soft delete
                 $deletedCount++;
             }
@@ -528,15 +534,26 @@ class AdminController extends Controller
                 'all' => 'any age'
             ][$timeFilter] ?? '30 days';
             
+            $statusLabels = [
+                Resume::STATUS_DRAFT => 'draft',
+                Resume::STATUS_IN_PROGRESS => 'in progress',
+                Resume::STATUS_COMPLETED => 'completed',
+                Resume::STATUS_PUBLISHED => 'published'
+            ];
+            
+            $statusNames = array_map(function($status) use ($statusLabels) {
+                return $statusLabels[$status] ?? $status;
+            }, $statusesToDelete);
+            
             return response()->json([
                 'success' => true,
-                'message' => "Successfully deleted {$deletedCount} unfinished resumes older than {$timeLabel}",
+                'message' => "Successfully deleted {$deletedCount} resumes with status: " . implode(', ', $statusNames) . " older than {$timeLabel}",
                 'deleted_count' => $deletedCount,
                 'time_filter' => $timeFilter,
-                'progress_threshold' => $progressThreshold,
+                'statuses' => $statusesToDelete,
                 'debug_info' => [
                     'matching_criteria' => $resumesToDelete->count(),
-                    'after_progress_filter' => $finalResumesToDelete->count()
+                    'deleted_count' => $deletedCount
                 ]
             ]);
             

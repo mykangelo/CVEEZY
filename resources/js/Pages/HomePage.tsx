@@ -448,7 +448,7 @@ const HomePage: React.FC<HomePageProps> = ({
               <div className="text-sm text-gray-300 mb-3">
                 <div className="flex items-center justify-center mb-1">
                   <img
-                    src="/images/certicode-logo.png"
+                    src="/images/CerticodeLogo.jpg"
                     alt="Certicode Logo"
                     className="w-4 h-4 rounded mr-2 object-contain"
                   />
