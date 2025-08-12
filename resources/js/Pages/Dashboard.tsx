@@ -85,6 +85,18 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         setResumeList(resumes);
     }, [resumes]);
 
+    // Add focus event listener to refresh data when user returns to tab
+    useEffect(() => {
+        const handleFocus = () => {
+            if (!isRefreshing) {
+                refreshDashboardData();
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [isRefreshing]);
+
     // Update payment proofs when props change
     useEffect(() => {
         setPaymentProofs(initialPaymentProofs);
@@ -239,7 +251,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     // Function to get payment status for a resume
     const getPaymentStatus = (resumeId: number) => {
         const resume = resumeList.find(r => r.id === resumeId);
-        return resume?.payment_status || null; // Return null if no payment proof exists
+        return resume?.payment_status_detailed || resume?.payment_status || null; // Return null if no payment proof exists
     };
 
     // Function to check if resume can be downloaded
@@ -255,12 +267,21 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         const status = resume?.payment_status_detailed || resume?.payment_status;
         
         // Priority: Check if needs payment due to modifications
-        if (resume?.needs_payment) {
+        if (status === 'needs_payment_modified') {
             return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 Needs Payment (Modified)
+            </span>;
+        }
+        
+        if (status === 'needs_payment') {
+            return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Needs Payment
             </span>;
         }
         
@@ -569,13 +590,59 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                                 isOpen: true,
                                                                 title: 'Edit Paid Resume',
                                                                 message: 'This resume is already paid for. If you edit it, you will need to pay again to download the updated version. Do you want to continue?',
-                                                                onConfirm: () => {
-                                                                    addToast({
-                                                                        type: 'warning',
-                                                                        title: 'Resume Opened for Editing',
-                                                                        message: 'Remember: You\'ll need to pay again to download after making changes.'
-                                                                    });
-                                                                    router.visit(`/builder?resume=${resume.id}`);
+                                                                onConfirm: async () => {
+                                                                    try {
+                                                                        // Mark resume as modified immediately
+                                                                        const response = await fetch(`/resumes/${resume.id}/mark-modified`, {
+                                                                            method: 'PATCH',
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json',
+                                                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                                                            },
+                                                                        });
+
+                                                                        if (response.ok) {
+                                                                            const data = await response.json();
+                                                                            
+                                                                            // Update the resume in state immediately
+                                                                            setResumeList(prev => prev.map(r => 
+                                                                                r.id === resume.id 
+                                                                                    ? { 
+                                                                                        ...r, 
+                                                                                        is_paid: data.resume.is_paid,
+                                                                                        needs_payment: data.resume.needs_payment,
+                                                                                        is_downloadable: data.resume.is_downloadable,
+                                                                                        payment_status_detailed: data.resume.payment_status_detailed,
+                                                                                        payment_status: data.resume.payment_status_detailed
+                                                                                    }
+                                                                                    : r
+                                                                            ));
+
+                                                                            addToast({
+                                                                                type: 'warning',
+                                                                                title: 'Download Access Restricted',
+                                                                                message: 'Resume download is now restricted. You\'ll need to pay again after editing.',
+                                                                                duration: 5000
+                                                                            });
+
+                                                                            // Navigate to builder
+                                                                            router.visit(`/builder?resume=${resume.id}`);
+                                                                        } else {
+                                                                            addToast({
+                                                                                type: 'error',
+                                                                                title: 'Error',
+                                                                                message: 'Failed to update resume status. Please try again.',
+                                                                                duration: 5000
+                                                                            });
+                                                                        }
+                                                                    } catch (error) {
+                                                                        addToast({
+                                                                            type: 'error',
+                                                                            title: 'Error',
+                                                                            message: 'An error occurred. Please try again.',
+                                                                            duration: 5000
+                                                                        });
+                                                                    }
                                                                 }
                                                             });
                                                         } else {
@@ -621,34 +688,89 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                 )}
                                                 
                                                 {/* Payment actions */}
-                                                {(getPaymentStatus(resume.id) === 'pending' || getPaymentStatus(resume.id) === 'rejected') && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedResumeId(resume.id);
-                                                            setIsPaymentModalOpen(true);
-                                                        }}
-                                                        className="text-purple-600 hover:text-purple-900 inline-flex items-center space-x-1"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                        </svg>
-                                                        <span>Upload Payment</span>
-                                                    </button>
-                                                )}
-                                                {getPaymentStatus(resume.id) === null && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedResumeId(resume.id);
-                                                            setIsPaymentModalOpen(true);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                        </svg>
-                                                        <span>Add Payment</span>
-                                                    </button>
-                                                )}
+                                                {(() => {
+                                                    const paymentStatus = getPaymentStatus(resume.id);
+                                                    
+                                                    // Don't show payment buttons for approved payments only
+                                                    if (paymentStatus === 'approved') {
+                                                        return null;
+                                                    }
+                                                    
+                                                    // Show upload payment button for modified paid resumes
+                                                    if (paymentStatus === 'needs_payment_modified') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-orange-600 hover:text-orange-900 inline-flex items-center space-x-1"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                </svg>
+                                                                <span>Upload Payment</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    // Show upload payment button for pending/rejected status
+                                                    if (paymentStatus === 'pending') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-yellow-600 hover:text-yellow-900 inline-flex items-center space-x-1"
+                                                                disabled
+                                                                title="Payment proof is pending review"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                <span>Payment Pending</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    if (paymentStatus === 'rejected') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-red-600 hover:text-red-900 inline-flex items-center space-x-1"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                </svg>
+                                                                <span>Re-upload Payment</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    // Show add payment for resumes without payment proof or needing payment
+                                                    if (paymentStatus === null || paymentStatus === 'needs_payment') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                                </svg>
+                                                                <span>Add Payment</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    return null;
+                                                })()}
                                             </td>
                                         </tr>
                                     ))}
@@ -765,6 +887,8 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 onClose={() => {
                     setIsPaymentModalOpen(false);
                     setSelectedResumeId(undefined);
+                    // Refresh dashboard data when payment modal is closed
+                    setTimeout(() => refreshDashboardData(), 500);
                 }}
                 resumeId={selectedResumeId}
                 resumeName={selectedResumeId ? resumeList.find(r => r.id === selectedResumeId)?.name : undefined}

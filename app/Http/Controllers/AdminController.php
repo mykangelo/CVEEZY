@@ -278,9 +278,17 @@ class AdminController extends Controller
             $proof->save();
             
             // Reset resume payment status if it was previously approved
-            if ($proof->resume && $proof->resume->is_paid) {
-                $proof->resume->is_paid = false;
-                $proof->resume->save();
+            if ($proof->resume) {
+                // If this was a modified resume payment, set needs_payment back to true
+                if ($proof->resume->wasModifiedAfterPayment()) {
+                    $proof->resume->update([
+                        'is_paid' => false,
+                        'needs_payment' => true,
+                    ]);
+                } else {
+                    // For regular payments, just set is_paid to false
+                    $proof->resume->update(['is_paid' => false]);
+                }
             }
             
             \Log::info('Payment proof rejected successfully', [

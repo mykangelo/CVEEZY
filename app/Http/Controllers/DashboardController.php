@@ -523,6 +523,47 @@ class DashboardController extends Controller
     }
 
     /**
+     * Mark a paid resume as needing payment due to upcoming edit.
+     */
+    public function markAsModifiedForEdit(Request $request, Resume $resume)
+    {
+        // Ensure user owns the resume
+        if ($resume->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to resume.');
+        }
+
+        // Only mark as modified if it was previously paid
+        if ($resume->is_paid && $resume->last_paid_at) {
+            $resume->markAsModified();
+            
+            return response()->json([
+                'message' => 'Resume marked as needing payment',
+                'resume' => [
+                    'id' => $resume->id,
+                    'name' => $resume->name,
+                    'is_paid' => $resume->is_paid,
+                    'needs_payment' => $resume->needsPayment(),
+                    'is_downloadable' => $resume->isDownloadable(),
+                    'payment_status_detailed' => $resume->getPaymentStatus(),
+                    'updated_at' => $resume->updated_at->toISOString(),
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Resume was not previously paid',
+            'resume' => [
+                'id' => $resume->id,
+                'name' => $resume->name,
+                'is_paid' => $resume->is_paid,
+                'needs_payment' => $resume->needsPayment(),
+                'is_downloadable' => $resume->isDownloadable(),
+                'payment_status_detailed' => $resume->getPaymentStatus(),
+            ]
+        ]);
+    }
+
+    /**
      * Rename a resume.
      */
     public function rename(Request $request, Resume $resume)

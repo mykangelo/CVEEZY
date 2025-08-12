@@ -214,13 +214,18 @@ class Resume extends Model
     public function markAsModified(): bool
     {
         // Only mark as needing payment if it was previously paid
-        $needsPayment = $this->is_paid && $this->last_paid_at;
+        // If resume is paid but doesn't have last_paid_at, set it first
+        if ($this->is_paid && !$this->last_paid_at) {
+            $this->update(['last_paid_at' => now()]);
+        }
+        
+        $needsPayment = $this->is_paid;
         
         return $this->update([
             'last_modified_at' => now(),
             'needs_payment' => $needsPayment,
             // Reset payment status if it was previously paid
-            'is_paid' => $needsPayment ? false : $this->is_paid,
+            'is_paid' => false,
         ]);
     }
 
@@ -259,12 +264,28 @@ class Resume extends Model
     {
         $latestPaymentProof = $this->getLatestPaymentProof();
         
-        if ($this->needs_payment) {
-            return 'needs_payment';
+        // If there's a payment proof, check if it's relevant to current resume state
+        if ($latestPaymentProof) {
+            // If resume was modified after the payment proof was created, the proof is outdated
+            if ($this->last_modified_at && $this->last_modified_at->isAfter($latestPaymentProof->created_at)) {
+                // Payment proof is outdated, check if this is a modified paid resume
+                if ($this->last_paid_at && $this->wasModifiedAfterPayment()) {
+                    return 'needs_payment_modified';
+                }
+                return 'needs_payment';
+            }
+            
+            // Payment proof is current, return its status
+            return $latestPaymentProof->status;
         }
         
-        if ($latestPaymentProof) {
-            return $latestPaymentProof->status;
+        // No payment proof exists - check if this is a modified paid resume
+        if ($this->last_paid_at && $this->wasModifiedAfterPayment()) {
+            return 'needs_payment_modified';
+        }
+        
+        if ($this->needs_payment) {
+            return 'needs_payment';
         }
         
         if ($this->is_paid) {
