@@ -9,6 +9,7 @@ import Dropdown from "@/Components/Dropdown";
 import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
 import ToastContainer from '@/Components/ToastContainer';
 import ConfirmationModal from '@/Components/ConfirmationModal';
+import InlineEdit from '@/Components/InlineEdit';
 import { ToastProps } from '@/Components/Toast';
 
 interface PaymentProof {
@@ -175,6 +176,57 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
             });
             // Refresh dashboard data immediately when payment is rejected
             refreshDashboardData();
+        }
+    };
+
+    // Handle resume rename
+    const handleResumeRename = async (resumeId: number, newName: string): Promise<boolean> => {
+        try {
+            const response = await fetch(`/resumes/${resumeId}/rename`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ name: newName }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update the resume list with the new name
+                setResumeList(prev => prev.map(resume => 
+                    resume.id === resumeId 
+                        ? { ...resume, name: data.resume.name }
+                        : resume
+                ));
+
+                addToast({
+                    type: 'success',
+                    title: 'Resume Renamed',
+                    message: `Resume renamed to "${data.resume.name}"`,
+                    duration: 3000
+                });
+
+                return true;
+            } else {
+                const errorData = await response.json();
+                addToast({
+                    type: 'error',
+                    title: 'Rename Failed',
+                    message: errorData.message || 'Failed to rename resume',
+                    duration: 5000
+                });
+                return false;
+            }
+        } catch (error) {
+            addToast({
+                type: 'error',
+                title: 'Rename Failed',
+                message: 'An error occurred while renaming the resume',
+                duration: 5000
+            });
+            return false;
         }
     };
 
@@ -461,7 +513,23 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                     </svg>
                                                     <div>
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {resume.name}
+                                                            <InlineEdit
+                                                                value={resume.name}
+                                                                onSave={(newName) => handleResumeRename(resume.id, newName)}
+                                                                placeholder="Resume Name"
+                                                                maxLength={255}
+                                                                triggerMode="icon"
+                                                                validation={(value) => {
+                                                                    const trimmed = value.trim();
+                                                                    if (trimmed.length === 0) {
+                                                                        return 'Resume name cannot be empty';
+                                                                    }
+                                                                    if (trimmed.length > 255) {
+                                                                        return 'Resume name is too long';
+                                                                    }
+                                                                    return null;
+                                                                }}
+                                                            />
                                                         </div>
                                                         <div className="text-sm text-gray-500">
                                                             {resume.template_name ? resume.template_name.charAt(0).toUpperCase() + resume.template_name.slice(1) : 'Classic'} Template

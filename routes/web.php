@@ -88,6 +88,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
     Route::get('/resumes/{resume}', [DashboardController::class, 'show'])->name('resumes.show');
     Route::patch('/resumes/{resume}', [DashboardController::class, 'update'])->name('resumes.update');
+    Route::patch('/resumes/{resume}/rename', [DashboardController::class, 'rename'])->name('resumes.rename');
     Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
     Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
     Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');

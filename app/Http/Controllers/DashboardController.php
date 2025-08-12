@@ -523,6 +523,42 @@ class DashboardController extends Controller
     }
 
     /**
+     * Rename a resume.
+     */
+    public function rename(Request $request, Resume $resume)
+    {
+        // Ensure user owns the resume
+        if ($resume->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to resume.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255|min:1',
+        ]);
+
+        $newName = trim($request->input('name'));
+        
+        // Check if name actually changed
+        if ($newName === $resume->name) {
+            return response()->json([
+                'message' => 'Resume name unchanged',
+                'resume' => $resume
+            ]);
+        }
+
+        $resume->update(['name' => $newName]);
+
+        return response()->json([
+            'message' => 'Resume renamed successfully',
+            'resume' => [
+                'id' => $resume->id,
+                'name' => $resume->name,
+                'updated_at' => $resume->updated_at->toISOString(),
+            ]
+        ]);
+    }
+
+    /**
      * Duplicate a resume.
      */
     public function duplicate(Resume $resume)
