@@ -296,7 +296,10 @@ interface EducationSectionProps {
   setEducations: React.Dispatch<React.SetStateAction<Education[]>>;
   errors: Record<string, string>;
 }
+
 const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEducations, errors }) => {
+  const [loadingId, setLoadingId] = React.useState<number | null>(null);
+
   const addEducation = () => {
     setEducations([
       ...educations,
@@ -312,6 +315,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       },
     ]);
   };
+
   const updateEducation = (id: number, field: keyof Education, value: string) => {
     setEducations(
       educations.map((edu) =>
@@ -319,9 +323,11 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       )
     );
   };
+
   const removeEducation = (id: number) => {
     setEducations(educations.filter((edu) => edu.id !== id));
   };
+
   const toggleExpand = (id: number) => {
     setEducations(
       educations.map((edu) =>
@@ -329,10 +335,29 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       )
     );
   };
+
+  // Call Gemini API for description revision
+  const reviseDescription = async (id: number, description: string) => {
+    if (!description.trim()) return;
+    setLoadingId(id); // Start loading for this education entry
+    try {
+      const res = await fetch("/reviseDescription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: description }),
+      });
+      const data = await res.json();
+      updateEducation(id, "description", data.revised_text);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoadingId(null); // Stop loading
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2">Education</h2>
-      {educations.map((edu, idx) => (
+      {educations.map((edu) => (
         <div key={edu.id} className="bg-white rounded-xl border p-6 mb-4 shadow-sm relative">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-gray-700">
@@ -352,66 +377,78 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                 <div>
                   <label className="block text-gray-700 mb-1">School Name</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_school`] ? 'border-red-500' : ''}`}
-                    value={edu.school} 
-                    onChange={e => updateEducation(edu.id, 'school', e.target.value)} 
-                    placeholder="UCLA" 
+                    value={edu.school}
+                    onChange={e => updateEducation(edu.id, 'school', e.target.value)}
+                    placeholder="UCLA"
                   />
                   {errors[`edu_${edu.id}_school`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_school`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">Location</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_location`] ? 'border-red-500' : ''}`}
-                    value={edu.location} 
-                    onChange={e => updateEducation(edu.id, 'location', e.target.value)} 
-                    placeholder="New York" 
+                    value={edu.location}
+                    onChange={e => updateEducation(edu.id, 'location', e.target.value)}
+                    placeholder="New York"
                   />
                   {errors[`edu_${edu.id}_location`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_location`]}</p>}
                 </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                 <div>
                   <label className="block text-gray-700 mb-1">Degree</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_degree`] ? 'border-red-500' : ''}`}
-                    value={edu.degree} 
-                    onChange={e => updateEducation(edu.id, 'degree', e.target.value)} 
-                    placeholder="Bachelor of Science in Information Tech" 
+                    value={edu.degree}
+                    onChange={e => updateEducation(edu.id, 'degree', e.target.value)}
+                    placeholder="Bachelor of Science in Information Tech"
                   />
                   {errors[`edu_${edu.id}_degree`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_degree`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">Start Date</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_startDate`] ? 'border-red-500' : ''}`}
-                    value={edu.startDate} 
-                    onChange={e => updateEducation(edu.id, 'startDate', e.target.value)} 
-                    placeholder="MM/YYYY" 
+                    value={edu.startDate}
+                    onChange={e => updateEducation(edu.id, 'startDate', e.target.value)}
+                    placeholder="MM/YYYY"
                   />
                   {errors[`edu_${edu.id}_startDate`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_startDate`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">End Date</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_endDate`] ? 'border-red-500' : ''}`}
-                    value={edu.endDate} 
-                    onChange={e => updateEducation(edu.id, 'endDate', e.target.value)} 
-                    placeholder="MM/YYYY" 
+                    value={edu.endDate}
+                    onChange={e => updateEducation(edu.id, 'endDate', e.target.value)}
+                    placeholder="MM/YYYY"
                   />
                   {errors[`edu_${edu.id}_endDate`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_endDate`]}</p>}
                 </div>
               </div>
+
               <div>
                 <label className="block text-gray-700 mb-1">Description</label>
-                <textarea 
+                <textarea
                   className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_description`] ? 'border-red-500' : ''}`}
-                  value={edu.description} 
-                  onChange={e => updateEducation(edu.id, 'description', e.target.value)} 
-                  placeholder="Sample Text" 
+                  value={edu.description}
+                  onChange={e => updateEducation(edu.id, 'description', e.target.value)}
+                  placeholder="Sample Text"
                 />
                 {errors[`edu_${edu.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_description`]}</p>}
+
+                <button
+                  onClick={() => reviseDescription(edu.id, edu.description)}
+                  disabled={loadingId === edu.id}
+                  className={`mt-2 px-3 py-1 text-white rounded transition ${
+                    loadingId === edu.id ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                  }`}
+                >
+                  {loadingId === edu.id ? "Asking AI for assistance..." : "Revise Summary"}
+                </button>
               </div>
             </>
           )}
@@ -613,8 +650,8 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
   );
 };
 
-
 // Summary Section
+// 8/12/2025 Modfified Summary text area to allow for AI Improve button
 const summarySuggestions = [
   "Detail-oriented professional with 3+ years of experience in [field]. Skilled in [key skills]. Seeking to contribute to [type of team/company or goal].",
   "Motivated recent graduate with a background in [field]. Eager to apply skills in [skill area] and grow within a dynamic organization.",
@@ -626,35 +663,74 @@ interface SummarySectionProps {
   setSummary: React.Dispatch<React.SetStateAction<string>>;
   errors: Record<string, string>;
 }
-const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors }) => (
-  <div>
-    <h2 className="text-2xl font-bold mb-2">Summary</h2>
-    <p className="text-gray-600 mb-6">Write a short introduction that highlights your experience, key skills, and career goals.</p>
-    <label className="block text-gray-700 mb-1">Professional Summary</label>
-    <textarea
-      className={`w-full border rounded-md p-3 mb-4 ${errors.summary ? 'border-red-500' : ''}`}
-      value={summary}
-      onChange={e => setSummary(e.target.value)}
-      placeholder="Write your summary here..."
-      rows={4}
-    />
-    {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="font-semibold mb-2">Suggested summary structure</div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {summarySuggestions.map((s, i) => (
-          <button
-            key={i}
-            className="text-left bg-white border border-gray-200 rounded-lg p-3 hover:bg-blue-50 transition"
-            onClick={() => setSummary(s)}
-          >
-            + {s}
-          </button>
-        ))}
+const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors }) => {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleRevise = async () => {
+    if (!summary.trim()) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch("/revise-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: summary }),
+      });
+
+      const data = await res.json();
+      setSummary(data.revised_text);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-2">Summary</h2>
+      <p className="text-gray-600 mb-6">
+        Write a short introduction that highlights your experience, key skills, and career goals.
+      </p>
+
+      <label className="block text-gray-700 mb-1">Professional Summary</label>
+      <textarea
+        className={`w-full border rounded-md p-3 mb-4 ${errors.summary ? "border-red-500" : ""}`}
+        value={summary}
+        onChange={e => setSummary(e.target.value)}
+        placeholder="Write your summary here..."
+        rows={4}
+      />
+
+      {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
+
+      {/* Revise button */}
+      <button
+        onClick={handleRevise}
+        disabled={loading}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+      >
+        {loading ? "Revising..." : "Improve Summary using AI"}
+      </button>
+
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="font-semibold mb-2">Suggested summary structure</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {summarySuggestions.map((s, i) => (
+            <button
+              key={i}
+              className="text-left bg-white border border-gray-200 rounded-lg p-3 hover:bg-blue-50 transition"
+              onClick={() => setSummary(s)}
+            >
+              + {s}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
 
 // Finalize Section
 const finalizeSections = [
