@@ -511,7 +511,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                 </span>
                             </div>
                             <p className="text-gray-300 text-sm leading-relaxed">
-                                We Help job seekers stand out in the highly
+                                We help job seekers stand out in the highly
                                 competitive labor market with CVeezy!
                             </p>
                         </div>
@@ -588,7 +588,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                 <img
                                     src="/images/gcash-logo.png"
                                     alt="GCash"
-                                    className="h-5 object-contain"
+                                    className="h-6 object-contain rounded-2xl"
                                 />
                             </div>
                         </div>
@@ -681,7 +681,7 @@ const HomePage: React.FC<HomePageProps> = ({
                                 <img
                                     src="/images/gcash-logo.png"
                                     alt="GCash"
-                                    className="h-6 object-contain"
+                                    className="h-7 object-contain rounded-2xl"
                                 />
                             </div>
                         </div>
