@@ -146,7 +146,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
             <Logo
               size="sm"
               text="CVeezy"
-              imageSrc="/images/supsoft-logo.jpg"
+              imageSrc="/images/CveezyLOGO.png"
               imageAlt="CVeezy Logo"
               className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
             />
