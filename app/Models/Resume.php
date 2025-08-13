@@ -23,6 +23,9 @@ class Resume extends Model
         'resume_data',
         'settings',
         'is_paid',
+        'last_paid_at',
+        'last_modified_at',
+        'needs_payment',
     ];
 
     /**
@@ -34,6 +37,9 @@ class Resume extends Model
             'resume_data' => 'array',
             'settings' => 'array',
             'is_paid' => 'boolean',
+            'needs_payment' => 'boolean',
+            'last_paid_at' => 'datetime',
+            'last_modified_at' => 'datetime',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -188,5 +194,113 @@ class Resume extends Model
     public function getLatestPaymentProof()
     {
         return $this->paymentProofs()->latest()->first();
+    }
+
+    /**
+     * Mark resume as paid and set payment timestamp
+     */
+    public function markAsPaidWithTimestamp(): bool
+    {
+        return $this->update([
+            'is_paid' => true,
+            'last_paid_at' => now(),
+            'needs_payment' => false,
+        ]);
+    }
+
+    /**
+     * Mark resume as modified after payment
+     */
+    public function markAsModified(): bool
+    {
+        // Only mark as needing payment if it was previously paid
+        // If resume is paid but doesn't have last_paid_at, set it first
+        if ($this->is_paid && !$this->last_paid_at) {
+            $this->update(['last_paid_at' => now()]);
+        }
+        
+        $needsPayment = $this->is_paid;
+        
+        return $this->update([
+            'last_modified_at' => now(),
+            'needs_payment' => $needsPayment,
+            // Reset payment status if it was previously paid
+            'is_paid' => false,
+        ]);
+    }
+
+    /**
+     * Check if resume is available for download (paid and not modified)
+     */
+    public function isDownloadable(): bool
+    {
+        return $this->is_paid && !$this->needs_payment;
+    }
+
+    /**
+     * Check if resume needs payment due to modifications
+     */
+    public function needsPayment(): bool
+    {
+        return $this->needs_payment === true;
+    }
+
+    /**
+     * Check if resume was modified after payment
+     */
+    public function wasModifiedAfterPayment(): bool
+    {
+        if (!$this->last_paid_at || !$this->last_modified_at) {
+            return false;
+        }
+
+        return $this->last_modified_at->isAfter($this->last_paid_at);
+    }
+
+    /**
+     * Get the payment status for dashboard display
+     */
+    public function getPaymentStatus(): string
+    {
+        $latestPaymentProof = $this->getLatestPaymentProof();
+        
+        // If there's a payment proof, check if it's relevant to current resume state
+        if ($latestPaymentProof) {
+            // If resume was modified after the payment proof was created, the proof is outdated
+            if ($this->last_modified_at && $this->last_modified_at->isAfter($latestPaymentProof->created_at)) {
+                // Payment proof is outdated, check if this is a modified paid resume
+                if ($this->last_paid_at && $this->wasModifiedAfterPayment()) {
+                    return 'needs_payment_modified';
+                }
+                return 'needs_payment';
+            }
+            
+            // Payment proof is current, return its status
+            return $latestPaymentProof->status;
+        }
+        
+        // No payment proof exists - check if this is a modified paid resume
+        if ($this->last_paid_at && $this->wasModifiedAfterPayment()) {
+            return 'needs_payment_modified';
+        }
+        
+        if ($this->needs_payment) {
+            return 'needs_payment';
+        }
+        
+        if ($this->is_paid) {
+            return 'approved';
+        }
+        
+        return 'unpaid';
+    }
+
+    /**
+     * Check if user can edit this resume
+     */
+    public function canBeEdited(): bool
+    {
+        // Users can always edit resumes, even if they're paid
+        return true;
     }
 } 

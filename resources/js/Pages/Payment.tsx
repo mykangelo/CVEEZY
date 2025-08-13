@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
+import Logo from "@/Components/Logo";
 
 interface PaymentProof {
   id: number;
@@ -260,7 +261,28 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Head title="Payment - CVeezy" />
-      <Header />
+      
+      {/* Custom Header with Dashboard Button */}
+      <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm mb-10">
+        <div className="flex items-center">
+          <Logo 
+            size="sm"
+            text="CVeezy"
+            imageSrc="/images/supsoft-logo.jpg"
+            imageAlt="CVeezy Logo"
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+          />
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+          >
+            Dashboard
+          </Link>
+        </div>
+      </header>
 
              <main className="flex-grow bg-white py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
