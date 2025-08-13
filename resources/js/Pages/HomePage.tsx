@@ -26,35 +26,59 @@ const HomePage: React.FC<HomePageProps> = ({
     const containerRef = useRef<HTMLDivElement>(null);
     const ITEMS_PER_PAGE = 5;
     const CARD_WIDTH = 280;
+    const GAP = 24; // 6 * 4px (gap-6)
 
-    const [startIndex, setStartIndex] = useState(0);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isAnimating, setIsAnimating] = useState(false);
     const totalTemplates = templates.length;
 
-    const getVisibleTemplates = () => {
-        const endIndex = startIndex + ITEMS_PER_PAGE;
-        if (endIndex <= totalTemplates) {
-            return templates.slice(startIndex, endIndex);
-        } else {
-            // Wrap around
-            return [
-                ...templates.slice(startIndex),
-                ...templates.slice(0, endIndex - totalTemplates),
-            ];
-        }
+    // Create extended array for seamless looping
+    const getExtendedTemplates = () => {
+        // Add copies at the beginning and end for seamless looping
+        return [
+            ...templates.slice(-ITEMS_PER_PAGE),
+            ...templates,
+            ...templates.slice(0, ITEMS_PER_PAGE),
+        ];
+    };
+
+    const extendedTemplates = getExtendedTemplates();
+    const displayIndex = currentIndex + ITEMS_PER_PAGE; // Offset for the prepended items
+
+    const scrollToIndex = (newIndex: number, immediate = false) => {
+        if (isAnimating) return;
+
+        setIsAnimating(true);
+        setCurrentIndex(newIndex);
+
+        setTimeout(
+            () => {
+                setIsAnimating(false);
+
+                // Handle seamless looping
+                if (newIndex >= totalTemplates) {
+                    setCurrentIndex(0);
+                } else if (newIndex < 0) {
+                    setCurrentIndex(totalTemplates - 1);
+                }
+            },
+            immediate ? 0 : 300
+        );
     };
 
     const scrollRight = () => {
-        setStartIndex(
-            (prevIndex) => (prevIndex + ITEMS_PER_PAGE) % templates.length
-        );
+        const nextIndex = currentIndex + 1;
+        scrollToIndex(nextIndex);
     };
 
     const scrollLeft = () => {
-        setStartIndex(
-            (prevIndex) =>
-                (prevIndex - ITEMS_PER_PAGE + templates.length) %
-                templates.length
-        );
+        const nextIndex = currentIndex - 1;
+        scrollToIndex(nextIndex);
+    };
+
+    const getTransformValue = () => {
+        const translateX = -displayIndex * (CARD_WIDTH + GAP);
+        return `translateX(${translateX}px)`;
     };
 
     const features = [
@@ -332,7 +356,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 </div>
             </section>
 
-            {/* Templates Section */}
+            {/* Templates Section - Enhanced with Smooth Animation */}
             <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
                 <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
                     <h1 className="text-white text-4xl font-bold mb-4">
@@ -355,7 +379,8 @@ const HomePage: React.FC<HomePageProps> = ({
                         {/* Left Arrow */}
                         <button
                             onClick={scrollLeft}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
+                            disabled={isAnimating}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-3 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <svg
                                 className="w-6 h-6"
@@ -372,41 +397,53 @@ const HomePage: React.FC<HomePageProps> = ({
                             </svg>
                         </button>
 
-                        {/* Template Cards */}
+                        {/* Template Slider Container */}
                         <div
-                            className="flex justify-center gap-6 overflow-hidden px-10"
+                            className="overflow-hidden"
                             style={{
-                                width: `${CARD_WIDTH * ITEMS_PER_PAGE}px`,
-                                margin: "0 auto",
+                                width: `${
+                                    (CARD_WIDTH + GAP) * ITEMS_PER_PAGE - GAP
+                                }px`,
                             }}
                         >
-                            {getVisibleTemplates().map((template) => (
-                                <div
-                                    key={template.name}
-                                    className="flex flex-col items-center"
-                                    style={{
-                                        width: `${CARD_WIDTH}px`,
-                                        flex: "0 0 auto",
-                                    }}
-                                >
-                                    <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
-                                        <img
-                                            src={template.image}
-                                            alt={template.name}
-                                            className="w-full object-cover h-96"
-                                        />
+                            <div
+                                className="flex gap-6 transition-transform duration-300 ease-in-out"
+                                style={{
+                                    transform: getTransformValue(),
+                                    width: `${
+                                        extendedTemplates.length *
+                                        (CARD_WIDTH + GAP)
+                                    }px`,
+                                }}
+                                ref={containerRef}
+                            >
+                                {extendedTemplates.map((template, index) => (
+                                    <div
+                                        key={`${template.name}-${index}`}
+                                        className="flex flex-col items-center flex-shrink-0"
+                                        style={{ width: `${CARD_WIDTH}px` }}
+                                    >
+                                        <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
+                                            <img
+                                                src={template.image}
+                                                alt={template.name}
+                                                className="w-full object-cover h-96"
+                                                draggable={false}
+                                            />
+                                        </div>
+                                        <div className="mt-2 text-center text-lg font-semibold text-gray-800">
+                                            {template.name}
+                                        </div>
                                     </div>
-                                    <div className="mt-2 text-center text-lg font-semibold text-gray-800">
-                                        {template.name}
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
 
                         {/* Right Arrow */}
                         <button
                             onClick={scrollRight}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow  hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
+                            disabled={isAnimating}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-3 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                         >
                             <svg
                                 className="w-6 h-6"
