@@ -38,6 +38,27 @@ type Skill = {
   level: string;
 };
 
+type SpellCheckMatch = {
+  message: string;
+  shortMessage: string;
+  replacements: Array<{ value: string }>;
+  offset: number;
+  length: number;
+  context: {
+    text: string;
+    offset: number;
+    length: number;
+  };
+  rule: {
+    id: string;
+    description: string;
+    category: {
+      id: string;
+      name: string;
+    };
+  };
+};
+
 interface FinalCheckProps {
   contact?: Contact;
   experiences?: Experience[];
@@ -46,10 +67,8 @@ interface FinalCheckProps {
   summary?: string;
   resumeId?: number;
   templateName?: string;
-
+  spellcheck?: SpellCheckMatch[];
 }
-
-
 
 const FinalCheck: React.FC<FinalCheckProps> = ({ 
   contact: propContact,
@@ -59,10 +78,10 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   summary: propSummary,
   resumeId,
   templateName: propTemplateName,
-
+  spellcheck = []
 }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [currentSection, setCurrentSection] = useState<string>("templates");
+  const [currentSection, setCurrentSection] = useState<string>("design");
   
   // Debug: Log the resumeId and other props
   console.log('FinalCheck - Props received:', {
@@ -72,7 +91,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     propEducations,
     propSkills,
     propSummary,
-    propTemplateName
+    propTemplateName,
+    spellcheckCount: spellcheck.length
   });
   
   // Debug: Log URL parameters
@@ -90,10 +110,11 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         resumeId,
         hasPropsData: !!(propContact && propExperiences && propEducations && propSkills && propSummary),
         hasSessionData: !!sessionStorage.getItem('resumeData'),
-        urlResumeId
+        urlResumeId,
+        spellcheckIssues: spellcheck.length
       });
     }
-  }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary]);
+  }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary, spellcheck]);
   
   // Get data from sessionStorage or use props
   const getSkillLevelBullets = (level: string): number => {
@@ -166,37 +187,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   const resumeData = getResumeData();
   const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections, templateName } = resumeData;
 
-  const [selectedTemplate, setSelectedTemplate] = useState(0);
-  const [selectedColor, setSelectedColor] = useState(0);
 
-  const colorOptions = [
-    { name: "Gray", class: "bg-gray-200" },
-    { name: "Pink", class: "bg-pink-200" },
-    { name: "Blue", class: "bg-blue-200" },
-    { name: "Green", class: "bg-green-200" },
-    { name: "Orange", class: "bg-orange-200" }
-  ];
-
-  const templates = [
-    { name: "Classic", key: "classic", hasImage: false },
-    { name: "Modern", key: "modern", hasImage: false },
-    { name: "Creative", key: "creative", hasImage: true },
-    { name: "Elegant", key: "elegant", hasImage: false },
-    { name: "Professional", key: "professional", hasImage: false },
-    { name: "Minimal", key: "minimal", hasImage: false }
-  ];
-
-  // Set the selected template based on the actual template name
-  const getSelectedTemplateIndex = () => {
-    const templateIndex = templates.findIndex(t => t.key === templateName);
-    return templateIndex >= 0 ? templateIndex : 0;
-  };
-
-  // Set the correct template when templateName changes
-  useEffect(() => {
-    const templateIndex = templates.findIndex(t => t.key === templateName);
-    setSelectedTemplate(templateIndex >= 0 ? templateIndex : 0);
-  }, [templateName]);
 
    // Function to handle clicking the "Download PDF" button
   const handleDownloadButtonClick = () => {
@@ -217,34 +208,60 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     window.location.href = paymentUrl;
   };
 
+  // Function to get spell check severity color
+  const getSpellCheckSeverityColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'spelling':
+        return 'text-red-600';
+      case 'grammar':
+        return 'text-orange-600';
+      case 'style':
+        return 'text-yellow-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
 
+  // Function to get spell check severity icon
+  const getSpellCheckSeverityIcon = (category: string) => {
+    switch (category.toLowerCase()) {
+      case 'spelling':
+        return '🔴';
+      case 'grammar':
+        return '🟠';
+      case 'style':
+        return '🟡';
+      default:
+        return '⚪';
+    }
+  };
 
   const renderResumeContent = () => (
-    <div className="w-full h-full bg-white p-6 overflow-auto space-y-6 text-gray-800">
+    <div className="w-full h-full bg-white p-8 overflow-auto space-y-8 text-gray-800">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-center text-black mb-6">
+        <h1 className="text-4xl font-bold text-center text-black mb-8">
           This is the {templateName?.charAt(0).toUpperCase() + templateName?.slice(1)} Template
         </h1>
 
         {/* Contact Info */}
-        <div className="flex items-start gap-6">
+        <div className="flex items-start gap-8">
           <div className="flex-1">
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-3xl font-bold">
               {contact.firstName} {contact.lastName}
             </h2>
-            <p className="text-lg text-gray-600">
+            <p className="text-xl text-gray-600">
               {contact.desiredJobTitle}
             </p>
-            <div className="space-y-1 mt-2">
-              <p>
+            <div className="space-y-2 mt-4">
+              <p className="text-lg">
                 <strong>Phone:</strong> {contact.phone}
               </p>
-              <p>
+              <p className="text-lg">
                 <strong>Email:</strong> {contact.email}
               </p>
               {(contact.address || contact.city || contact.country || contact.postCode) && (
-                <p>
+                <p className="text-lg">
                   <strong>Location:</strong>{" "}
                   {[
                     contact.address,
@@ -266,25 +283,25 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       {/* Experience */}
       {experiences.length > 0 && (
         <div>
-          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
             Experience
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {experiences.map((exp: Experience) => (
-              <div key={exp.id} className="border-b pb-2">
+              <div key={exp.id} className="border-b border-gray-200 pb-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-bold">
+                  <h4 className="text-xl font-bold">
                     {exp.jobTitle}
                   </h4>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-base text-gray-500">
                     {exp.startDate} - {exp.endDate}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 italic">
+                <p className="text-base text-gray-700 italic">
                   {exp.company} — {exp.location}
                 </p>
                 {exp.description && (
-                  <p className="text-sm mt-1">
+                  <p className="text-base mt-2 leading-relaxed">
                     {exp.description}
                   </p>
                 )}
@@ -297,23 +314,23 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       {/* Education */}
       {educations.length > 0 && (
         <div>
-          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
             Education
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {educations.map((edu: Education) => (
-              <div key={edu.id} className="border-b pb-2">
+              <div key={edu.id} className="border-b border-gray-200 pb-4">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-bold">{edu.degree}</h4>
-                  <span className="text-sm text-gray-500">
+                  <h4 className="text-xl font-bold">{edu.degree}</h4>
+                  <span className="text-base text-gray-500">
                     {edu.startDate} - {edu.endDate}
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 italic">
+                <p className="text-base text-gray-700 italic">
                   {edu.school} — {edu.location}
                 </p>
                 {edu.description && (
-                  <p className="text-sm mt-1">
+                  <p className="text-base mt-2 leading-relaxed">
                     {edu.description}
                   </p>
                 )}
@@ -326,21 +343,21 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       {/* Skills */}
       {skills.length > 0 && (
         <div>
-          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
             Skills
           </h3>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {skills.map((skill: Skill) => (
-              <div key={skill.id} className="flex items-center gap-1">
-                <span className="text-sm text-gray-800 font-medium">
+              <div key={skill.id} className="flex items-center gap-2">
+                <span className="text-base text-gray-800 font-medium">
                   {skill.name}
                 </span>
                 {skill.level && resumeData.showExperienceLevel && (
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-1">
                     {Array.from({ length: 5 }, (_, i) => (
                       <div
                         key={i}
-                        className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
                           i < getSkillLevelBullets(skill.level || "Novice")
                             ? "bg-black"
                             : "bg-gray-300"
@@ -358,10 +375,10 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       {/* Summary */}
       {summary && (
         <div>
-          <h3 className="text-xl font-semibold mb-2 text-gray-700">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
             Summary
           </h3>
-          <p className="text-sm text-gray-800 whitespace-pre-line">
+          <p className="text-base text-gray-800 whitespace-pre-line leading-relaxed">
             {summary}
           </p>
         </div>
@@ -496,18 +513,6 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         <div className="p-6 border-b border-gray-200">
           <div className="space-y-4">
             <button
-              onClick={() => setCurrentSection("templates")}
-              className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${
-                currentSection === "templates" 
-                  ? "bg-blue-50 text-blue-600" 
-                  : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <span className="text-xl">📄</span>
-              <span className="font-medium">Templates</span>
-            </button>
-            
-            <button
               onClick={() => setCurrentSection("design")}
               className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${
                 currentSection === "design" 
@@ -535,56 +540,6 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
         {/* Content Area */}
         <div className="flex-1 p-6 overflow-auto">
-          {currentSection === "templates" && (
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Templates</h2>
-              
-              {/* Color Options */}
-              <div className="mb-6">
-                <div className="flex gap-2 mb-4">
-                  {colorOptions.map((color, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedColor(index)}
-                      className={`w-8 h-8 rounded-full border-2 transition-all ${
-                        color.class
-                      } ${
-                        selectedColor === index 
-                          ? "border-blue-500 ring-2 ring-blue-200" 
-                          : "border-gray-300"
-                      }`}
-                      title={color.name}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Template Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                {templates.map((template, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedTemplate(index)}
-                    className={`p-4 border-2 rounded-lg transition-all ${
-                      selectedTemplate === index
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="bg-gray-100 h-32 rounded mb-2 flex items-center justify-center">
-                      {template.hasImage && (
-                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">
-                          👤
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-gray-600 text-center">{template.name}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {currentSection === "design" && (
             <div>
               <h2 className="text-2xl font-bold mb-6">Design & Formatting</h2>
@@ -596,6 +551,42 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
             <div>
               <h2 className="text-2xl font-bold mb-6">Spell Check</h2>
               <p className="text-gray-600">Review and correct any spelling or grammar errors.</p>
+              {spellcheck.length > 0 && (
+                <div className="mt-6 space-y-4">
+                  {spellcheck.map((issue: SpellCheckMatch, index) => (
+                    <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={`text-lg ${getSpellCheckSeverityIcon(issue.rule.category.name)}`}>
+                          {getSpellCheckSeverityIcon(issue.rule.category.name)}
+                        </span>
+                        <span className={`font-semibold ${getSpellCheckSeverityColor(issue.rule.category.name)}`}>
+                          {issue.rule.category.name.toUpperCase()}
+                        </span>
+                        <span className="text-sm text-gray-600">({issue.shortMessage})</span>
+                      </div>
+                      <p className="text-sm text-gray-800">
+                        {issue.context.text}
+                        <span className="font-bold text-red-600">
+                          {issue.context.text.substring(issue.context.offset, issue.context.offset + issue.length)}
+                        </span>
+                        {issue.context.text.substring(issue.context.offset + issue.length)}
+                      </p>
+                      {issue.replacements && issue.replacements.length > 0 && (
+                        <div className="mt-2 text-sm text-gray-700">
+                          <span className="font-medium">Suggested replacements:</span>
+                          <div className="mt-1 space-x-2">
+                            {issue.replacements.map((rep, repIndex) => (
+                              <span key={repIndex} className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                {rep.value}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -654,8 +645,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
 
         {/* Resume Preview */}
-        <div className="flex-1 p-6 flex items-center justify-center">
-          <div className="bg-white shadow-2xl rounded-lg w-full max-w-4xl h-full overflow-hidden">
+        <div className="flex-1 p-6">
+          <div className="bg-white shadow-2xl rounded-lg w-full h-full overflow-hidden">
             <div className="h-full">
               {renderResumeContent()}
             </div>
