@@ -16,12 +16,12 @@ const HomePage: React.FC<HomePageProps> = ({
     const { auth } = usePage().props as any;
     const user = auth.user;
     const templates = [
-        { name: "Professional", image: "/images/templates/template1.png" },
-        { name: "Classic", image: "/images/templates/template2.png" },
-        { name: "Creative", image: "/images/templates/template3.jpg" },
-        { name: "Minimal", image: "/images/templates/template4.jpg" },
-        { name: "Elegant", image: "/images/templates/template5.jpg" },
-        { name: "Modern", image: "/images/templates/template6.jpg" },
+        { name: "Professional", image: "/images/templates/professional.png" },
+        { name: "Classic", image: "/images/templates/classic.png" },
+        { name: "Creative", image: "/images/templates/creative.jpg" },
+        { name: "Minimal", image: "/images/templates/minimal.jpg" },
+        { name: "Elegant", image: "/images/templates/elegant.jpg" },
+        { name: "Modern", image: "/images/templates/modern.jpg" },
     ];
     const containerRef = useRef<HTMLDivElement>(null);
     const ITEMS_PER_PAGE = 5;

@@ -164,7 +164,7 @@ class AdminController extends Controller
             $resumeData = json_decode($resumeData, true);
         }
 
-        // Map the data to the format expected by the PDF template
+        // Map the data to the format expected by the PDF template (parity with DashboardController)
         $pdfData = [
             'contact' => [
                 'firstName' => $resumeData['contact']['firstName'] ?? '',
@@ -179,35 +179,65 @@ class AdminController extends Controller
             ],
             'summary' => $resumeData['summary'] ?? '',
             'skills' => $resumeData['skills'] ?? [],
+            'showExperienceLevel' => $resumeData['showExperienceLevel'] ?? false,
+            'languages' => $resumeData['languages'] ?? [],
+            'certifications' => $resumeData['certifications'] ?? [],
+            'awards' => $resumeData['awards'] ?? [],
+            'websites' => $resumeData['websites'] ?? [],
+            'references' => $resumeData['references'] ?? [],
+            'hobbies' => $resumeData['hobbies'] ?? [],
+            'customSections' => $resumeData['customSections'] ?? [],
             'experiences' => array_map(function($exp) {
+                $jobTitle = $exp['jobTitle'] ?? '';
+                $company = $exp['company'] ?? $exp['employer'] ?? '';
+                $location = $exp['location'] ?? $exp['employer'] ?? $exp['company'] ?? '';
+                $startDate = $exp['startDate'] ?? '';
+                $endDate = $exp['endDate'] ?? '';
+                $description = $exp['description'] ?? '';
+                
                 return [
-                    'jobTitle' => $exp['jobTitle'] ?? '',
-                    'company' => $exp['employer'] ?? '',
-                    'location' => $exp['company'] ?? '',
-                    'startDate' => $exp['startDate'] ?? '',
-                    'endDate' => $exp['endDate'] ?? '',
-                    'description' => $exp['description'] ?? '',
+                    'jobTitle' => $jobTitle,
+                    'company' => $company,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
                 ];
             }, $resumeData['experiences'] ?? []),
             'education' => array_map(function($edu) {
+                $degree = $edu['degree'] ?? '';
+                $school = $edu['school'] ?? '';
+                $location = $edu['location'] ?? '';
+                $startDate = $edu['startDate'] ?? '';
+                $endDate = $edu['endDate'] ?? '';
+                $description = $edu['description'] ?? '';
+                
                 return [
-                    'degree' => $edu['degree'] ?? '',
-                    'school' => $edu['school'] ?? '',
-                    'location' => $edu['location'] ?? '',
-                    'startDate' => $edu['startDate'] ?? '',
-                    'endDate' => $edu['endDate'] ?? '',
-                    'description' => $edu['description'] ?? '',
+                    'degree' => $degree,
+                    'school' => $school,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
                 ];
             }, $resumeData['educations'] ?? []),
         ];
 
-        // Generate PDF using the same logic as DashboardController
+        // Use the selected template name for the PDF view, falling back to classic
+        $templateName = $resume->template_name ?? 'classic';
+        $viewName = 'resume.' . $templateName;
+        if (!view()->exists($viewName)) {
+            $viewName = 'resume.classic';
+        }
+
         try {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('resume.pdf', ['resume' => $pdfData]);
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($viewName, ['resume' => $pdfData]);
             return $pdf->download($resume->name . '_resume.pdf');
         } catch (\Exception $e) {
             \Log::error('Error generating PDF for resume', [
                 'resume_id' => $resume->id,
+                'template_name' => $templateName,
+                'view_name' => $viewName,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
