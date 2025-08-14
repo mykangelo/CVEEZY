@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
-import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera } from "lucide-react";
+import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera, User, Briefcase, GraduationCap, Code, FileText, Flag } from "lucide-react";
+import { SectionStepper } from '@/Components/Builder/SectionStepper';
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { ResumeData, Language, Certification, Award, Website, Reference, Hobby, CustomSection } from '@/types/resume';
@@ -341,7 +342,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
     if (!description.trim()) return;
     setLoadingId(id); // Start loading for this education entry
     try {
-      const res = await fetch("/reviseDescription", {
+      const res = await fetch("/reviseEducationDescription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: description }),
@@ -2301,29 +2302,49 @@ const Builder: React.FC<BuilderProps> = ({
           {/* Left Side */}
           <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
-              {/* Stepper */}
-              <div className="flex justify-between items-center mb-12">
-                {steps.map((step, index) => (
-                  <div
-                    key={index}
-                    className={`flex flex-col items-center text-xs font-medium cursor-pointer ${index === currentStep ? 'text-blue-600' : 'text-gray-500'}`}
-                    onClick={() => setCurrentStep(index)}
-                  >
-                    <div
-                      className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all duration-200 ${
-                        index === currentStep
-                          ? "border-blue-500 bg-blue-100"
-                          : "border-gray-300 bg-white"
-                      }`}
-                    >
-                      {index === currentStep && (
-                        <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                      )}
-                    </div>
-                    <span className="mt-1 text-center">{step}</span>
-                  </div>
-                ))}
-              </div>
+              {/* Section Stepper */}
+              <SectionStepper
+                currentSection={currentStep.toString()}
+                sections={[
+                  {
+                    id: "0",
+                    label: "Contacts",
+                    icon: <User className="w-5 h-5" />,
+                    isCompleted: !!(resumeData.contact?.firstName && resumeData.contact?.lastName && resumeData.contact?.email)
+                  },
+                  {
+                    id: "1",
+                    label: "Experience",
+                    icon: <Briefcase className="w-5 h-5" />,
+                    isCompleted: resumeData.experiences?.length > 0
+                  },
+                  {
+                    id: "2",
+                    label: "Education",
+                    icon: <GraduationCap className="w-5 h-5" />,
+                    isCompleted: resumeData.education?.length > 0
+                  },
+                  {
+                    id: "3",
+                    label: "Skills",
+                    icon: <Code className="w-5 h-5" />,
+                    isCompleted: resumeData.skills?.length > 0
+                  },
+                  {
+                    id: "4",
+                    label: "Summary",
+                    icon: <FileText className="w-5 h-5" />,
+                    isCompleted: !!resumeData.summary
+                  },
+                  {
+                    id: "5",
+                    label: "Finalize",
+                    icon: <Flag className="w-5 h-5" />,
+                    isCompleted: false
+                  }
+                ]}
+                onSectionChange={(id) => setCurrentStep(parseInt(id))}
+              />
 
               {/* Resume Score Display */}
               {currentStep === 5 && (

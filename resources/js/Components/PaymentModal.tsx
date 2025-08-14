@@ -15,29 +15,58 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, resumeId, 
   const [uploadMessage, setUploadMessage] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
 
-  // Check payment status when modal opens
-  useEffect(() => {
-    if (isOpen && resumeId) {
-      checkPaymentStatus();
-    }
-  }, [isOpen, resumeId]);
-
-  // Poll for status changes when payment is pending
+  // Check payment status when modal opens and handle cleanup
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
-    if (isOpen && resumeId && paymentStatus === 'pending') {
-      interval = setInterval(() => {
-        checkPaymentStatus();
-      }, 5000); // Check every 5 seconds
+
+    const checkStatus = async () => {
+      if (!isOpen || !resumeId) return;
+      
+      try {
+        const response = await fetch(`/user/payment-proofs`);
+        if (response.ok) {
+          const proofs = await response.json();
+          const latestProof = proofs.find((proof: any) => proof.resume_id === resumeId);
+          
+          if (latestProof) {
+            setPaymentStatus(latestProof.status);
+            
+            // Handle status changes
+            if (latestProof.status === 'approved') {
+              setUploadStatus('success');
+              setUploadMessage('🎉 Your payment has been approved! You can now download your PDF resume.');
+              onStatusChange?.(latestProof.status);
+              clearInterval(interval);
+            } else if (latestProof.status === 'rejected') {
+              setUploadStatus('error');
+              setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
+              onStatusChange?.(latestProof.status);
+              clearInterval(interval);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error);
+      }
+    };
+
+    // Initial check
+    if (isOpen && resumeId) {
+      checkStatus();
     }
 
+    // Set up polling if modal is open and we're waiting for approval
+    if (isOpen && resumeId && (paymentStatus === 'pending' || uploadStatus === 'success')) {
+      interval = setInterval(checkStatus, 5000);
+    }
+
+    // Cleanup
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [isOpen, resumeId, paymentStatus]);
+  }, [isOpen, resumeId, paymentStatus, uploadStatus, onStatusChange]);
 
   const checkPaymentStatus = async () => {
     try {
