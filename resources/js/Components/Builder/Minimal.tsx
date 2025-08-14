@@ -1,5 +1,6 @@
 import React from "react";
-import { ResumeData } from "@/types/resume";
+import { ResumeData, Website } from "@/types/resume";
+import Placeholder from "./Placeholder";
 
 type Props = {
   resumeData: ResumeData;
@@ -21,6 +22,9 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
     customSections,
     showExperienceLevel,
   } = resumeData;
+
+  // Some resumes may include social links on the contact object
+  const socials: Website[] | undefined = (contact as unknown as { socials?: Website[] }).socials;
 
   const hasLocationInfo =
     contact.address || contact.city || contact.country || contact.postCode;
@@ -47,23 +51,19 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-black mb-2 tracking-wide">
-          {contact.firstName.toUpperCase()} {contact.lastName.toUpperCase()}
+          <Placeholder value={`${(contact.firstName||'').toUpperCase()} ${(contact.lastName||'').toUpperCase()}`.trim()} placeholder="YOUR NAME" />
         </h1>
         <p className="text-xl font-bold text-black mb-3">
-          {contact.desiredJobTitle}
+          <Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" />
         </p>
         <div className="text-sm text-black space-x-4">
-          {hasLocationInfo && (
-            <span>
-              {[contact.address, contact.city, contact.country, contact.postCode]
-                .filter(Boolean)
-                .join(", ")}
-            </span>
-          )}
-          {hasLocationInfo && contact.phone && <span>|</span>}
-          {contact.phone && <span>{contact.phone}</span>}
-          {(hasLocationInfo || contact.phone) && contact.email && <span>|</span>}
-          {contact.email && <span>{contact.email}</span>}
+          <span>
+            <Placeholder value={[contact.address, contact.city, contact.country, contact.postCode].filter(Boolean).join(", ")} placeholder="123 Anywhere St, Any City | 12345" />
+          </span>
+          <span className="mx-1">|</span>
+          <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
+          <span className="mx-1">|</span>
+          <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
           {/* Websites */}
           {websites && websites.length > 0 && (
             <>
@@ -84,10 +84,10 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
             </>
           )}
           {/* Social Media */}
-          {contact.socials && contact.socials.length > 0 && (
+          {socials && socials.length > 0 && (
             <>
               <span>|</span>
-              {contact.socials.map((social, idx) => (
+              {socials.map((social: Website, idx: number) => (
                 <React.Fragment key={social.url}>
                   <a
                     href={social.url}
@@ -97,7 +97,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
                   >
                     {social.label || social.url}
                   </a>
-                  {idx < contact.socials.length - 1 && <span>|</span>}
+                  {idx < socials.length - 1 && <span>|</span>}
                 </React.Fragment>
               ))}
             </>
@@ -106,104 +106,76 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       </div>
 
       {/* Summary */}
-      {summary && (
-        <div className="mb-6">
-          <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">SUMMARY</h2>
-          </div>
-          <p className="text-sm text-black leading-relaxed break-words">
-            {summary}
-          </p>
+      <div className="mb-6">
+        <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
+          <h2 className="text-lg font-semibold italic text-black">SUMMARY</h2>
         </div>
-      )}
+        <p className="text-sm text-black leading-relaxed break-words">
+          <Placeholder value={summary} placeholder={"Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."} />
+        </p>
+      </div>
 
        {/* Skills */}
-       {skills.length > 0 && (
-            <div className="mb-6">
-                <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-                    <h2 className="text-lg font-semibold italic text-black">TECHNICAL SKILLS</h2>
-                </div>
-                <div className="grid grid-cols-3 gap-x-8 gap-y-2">
-                    {skills.map((skill, index) => (
-                        <div key={index} className="flex items-center gap-1">
-                            <span className="text-sm text-black font-medium">
-                                {skill.name}
-                            </span>
-                            {skill.level && showExperienceLevel && (
-                                <div className="flex items-center gap-0.5">
-                                    {Array.from({ length: 5 }, (_, i) => (
-                                        <div
-                                            key={i}
-                                            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                                                i < getSkillLevelBullets(skill.level || "Novice")
-                                                    ? "bg-black"
-                                                    : "bg-gray-300"
-                                            }`}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </div>
-        )}
-
-      {/* Experience */}
-      {experiences.length > 0 && (
-        <div className="mb-6">
+       <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">PROFESSIONAL EXPERIENCE</h2>
+            <h2 className="text-lg font-semibold italic text-black">TECHNICAL SKILLS</h2>
           </div>
-          <div className="space-y-4">
-            {experiences.map((exp) => (
-              <div key={exp.id} className="mb-6">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-bold text-black flex-1 mr-4">
-                    {exp.jobTitle}, {exp.company}
-                  </h3>
-                  <span className="text-sm font-bold text-black whitespace-nowrap text-right">
-                    {exp.startDate} - {exp.endDate}
-                  </span>
-                </div>
-                {exp.location && (
-                  <p className="text-sm text-black mb-3">{exp.location}</p>
-                )}
-                {exp.description && (
-                  <div className="text-sm text-black space-y-2">
-                    {exp.description.trim() !== '' ? (
-                      <div className="flex items-start gap-2">
-                        <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
-                        <p className="break-words leading-relaxed min-w-0">{exp.description.trim()}</p>
-                      </div>
-                    ) : null}
+          <div className="grid grid-cols-3 gap-x-8 gap-y-2">
+            {(skills.length > 0 ? skills : [{ id: -1, name: 'Skill 1', level: 'Experienced' }, { id: -2, name: 'Skill 2', level: 'Experienced' }, { id: -3, name: 'Skill 3', level: 'Experienced' }] as any[]).map((skill: any, index: number) => (
+              <div key={index} className="flex items-center gap-1">
+                <span className="text-sm text-black font-medium"><Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} /></span>
+                {showExperienceLevel && (
+                  <div className="flex items-center gap-0.5">
+                    {Array.from({ length: 5 }, (_, i) => (
+                      <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${i < getSkillLevelBullets(skill.level || 'Novice') ? 'bg-black' : 'bg-gray-300'}`} />
+                    ))}
                   </div>
                 )}
               </div>
             ))}
           </div>
         </div>
-      )}
+
+      {/* Experience */}
+      <div className="mb-6">
+          <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
+            <h2 className="text-lg font-semibold italic text-black">PROFESSIONAL EXPERIENCE</h2>
+          </div>
+          <div className="space-y-4">
+            {(experiences.length > 0 ? experiences : [{ id: -1, jobTitle: 'Job Title', company: 'Company', location: 'Location', startDate: '2017', endDate: '2020', description: 'Responsibilities\nResponsibilities' }] as any[]).map((exp: any) => (
+              <div key={exp.id} className="mb-6">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="font-bold text-black flex-1 mr-4"><Placeholder value={`${exp.jobTitle}, ${exp.company}`} placeholder="Job Title, Company" /></h3>
+                  <span className="text-sm font-bold text-black whitespace-nowrap text-right"><Placeholder value={`${exp.startDate} - ${exp.endDate}`} placeholder="2017 — 2020" /></span>
+                </div>
+                <p className="text-sm text-black mb-3"><Placeholder value={exp.location} placeholder="Location" /></p>
+                <div className="text-sm text-black space-y-2">
+                  {((exp.description && exp.description.trim() !== '') ? exp.description : 'Responsibilities\nResponsibilities').split('\n').map((line: string, i: number) => (
+                    <div key={i} className="flex items-start gap-2">
+                      <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                      <p className="break-words leading-relaxed min-w-0">{line}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
 
       {/* Education */}
-      {education.length > 0 && (
-        <div className="mb-6">
+      <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
             <h2 className="text-lg font-semibold italic text-black">EDUCATION</h2>
           </div>
           <div className="space-y-4">
-            {education.map((edu) => (
+            {(education.length > 0 ? education : [{ id: -1, degree: 'Degree in Field of study', school: 'School Name', location: 'Location', startDate: '2017', endDate: '2020' }] as any[]).map((edu: any) => (
               <div key={edu.id} className="mb-4">
                 <div className="flex justify-between items-center mb-1">
-                  <h3 className="font-bold text-black flex-1 mr-4">{edu.degree}</h3>
-                  <span className="text-sm font-bold text-black whitespace-nowrap ml-4">
-                    {edu.startDate} - {edu.endDate}
-                  </span>
+                  <h3 className="font-bold text-black flex-1 mr-4"><Placeholder value={edu.degree} placeholder="Degree in Field of study" /></h3>
+                  <span className="text-sm font-bold text-black whitespace-nowrap ml-4"><Placeholder value={`${edu.startDate} - ${edu.endDate}`} placeholder="2017 — 2020" /></span>
                 </div>
-                <p className="text-sm text-black mb-2">{edu.school}</p>
-                {edu.location && (
-                  <p className="text-sm text-black mb-2">{edu.location}</p>
-                )}
+                <p className="text-sm text-black mb-2"><Placeholder value={edu.school} placeholder="School Name" /></p>
+                <p className="text-sm text-black mb-2"><Placeholder value={edu.location} placeholder="Location" /></p>
                 {edu.description && (
                   <div className="text-sm text-black">
                     {edu.description.trim() !== '' ? (
@@ -218,7 +190,6 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
             ))}
           </div>
         </div>
-      )}
 
       {/* Additional Information */}
       {((languages && languages.length > 0) || (certifications && certifications.length > 0) || (awards && awards.length > 0) || (hobbies && hobbies.length > 0)) && (

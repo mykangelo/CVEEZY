@@ -27,6 +27,7 @@ export type Contact = {
   city?: string;
   address?: string;
   postCode?: string;
+  socials?: Website[];
 };
 
 export type Experience = {

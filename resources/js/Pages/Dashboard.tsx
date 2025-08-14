@@ -350,12 +350,14 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Left: Logo */}
-                        <div className="flex items-center h-full">
-                            <Logo 
-                                size="lg"
-                                showText={false}
-                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
-                            />
+                        <div className="flex items-center">
+                            <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
+                                <Logo 
+                                    size="sm"
+                                    showText={false}
+                                    className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                />
+                            </Link>
                         </div>
 
                         {/* Center: Navigation */}

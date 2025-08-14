@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
 import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera, User, Briefcase, GraduationCap, Code, FileText, Flag } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { SectionStepper } from '@/Components/Builder/SectionStepper';
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
@@ -15,6 +16,7 @@ import Creative from '@/Components/Builder/Creative';
 import Elegant from '@/Components/Builder/Elegant';
 import Professional from '@/Components/Builder/Professional';
 import Minimal from '@/Components/Builder/Minimal';
+import Logo from "@/Components/Logo";
 
 const templateComponents: Record<string, React.FC<{ resumeData: ResumeData }>> = {
   classic: Classic,
@@ -2164,6 +2166,16 @@ const Builder: React.FC<BuilderProps> = ({
     }));
       }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        window.location.href = '/choose-resume-maker';
+      }
+    };
+    window.addEventListener('keydown', onKeyDown as any);
+    return () => window.removeEventListener('keydown', onKeyDown as any);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Build Your Resume" />
@@ -2178,23 +2190,7 @@ const Builder: React.FC<BuilderProps> = ({
         </div>
       )}
       
-      {/* Header with Back Button */}
-      <header className="w-full bg-white flex items-center justify-between px-8 py-4 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold text-gray-800">Resume Builder</h1>
-          {isUpdating && (
-            <div className="flex items-center space-x-2 text-blue-600">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">Saving...</span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-600">
-            Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
-          </span>
-        </div>
-      </header>
+      {/* Header removed to maximize editor space */}
 
       {/* Warning for pending payments */}
       {hasPendingPayments && (
@@ -2212,15 +2208,13 @@ const Builder: React.FC<BuilderProps> = ({
       )}
 
       {/* Main Content */}
-        <Link
-            href="/choose-resume-maker"
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors mt-3 ml-2"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">Back</span>
+        <div className="mt-3 ml-2">
+          <Link href="/choose-resume-maker" className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 bg-white/90 hover:bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-semibold">Back to Make Option</span>
+            <span className="ml-2 hidden sm:inline-flex items-center text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Esc</span>
           </Link>
+        </div>
       {!isLoading && (
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Left Side */}

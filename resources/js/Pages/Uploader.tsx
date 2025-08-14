@@ -166,11 +166,13 @@ const Uploader: React.FC<UploaderProps> = ({
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
         <div className="flex items-center">
-          <Logo 
-            size="xl"
-            showText={false}
-            className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
-          />
+          <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
+            <Logo 
+              size="sm"
+              showText={false}
+              className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            />
+          </Link>
         </div>
         <div className="flex items-center gap-3">
           <Link
