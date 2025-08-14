@@ -359,13 +359,11 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Left: Logo */}
-                        <div className="flex items-center">
+                        <div className="flex items-center h-full">
                             <Logo 
-                                size="sm"
-                                text="CVeezy"
-                                imageSrc="/images/supsoft-logo.jpg"
-                                imageAlt="CVeezy Logo"
-                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                size="lg"
+                                showText={false}
+                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                             />
                         </div>
 
