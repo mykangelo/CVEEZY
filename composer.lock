@@ -1,3 +1,4 @@
+
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
@@ -5,7 +6,6 @@
         "This file is @generated automatically"
     ],
     "content-hash": "9da0c5b0b0842c46a13148c4e0f89f37",
-
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",

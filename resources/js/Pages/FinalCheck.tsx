@@ -552,40 +552,66 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
             <div>
               <h2 className="text-2xl font-bold mb-6">Spell Check</h2>
               <p className="text-gray-600">Review and correct any spelling or grammar errors.</p>
-              {spellcheck.length > 0 && (
+              {spellcheck.length > 0 ? (
                 <div className="mt-6 space-y-4">
-                  {spellcheck.map((issue: SpellCheckMatch, index) => (
-                    <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-lg ${getSpellCheckSeverityIcon(issue.rule.category.name)}`}>
-                          {getSpellCheckSeverityIcon(issue.rule.category.name)}
-                        </span>
-                        <span className={`font-semibold ${getSpellCheckSeverityColor(issue.rule.category.name)}`}>
-                          {issue.rule.category.name.toUpperCase()}
-                        </span>
-                        <span className="text-sm text-gray-600">({issue.shortMessage})</span>
-                      </div>
-                      <p className="text-sm text-gray-800">
-                        {issue.context.text}
-                        <span className="font-bold text-red-600">
-                          {issue.context.text.substring(issue.context.offset, issue.context.offset + issue.length)}
-                        </span>
-                        {issue.context.text.substring(issue.context.offset + issue.length)}
-                      </p>
-                      {issue.replacements && issue.replacements.length > 0 && (
-                        <div className="mt-2 text-sm text-gray-700">
-                          <span className="font-medium">Suggested replacements:</span>
-                          <div className="mt-1 space-x-2">
-                            {issue.replacements.map((rep, repIndex) => (
-                              <span key={repIndex} className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
-                                {rep.value}
-                              </span>
-                            ))}
-                          </div>
+                  {spellcheck.map((issue: SpellCheckMatch, index) => {
+                    const severityIcon = getSpellCheckSeverityIcon(issue.rule.category.name);
+                    return (
+                      <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-lg">{severityIcon}</span>
+                          <span className={`font-semibold ${getSpellCheckSeverityColor(issue.rule.category.name)}`}>
+                            {issue.rule.category.name.toUpperCase()}
+                          </span>
+                          <span className="text-sm text-gray-600">({issue.shortMessage})</span>
                         </div>
-                      )}
+                        {(() => {
+                          const contextText = issue.context?.text || '';
+                          const rawOffset = typeof issue.context?.offset === 'number' ? issue.context.offset : 0;
+                          const start = (issue as any)?.context?.start;
+                          let relativeOffset = typeof start === 'number' ? rawOffset - start : rawOffset;
+                          // Guard within [0, contextText.length]
+                          if (relativeOffset < 0) relativeOffset = 0;
+                          if (relativeOffset > contextText.length) relativeOffset = contextText.length;
+                          const highlightLen = Math.max(0, Math.min(issue.length || 0, contextText.length - relativeOffset));
+                          const before = contextText.substring(0, relativeOffset);
+                          const highlight = contextText.substring(relativeOffset, relativeOffset + highlightLen);
+                          const after = contextText.substring(relativeOffset + highlightLen);
+                          return (
+                            <p className="text-sm text-gray-800">
+                              {before}
+                              <span className="font-bold text-red-600">{highlight}</span>
+                              {after}
+                            </p>
+                          );
+                        })()}
+                        {issue.replacements && issue.replacements.length > 0 && (
+                          <div className="mt-2 text-sm text-gray-700">
+                            <span className="font-medium">Suggested replacements:</span>
+                            <div className="mt-1 space-x-2">
+                              {issue.replacements.map((rep, repIndex) => (
+                                <span key={repIndex} className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                  {rep.value}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-6" role="status" aria-live="polite">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
+                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5" aria-hidden="true">
+                      <span className="text-white text-xs">✓</span>
                     </div>
-                  ))}
+                    <div className="text-green-800">
+                      <p className="font-medium">No spelling issues found</p>
+                      <p className="text-sm text-green-700">Your resume looks good.</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

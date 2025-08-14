@@ -21,11 +21,11 @@ export default function Authenticated({
                     <div className="flex h-16 justify-between">
                         <div className="flex">
                             <div className="flex shrink-0 items-center">
-                                <Link href="/">
+                                <Link href={route('home')} className="inline-flex items-center cursor-pointer" aria-label="Go to homepage">
                                     <Logo 
                                         size="sm"
                                         text="CVeezy"
-                                        imageSrc="/images/supsoft-logo.jpg"
+                                        imageSrc="/images/cveezyLOGO_C.png"
                                         imageAlt="CVeezy Logo"
                                         className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                                     />
@@ -49,6 +49,15 @@ export default function Authenticated({
                                     </NavLink>
                                 )}
                             </div>
+
+                            {header && (
+                                <div className="hidden sm:flex items-center sm:ms-6">
+                                    <span className="mx-4 h-6 w-px bg-blue-200" aria-hidden="true" />
+                                    <div className="text-gray-800 text-lg font-semibold leading-tight truncate">
+                                        {header}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
@@ -189,13 +198,7 @@ export default function Authenticated({
                 </div>
             </nav>
 
-            {header && (
-                <header className="bg-white shadow-sm border-b border-blue-100">
-                    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-                        {header}
-                    </div>
-                </header>
-            )}
+            {/* Page header is now integrated into the top nav to avoid stacked headers */}
 
             <main>{children}</main>
         </div>
