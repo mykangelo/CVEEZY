@@ -1,316 +1,488 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
+import { Mail } from "lucide-react";
 
 type Props = {
-  resumeData: ResumeData;
+    resumeData: ResumeData;
 };
 
-const Classic: React.FC<Props> = ({ resumeData }) => {
-  const {
-    contact,
-    experiences,
-    education,
-    skills,
-    summary,
-    languages,
-    certifications,
-    awards,
-    websites,
-    references,
-    hobbies,
-    customSections,
-    showExperienceLevel,
+const Creative: React.FC<Props> = ({ resumeData }) => {
+    const {
+        contact,
+        experiences,
+        education,
+        summary,
+        skills,
+        languages,
+        certifications,
+        awards,
+        websites,
+        references,
+        hobbies,
+        customSections,
+    } = resumeData;
 
-  } = resumeData;
+    const hasLocationInfo =
+        contact.address || contact.city || contact.country || contact.postCode;
 
-  const hasLocationInfo =
-    contact.address || contact.city || contact.country || contact.postCode;
+    const getSkillLevelBullets = (level: string | undefined): number => {
+        if (!level) {
+            return 3;
+        }
 
-  const getSkillLevelBullets = (level: string): number => {
-    switch (level) {
-      case "Novice":
-        return 1;
-      case "Beginner":
-        return 2;
-      case "Skillful":
-        return 3;
-      case "Experienced":
-        return 4;
-      case "Expert":
-        return 5;
-      default:
-        return 1;
-    }
-  };
+        const normalizedLevel = level.toLowerCase().trim();
 
+        if (normalizedLevel.includes("expert")) {
+            return 5;
+        } else if (
+            normalizedLevel.includes("experienced") ||
+            normalizedLevel.includes("advanced")
+        ) {
+            return 4;
+        } else if (normalizedLevel.includes("intermediate")) {
+            return 3;
+        } else if (normalizedLevel.includes("beginner")) {
+            return 2;
+        } else if (normalizedLevel.includes("novice")) {
+            return 1;
+        } else {
+            // Try exact matches as fallback
+            switch (normalizedLevel) {
+                case "expert":
+                    return 5;
+                case "experienced":
+                case "advanced":
+                    return 4;
+                case "intermediate":
+                    return 3;
+                case "beginner":
+                    return 2;
+                case "novice":
+                    return 1;
+                default:
+                    return 3;
+            }
+        }
+    };
 
-    return (
-        <div className="space-y-6 text-gray-800">
-            <h1 className="text-3xl font-bold text-center text-black mb-6">
-                This is the Creative Template
-            </h1>
+    const getProficiencyLevel = (proficiency: string): number => {
+        if (!proficiency) return 3; // default
+        const level = proficiency.toLowerCase();
+        if (level.includes("beginner") || level.includes("basic")) return 2;
+        if (level.includes("intermediate")) return 3;
+        if (level.includes("advanced") || level.includes("fluent")) return 4;
+        if (level.includes("native") || level.includes("expert")) return 5;
+        return 3; // default
+    };
 
-            {/* Contact Info */}
-            <div className="flex items-start gap-6">
-                <div className="flex-1">
-                    <h2 className="text-2xl font-bold">
-                        {contact.firstName} {contact.lastName}
-                    </h2>
-                    <p className="text-lg text-gray-600">
-                        {contact.desiredJobTitle}
-                    </p>
-                    <div className="space-y-1 mt-2">
-                    <p>
-                        <strong>Phone:</strong> {contact.phone}
-                    </p>
-                    <p>
-                        <strong>Email:</strong> {contact.email}
-                    </p>
-                    {hasLocationInfo && (
-                        <p>
-                            <strong>Location:</strong>{" "}
-                            {[
-                                contact.address,
-                                contact.city,
-                                contact.country,
-                                contact.postCode,
-                            ]
-                                .filter(Boolean)
-                                .join(", ")}
-                        </p>
-                    )}
-                    </div>
-                </div>
-                
+    // Create array of sections with their content and check if they have data
+    // Swapped the order of hobbies and websites sections
+    const additionalSections = [
+        {
+            id: "languages",
+            title: "Languages",
+            hasContent: languages && languages.length > 0,
+            content: languages,
+        },
+        {
+            id: "certifications",
+            title: "Certifications",
+            hasContent: certifications && certifications.length > 0,
+            content: certifications,
+        },
+        {
+            id: "awards",
+            title: "Awards",
+            hasContent: awards && awards.length > 0,
+            content: awards,
+        },
+        {
+            id: "websites",
+            title: "Websites",
+            hasContent: websites && websites.length > 0,
+            content: websites,
+        },
+        {
+            id: "hobbies",
+            title: "Interests",
+            hasContent: hobbies && hobbies.length > 0,
+            content: hobbies,
+        },
+        {
+            id: "references",
+            title: "References",
+            hasContent: references && references.length > 0,
+            content: references,
+        },
+    ];
 
-            </div>
+    // Filter to only include sections with content
+    const sectionsWithContent = additionalSections.filter(
+        (section) => section.hasContent
+    );
 
-            {/* Experience */}
-            {experiences.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Experience
-                    </h3>
-                    <div className="space-y-4">
-                        {experiences.map((exp) => (
-                            <div key={exp.id} className="border-b pb-2">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-bold">
-                                        {exp.jobTitle}
-                                    </h4>
-                                    <span className="text-sm text-gray-500">
-                                        {exp.startDate} - {exp.endDate}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-700 italic">
-                                    {exp.company} — {exp.location}
-                                </p>
-                                {exp.description && (
-                                    <p className="text-sm mt-1">
-                                        {exp.description}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+    const hasAdditionalSections = sectionsWithContent.length > 0;
 
-            {/* Education */}
-            {education.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Education
-                    </h3>
-                    <div className="space-y-4">
-                        {education.map((edu) => (
-                            <div key={edu.id} className="border-b pb-2">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-bold">{edu.degree}</h4>
-                                    <span className="text-sm text-gray-500">
-                                        {edu.startDate} - {edu.endDate}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-700 italic">
-                                    {edu.school} — {edu.location}
-                                </p>
-                                {edu.description && (
-                                    <p className="text-sm mt-1">
-                                        {edu.description}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Skills */}
-            {skills.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Skills
-                    </h3>
-                    <div className="space-y-2">
-                        {skills.map((skill, index) => (
-                            <div key={index} className="flex items-center gap-1">
-                                <span className="text-sm text-gray-800 font-medium">
-                                    {skill.name}
+    const renderSectionContent = (section: any) => {
+        switch (section.id) {
+            case "languages":
+                return (
+                    <div className="space-y-3">
+                        {section.content.map((lang: any) => (
+                            <div
+                                key={lang.id}
+                                className="flex items-center gap-2"
+                            >
+                                <span className="text-xs font-medium">
+                                    {lang.name}
                                 </span>
-                                {skill.level && showExperienceLevel && (
-                                    <div className="flex items-center gap-0.5">
-                                        {Array.from({ length: 5 }, (_, i) => (
-                                            <div
-                                                key={i}
-                                                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                                                    i < getSkillLevelBullets(skill.level || "Novice")
-                                                        ? "bg-black"
-                                                        : "bg-gray-300"
-                                                }`}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
+                                <div className="flex space-x-0.5 flex-shrink-0">
+                                    {[1, 2, 3, 4, 5].map((bar) => (
+                                        <div
+                                            key={bar}
+                                            className={`w-2 h-0.5 ${
+                                                getProficiencyLevel(
+                                                    lang.proficiency || ""
+                                                ) >= bar
+                                                    ? "bg-black"
+                                                    : "bg-gray-300"
+                                            }`}
+                                        ></div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>
-                </div>
-            )}
+                );
 
-            {/* Summary */}
-            {summary && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Summary
-                    </h3>
-                    <p className="text-sm text-gray-800 whitespace-pre-line">
-                        {summary}
-                    </p>
-                </div>
-            )}
-
-            {/* Languages */}
-            {languages && languages.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Languages
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {languages.map((lang) => (
-                            <li key={lang.id}>
-                                {lang.name}{" "}
-                                {lang.proficiency && `– ${lang.proficiency}`}
+            case "certifications":
+                return (
+                    <ul className="space-y-1">
+                        {section.content.map((cert: any) => (
+                            <li
+                                key={cert.id}
+                                className="flex items-start text-xs"
+                            >
+                                <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                {cert.title}
                             </li>
                         ))}
                     </ul>
-                </div>
-            )}
+                );
 
-            {/* Certifications */}
-            {certifications && certifications.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Certifications
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {certifications.map((cert) => (
-                            <li key={cert.id}>{cert.title}</li>
+            case "awards":
+                return (
+                    <ul className="space-y-1">
+                        {section.content.map((award: any) => (
+                            <li
+                                key={award.id}
+                                className="flex items-start text-xs"
+                            >
+                                <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                {award.title}
+                            </li>
                         ))}
                     </ul>
-                </div>
-            )}
+                );
 
-            {/* Awards */}
-            {awards && awards.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Awards
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {awards.map((award) => (
-                            <li key={award.id}>{award.title}</li>
+            case "hobbies":
+                return (
+                    <ul className="space-y-1">
+                        {section.content.map((hobby: any) => (
+                            <li
+                                key={hobby.id}
+                                className="flex items-start text-xs"
+                            >
+                                <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                {hobby.name}
+                            </li>
                         ))}
                     </ul>
-                </div>
-            )}
+                );
 
-            {/* Websites */}
-            {websites && websites.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Websites
-                    </h3>
-                    <ul className="space-y-1 text-sm">
-                        {websites.map((site) => (
-                            <li key={site.id}>
-                                <strong>{site.label}:</strong>{" "}
+            case "websites":
+                return (
+                    <div className="space-y-1">
+                        {section.content.map((site: any) => (
+                            <div key={site.id} className="text-xs">
+                                <div className="font-medium">{site.label}</div>
                                 <a
                                     href={site.url}
-                                    className="text-blue-600 underline"
+                                    className="text-blue-600 underline break-all"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
                                     {site.url}
                                 </a>
-                            </li>
+                            </div>
                         ))}
-                    </ul>
-                </div>
-            )}
+                    </div>
+                );
 
-            {/* References */}
-            {references && references.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        References
-                    </h3>
-                    <ul className="space-y-2 text-sm">
-                        {references.map((ref) => (
-                            <li key={ref.id}>
-                                <strong>{ref.name}</strong>
-                                {ref.relationship && ` — ${ref.relationship}`}
-                                {ref.contactInfo && (
-                                    <div className="text-gray-600">
-                                        {ref.contactInfo}
+            case "references":
+                return (
+                    <div className="space-y-3">
+                        {section.content.map((ref: any) => (
+                            <div key={ref.id} className="text-xs">
+                                <div className="font-bold text-gray-800">
+                                    {ref.name}
+                                </div>
+                                {ref.relationship && (
+                                    <div className="text-gray-600 text-xs uppercase tracking-wide mb-1">
+                                        {ref.relationship}
                                     </div>
                                 )}
-                            </li>
+                                {ref.contactInfo && (
+                                    <div className="text-gray-700">
+                                        <div className="font-medium">Phone</div>
+                                        <div>{ref.contactInfo}</div>
+                                    </div>
+                                )}
+                            </div>
                         ))}
-                    </ul>
-                </div>
-            )}
+                    </div>
+                );
 
-            {/* Hobbies */}
-            {hobbies && hobbies.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Hobbies
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {hobbies.map((hobby) => (
-                            <li key={hobby.id}>{hobby.name}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
+            default:
+                return null;
+        }
+    };
 
-            {/* Custom Sections */}
-            {customSections && customSections.length > 0 && (
-                <div>
-                    {customSections.map((custom) => (
-                        <div key={custom.id}>
-                            <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                                {custom.title}
-                            </h3>
-                            <p className="text-sm text-gray-800 whitespace-pre-line">
-                                {custom.content}
+    return (
+        <div className="max-w-4xl mx-auto bg-white shadow-lg">
+            {/* Header Section */}
+            <div className="flex">
+                {/* Left Column */}
+                <div className="w-[60%] flex items-start">
+                    <div className="bg-black text-white px-8 py-8">
+                        <h1 className="text-3xl font-bold uppercase tracking-wide mb-2">
+                            {contact.firstName} {contact.lastName}
+                        </h1>
+                        <p className="text-lg uppercase tracking-wider text-gray-300">
+                            {contact.desiredJobTitle}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Right Column */}
+                <div className="bg-white px-8 pb-8 w-[40%] flex flex-col justify-center space-y-4 pt-5">
+                    {contact.phone && (
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-black text-sm">☎</span>
+                            </div>
+                            <span className="text-sm text-black">
+                                {contact.phone}
+                            </span>
+                        </div>
+                    )}
+
+                    {contact.email && (
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                                <Mail className="w-4 h-4 text-black" />
+                            </div>
+                            <span className="text-sm text-black">
+                                {contact.email}
+                            </span>
+                        </div>
+                    )}
+
+                    {hasLocationInfo && (
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-black text-sm">⚲</span>
+                            </div>
+                            <span className="text-sm text-black">
+                                {[
+                                    contact.address,
+                                    contact.city,
+                                    contact.country,
+                                    contact.postCode,
+                                ]
+                                    .filter(Boolean)
+                                    .join(", ")}
+                            </span>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Main Content - Two Column Layout */}
+            <div className="px-8 pb-8">
+                {/* About Me / Summary */}
+                {summary && (
+                    <div className="flex border-t border-black py-6">
+                        <div className="w-1/4 pr-8">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                ABOUT ME
+                            </h2>
+                        </div>
+                        <div className="w-3/4">
+                            <p className="text-gray-800 text-sm leading-relaxed">
+                                {summary}
                             </p>
                         </div>
-                    ))}
-                </div>
-            )}
+                    </div>
+                )}
+
+                {/* Experience */}
+                {experiences.length > 0 && (
+                    <div className="flex border-t border-black py-6">
+                        <div className="w-1/4 pr-8">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                EXPERIENCE
+                            </h2>
+                        </div>
+                        <div className="w-3/4 space-y-6">
+                            {experiences.map((exp) => (
+                                <div key={exp.id}>
+                                    <div className="mb-1">
+                                        <h3 className="font-bold text-sm">
+                                            {exp.company} {exp.startDate} -{" "}
+                                            {exp.endDate}
+                                        </h3>
+                                        <p className="text-gray-700 text-sm">
+                                            {exp.jobTitle}
+                                        </p>
+                                    </div>
+                                    {exp.description && (
+                                        <p className="text-gray-800 text-sm leading-relaxed">
+                                            {exp.description}
+                                        </p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Education */}
+                {education.length > 0 && (
+                    <div className="flex border-t border-black py-6">
+                        <div className="w-1/4 pr-8">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                EDUCATION
+                            </h2>
+                        </div>
+                        <div className="w-3/4 space-y-4">
+                            {education.map((edu) => (
+                                <div key={edu.id} className="flex gap-2">
+                                    {/* Date and School Info Column */}
+                                    <div className="w-1/2">
+                                        <p className="text-xs font-bold mb-1">
+                                            {edu.startDate} - {edu.endDate}
+                                        </p>
+                                        <p className="text-xs text-gray-700 mb-1">
+                                            {edu.school}
+                                            {edu.location &&
+                                                ` — ${edu.location}`}
+                                        </p>
+                                        <h4 className="font-bold text-xs">
+                                            {edu.degree}
+                                        </h4>
+                                    </div>
+
+                                    {/* Description Column */}
+                                    <div className="w-1/2 -ml-3">
+                                        {edu.description && (
+                                            <p className="text-xs text-gray-800 leading-relaxed">
+                                                {edu.description}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Skills */}
+                {skills.length > 0 && (
+                    <div className="flex border-t border-black py-6">
+                        <div className="w-1/4 pr-8">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                SKILLS
+                            </h2>
+                        </div>
+                        <div className="w-3/4">
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                {skills.map((skill, index) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-3"
+                                    >
+                                        <span className="text-sm text-gray-800 font-medium">
+                                            {skill.name}
+                                        </span>
+                                        {skill.level && (
+                                            <div className="flex items-center gap-0.5">
+                                                {Array.from(
+                                                    { length: 5 },
+                                                    (_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                                                                i <
+                                                                getSkillLevelBullets(
+                                                                    skill.level
+                                                                )
+                                                                    ? "bg-black"
+                                                                    : "bg-gray-300"
+                                                            }`}
+                                                        />
+                                                    )
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Additional Sections - Always 3 Column Grid Layout */}
+                {hasAdditionalSections && (
+                    <div className="border-t border-black py-6">
+                        <div className="grid grid-cols-3 gap-6">
+                            {sectionsWithContent.map((section) => (
+                                <div key={section.id} className="w-full">
+                                    <h3 className="text-xs font-bold mb-3 text-gray-800 uppercase tracking-wide">
+                                        {section.title}
+                                    </h3>
+                                    {renderSectionContent(section)}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Custom Sections */}
+                {customSections && customSections.length > 0 && (
+                    <>
+                        {customSections.map((custom) => (
+                            <div
+                                key={custom.id}
+                                className="flex border-t border-black py-6"
+                            >
+                                <div className="w-1/4 pr-8">
+                                    <h2 className="text-sm font-bold uppercase tracking-wider">
+                                        {custom.title}
+                                    </h2>
+                                </div>
+                                <div className="w-3/4">
+                                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                                        {custom.content}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </>
+                )}
+            </div>
         </div>
     );
 };
 
-export default Classic;
+export default Creative;

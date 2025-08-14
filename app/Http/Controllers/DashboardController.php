@@ -629,4 +629,26 @@ class DashboardController extends Controller
         // Otherwise, it's still a draft
         return Resume::STATUS_DRAFT;
     }
+
+    /**
+     * Return authoritative payment status for a specific resume
+     */
+    public function paymentStatus(Resume $resume)
+    {
+        // Ensure the resume belongs to the authenticated user
+        if ($resume->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return response()->json([
+            'resume_id' => $resume->id,
+            'status_effective' => $resume->getPaymentStatus(),
+            'is_paid' => (bool) $resume->is_paid,
+            'needs_payment' => $resume->needsPayment(),
+            'is_downloadable' => $resume->isDownloadable(),
+            'last_paid_at' => $resume->last_paid_at?->toISOString(),
+            'last_modified_at' => $resume->last_modified_at?->toISOString(),
+            'updated_at' => $resume->updated_at->toISOString(),
+        ]);
+    }
 } 

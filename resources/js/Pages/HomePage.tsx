@@ -16,12 +16,12 @@ const HomePage: React.FC<HomePageProps> = ({
     const { auth } = usePage().props as any;
     const user = auth.user;
     const templates = [
-        { name: "Professional", image: "/images/templates/template1.png" },
-        { name: "Classic", image: "/images/templates/template2.png" },
-        { name: "Creative", image: "/images/templates/template3.jpg" },
-        { name: "Minimal", image: "/images/templates/template4.jpg" },
-        { name: "Elegant", image: "/images/templates/template5.jpg" },
-        { name: "Modern", image: "/images/templates/template6.jpg" },
+        { name: "Professional", image: "/images/templates/professional.png" },
+        { name: "Classic", image: "/images/templates/classic.png" },
+        { name: "Creative", image: "/images/templates/creative.jpg" },
+        { name: "Minimal", image: "/images/templates/minimal.jpg" },
+        { name: "Elegant", image: "/images/templates/elegant.jpg" },
+        { name: "Modern", image: "/images/templates/modern.jpg" },
     ];
     const containerRef = useRef<HTMLDivElement>(null);
     const ITEMS_PER_PAGE = 5;
@@ -125,34 +125,32 @@ const HomePage: React.FC<HomePageProps> = ({
             <Head title="CVeezy | Build Your Job-Winning Resume" />
 
             {/* Header */}
-            <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
+            <header className="w-full bg-white flex items-center justify-between h-20 px-6 shadow-sm">
                 <div className="flex items-center">
                     <Logo
-                        size="sm"
-                        text="CVeezy"
-                        imageSrc="/images/supsoft-logo.jpg"
-                        imageAlt="CVeezy Logo"
-                        className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                        size="xxl"
+                        showText={false}
+                        className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                     />
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     <Link
                         href="/contact"
-                        className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+                        className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
                     >
                         Contact us
                     </Link>
                     {user ? (
                         <Link
                             href="/dashboard"
-                            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
                         >
                             Dashboard
                         </Link>
                     ) : (
                         <Link
                             href="/login"
-                            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
                         >
                             Login
                         </Link>
@@ -167,8 +165,9 @@ const HomePage: React.FC<HomePageProps> = ({
                     <div className="flex-1 max-w-2xl">
                         <p className="text-[#2196f3] font-semibold mb-2 flex items-center text-lg">
                             <span className="inline-block w-3 h-3 bg-[#3bb2f6] rounded-full mr-2 align-middle"></span>
-                            <span className="font-bold">50,435</span> resumes
-                            created today
+                            <span className="font-bold">50,435 resumes
+                            created today</span>
+
                         </p>
                         <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
                             Create your{" "}
@@ -502,13 +501,10 @@ const HomePage: React.FC<HomePageProps> = ({
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center mb-4">
                                 <img
-                                    src="/images/supsoft-logo.jpg"
+                                    src="/images/cveezyLOGO_C.png"
                                     alt="CVeezy Logo"
-                                    className="w-6 h-6 rounded mr-2 object-contain"
+                                    className="w-12 h-12 rounded mr-2 object-contain"
                                 />
-                                <span className="text-xl font-bold">
-                                    CVeezy
-                                </span>
                             </div>
                             <p className="text-gray-300 text-sm leading-relaxed">
                                 We help job seekers stand out in the highly
@@ -596,14 +592,11 @@ const HomePage: React.FC<HomePageProps> = ({
                     <div className="hidden md:grid grid-cols-3 gap-8">
                         <div className="col-span-1">
                             <div className="flex items-center mb-6">
-                                <img
-                                    src="/images/supsoft-logo.jpg"
-                                    alt="CVeezy Logo"
-                                    className="w-8 h-8 rounded mr-3 object-contain"
+                                <Logo
+                                    size="xxl"
+                                    showText={false}
+                                    className=""
                                 />
-                                <span className="text-2xl font-bold">
-                                    CVeezy
-                                </span>
                             </div>
                             <p className="text-gray-300 text-base leading-relaxed">
                                 We Help job seekers stand out in the highly

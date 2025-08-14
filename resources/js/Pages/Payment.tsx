@@ -23,7 +23,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'success' | 'error'>('idle');
   const [uploadMessage, setUploadMessage] = useState('');
   const [currentPaymentStatus, setCurrentPaymentStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
-  
+
   // Get URL parameters for resume data
   const [resumeId, setResumeId] = useState<number | undefined>(propResumeId);
   const [resumeName, setResumeName] = useState<string | undefined>(propResumeName);
@@ -34,10 +34,14 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
       const urlParams = new URLSearchParams(window.location.search);
       const urlResumeId = urlParams.get('resumeId') || urlParams.get('resume');
       const urlResumeName = urlParams.get('resumeName');
-      
+
       if (urlResumeId) {
         const parsedId = parseInt(urlResumeId);
         setResumeId(parsedId);
+        // Persist chosen resume so reloads work without query params
+        try {
+          sessionStorage.setItem('paymentResumeId', String(parsedId));
+        } catch {}
       }
       if (urlResumeName) {
         const decodedName = decodeURIComponent(urlResumeName);
@@ -46,35 +50,94 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
     }
   }, [propResumeId, propResumeName]);
 
-  // Check current payment status
+  // Fallback: recover resumeId from session storage if missing
+  useEffect(() => {
+    if (!resumeId) {
+      try {
+        const stored = sessionStorage.getItem('paymentResumeId');
+        if (stored) {
+          const parsed = parseInt(stored);
+          if (!Number.isNaN(parsed)) {
+            setResumeId(parsed);
+          }
+        }
+      } catch {}
+    }
+  }, [resumeId]);
+
+  // Check current payment status from initial props (respect effective status and downloadability)
   useEffect(() => {
     if (resumeId && paymentProofs.length > 0) {
-      const currentProof = paymentProofs.find(proof => proof.resume_id === resumeId);
+      const currentProof: any = paymentProofs.find((proof: any) => proof.resume_id === resumeId);
       if (currentProof) {
-        setCurrentPaymentStatus(currentProof.status);
+        const effective = currentProof.status_effective || currentProof.status;
+        if (effective === 'needs_payment' || effective === 'needs_payment_modified' || currentProof.is_downloadable === false) {
+          setCurrentPaymentStatus(null);
+          setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+          setUploadStatus('error');
+        } else if (effective) {
+          setCurrentPaymentStatus(effective);
+        }
       }
     }
   }, [resumeId, paymentProofs]);
 
+  // One-time initial fetch to ensure status is up-to-date on reload
+  useEffect(() => {
+    const fetchLatestStatus = async () => {
+      if (!resumeId) return;
+      try {
+        const response = await fetch('/user/payment-proofs');
+        if (response.ok) {
+          const proofs = await response.json();
+          const currentProof = proofs.find((p: any) => p.resume_id === resumeId);
+          if (currentProof) {
+            const effective = currentProof.status_effective || currentProof.status;
+            if (effective === 'needs_payment' || effective === 'needs_payment_modified' || currentProof.is_downloadable === false) {
+              setCurrentPaymentStatus(null);
+              setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+            } else if (effective) {
+              setCurrentPaymentStatus(effective);
+            }
+          }
+        }
+      } catch (e) {
+        // no-op
+      }
+    };
+    fetchLatestStatus();
+  }, [resumeId]);
+
   // Poll for status changes when payment is pending
   useEffect(() => {
     let interval: NodeJS.Timeout;
+
     
-    if (currentPaymentStatus === 'pending') {
+    if (currentPaymentStatus === 'pending' || currentPaymentStatus === null) {
+
       interval = setInterval(async () => {
         try {
           const response = await fetch('/user/payment-proofs');
           if (response.ok) {
             const updatedPaymentProofs = await response.json();
             const currentProof = updatedPaymentProofs.find((proof: any) => proof.resume_id === resumeId);
-            if (currentProof && currentProof.status !== 'pending') {
-              setCurrentPaymentStatus(currentProof.status);
-              if (currentProof.status === 'approved') {
+            if (currentProof) {
+              const effective = currentProof.status_effective || currentProof.status;
+              if (effective === 'needs_payment' || effective === 'needs_payment_modified' || currentProof.is_downloadable === false) {
+                if (currentPaymentStatus !== null) {
+                  setCurrentPaymentStatus(null);
+                  setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+                  setUploadStatus('error');
+                }
+              } else if (effective !== 'pending' && effective !== currentPaymentStatus) {
+                setCurrentPaymentStatus(effective);
+                if (effective === 'approved') {
                 setUploadMessage('🎉 Your payment has been approved! You can now download your PDF resume.');
                 setUploadStatus('success');
-              } else if (currentProof.status === 'rejected') {
-                setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
-                setUploadStatus('error');
+                } else if (effective === 'rejected') {
+                  setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
+                  setUploadStatus('error');
+                }
               }
             }
           }
@@ -167,10 +230,14 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
         setUploadStatus('success');
         setCurrentPaymentStatus('pending');
         setUploadMessage('✅ Payment proof uploaded successfully! Your payment is now under review by our admin team. You will be notified once it is approved.');
+        // Persist resumeId for reliable reload behavior
+        try {
+          if (resumeId) sessionStorage.setItem('paymentResumeId', String(resumeId));
+        } catch {}
       } else {
         const errorData = await response.json();
         setUploadStatus('error');
-        
+
         // Handle specific validation errors
         if (errorData.errors) {
           const errorMessages = [];
@@ -199,7 +266,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
       <div className="flex flex-col min-h-screen bg-white">
         <Head title="Payment - CVeezy" />
         <Header />
-        
+
         <main className="flex-grow bg-white py-8">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
@@ -210,7 +277,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                 You need to create a resume before uploading payment proof.
               </p>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-lg p-8 text-center">
               <div className="text-6xl mb-4">📄</div>
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Create Your Resume First</h2>
@@ -226,7 +293,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
             </div>
           </div>
         </main>
-        
+
         <Footer />
       </div>
     );
@@ -237,7 +304,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
       setUploadMessage('No resume selected for download');
       return;
     }
-    
+
     setIsLoading(true);
     // Direct PDF download
     window.open(`/resumes/${resumeId}/download`, '_blank');
@@ -263,28 +330,26 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
       <Head title="Payment - CVeezy" />
       
       {/* Custom Header with Dashboard Button */}
-      <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm mb-10">
+      <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
         <div className="flex items-center">
           <Logo 
-            size="sm"
-            text="CVeezy"
-            imageSrc="/images/supsoft-logo.jpg"
-            imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            size="lg"
+            showText={false}
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
           >
             Dashboard
           </Link>
         </div>
       </header>
 
-             <main className="flex-grow bg-white py-8">
+      <main className="flex-grow bg-white py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-12">
@@ -295,6 +360,19 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
               Upload your payment proof to download your professional resume
             </p>
           </div>
+
+          {/* Gcash payment */}
+          <div className="text-center mb-16">
+            <img
+              src="/images/gcash.png"
+              alt="GCash logo"
+              className="h-14 mx-auto"
+            />
+            <p className="text-base text-gray-900 mb-8">
+              Please pay ₱149 to this GCash account: 09365231328.
+            </p>
+          </div>
+
 
           {/* Main Content Grid - Vertical Layout */}
           <div className="space-y-8">
@@ -338,24 +416,22 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                 <h3 className="text-2xl font-bold text-gray-900 mb-6">Payment Status</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                      statusInfo?.color === 'green' ? 'bg-green-100' :
+                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${statusInfo?.color === 'green' ? 'bg-green-100' :
                       statusInfo?.color === 'red' ? 'bg-red-100' :
-                      statusInfo?.color === 'yellow' ? 'bg-yellow-100' :
-                      'bg-blue-100'
-                    }`}>
-                      <span className={`text-lg ${
-                        statusInfo?.color === 'green' ? 'text-green-600' :
+                        statusInfo?.color === 'yellow' ? 'bg-yellow-100' :
+                          'bg-blue-100'
+                      }`}>
+                      <span className={`text-lg ${statusInfo?.color === 'green' ? 'text-green-600' :
                         statusInfo?.color === 'red' ? 'text-red-600' :
-                        statusInfo?.color === 'yellow' ? 'text-yellow-600' :
-                        'text-blue-600'
-                      }`}>{statusInfo?.icon}</span>
+                          statusInfo?.color === 'yellow' ? 'text-yellow-600' :
+                            'text-blue-600'
+                        }`}>{statusInfo?.icon}</span>
                     </div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800 mb-1">
                         {currentPaymentStatus === 'approved' ? 'Payment Approved' :
-                         currentPaymentStatus === 'rejected' ? 'Payment Rejected' :
-                         'Payment Under Review'}
+                          currentPaymentStatus === 'rejected' ? 'Payment Rejected' :
+                            'Payment Under Review'}
                       </h4>
                       <p className="text-sm text-gray-600 mb-3">{statusInfo?.message}</p>
                       {currentPaymentStatus === 'approved' && (
@@ -376,7 +452,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
               canUploadNewProof() && (
                 <div className="bg-white rounded-xl shadow-lg p-8">
                   <h3 className="text-2xl font-bold text-gray-900 mb-6">Upload Payment Proof</h3>
-                  
+
                   {/* Accepted Formats */}
                   <div className="bg-blue-50 rounded-lg p-6 mb-6">
                     <h4 className="font-semibold text-blue-800 mb-3">Accepted formats:</h4>
@@ -427,11 +503,10 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
 
                   {/* Status Message */}
                   {uploadMessage && (
-                    <div className={`p-4 rounded-lg mb-6 ${
-                      uploadStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
+                    <div className={`p-4 rounded-lg mb-6 ${uploadStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
                       uploadStatus === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-                      'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}>
+                        'bg-blue-50 text-blue-700 border border-blue-200'
+                      }`}>
                       <div className="flex items-center gap-2">
                         {uploadStatus === 'success' ? (
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -455,11 +530,10 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                   <button
                     onClick={handlePaymentUpload}
                     disabled={uploadStatus === 'uploading' || !selectedFile}
-                    className={`w-full py-4 px-8 rounded-lg font-bold text-white text-lg transition-colors ${
-                      uploadStatus === 'uploading' || !selectedFile
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600'
-                    }`}
+                    className={`w-full py-4 px-8 rounded-lg font-bold text-white text-lg transition-colors ${uploadStatus === 'uploading' || !selectedFile
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                      }`}
                   >
                     {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload Payment Proof'}
                   </button>
@@ -480,7 +554,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                     <p className="text-sm text-gray-600">Download your resume in multiple formats</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-blue-600 text-lg">🏔️</span>
@@ -490,7 +564,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                     <p className="text-sm text-gray-600">30+ templates optimized to beat ATS scans</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
                     <span className="text-purple-600 text-lg">✉️</span>
@@ -500,7 +574,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                     <p className="text-sm text-gray-600">Create and customize cover letters</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                     <span className="text-orange-600 text-lg">⚡</span>
@@ -510,7 +584,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                     <p className="text-sm text-gray-600">Check for 30+ issues and get feedback</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
                     <span className="text-red-600 text-lg">💰</span>
@@ -520,7 +594,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                     <p className="text-sm text-gray-600">7-day money-back guarantee</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
                     <span className="text-teal-600 text-lg">💬</span>
@@ -534,10 +608,10 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
             </div>
           </div>
 
-          
+
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

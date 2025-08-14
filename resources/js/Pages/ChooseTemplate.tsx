@@ -3,21 +3,21 @@ import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
-// Template list with names and descriptions
+// Template list with names and descriptions (aligned to new order)
 const templates = [
   {
     id: 1,
+    name: 'professional',
+    displayName: 'Professional',
+    description: 'Classic professional layout optimized for ATS systems and traditional industries.',
+    category: 'ats'
+  },
+  {
+    id: 2,
     name: 'classic',
     displayName: 'Classic',
     description: 'Soft neutral tones with refined typography for a sophisticated and professional feel.',
     category: 'simple'
-  },
-  {
-    id: 2,
-    name: 'modern',
-    displayName: 'Modern',
-    description: 'A visually striking resume template, perfect for illustrating the breadth and depth of your expertise.',
-    category: 'modern'
   },
   {
     id: 3,
@@ -28,35 +28,37 @@ const templates = [
   },
   {
     id: 4,
+    name: 'minimal',
+    displayName: 'Minimal',
+    description: 'Clean and minimal design focusing on content with subtle visual elements.',
+    category: 'simple'
+  },
+  {
+    id: 5,
     name: 'elegant',
     displayName: 'Elegant',
     description: 'Clean and sophisticated design with elegant typography for a polished professional appearance.',
     category: 'professional'
   },
   {
-    id: 5,
-    name: 'professional',
-    displayName: 'Professional',
-    description: 'Classic professional layout optimized for ATS systems and traditional industries.',
-    category: 'ats'
-  },
-  {
     id: 6,
-    name: 'minimal',
-    displayName: 'Minimal',
-    description: 'Clean and minimal design focusing on content with subtle visual elements.',
-    category: 'simple'
+    name: 'modern',
+    displayName: 'Modern',
+    description: 'A visually striking resume template, perfect for illustrating the breadth and depth of your expertise.',
+    category: 'modern'
   },
 ];
 
 // Template image map
 const templateImages: Record<number, string> = {
-  1: "/images/templates/template1.png",
-  2: "/images/templates/template2.png",
-  3: "/images/templates/template3.jpg",
-  4: "/images/templates/template4.jpg",
-  5: "/images/templates/template5.jpg",
-  6: "/images/templates/template6.jpg",
+
+  1: "/images/templates/professional.png",
+  2: "/images/templates/classic.png",
+  3: "/images/templates/creative.jpg",
+  4: "/images/templates/minimal.jpg",
+  5: "/images/templates/elegant.jpg",
+  6: "/images/templates/modern.jpg",
+
 };
 
 // Filter categories
@@ -141,34 +143,32 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
         <Head title="CVeezy | Resume Templates" />
 
         {/* Header */}
-        <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
+        <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
           <div className="flex items-center space-x-4">
             <Logo
-              size="sm"
-              text="CVeezy"
-              imageSrc="/images/supsoft-logo.jpg"
-              imageAlt="CVeezy Logo"
-              className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+              size="lg"
+              showText={false}
+              className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
             />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link
               href="/contact"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Contact us
             </Link>
             {user ? (
               <Link
                 href="/dashboard"
-                className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
               >
                 Dashboard
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
               >
                 Login
               </Link>
