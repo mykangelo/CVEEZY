@@ -43,6 +43,13 @@ class DashboardController extends Controller
                     'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
                     'progress' => $progress,
+                    'is_paid' => $resume->is_paid,
+                    'needs_payment' => $resume->needsPayment(),
+                    'is_downloadable' => $resume->isDownloadable(),
+                    'can_be_edited' => $resume->canBeEdited(),
+                    'payment_status_detailed' => $resume->getPaymentStatus(),
+                    'last_paid_at' => $resume->last_paid_at?->toISOString(),
+                    'last_modified_at' => $resume->last_modified_at?->toISOString(),
                 ];
             });
 
@@ -65,19 +72,10 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Create a map of resume_id to payment status for easy lookup
-        $paymentStatusMap = $paymentProofs->keyBy('resume_id')->map(function ($proof) {
-            return $proof['status'];
-        });
-
-        // Add payment status to each resume - only show pending if they have payment proofs
-        $resumesWithPaymentStatus = $resumes->map(function ($resume) use ($paymentStatusMap) {
-            // Only show payment status if the resume has a payment proof
-            if ($paymentStatusMap->has($resume['id'])) {
-                $resume['payment_status'] = $paymentStatusMap->get($resume['id']);
-            } else {
-                $resume['payment_status'] = null; // No payment proof exists
-            }
+        // Add payment status to each resume using the detailed status
+        $resumesWithPaymentStatus = $resumes->map(function ($resume) {
+            // Use the detailed payment status from the Resume model
+            $resume['payment_status'] = $resume['payment_status_detailed'];
             return $resume;
         });
 
@@ -249,10 +247,15 @@ class DashboardController extends Controller
         }
 
         $resume->update($updateData);
+        
+        // Mark resume as modified (this will handle payment status logic)
+        $resume->markAsModified();
 
         return response()->json([
             'message' => 'Resume updated successfully',
-            'resume' => $resume
+            'resume' => $resume,
+            'needs_payment' => $resume->needsPayment(),
+            'payment_status' => $resume->getPaymentStatus()
         ]);
     }
 
@@ -298,16 +301,18 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized access to resume.');
         }
 
-        // Check if there's an approved payment proof for this resume
-        $approvedPayment = $resume->paymentProofs()
-            ->where('status', 'approved')
-            ->first();
-
-        if (!$approvedPayment) {
-            return response()->json([
-                'error' => 'Payment required to download PDF',
-                'message' => 'Please complete payment and wait for admin approval to download your resume as PDF.'
-            ], 403);
+        // Check if resume is downloadable (paid and not modified)
+        if (!$resume->isDownloadable()) {
+            if ($resume->needsPayment()) {
+                return response()->json([
+                    'error' => 'Resume was modified after payment. Please make a new payment to download the updated version.',
+                ], 403);
+            } else {
+                return response()->json([
+                    'error' => 'Payment required to download PDF',
+                    'message' => 'Please complete payment and wait for admin approval to download your resume as PDF.'
+                ], 403);
+            }
         }
 
         // Get resume data
@@ -452,6 +457,13 @@ class DashboardController extends Controller
                     'template_name' => $resume->template_name,
                     'user_id' => $resume->user_id,
                     'progress' => $progress,
+                    'is_paid' => $resume->is_paid,
+                    'needs_payment' => $resume->needsPayment(),
+                    'is_downloadable' => $resume->isDownloadable(),
+                    'can_be_edited' => $resume->canBeEdited(),
+                    'payment_status_detailed' => $resume->getPaymentStatus(),
+                    'last_paid_at' => $resume->last_paid_at?->toISOString(),
+                    'last_modified_at' => $resume->last_modified_at?->toISOString(),
                 ];
             });
 
@@ -474,19 +486,10 @@ class DashboardController extends Controller
                 ];
             });
 
-        // Create a map of resume_id to payment status for easy lookup
-        $paymentStatusMap = $paymentProofs->keyBy('resume_id')->map(function ($proof) {
-            return $proof['status'];
-        });
-
-        // Add payment status to each resume - only show pending if they have payment proofs
-        $resumesWithPaymentStatus = $resumes->map(function ($resume) use ($paymentStatusMap) {
-            // Only show payment status if the resume has a payment proof
-            if ($paymentStatusMap->has($resume['id'])) {
-                $resume['payment_status'] = $paymentStatusMap->get($resume['id']);
-            } else {
-                $resume['payment_status'] = null; // No payment proof exists
-            }
+        // Add payment status to each resume using the detailed status
+        $resumesWithPaymentStatus = $resumes->map(function ($resume) {
+            // Use the detailed payment status from the Resume model
+            $resume['payment_status'] = $resume['payment_status_detailed'];
             return $resume;
         });
 
@@ -498,6 +501,83 @@ class DashboardController extends Controller
                 'completed_resumes' => $user->completed_resumes_count,
                 'draft_resumes' => $user->resumes()->where('status', Resume::STATUS_DRAFT)->count(),
             ],
+        ]);
+    }
+
+    /**
+     * Mark a paid resume as needing payment due to upcoming edit.
+     */
+    public function markAsModifiedForEdit(Request $request, Resume $resume)
+    {
+        // Ensure user owns the resume
+        if ($resume->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to resume.');
+        }
+
+        // Only mark as modified if it was previously paid
+        if ($resume->is_paid && $resume->last_paid_at) {
+            $resume->markAsModified();
+            
+            return response()->json([
+                'message' => 'Resume marked as needing payment',
+                'resume' => [
+                    'id' => $resume->id,
+                    'name' => $resume->name,
+                    'is_paid' => $resume->is_paid,
+                    'needs_payment' => $resume->needsPayment(),
+                    'is_downloadable' => $resume->isDownloadable(),
+                    'payment_status_detailed' => $resume->getPaymentStatus(),
+                    'updated_at' => $resume->updated_at->toISOString(),
+                ]
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Resume was not previously paid',
+            'resume' => [
+                'id' => $resume->id,
+                'name' => $resume->name,
+                'is_paid' => $resume->is_paid,
+                'needs_payment' => $resume->needsPayment(),
+                'is_downloadable' => $resume->isDownloadable(),
+                'payment_status_detailed' => $resume->getPaymentStatus(),
+            ]
+        ]);
+    }
+
+    /**
+     * Rename a resume.
+     */
+    public function rename(Request $request, Resume $resume)
+    {
+        // Ensure user owns the resume
+        if ($resume->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized access to resume.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255|min:1',
+        ]);
+
+        $newName = trim($request->input('name'));
+        
+        // Check if name actually changed
+        if ($newName === $resume->name) {
+            return response()->json([
+                'message' => 'Resume name unchanged',
+                'resume' => $resume
+            ]);
+        }
+
+        $resume->update(['name' => $newName]);
+
+        return response()->json([
+            'message' => 'Resume renamed successfully',
+            'resume' => [
+                'id' => $resume->id,
+                'name' => $resume->name,
+                'updated_at' => $resume->updated_at->toISOString(),
+            ]
         ]);
     }
 
@@ -548,5 +628,27 @@ class DashboardController extends Controller
         
         // Otherwise, it's still a draft
         return Resume::STATUS_DRAFT;
+    }
+
+    /**
+     * Return authoritative payment status for a specific resume
+     */
+    public function paymentStatus(Resume $resume)
+    {
+        // Ensure the resume belongs to the authenticated user
+        if ($resume->user_id !== Auth::id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        return response()->json([
+            'resume_id' => $resume->id,
+            'status_effective' => $resume->getPaymentStatus(),
+            'is_paid' => (bool) $resume->is_paid,
+            'needs_payment' => $resume->needsPayment(),
+            'is_downloadable' => $resume->isDownloadable(),
+            'last_paid_at' => $resume->last_paid_at?->toISOString(),
+            'last_modified_at' => $resume->last_modified_at?->toISOString(),
+            'updated_at' => $resume->updated_at->toISOString(),
+        ]);
     }
 } 

@@ -87,7 +87,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Resume Management
     Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
     Route::get('/resumes/{resume}', [DashboardController::class, 'show'])->name('resumes.show');
+    Route::get('/resumes/{resume}/payment-status', [DashboardController::class, 'paymentStatus'])->name('resumes.payment-status');
     Route::patch('/resumes/{resume}', [DashboardController::class, 'update'])->name('resumes.update');
+    Route::patch('/resumes/{resume}/rename', [DashboardController::class, 'rename'])->name('resumes.rename');
+    Route::patch('/resumes/{resume}/mark-modified', [DashboardController::class, 'markAsModifiedForEdit'])->name('resumes.mark-modified');
     Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
     Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
     Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');
@@ -98,7 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/resume/{id}', [ResumeController::class, 'show'])->name('resume.show');
 
     // Payment & Payment Proof Management
-    Route::inertia('/payment', 'Payment')->name('payment.page');
+    Route::get('/payment', [PaymentController::class, 'index'])->name('payment.page');
     Route::get('/payment-upload', [PaymentUploadController::class, 'index'])->name('payment.upload.page');
     Route::post('/upload-payment-proof', [PaymentProofController::class, 'store'])->name('payment.upload');
     Route::get('/user/payment-proofs', [PaymentProofController::class, 'userPayments'])->name('payment.proofs');
@@ -130,6 +133,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/admin/payment/{id}/view', [AdminController::class, 'viewPaymentProof'])->name('admin.payment.view');
     Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve'])->name('admin.payment.approve');
     Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject'])->name('admin.payment.reject');
+    Route::get('/admin/payment-storage-path', [AdminController::class, 'getStoragePath'])->name('admin.payment.storage-path');
+    Route::post('/admin/open-storage-folder', [AdminController::class, 'openStorageFolder'])->name('admin.payment.open-folder');
     
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');

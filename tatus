@@ -1,0 +1,335 @@
+[1mdiff --git a/resources/js/Components/Header.tsx b/resources/js/Components/Header.tsx[m
+[1mindex 1d2d035..f0224bc 100644[m
+[1m--- a/resources/js/Components/Header.tsx[m
+[1m+++ b/resources/js/Components/Header.tsx[m
+[36m@@ -16,7 +16,7 @@[m [mconst Header: React.FC<HeaderProps> = ({ showDropdown = false }) => {[m
+         <Logo [m
+           size="sm"[m
+           text="CVeezy"[m
+[31m-          imageSrc="/images/supsoft-logo.jpg"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+           imageAlt="CVeezy Logo"[m
+           className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+         />[m
+[1mdiff --git a/resources/js/Components/Logo.tsx b/resources/js/Components/Logo.tsx[m
+[1mindex 79804ab..95d5cc9 100644[m
+[1m--- a/resources/js/Components/Logo.tsx[m
+[1m+++ b/resources/js/Components/Logo.tsx[m
+[36m@@ -12,30 +12,23 @@[m [minterface LogoProps {[m
+ [m
+ const Logo: React.FC<LogoProps> = ({ [m
+   className = '', [m
+[31m-  size = 'lg', [m
+[31m-  showText = true,[m
+[32m+[m[32m  size = 'xl',[m[41m [m
+[32m+[m[32m  showText = false,[m
+   text = 'CVeezy',[m
+[31m-  imageSrc = "/images/supsoft-logo.jpg",[m
+[31m-  imageAlt = 'Supsoft Tech Logo'[m
+[32m+[m[32m  imageSrc = "/images/CveezyLOGO.png",[m
+[32m+[m[32m  imageAlt = 'CVeezy Logo'[m
+ }) => {[m
+   const sizeClasses = {[m
+[31m-    sm: 'w-8 h-8',[m
+[31m-    md: 'w-12 h-12',[m
+[31m-    lg: 'w-16 h-16',[m
+[31m-    xl: 'w-20 h-20'[m
+[31m-  };[m
+[31m-[m
+[31m-  const textSizeClasses = {[m
+[31m-    sm: 'text-lg',[m
+[31m-    md: 'text-xl',[m
+[31m-    lg: 'text-2xl',[m
+[31m-    xl: 'text-3xl'[m
+[32m+[m[32m    sm: 'w-16 h-16',[m
+[32m+[m[32m    md: 'w-20 h-20',[m
+[32m+[m[32m    lg: 'w-24 h-24',[m
+[32m+[m[32m    xl: 'w-28 h-28'[m
+   };[m
+   [m
+   return ([m
+     <Link[m
+       href="/"[m
+[31m-      className={`flex items-center space-x-3 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-2 ${className}`}[m
+[32m+[m[32m      className={`flex items-center space-x-1 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-1 ${className}`}[m
+     >[m
+       {/* Logo Image */}[m
+       <img [m
+[36m@@ -43,18 +36,6 @@[m [mconst Logo: React.FC<LogoProps> = ({[m
+         alt={imageAlt}[m
+         className={`${sizeClasses[size]} object-contain`}[m
+       />[m
+[31m-[m
+[31m-      {/* Logo Text - Updated with BetterCV-style font */}[m
+[31m-      {showText && ([m
+[31m-        <div className="flex flex-col leading-tight">[m
+[31m-          <span className={`font-heavybold text-gray-800 tracking-tight ${textSizeClasses[size]} font-sans`}>[m
+[31m-            {text}[m
+[31m-          </span>[m
+[31m-          <span className="text-xs text-gray-400 -mt-1.5 ml-2">[m
+[31m-            by Certicode[m
+[31m-          </span>[m
+[31m-        </div>[m
+[31m-      )}[m
+     </Link>[m
+   );[m
+ };[m
+[1mdiff --git a/resources/js/Pages/ChooseResumeMaker.tsx b/resources/js/Pages/ChooseResumeMaker.tsx[m
+[1mindex 9fb8aa4..86b94d8 100644[m
+[1m--- a/resources/js/Pages/ChooseResumeMaker.tsx[m
+[1m+++ b/resources/js/Pages/ChooseResumeMaker.tsx[m
+[36m@@ -28,11 +28,11 @@[m [mconst ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({[m
+           {/* Back Button */}[m
+ [m
+           [m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/ChooseTemplate.tsx b/resources/js/Pages/ChooseTemplate.tsx[m
+[1mindex 86ac981..25aecea 100644[m
+[1m--- a/resources/js/Pages/ChooseTemplate.tsx[m
+[1m+++ b/resources/js/Pages/ChooseTemplate.tsx[m
+[36m@@ -143,11 +143,11 @@[m [mconst ChooseTemplate: React.FC<ChooseTemplateProps> = ({[m
+         {/* Header */}[m
+         <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+           <div className="flex items-center space-x-4">[m
+[31m-            <Logo[m
+[31m-              size="sm"[m
+[31m-              text="CVeezy"[m
+[31m-              imageSrc="/images/supsoft-logo.jpg"[m
+[31m-              imageAlt="CVeezy Logo"[m
+[32m+[m[32m                    <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+               className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+             />[m
+           </div>[m
+[1mdiff --git a/resources/js/Pages/Contact.tsx b/resources/js/Pages/Contact.tsx[m
+[1mindex 7e0ac22..331b4c7 100644[m
+[1m--- a/resources/js/Pages/Contact.tsx[m
+[1m+++ b/resources/js/Pages/Contact.tsx[m
+[36m@@ -66,11 +66,11 @@[m [mconst Contact: React.FC<ContactProps> = ({[m
+       {/* Header */}[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+         <div className="flex items-center">[m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/CookiePolicy.tsx b/resources/js/Pages/CookiePolicy.tsx[m
+[1mindex 1723fab..2eca00f 100644[m
+[1m--- a/resources/js/Pages/CookiePolicy.tsx[m
+[1m+++ b/resources/js/Pages/CookiePolicy.tsx[m
+[36m@@ -19,11 +19,11 @@[m [mconst CookiePolicy: React.FC<CookiePolicyProps> = ({[m
+     <div className="min-h-screen bg-gray-50 flex flex-col">[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+         <div className="flex items-center">[m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/Dashboard.tsx b/resources/js/Pages/Dashboard.tsx[m
+[1mindex 7709977..098a62e 100644[m
+[1m--- a/resources/js/Pages/Dashboard.tsx[m
+[1m+++ b/resources/js/Pages/Dashboard.tsx[m
+[36m@@ -360,11 +360,11 @@[m [mexport default function Dashboard({ resumes = [], paymentProofs: initialPaymentP[m
+                     <div className="flex justify-between items-center h-16">[m
+                         {/* Left: Logo */}[m
+                         <div className="flex items-center">[m
+[31m-                            <Logo [m
+[31m-                                size="sm"[m
+[31m-                                text="CVeezy"[m
+[31m-                                imageSrc="/images/supsoft-logo.jpg"[m
+[31m-                                imageAlt="CVeezy Logo"[m
+[32m+[m[32m                                    <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+                                 className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+                             />[m
+                         </div>[m
+[1mdiff --git a/resources/js/Pages/HomePage.tsx b/resources/js/Pages/HomePage.tsx[m
+[1mindex fe615ab..57d4187 100644[m
+[1m--- a/resources/js/Pages/HomePage.tsx[m
+[1m+++ b/resources/js/Pages/HomePage.tsx[m
+[36m@@ -127,11 +127,11 @@[m [mconst HomePage: React.FC<HomePageProps> = ({[m
+             {/* Header */}[m
+             <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+                 <div className="flex items-center">[m
+[31m-                    <Logo[m
+[31m-                        size="sm"[m
+[31m-                        text="CVeezy"[m
+[31m-                        imageSrc="/images/supsoft-logo.jpg"[m
+[31m-                        imageAlt="CVeezy Logo"[m
+[32m+[m[32m                              <Logo[m[41m [m
+[32m+[m[32m            size="sm"[m
+[32m+[m[32m            text="CVeezy"[m
+[32m+[m[32m            imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m            imageAlt="CVeezy Logo"[m
+                         className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+                     />[m
+                 </div>[m
+[36m@@ -502,7 +502,7 @@[m [mconst HomePage: React.FC<HomePageProps> = ({[m
+                         <div className="text-center mb-6">[m
+                             <div className="flex items-center justify-center mb-4">[m
+                                 <img[m
+[31m-                                    src="/images/supsoft-logo.jpg"[m
+[32m+[m[32m                                    src="/images/CveezyLOGO.png"[m
+                                     alt="CVeezy Logo"[m
+                                     className="w-6 h-6 rounded mr-2 object-contain"[m
+                                 />[m
+[36m@@ -595,12 +595,12 @@[m [mconst HomePage: React.FC<HomePageProps> = ({[m
+                     </div>[m
+                     <div className="hidden md:grid grid-cols-3 gap-8">[m
+                         <div className="col-span-1">[m
+[31m-                            <div className="flex items-center mb-6">[m
+[31m-                                <img[m
+[31m-                                    src="/images/supsoft-logo.jpg"[m
+[31m-                                    alt="CVeezy Logo"[m
+[31m-                                    className="w-8 h-8 rounded mr-3 object-contain"[m
+[31m-                                />[m
+[32m+[m[32m                                                    <div className="flex items-center mb-6">[m
+[32m+[m[32m                            <img[m
+[32m+[m[32m                                src="/images/CveezyLOGO.png"[m
+[32m+[m[32m                                alt="CVeezy Logo"[m
+[32m+[m[32m                                className="w-8 h-8 rounded mr-3 object-contain"[m
+[32m+[m[32m                            />[m
+                                 <span className="text-2xl font-bold">[m
+                                     CVeezy[m
+                                 </span>[m
+[1mdiff --git a/resources/js/Pages/Payment.tsx b/resources/js/Pages/Payment.tsx[m
+[1mindex 18cceef..83484e5 100644[m
+[1m--- a/resources/js/Pages/Payment.tsx[m
+[1m+++ b/resources/js/Pages/Payment.tsx[m
+[36m@@ -265,11 +265,11 @@[m [mconst Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p[m
+       {/* Custom Header with Dashboard Button */}[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm mb-10">[m
+         <div className="flex items-center">[m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/PaymentTerm.tsx b/resources/js/Pages/PaymentTerm.tsx[m
+[1mindex 6f23961..1974563 100644[m
+[1m--- a/resources/js/Pages/PaymentTerm.tsx[m
+[1m+++ b/resources/js/Pages/PaymentTerm.tsx[m
+[36m@@ -22,11 +22,11 @@[m [mconst PaymentTerm: React.FC<PaymentTermProps> = ({[m
+       {/* Header */}[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+         <div className="flex items-center">[m
+[31m-          <Logo[m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/PrivacyPolicy.tsx b/resources/js/Pages/PrivacyPolicy.tsx[m
+[1mindex 2bdc459..ac0edc8 100644[m
+[1m--- a/resources/js/Pages/PrivacyPolicy.tsx[m
+[1m+++ b/resources/js/Pages/PrivacyPolicy.tsx[m
+[36m@@ -22,11 +22,11 @@[m [mconst PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({[m
+       {/* Header */}[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+         <div className="flex items-center">[m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/TermsAndConditions.tsx b/resources/js/Pages/TermsAndConditions.tsx[m
+[1mindex 83836ca..e8ffcad 100644[m
+[1m--- a/resources/js/Pages/TermsAndConditions.tsx[m
+[1m+++ b/resources/js/Pages/TermsAndConditions.tsx[m
+[36m@@ -19,11 +19,11 @@[m [mconst TermsAndConditions: React.FC<TermsAndConditionsProps> = ({[m
+     <div className="min-h-screen bg-gray-50 flex flex-col">[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+         <div className="flex items-center">[m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m
+[1mdiff --git a/resources/js/Pages/Uploader.tsx b/resources/js/Pages/Uploader.tsx[m
+[1mindex 05324b9..4ed73ba 100644[m
+[1m--- a/resources/js/Pages/Uploader.tsx[m
+[1m+++ b/resources/js/Pages/Uploader.tsx[m
+[36m@@ -166,11 +166,11 @@[m [mconst Uploader: React.FC<UploaderProps> = ({[m
+       {/* Header */}[m
+       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">[m
+         <div className="flex items-center">[m
+[31m-          <Logo [m
+[31m-            size="sm"[m
+[31m-            text="CVeezy"[m
+[31m-            imageSrc="/images/supsoft-logo.jpg"[m
+[31m-            imageAlt="CVeezy Logo"[m
+[32m+[m[32m                  <Logo[m[41m [m
+[32m+[m[32m          size="sm"[m
+[32m+[m[32m          text="CVeezy"[m
+[32m+[m[32m          imageSrc="/images/CveezyLOGO.png"[m
+[32m+[m[32m          imageAlt="CVeezy Logo"[m
+             className="text-2xl font-bold text-[#222] font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"[m
+           />[m
+         </div>[m

@@ -6,6 +6,7 @@ use App\Models\PaymentProof;
 use App\Models\Resume;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class AdminController extends Controller
@@ -30,7 +31,10 @@ class AdminController extends Controller
 
         $users = User::withCount('resumes')->latest()->get();
         $resumes = Resume::with('user')->latest()->get();
-        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get();
+        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->filter(function ($proof) {
+            // Only include payment proofs that have both user and resume
+            return $proof->user && $proof->resume;
+        })->values();
 
         return Inertia::render('AdminDashboard', [
             'stats' => $stats,
@@ -160,7 +164,7 @@ class AdminController extends Controller
             $resumeData = json_decode($resumeData, true);
         }
 
-        // Map the data to the format expected by the PDF template
+        // Map the data to the format expected by the PDF template (parity with DashboardController)
         $pdfData = [
             'contact' => [
                 'firstName' => $resumeData['contact']['firstName'] ?? '',
@@ -175,35 +179,65 @@ class AdminController extends Controller
             ],
             'summary' => $resumeData['summary'] ?? '',
             'skills' => $resumeData['skills'] ?? [],
+            'showExperienceLevel' => $resumeData['showExperienceLevel'] ?? false,
+            'languages' => $resumeData['languages'] ?? [],
+            'certifications' => $resumeData['certifications'] ?? [],
+            'awards' => $resumeData['awards'] ?? [],
+            'websites' => $resumeData['websites'] ?? [],
+            'references' => $resumeData['references'] ?? [],
+            'hobbies' => $resumeData['hobbies'] ?? [],
+            'customSections' => $resumeData['customSections'] ?? [],
             'experiences' => array_map(function($exp) {
+                $jobTitle = $exp['jobTitle'] ?? '';
+                $company = $exp['company'] ?? $exp['employer'] ?? '';
+                $location = $exp['location'] ?? $exp['employer'] ?? $exp['company'] ?? '';
+                $startDate = $exp['startDate'] ?? '';
+                $endDate = $exp['endDate'] ?? '';
+                $description = $exp['description'] ?? '';
+                
                 return [
-                    'jobTitle' => $exp['jobTitle'] ?? '',
-                    'company' => $exp['employer'] ?? '',
-                    'location' => $exp['company'] ?? '',
-                    'startDate' => $exp['startDate'] ?? '',
-                    'endDate' => $exp['endDate'] ?? '',
-                    'description' => $exp['description'] ?? '',
+                    'jobTitle' => $jobTitle,
+                    'company' => $company,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
                 ];
             }, $resumeData['experiences'] ?? []),
             'education' => array_map(function($edu) {
+                $degree = $edu['degree'] ?? '';
+                $school = $edu['school'] ?? '';
+                $location = $edu['location'] ?? '';
+                $startDate = $edu['startDate'] ?? '';
+                $endDate = $edu['endDate'] ?? '';
+                $description = $edu['description'] ?? '';
+                
                 return [
-                    'degree' => $edu['degree'] ?? '',
-                    'school' => $edu['school'] ?? '',
-                    'location' => $edu['location'] ?? '',
-                    'startDate' => $edu['startDate'] ?? '',
-                    'endDate' => $edu['endDate'] ?? '',
-                    'description' => $edu['description'] ?? '',
+                    'degree' => $degree,
+                    'school' => $school,
+                    'location' => $location,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                    'description' => $description,
                 ];
             }, $resumeData['educations'] ?? []),
         ];
 
-        // Generate PDF using the same logic as DashboardController
+        // Use the selected template name for the PDF view, falling back to classic
+        $templateName = $resume->template_name ?? 'classic';
+        $viewName = 'resume.' . $templateName;
+        if (!view()->exists($viewName)) {
+            $viewName = 'resume.classic';
+        }
+
         try {
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('resume.pdf', ['resume' => $pdfData]);
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($viewName, ['resume' => $pdfData]);
             return $pdf->download($resume->name . '_resume.pdf');
         } catch (\Exception $e) {
             \Log::error('Error generating PDF for resume', [
                 'resume_id' => $resume->id,
+                'template_name' => $templateName,
+                'view_name' => $viewName,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -230,8 +264,7 @@ class AdminController extends Controller
             
             // Update resume payment status
             if ($proof->resume) {
-                $proof->resume->is_paid = true;
-                $proof->resume->save();
+                $proof->resume->markAsPaidWithTimestamp();
             }
             
             \Log::info('Payment proof approved successfully', [
@@ -275,9 +308,17 @@ class AdminController extends Controller
             $proof->save();
             
             // Reset resume payment status if it was previously approved
-            if ($proof->resume && $proof->resume->is_paid) {
-                $proof->resume->is_paid = false;
-                $proof->resume->save();
+            if ($proof->resume) {
+                // If this was a modified resume payment, set needs_payment back to true
+                if ($proof->resume->wasModifiedAfterPayment()) {
+                    $proof->resume->update([
+                        'is_paid' => false,
+                        'needs_payment' => true,
+                    ]);
+                } else {
+                    // For regular payments, just set is_paid to false
+                    $proof->resume->update(['is_paid' => false]);
+                }
             }
             
             \Log::info('Payment proof rejected successfully', [
@@ -301,6 +342,109 @@ class AdminController extends Controller
             ]);
             
             return response()->json(['message' => 'Error rejecting payment: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get payment proof storage path information
+     */
+    public function getStoragePath()
+    {
+        try {
+            $storagePath = storage_path('app/public/proofs');
+            $absolutePath = realpath($storagePath) ?: $storagePath;
+            
+            // Count files in directory
+            $fileCount = 0;
+            if (is_dir($storagePath)) {
+                $files = scandir($storagePath);
+                $fileCount = count(array_filter($files, function($file) use ($storagePath) {
+                    return $file !== '.' && $file !== '..' && is_file($storagePath . DIRECTORY_SEPARATOR . $file);
+                }));
+            }
+            
+            return response()->json([
+                'storage_path' => $absolutePath,
+                'relative_path' => 'storage/app/public/proofs',
+                'exists' => is_dir($storagePath),
+                'writable' => is_writable($storagePath),
+                'file_count' => $fileCount,
+                'disk' => 'public',
+                'url_prefix' => asset('storage/proofs/')
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Unable to get storage path: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Open storage folder in file explorer
+     */
+    public function openStorageFolder()
+    {
+        try {
+            $storagePath = storage_path('app/public/proofs');
+            $absolutePath = realpath($storagePath) ?: $storagePath;
+            
+            // Check if directory exists
+            if (!is_dir($storagePath)) {
+                return response()->json([
+                    'error' => 'Storage directory does not exist: ' . $absolutePath
+                ], 404);
+            }
+            
+            // Detect OS and execute appropriate command
+            $os = PHP_OS_FAMILY;
+            $command = '';
+            
+            switch (strtolower($os)) {
+                case 'windows':
+                    $command = 'explorer "' . str_replace('/', '\\', $absolutePath) . '"';
+                    break;
+                case 'darwin': // macOS
+                    $command = 'open "' . $absolutePath . '"';
+                    break;
+                case 'linux':
+                    // Try common file managers
+                    $fileManagers = ['xdg-open', 'nautilus', 'dolphin', 'thunar', 'pcmanfm'];
+                    foreach ($fileManagers as $fm) {
+                        if (shell_exec("which $fm")) {
+                            $command = "$fm \"$absolutePath\"";
+                            break;
+                        }
+                    }
+                    if (!$command) {
+                        $command = 'xdg-open "' . $absolutePath . '"'; // Fallback
+                    }
+                    break;
+                default:
+                    return response()->json([
+                        'error' => 'Unsupported operating system: ' . $os
+                    ], 400);
+            }
+            
+            // Execute command in background
+            if ($os === 'Windows') {
+                pclose(popen("start /B $command", "r"));
+            } else {
+                shell_exec("$command > /dev/null 2>&1 &");
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Folder opened successfully',
+                'path' => $absolutePath,
+                'os' => $os,
+                'command' => $command
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Unable to open folder: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -433,7 +577,10 @@ class AdminController extends Controller
         });
 
         // Get updated payment proofs
-        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->map(function ($proof) {
+        $paymentProofs = PaymentProof::with('user', 'resume')->latest()->get()->filter(function ($proof) {
+            // Only include payment proofs that have both user and resume
+            return $proof->user && $proof->resume;
+        })->map(function ($proof) {
             return [
                 'id' => $proof->id,
                 'user' => [
@@ -450,7 +597,7 @@ class AdminController extends Controller
                 'status' => $proof->status,
                 'created_at' => $proof->created_at->toISOString(),
             ];
-        });
+        })->values();
 
         return response()->json([
             'stats' => $stats,
@@ -466,9 +613,18 @@ class AdminController extends Controller
     public function bulkDeleteUnfinishedResumes(Request $request)
     {
         try {
-            // Get time filter from request
+            // Get filters from request
             $timeFilter = $request->input('time_filter', '30_days');
-            $progressThreshold = $request->input('progress_threshold', 20);
+            $statusesToDelete = $request->input('statuses', [Resume::STATUS_DRAFT]);
+            
+            // Validate statuses
+            $validStatuses = [Resume::STATUS_DRAFT, Resume::STATUS_IN_PROGRESS, Resume::STATUS_COMPLETED, Resume::STATUS_PUBLISHED];
+            $statusesToDelete = array_intersect($statusesToDelete, $validStatuses);
+            
+            // If no valid statuses provided, default to draft
+            if (empty($statusesToDelete)) {
+                $statusesToDelete = [Resume::STATUS_DRAFT];
+            }
             
             // Define time ranges
             $timeRanges = [
@@ -489,10 +645,7 @@ class AdminController extends Controller
             $deletedCount = 0;
             
             // Build query for resumes that meet cleanup criteria
-            $query = Resume::where(function($baseQuery) {
-                $baseQuery->where('status', Resume::STATUS_DRAFT)
-                          ->orWhere('is_paid', false);
-            });
+            $query = Resume::whereIn('status', $statusesToDelete);
             
             // Apply time filter if specified
             if ($cutoffDate) {
@@ -501,14 +654,8 @@ class AdminController extends Controller
             
             $resumesToDelete = $query->get();
             
-            // Filter by progress threshold
-            $finalResumesToDelete = $resumesToDelete->filter(function($resume) use ($progressThreshold) {
-                $progress = $resume->getProgressPercentage();
-                return $progress < $progressThreshold;
-            });
-            
             // Delete the resumes
-            foreach ($finalResumesToDelete as $resume) {
+            foreach ($resumesToDelete as $resume) {
                 $resume->delete(); // This will soft delete
                 $deletedCount++;
             }
@@ -528,15 +675,26 @@ class AdminController extends Controller
                 'all' => 'any age'
             ][$timeFilter] ?? '30 days';
             
+            $statusLabels = [
+                Resume::STATUS_DRAFT => 'draft',
+                Resume::STATUS_IN_PROGRESS => 'in progress',
+                Resume::STATUS_COMPLETED => 'completed',
+                Resume::STATUS_PUBLISHED => 'published'
+            ];
+            
+            $statusNames = array_map(function($status) use ($statusLabels) {
+                return $statusLabels[$status] ?? $status;
+            }, $statusesToDelete);
+            
             return response()->json([
                 'success' => true,
-                'message' => "Successfully deleted {$deletedCount} unfinished resumes older than {$timeLabel}",
+                'message' => "Successfully deleted {$deletedCount} resumes with status: " . implode(', ', $statusNames) . " older than {$timeLabel}",
                 'deleted_count' => $deletedCount,
                 'time_filter' => $timeFilter,
-                'progress_threshold' => $progressThreshold,
+                'statuses' => $statusesToDelete,
                 'debug_info' => [
                     'matching_criteria' => $resumesToDelete->count(),
-                    'after_progress_filter' => $finalResumesToDelete->count()
+                    'deleted_count' => $deletedCount
                 ]
             ]);
             

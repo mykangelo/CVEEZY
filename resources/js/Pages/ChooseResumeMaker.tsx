@@ -23,37 +23,35 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
     <div className="flex flex-col min-h-screen bg-white font-sans">
       <Head title="CVeezy | How will you make your resume?" />
       {/* Header */}
-      <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
+      <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
         <div className="flex items-center space-x-4">
           {/* Back Button */}
 
           
           <Logo 
-            size="sm"
-            text="CVeezy"
-            imageSrc="/images/supsoft-logo.jpg"
-            imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+            size="lg"
+            showText={false}
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
           />
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <Link
             href="/contact"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
           >
             Contact us
           </Link>
           {user ? (
             <Link
               href="/dashboard"
-              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
             >
               Dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
             >
               Login
             </Link>

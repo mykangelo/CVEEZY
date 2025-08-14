@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import Header from "@/Components/Header";
 import Footer from "@/Components/Footer";
+import Logo from "@/Components/Logo";
 
 interface PaymentProof {
   id: number;
@@ -37,6 +38,10 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
       if (urlResumeId) {
         const parsedId = parseInt(urlResumeId);
         setResumeId(parsedId);
+        // Persist chosen resume so reloads work without query params
+        try {
+          sessionStorage.setItem('paymentResumeId', String(parsedId));
+        } catch {}
       }
       if (urlResumeName) {
         const decodedName = decodeURIComponent(urlResumeName);
@@ -45,35 +50,94 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
     }
   }, [propResumeId, propResumeName]);
 
-  // Check current payment status
+  // Fallback: recover resumeId from session storage if missing
+  useEffect(() => {
+    if (!resumeId) {
+      try {
+        const stored = sessionStorage.getItem('paymentResumeId');
+        if (stored) {
+          const parsed = parseInt(stored);
+          if (!Number.isNaN(parsed)) {
+            setResumeId(parsed);
+          }
+        }
+      } catch {}
+    }
+  }, [resumeId]);
+
+  // Check current payment status from initial props (respect effective status and downloadability)
   useEffect(() => {
     if (resumeId && paymentProofs.length > 0) {
-      const currentProof = paymentProofs.find(proof => proof.resume_id === resumeId);
+      const currentProof: any = paymentProofs.find((proof: any) => proof.resume_id === resumeId);
       if (currentProof) {
-        setCurrentPaymentStatus(currentProof.status);
+        const effective = currentProof.status_effective || currentProof.status;
+        if (effective === 'needs_payment' || effective === 'needs_payment_modified' || currentProof.is_downloadable === false) {
+          setCurrentPaymentStatus(null);
+          setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+          setUploadStatus('error');
+        } else if (effective) {
+          setCurrentPaymentStatus(effective);
+        }
       }
     }
   }, [resumeId, paymentProofs]);
+
+  // One-time initial fetch to ensure status is up-to-date on reload
+  useEffect(() => {
+    const fetchLatestStatus = async () => {
+      if (!resumeId) return;
+      try {
+        const response = await fetch('/user/payment-proofs');
+        if (response.ok) {
+          const proofs = await response.json();
+          const currentProof = proofs.find((p: any) => p.resume_id === resumeId);
+          if (currentProof) {
+            const effective = currentProof.status_effective || currentProof.status;
+            if (effective === 'needs_payment' || effective === 'needs_payment_modified' || currentProof.is_downloadable === false) {
+              setCurrentPaymentStatus(null);
+              setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+            } else if (effective) {
+              setCurrentPaymentStatus(effective);
+            }
+          }
+        }
+      } catch (e) {
+        // no-op
+      }
+    };
+    fetchLatestStatus();
+  }, [resumeId]);
 
   // Poll for status changes when payment is pending
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (currentPaymentStatus === 'pending') {
+    
+    if (currentPaymentStatus === 'pending' || currentPaymentStatus === null) {
+
       interval = setInterval(async () => {
         try {
           const response = await fetch('/user/payment-proofs');
           if (response.ok) {
             const updatedPaymentProofs = await response.json();
             const currentProof = updatedPaymentProofs.find((proof: any) => proof.resume_id === resumeId);
-            if (currentProof && currentProof.status !== 'pending') {
-              setCurrentPaymentStatus(currentProof.status);
-              if (currentProof.status === 'approved') {
+            if (currentProof) {
+              const effective = currentProof.status_effective || currentProof.status;
+              if (effective === 'needs_payment' || effective === 'needs_payment_modified' || currentProof.is_downloadable === false) {
+                if (currentPaymentStatus !== null) {
+                  setCurrentPaymentStatus(null);
+                  setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+                  setUploadStatus('error');
+                }
+              } else if (effective !== 'pending' && effective !== currentPaymentStatus) {
+                setCurrentPaymentStatus(effective);
+                if (effective === 'approved') {
                 setUploadMessage('🎉 Your payment has been approved! You can now download your PDF resume.');
                 setUploadStatus('success');
-              } else if (currentProof.status === 'rejected') {
-                setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
-                setUploadStatus('error');
+                } else if (effective === 'rejected') {
+                  setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
+                  setUploadStatus('error');
+                }
               }
             }
           }
@@ -166,6 +230,10 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
         setUploadStatus('success');
         setCurrentPaymentStatus('pending');
         setUploadMessage('✅ Payment proof uploaded successfully! Your payment is now under review by our admin team. You will be notified once it is approved.');
+        // Persist resumeId for reliable reload behavior
+        try {
+          if (resumeId) sessionStorage.setItem('paymentResumeId', String(resumeId));
+        } catch {}
       } else {
         const errorData = await response.json();
         setUploadStatus('error');
@@ -260,7 +328,26 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <Head title="Payment - CVeezy" />
-      <Header />
+      
+      {/* Custom Header with Dashboard Button */}
+      <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
+        <div className="flex items-center">
+          <Logo 
+            size="lg"
+            showText={false}
+            className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+          />
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <Link
+            href="/dashboard"
+            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+          >
+            Dashboard
+          </Link>
+        </div>
+      </header>
 
       <main className="flex-grow bg-white py-8">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

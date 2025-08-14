@@ -122,15 +122,15 @@ class ResumeController extends Controller
                 abort(403, 'Resume not found or you do not have permission to download it.');
             }
             
-            // Check if user has approved payment proof for this resume
-            $approvedPayment = PaymentProof::where('resume_id', $id)
-                                          ->where('user_id', Auth::id())
-                                          ->where('status', 'approved')
-                                          ->first();
-            
-            if (!$approvedPayment) {
-                Log::warning("Access denied for resume $id - no approved payment found");
-                abort(403, 'Payment required to download PDF. Please complete payment and wait for admin approval.');
+            // Check if resume is downloadable (paid and not modified)
+            if (!$resumeModel->isDownloadable()) {
+                if ($resumeModel->needsPayment()) {
+                    Log::warning("Access denied for resume $id - resume was modified and needs new payment");
+                    abort(403, 'Resume was modified after payment. Please make a new payment to download the updated version.');
+                } else {
+                    Log::warning("Access denied for resume $id - no approved payment found");
+                    abort(403, 'Payment required to download PDF. Please complete payment and wait for admin approval.');
+                }
             }
             
             Log::info("Resume found and user has permission to download");

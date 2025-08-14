@@ -7,6 +7,10 @@ import { Resume } from "@/types/resume";
 import Logo from "@/Components/Logo";
 import Dropdown from "@/Components/Dropdown";
 import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
+import ToastContainer from '@/Components/ToastContainer';
+import ConfirmationModal from '@/Components/ConfirmationModal';
+import InlineEdit from '@/Components/InlineEdit';
+import { ToastProps } from '@/Components/Toast';
 
 interface PaymentProof {
     id: number;
@@ -34,13 +38,45 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     const [selectedResumeId, setSelectedResumeId] = useState<number | undefined>(undefined);
     const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
+    
+    // Toast and modal states
+    const [toasts, setToasts] = useState<ToastProps[]>([]);
+    const [confirmationModal, setConfirmationModal] = useState<{
+        isOpen: boolean;
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    }>({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: () => {}
+    });
 
-    // Check for error/success messages from props
+    // Toast management functions
+    const addToast = (toast: Omit<ToastProps, 'id' | 'onClose'>) => {
+        const id = Math.random().toString(36).substring(2, 9);
+        setToasts(prev => [...prev, { ...toast, id, onClose: removeToast }]);
+    };
+
+    const removeToast = (id: string) => {
+        setToasts(prev => prev.filter(toast => toast.id !== id));
+    };
+
+    // Check for error/success messages from props and convert to toasts
     useEffect(() => {
         if (error) {
-            setNotification({ type: 'error', message: error });
+            addToast({
+                type: 'error',
+                title: 'Error',
+                message: error
+            });
         } else if (success) {
-            setNotification({ type: 'success', message: success });
+            addToast({
+                type: 'success',
+                title: 'Success',
+                message: success
+            });
         }
     }, [error, success]);
 
@@ -49,15 +85,14 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         setResumeList(resumes);
     }, [resumes]);
 
+    // Removed auto-refresh on window focus to avoid unexpected UI updates
+
     // Update payment proofs when props change
     useEffect(() => {
         setPaymentProofs(initialPaymentProofs);
     }, [initialPaymentProofs]);
 
-    // Initial data refresh when component mounts
-    useEffect(() => {
-        refreshDashboardData();
-    }, []);
+    // Removed automatic initial re-fetch; rely on server-provided props and manual refresh/actions
 
     // Check if user has pending payments
     const hasPendingPayments = () => {
@@ -82,6 +117,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
 
     // Function to refresh dashboard data
+    // Public method so other components/actions can request an on-demand refresh
     const refreshDashboardData = async () => {
         setIsRefreshing(true);
         try {
@@ -109,37 +145,92 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         }
     };
 
-    // Poll for dashboard updates
-    useEffect(() => {
-        const pollDashboardData = async () => {
-            await refreshDashboardData();
-        };
+    // Removed periodic polling; dashboard refreshes only on explicit actions or when changes occur
 
-        // Poll every 30 seconds
-        const interval = setInterval(pollDashboardData, 30000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    const handlePaymentStatusChange = (status: 'pending' | 'approved' | 'rejected') => {
+    const handlePaymentStatusChange = (status: 'pending' | 'approved' | 'rejected', resumeId?: number) => {
+        // debounced/once-per-session notification guard per resumeId
+        const key = resumeId ? `toastShown:${resumeId}:${status}` : `toastShown:global:${status}`;
+        try {
+            const already = sessionStorage.getItem(key);
+            if (already) {
+                // Still refresh data but don't re-toast
+                if (status === 'approved' || status === 'rejected') {
+                    refreshDashboardData();
+                }
+                return;
+            }
+            sessionStorage.setItem(key, '1');
+        } catch {}
         if (status === 'approved') {
-            setNotification({
+            addToast({
                 type: 'success',
-                message: '🎉 Your payment has been approved! You can now download your PDF resume.'
+                title: 'Payment Approved!',
+                message: 'Your payment has been approved! You can now download your PDF resume.',
+                duration: 8000
             });
             // Refresh dashboard data immediately when payment is approved
             refreshDashboardData();
         } else if (status === 'rejected') {
-            setNotification({
+            addToast({
                 type: 'error',
-                message: '❌ Your payment was rejected. Please upload a new payment proof.'
+                title: 'Payment Rejected',
+                message: 'Your payment was rejected. Please upload a new payment proof.',
+                duration: 8000
             });
             // Refresh dashboard data immediately when payment is rejected
             refreshDashboardData();
         }
-        
-        // Clear notification after 5 seconds
-        setTimeout(() => setNotification(null), 5000);
+    };
+
+    // Handle resume rename
+    const handleResumeRename = async (resumeId: number, newName: string): Promise<boolean> => {
+        try {
+            const response = await fetch(`/resumes/${resumeId}/rename`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: JSON.stringify({ name: newName }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update the resume list with the new name
+                setResumeList(prev => prev.map(resume => 
+                    resume.id === resumeId 
+                        ? { ...resume, name: data.resume.name }
+                        : resume
+                ));
+
+                addToast({
+                    type: 'success',
+                    title: 'Resume Renamed',
+                    message: `Resume renamed to "${data.resume.name}"`,
+                    duration: 3000
+                });
+
+                return true;
+            } else {
+                const errorData = await response.json();
+                addToast({
+                    type: 'error',
+                    title: 'Rename Failed',
+                    message: errorData.message || 'Failed to rename resume',
+                    duration: 5000
+                });
+                return false;
+            }
+        } catch (error) {
+            addToast({
+                type: 'error',
+                title: 'Rename Failed',
+                message: 'An error occurred while renaming the resume',
+                duration: 5000
+            });
+            return false;
+        }
     };
 
 
@@ -151,19 +242,39 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     // Function to get payment status for a resume
     const getPaymentStatus = (resumeId: number) => {
         const resume = resumeList.find(r => r.id === resumeId);
-        return resume?.payment_status || null; // Return null if no payment proof exists
+        return resume?.payment_status_detailed || resume?.payment_status || null; // Return null if no payment proof exists
     };
 
     // Function to check if resume can be downloaded
     const canDownloadResume = (resumeId: number) => {
-        const paymentStatus = getPaymentStatus(resumeId);
-        return paymentStatus === 'approved';
+        const resume = resumeList.find(r => r.id === resumeId);
+        return resume?.is_downloadable || false;
     };
 
 
 
     const getPaymentStatusBadge = (resumeId: number) => {
-        const status = getPaymentStatus(resumeId);
+        const resume = resumeList.find(r => r.id === resumeId);
+        const status = resume?.payment_status_detailed || resume?.payment_status;
+        
+        // Priority: Check if needs payment due to modifications
+        if (status === 'needs_payment_modified') {
+            return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Needs Payment (Modified)
+            </span>;
+        }
+        
+        if (status === 'needs_payment') {
+            return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                Needs Payment
+            </span>;
+        }
         
         switch (status) {
             case 'approved':
@@ -187,6 +298,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                     </svg>
                     Payment Pending
                 </span>;
+            case 'unpaid':
             default:
                 return <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -238,13 +350,11 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Left: Logo */}
-                        <div className="flex items-center">
+                        <div className="flex items-center h-full">
                             <Logo 
-                                size="sm"
-                                text="CVeezy"
-                                imageSrc="/images/supsoft-logo.jpg"
-                                imageAlt="CVeezy Logo"
-                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                size="lg"
+                                showText={false}
+                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                             />
                         </div>
 
@@ -414,7 +524,23 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                     </svg>
                                                     <div>
                                                         <div className="text-sm font-medium text-gray-900">
-                                                            {resume.name}
+                                                            <InlineEdit
+                                                                value={resume.name}
+                                                                onSave={(newName) => handleResumeRename(resume.id, newName)}
+                                                                placeholder="Resume Name"
+                                                                maxLength={255}
+                                                                triggerMode="icon"
+                                                                validation={(value) => {
+                                                                    const trimmed = value.trim();
+                                                                    if (trimmed.length === 0) {
+                                                                        return 'Resume name cannot be empty';
+                                                                    }
+                                                                    if (trimmed.length > 255) {
+                                                                        return 'Resume name is too long';
+                                                                    }
+                                                                    return null;
+                                                                }}
+                                                            />
                                                         </div>
                                                         <div className="text-sm text-gray-500">
                                                             {resume.template_name ? resume.template_name.charAt(0).toUpperCase() + resume.template_name.slice(1) : 'Classic'} Template
@@ -445,20 +571,88 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                 {getPaymentStatusBadge(resume.id)}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                {/* Edit functionality - users can edit resumes that are not approved */}
-                                                {!canDownloadResume(resume.id) && (
-                                                    <button
-                                                        onClick={() => {
+                                                {/* Edit functionality - users can edit all resumes, with warning for paid ones */}
+                                                <button
+                                                    onClick={() => {
+                                                        const isPaid = canDownloadResume(resume.id);
+                                                        if (isPaid) {
+                                                            setConfirmationModal({
+                                                                isOpen: true,
+                                                                title: 'Edit Paid Resume',
+                                                                message: 'This resume is already paid for. If you edit it, you will need to pay again to download the updated version. Do you want to continue?',
+                                                                onConfirm: async () => {
+                                                                    try {
+                                                                        // Mark resume as modified immediately
+                                                                        const response = await fetch(`/resumes/${resume.id}/mark-modified`, {
+                                                                            method: 'PATCH',
+                                                                            headers: {
+                                                                                'Content-Type': 'application/json',
+                                                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                                                            },
+                                                                        });
+
+                                                                        if (response.ok) {
+                                                                            const data = await response.json();
+                                                                            
+                                                                            // Update the resume in state immediately
+                                                                            setResumeList(prev => prev.map(r => 
+                                                                                r.id === resume.id 
+                                                                                    ? { 
+                                                                                        ...r, 
+                                                                                        is_paid: data.resume.is_paid,
+                                                                                        needs_payment: data.resume.needs_payment,
+                                                                                        is_downloadable: data.resume.is_downloadable,
+                                                                                        payment_status_detailed: data.resume.payment_status_detailed,
+                                                                                        payment_status: data.resume.payment_status_detailed
+                                                                                    }
+                                                                                    : r
+                                                                            ));
+
+                                                                            addToast({
+                                                                                type: 'warning',
+                                                                                title: 'Download Access Restricted',
+                                                                                message: 'Resume download is now restricted. You\'ll need to pay again after editing.',
+                                                                                duration: 5000
+                                                                            });
+
+                                                                            // Navigate to builder
+                                                                            router.visit(`/builder?resume=${resume.id}`);
+                                                                        } else {
+                                                                            addToast({
+                                                                                type: 'error',
+                                                                                title: 'Error',
+                                                                                message: 'Failed to update resume status. Please try again.',
+                                                                                duration: 5000
+                                                                            });
+                                                                        }
+                                                                    } catch (error) {
+                                                                        addToast({
+                                                                            type: 'error',
+                                                                            title: 'Error',
+                                                                            message: 'An error occurred. Please try again.',
+                                                                            duration: 5000
+                                                                        });
+                                                                    }
+                                                                }
+                                                            });
+                                                        } else {
                                                             router.visit(`/builder?resume=${resume.id}`);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
-                                                        <span>Edit Resume</span>
-                                                    </button>
-                                                )}
+                                                        }
+                                                    }}
+                                                    className={`${
+                                                        canDownloadResume(resume.id) 
+                                                            ? 'text-amber-600 hover:text-amber-900' 
+                                                            : 'text-blue-600 hover:text-blue-900'
+                                                    } inline-flex items-center space-x-1 transition-colors duration-200`}
+                                                    title={canDownloadResume(resume.id) ? 'Edit will require new payment' : 'Edit resume'}
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                    <span>
+                                                        Edit
+                                                    </span>
+                                                </button>
                                                 
                                                 {/* Download PDF functionality */}
                                                 {canDownloadResume(resume.id) ? (
@@ -484,34 +678,84 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                 )}
                                                 
                                                 {/* Payment actions */}
-                                                {(getPaymentStatus(resume.id) === 'pending' || getPaymentStatus(resume.id) === 'rejected') && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedResumeId(resume.id);
-                                                            setIsPaymentModalOpen(true);
-                                                        }}
-                                                        className="text-purple-600 hover:text-purple-900 inline-flex items-center space-x-1"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                        </svg>
-                                                        <span>Upload Payment</span>
-                                                    </button>
-                                                )}
-                                                {getPaymentStatus(resume.id) === null && (
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedResumeId(resume.id);
-                                                            setIsPaymentModalOpen(true);
-                                                        }}
-                                                        className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                                                    >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                        </svg>
-                                                        <span>Add Payment</span>
-                                                    </button>
-                                                )}
+                                                {(() => {
+                                                    const paymentStatus = getPaymentStatus(resume.id);
+                                                    
+                                                    // Don't show payment buttons for approved payments only
+                                                    if (paymentStatus === 'approved') {
+                                                        return null;
+                                                    }
+                                                    
+                                                    // Show appropriate payment button based on status
+                                                    if (paymentStatus === 'needs_payment_modified') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-orange-600 hover:text-orange-900 inline-flex items-center space-x-1"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                </svg>
+                                                                <span>Upload Payment</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    if (paymentStatus === 'pending') {
+                                                        return (
+                                                            <button
+                                                                disabled
+                                                                title="Payment proof is pending review"
+                                                                className="text-yellow-600 hover:text-yellow-900 inline-flex items-center space-x-1 opacity-60 cursor-not-allowed"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                <span>Payment Pending</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    if (paymentStatus === 'rejected') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-red-600 hover:text-red-900 inline-flex items-center space-x-1"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                </svg>
+                                                                <span>Re-upload Payment</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    // Show add payment for resumes without payment proof or needing payment
+                                                    if (paymentStatus === null || paymentStatus === 'needs_payment' || paymentStatus === 'unpaid') {
+                                                        return (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedResumeId(resume.id);
+                                                                    setIsPaymentModalOpen(true);
+                                                                }}
+                                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                                                            >
+                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                                </svg>
+                                                                <span>Add Payment</span>
+                                                            </button>
+                                                        );
+                                                    }
+                                                    
+                                                    return null;
+                                                })()}
                                             </td>
                                         </tr>
                                     ))}
@@ -628,10 +872,30 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 onClose={() => {
                     setIsPaymentModalOpen(false);
                     setSelectedResumeId(undefined);
+                    // Refresh dashboard data when payment modal is closed
+                    setTimeout(() => refreshDashboardData(), 500);
                 }}
                 resumeId={selectedResumeId}
                 resumeName={selectedResumeId ? resumeList.find(r => r.id === selectedResumeId)?.name : undefined}
                 onStatusChange={handlePaymentStatusChange}
+            />
+
+            {/* Toast Container */}
+            <ToastContainer 
+                toasts={toasts} 
+                onCloseToast={removeToast} 
+            />
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={confirmationModal.isOpen}
+                onClose={() => setConfirmationModal(prev => ({ ...prev, isOpen: false }))}
+                onConfirm={confirmationModal.onConfirm}
+                title={confirmationModal.title}
+                message={confirmationModal.message}
+                confirmText="Continue Editing"
+                cancelText="Cancel"
+                type="warning"
             />
         </div>
     );

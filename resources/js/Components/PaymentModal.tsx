@@ -5,7 +5,7 @@ interface PaymentModalProps {
   onClose: () => void;
   resumeId?: number;
   resumeName?: string;
-  onStatusChange?: (status: 'pending' | 'approved' | 'rejected') => void;
+  onStatusChange?: (status: 'pending' | 'approved' | 'rejected', resumeId?: number) => void;
 }
 
 const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, resumeId, resumeName, onStatusChange }) => {
@@ -15,51 +15,94 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, resumeId, 
   const [uploadMessage, setUploadMessage] = useState('');
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'approved' | 'rejected' | null>(null);
 
-  // Check payment status when modal opens
+  // Reset transient UI state when opening for a new resume
   useEffect(() => {
-    if (isOpen && resumeId) {
-      checkPaymentStatus();
+    if (isOpen) {
+      setUploadStatus('idle');
+      setUploadMessage('');
+      setPaymentStatus(null);
+      setSelectedFile(null);
     }
   }, [isOpen, resumeId]);
 
-  // Poll for status changes when payment is pending
+  // Check payment status when modal opens and handle cleanup
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    
-    if (isOpen && resumeId && paymentStatus === 'pending') {
-      interval = setInterval(() => {
-        checkPaymentStatus();
-      }, 5000); // Check every 5 seconds
+
+    const checkStatus = async () => {
+      if (!isOpen || !resumeId) return;
+      
+      try {
+        // Authoritative single source to avoid inconsistent states
+        const statusRes = await fetch(`/resumes/${resumeId}/payment-status?ts=${Date.now()}`, { cache: 'no-store' });
+        const statusJson = statusRes.ok ? await statusRes.json() : null;
+        const effective: string | null = statusJson?.status_effective ?? null;
+
+        if (effective) {
+          const prev = paymentStatus;
+          if (effective === 'unpaid') {
+            // No payment uploaded yet → don't show a status banner
+            setPaymentStatus(null);
+            return;
+          }
+          setPaymentStatus(effective as any);
+          if (effective === 'approved') {
+            setUploadStatus('success');
+            setUploadMessage('🎉 Your payment has been approved! You can now download your PDF resume.');
+            if (prev !== 'approved') onStatusChange?.('approved', resumeId);
+          } else if (effective === 'rejected') {
+            setUploadStatus('error');
+            setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
+            if (prev !== 'rejected') onStatusChange?.('rejected', resumeId);
+          } else if (effective === 'needs_payment' || effective === 'needs_payment_modified') {
+            setUploadStatus('error');
+            setUploadMessage('You proceeded to modify a previously paid resume. For security and accuracy, please upload a new payment proof to re-enable PDF downloads.');
+            setPaymentStatus(null);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking payment status:', error);
+      }
+    };
+
+    // Initial check
+    if (isOpen && resumeId) {
+      checkStatus();
     }
 
+    // Poll while waiting for a decision
+    if (isOpen && resumeId && paymentStatus === 'pending') {
+      interval = setInterval(checkStatus, 2000);
+    }
+
+    // Cleanup
     return () => {
       if (interval) {
         clearInterval(interval);
       }
     };
-  }, [isOpen, resumeId, paymentStatus]);
+  }, [isOpen, resumeId, paymentStatus, uploadStatus, onStatusChange]);
 
   const checkPaymentStatus = async () => {
     try {
-      const response = await fetch(`/user/payment-proofs`);
-      if (response.ok) {
-        const paymentProofs = await response.json();
-        const currentResumeProof = paymentProofs.find((proof: any) => proof.resume_id === resumeId);
-        if (currentResumeProof) {
-          const newStatus = currentResumeProof.status;
-          setPaymentStatus(newStatus);
-          
-          // Show notification for status changes
-          if (newStatus === 'approved' && paymentStatus !== 'approved') {
-            setUploadMessage('🎉 Your payment has been approved! You can now download your PDF resume.');
-            setUploadStatus('success');
-            onStatusChange?.('approved');
-          } else if (newStatus === 'rejected' && paymentStatus !== 'rejected') {
-            setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
-            setUploadStatus('error');
-            onStatusChange?.('rejected');
-          }
-        }
+      const res = await fetch(`/resumes/${resumeId}/payment-status?ts=${Date.now()}`, { cache: 'no-store' });
+      if (!res.ok) return;
+      const data = await res.json();
+      const newStatus = data?.status_effective;
+      const prev = paymentStatus;
+      if (newStatus === 'unpaid') {
+        setPaymentStatus(null);
+        return;
+      }
+      if (newStatus) setPaymentStatus(newStatus);
+      if (newStatus === 'approved' && prev !== 'approved') {
+        setUploadMessage('🎉 Your payment has been approved! You can now download your PDF resume.');
+        setUploadStatus('success');
+        onStatusChange?.('approved', resumeId);
+      } else if (newStatus === 'rejected' && prev !== 'rejected') {
+        setUploadMessage('❌ Your payment was rejected. Please upload a new payment proof.');
+        setUploadStatus('error');
+        onStatusChange?.('rejected', resumeId);
       }
     } catch (error) {
       console.error('Error checking payment status:', error);
