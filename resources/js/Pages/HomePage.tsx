@@ -124,151 +124,193 @@ const HomePage: React.FC<HomePageProps> = ({
         <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-sans px-0">
             <Head title="CVeezy | Build Your Job-Winning Resume" />
 
-      {/* Header */}
-      <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
-        <div className="flex items-center">
-          <Logo 
-            size="sm"
-            text="CVeezy"
-            imageSrc="/images/CveezyLOGO.png"
-            imageAlt="CVeezy Logo"
-            className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
-          />
-        </div>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/contact"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
-          >
-            Contact us
-          </Link>
-          {user ? (
-            <Link
-              href="/dashboard"
-              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
-            >
-              Login
-            </Link>
-          )}
-        </div>
-      </header>
-      
-      {/* Hero Section */}
-      <section className="w-full flex items-center justify-center px-4 py-16 md:py-24 bg-[#eaf6fe]">
-        <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-7xl mx-auto">
-          {/* Left Side */}
-          <div className="flex-1 max-w-2xl">
-            <p className="text-[#2196f3] font-semibold mb-2 flex items-center text-lg">
-              <span className="inline-block w-3 h-3 bg-[#3bb2f6] rounded-full mr-2 align-middle"></span>
-              <span className="font-bold">50,435</span> resumes created today
-            </p>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
-              Create your{" "}
-              <span className="text-[#2196f3]">job-winning resume</span> in minutes
-            </h1>
-            <p className="text-gray-600 text-xl mb-8">
-              The first step to a better job? A better resume. Get yours in just a few
-              clicks.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              {user && hasPendingPayments ? (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="text-yellow-800 font-semibold">Payment Under Review</span>
-                  </div>
-                  <p className="text-yellow-700 text-sm">
-                    You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.
-                  </p>
+            {/* Header */}
+            <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
+                <div className="flex items-center">
+                    <Logo
+                        size="sm"
+                        text="CVeezy"
+                        imageSrc="/images/supsoft-logo.jpg"
+                        imageAlt="CVeezy Logo"
+                        className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                    />
                 </div>
-              ) : (
-                <>
-                  <Link href="/choose-template">
-                    <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
-                      Create New Resume
-                    </button>
-                  </Link>
-                  <Link href="/uploader">
-                    <button className="bg-white border border-[#2196f3] text-[#2196f3] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
-                      Improve My Resume
-                    </button>
-                  </Link>
-                </>
-              )}
-            </div>
-            <div className="flex gap-12 mt-2 items-center">
-              <div className="flex flex-col items-center">
-                <span className="text-[#43d19e] text-3xl font-bold">48%</span>
-                <span className="block text-[#43d19e] text-lg">more likely to get hired</span>
-              </div>
-              <div className="border-l border-[#dbeafe] h-8 mx-4"></div>
-              <div className="flex flex-col items-center">
-                <span className="text-[#ffc107] text-3xl font-bold">12%</span>
-                <span className="block text-[#ffc107] text-lg">better pay with your next job</span>
-              </div>
-            </div>
-          </div>
-          {/* Right Side */}
-          <div className="flex-1 flex justify-center items-center mt-10 md:mt-0">
-            <div className="relative w-[400px] h-[480px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center">
-              <img
-                src="/images/TemplateHome"
-                alt="Resume Example"
-                className="w-[340px] h-[440px] object-cover rounded-xl shadow"
-              />
-              {/* Color palette circles */}
-              <div className="absolute left-24 top-[340px] flex gap-3">
-                <span className="w-5 h-5 rounded-full bg-[#e3f2fd] border border-[#b3e0ff]"></span>
-                <span className="w-5 h-5 rounded-full bg-[#bbdefb] border border-[#90caf9]"></span>
-                <span className="w-5 h-5 rounded-full bg-[#90caf9] border border-[#64b5f6]"></span>
-                <span className="w-5 h-5 rounded-full bg-[#2196f3] border border-[#1976d2]"></span>
-              </div>
-              {/* ATS Perfect badge */}
-              <div className="absolute left-8 bottom-24 bg-[#e6fff4] text-[#43d19e] px-5 py-2 rounded-full text-base font-semibold shadow">
-                ATS Perfect
-              </div>
-              {/* AI-powered ideas box */}
-              <div className="absolute right-0 bottom-0 bg-white rounded-xl shadow-lg p-6 w-[280px] text-base text-[#2196f3] flex flex-col gap-2">
-                <div className="font-semibold mb-2 text-[#2196f3]">AI-powered ideas:</div>
-                <div className="flex items-start gap-2">
-                  <span className="inline-block w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center">
-                    <svg width="18" height="18" fill="#2196f3"><circle cx="9" cy="9" r="9"/></svg>
-                  </span>
-                  <span className="text-[#2196f3]">
-                    Analyzed market trends to identify new growth opportunities.
-                  </span>
+                <div className="flex items-center gap-4">
+                    <Link
+                        href="/contact"
+                        className="border border-[#2196f3] text-[#2196f3] font-semibold px-6 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+                    >
+                        Contact us
+                    </Link>
+                    {user ? (
+                        <Link
+                            href="/dashboard"
+                            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                        >
+                            Dashboard
+                        </Link>
+                    ) : (
+                        <Link
+                            href="/login"
+                            className="bg-[#2196f3] text-white font-semibold px-6 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                        >
+                            Login
+                        </Link>
+                    )}
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="inline-block w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center">
-                    <svg width="18" height="18" fill="#2196f3"><circle cx="9" cy="9" r="9"/></svg>
-                  </span>
-                  <span className="text-[#2196f3]">
-                    Reduced operational costs by 15% through process optimization.
-                  </span>
+            </header>
+
+            {/* Hero Section */}
+            <section className="w-full flex items-center justify-center px-4 py-16 md:py-24 bg-[#eaf6fe]">
+                <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-7xl mx-auto">
+                    {/* Left Side */}
+                    <div className="flex-1 max-w-2xl">
+                        <p className="text-[#2196f3] font-semibold mb-2 flex items-center text-lg">
+                            <span className="inline-block w-3 h-3 bg-[#3bb2f6] rounded-full mr-2 align-middle"></span>
+                            <span className="font-bold">50,435</span> resumes
+                            created today
+                        </p>
+                        <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
+                            Create your{" "}
+                            <span className="text-[#2196f3]">
+                                job-winning resume
+                            </span>{" "}
+                            in minutes
+                        </h1>
+                        <p className="text-gray-600 text-xl mb-8">
+                            The first step to a better job? A better resume. Get
+                            yours in just a few clicks.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                            {user && hasPendingPayments ? (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <svg
+                                            className="w-5 h-5 text-yellow-600"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                            />
+                                        </svg>
+                                        <span className="text-yellow-800 font-semibold">
+                                            Payment Under Review
+                                        </span>
+                                    </div>
+                                    <p className="text-yellow-700 text-sm">
+                                        You have resumes with pending payment
+                                        reviews. Please wait for admin approval
+                                        before creating new resumes.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <Link href="/choose-template">
+                                        <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
+                                            Create New Resume
+                                        </button>
+                                    </Link>
+                                    <Link href="/uploader">
+                                        <button className="bg-white border border-[#2196f3] text-[#2196f3] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
+                                            Improve My Resume
+                                        </button>
+                                    </Link>
+                                </>
+                            )}
+                        </div>
+                        <div className="flex gap-12 mt-2 items-center">
+                            <div className="flex flex-col items-center">
+                                <span className="text-[#43d19e] text-3xl font-bold">
+                                    48%
+                                </span>
+                                <span className="block text-[#43d19e] text-lg">
+                                    more likely to get hired
+                                </span>
+                            </div>
+                            <div className="border-l border-[#dbeafe] h-8 mx-4"></div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-[#ffc107] text-3xl font-bold">
+                                    12%
+                                </span>
+                                <span className="block text-[#ffc107] text-lg">
+                                    better pay with your next job
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Right Side */}
+                    <div className="flex-1 flex justify-center items-center mt-10 md:mt-0">
+                        <div className="relative w-[400px] h-[480px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center">
+                            <img
+                                src="/images/TemplateHome"
+                                alt="Resume Example"
+                                className="w-[340px] h-[440px] object-cover rounded-xl shadow"
+                            />
+                            {/* Color palette circles */}
+                            <div className="absolute left-24 top-[340px] flex gap-3">
+                                <span className="w-5 h-5 rounded-full bg-[#e3f2fd] border border-[#b3e0ff]"></span>
+                                <span className="w-5 h-5 rounded-full bg-[#bbdefb] border border-[#90caf9]"></span>
+                                <span className="w-5 h-5 rounded-full bg-[#90caf9] border border-[#64b5f6]"></span>
+                                <span className="w-5 h-5 rounded-full bg-[#2196f3] border border-[#1976d2]"></span>
+                            </div>
+                            {/* ATS Perfect badge */}
+                            <div className="absolute left-8 bottom-24 bg-[#e6fff4] text-[#43d19e] px-5 py-2 rounded-full text-base font-semibold shadow">
+                                ATS Perfect
+                            </div>
+                            {/* AI-powered ideas box */}
+                            <div className="absolute right-0 bottom-0 bg-white rounded-xl shadow-lg p-6 w-[280px] text-base text-[#2196f3] flex flex-col gap-2">
+                                <div className="font-semibold mb-2 text-[#2196f3]">
+                                    AI-powered ideas:
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <span className="inline-block w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center">
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            fill="#2196f3"
+                                        >
+                                            <circle cx="9" cy="9" r="9" />
+                                        </svg>
+                                    </span>
+                                    <span className="text-[#2196f3]">
+                                        Analyzed market trends to identify new
+                                        growth opportunities.
+                                    </span>
+                                </div>
+                                <div className="flex items-start gap-2">
+                                    <span className="inline-block w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center">
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            fill="#2196f3"
+                                        >
+                                            <circle cx="9" cy="9" r="9" />
+                                        </svg>
+                                    </span>
+                                    <span className="text-[#2196f3]">
+                                        Reduced operational costs by 15% through
+                                        process optimization.
+                                    </span>
+                                </div>
+                            </div>
+                            {/* Decorative floating squares */}
+                            <div className="absolute right-8 top-8 flex flex-col gap-4">
+                                <span className="w-10 h-10 bg-[#e3f2fd] rounded-xl shadow"></span>
+                                <span className="w-10 h-10 bg-white rounded-xl shadow"></span>
+                            </div>
+                            {/* Decorative sparkles */}
+                            <div className="absolute right-16 top-[320px] text-[#2196f3] text-2xl">
+                                <span>✨</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
-              {/* Decorative floating squares */}
-              <div className="absolute right-8 top-8 flex flex-col gap-4">
-                <span className="w-10 h-10 bg-[#e3f2fd] rounded-xl shadow"></span>
-                <span className="w-10 h-10 bg-white rounded-xl shadow"></span>
-              </div>
-              {/* Decorative sparkles */}
-              <div className="absolute right-16 top-[320px] text-[#2196f3] text-2xl">
-                <span>✨</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+            </section>
 
             {/* Features Section */}
             <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">

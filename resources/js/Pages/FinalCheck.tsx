@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
-import Logo from "@/Components/Logo";
-
 
 type Contact = {
   firstName: string;
@@ -609,13 +607,12 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <Logo 
-                size="sm"
-                text="CVeezy"
-                imageSrc="/images/CveezyLOGO.png"
-                imageAlt="CVeezy Logo"
-                className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+              <img
+                src="/icons/favicon-32x32.png"
+                alt="CVeezy Logo"
+                className="w-8 h-8 rounded-lg object-cover"
               />
+              <span className="text-xl font-bold text-gray-800">CVeezy</span>
             </div>
           </div>
 
