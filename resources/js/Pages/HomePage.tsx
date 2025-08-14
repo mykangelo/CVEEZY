@@ -1,95 +1,128 @@
 import React, { useRef, useState } from "react";
-import { Link, Head, usePage } from '@inertiajs/react';
-import FAQ from './HomepageFAQ';
+import { Link, Head, usePage } from "@inertiajs/react";
+import FAQ from "./HomepageFAQ";
 import Logo from "@/Components/Logo";
 import Button from "../Components/PrimaryButton";
 
 interface HomePageProps {
-  hasPendingPayments?: boolean;
-  pendingResumesCount?: number;
+    hasPendingPayments?: boolean;
+    pendingResumesCount?: number;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ 
-  hasPendingPayments = false, 
-  pendingResumesCount = 0 
+const HomePage: React.FC<HomePageProps> = ({
+    hasPendingPayments = false,
+    pendingResumesCount = 0,
 }) => {
-  const { auth } = usePage().props as any;
-  const user = auth.user;
-  const templates = [
-  { name: "Cosmos", image: "/images/templates/template1.png" },
-  { name: "Celestial", image: "/images/templates/template2.png" },
-  { name: "Galaxy", image: "/images/templates/template3.jpg" },
-  { name: "Astral", image: "/images/templates/template4.jpg" },
-  { name: "Astralis", image: "/images/templates/template5.jpg" },
-  { name: "Daniel Gallego", image: "/images/templates/template6.jpg" },
-];
-  const containerRef = useRef<HTMLDivElement>(null);
-  const ITEMS_PER_PAGE = 5;
-  const CARD_WIDTH = 280;
+    const { auth } = usePage().props as any;
+    const user = auth.user;
+    const templates = [
+        { name: "Professional", image: "/images/templates/template1.png" },
+        { name: "Classic", image: "/images/templates/template2.png" },
+        { name: "Creative", image: "/images/templates/template3.jpg" },
+        { name: "Minimal", image: "/images/templates/template4.jpg" },
+        { name: "Elegant", image: "/images/templates/template5.jpg" },
+        { name: "Modern", image: "/images/templates/template6.jpg" },
+    ];
+    const containerRef = useRef<HTMLDivElement>(null);
+    const ITEMS_PER_PAGE = 5;
+    const CARD_WIDTH = 280;
+    const GAP = 24; // 6 * 4px (gap-6)
 
-  const [startIndex, setStartIndex] = useState(0);
-  const totalTemplates = templates.length;
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const totalTemplates = templates.length;
 
+    // Create extended array for seamless looping
+    const getExtendedTemplates = () => {
+        // Add copies at the beginning and end for seamless looping
+        return [
+            ...templates.slice(-ITEMS_PER_PAGE),
+            ...templates,
+            ...templates.slice(0, ITEMS_PER_PAGE),
+        ];
+    };
 
-  const getVisibleTemplates = () => {
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-    if (endIndex <= totalTemplates) {
-      return templates.slice(startIndex, endIndex);
-    } else {
-      // Wrap around
-      return [...templates.slice(startIndex), ...templates.slice(0, endIndex - totalTemplates)];
-    }
-  }
+    const extendedTemplates = getExtendedTemplates();
+    const displayIndex = currentIndex + ITEMS_PER_PAGE; // Offset for the prepended items
 
-  const scrollRight = () => {
-    setStartIndex((prevIndex) =>
-      (prevIndex + ITEMS_PER_PAGE) % templates.length
-    );
-  };
+    const scrollToIndex = (newIndex: number, immediate = false) => {
+        if (isAnimating) return;
 
-  const scrollLeft = () => {
-    setStartIndex((prevIndex) =>
-      (prevIndex - ITEMS_PER_PAGE + templates.length) % templates.length
-    );
-  };
-  
+        setIsAnimating(true);
+        setCurrentIndex(newIndex);
 
-  const features = [
-    {
-      icon: "/images/template-icon.png",
-      title: "Modern Templates",
-      description: "Choose from 6+ professional templates for all jobs and experience levels.",
-    },
-    {
-      icon: "/images/ats-friendly-icon.png",
-      title: "ATS-Friendly Resumes",
-      description: "Your resume will pass the software many companies use to screen applicants.",
-    },
-    {
-      icon: "/images/pre-written-icon.png",
-      title: "Pre-Written Content",
-      description: "Use ready-made content to save time and avoid the stress of writing from scratch.",
-    },
-    {
-      icon: "/images/ai-icon.png",
-      title: "Easy with AI",
-      description: "AI sparks ideas and helps you find the right words to highlight your skills.",
-    },
-    {
-      icon: "/images/beat-competition-icon.png",
-      title: "Beat the Competition",
-      description: "Stand out with an impressive resume that shows off your strengths.",
-    },
-    {
-      icon: "/images/paid-more-icon.png",
-      title: "Get Paid More",
-      description: "A strong resume opens doors. BetterCV helps you move toward better job offers.",
-    },
-  ];
+        setTimeout(
+            () => {
+                setIsAnimating(false);
 
-  return (
-    <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-sans px-0">
-      <Head title="CVeezy | Build Your Job-Winning Resume" />
+                // Handle seamless looping
+                if (newIndex >= totalTemplates) {
+                    setCurrentIndex(0);
+                } else if (newIndex < 0) {
+                    setCurrentIndex(totalTemplates - 1);
+                }
+            },
+            immediate ? 0 : 300
+        );
+    };
+
+    const scrollRight = () => {
+        const nextIndex = currentIndex + 1;
+        scrollToIndex(nextIndex);
+    };
+
+    const scrollLeft = () => {
+        const nextIndex = currentIndex - 1;
+        scrollToIndex(nextIndex);
+    };
+
+    const getTransformValue = () => {
+        const translateX = -displayIndex * (CARD_WIDTH + GAP);
+        return `translateX(${translateX}px)`;
+    };
+
+    const features = [
+        {
+            icon: "/images/template-icon.png",
+            title: "Modern Templates",
+            description:
+                "Choose from 6+ professional templates for all jobs and experience levels.",
+        },
+        {
+            icon: "/images/ats-friendly-icon.png",
+            title: "ATS-Friendly Resumes",
+            description:
+                "Your resume will pass the software many companies use to screen applicants.",
+        },
+        {
+            icon: "/images/pre-written-icon.png",
+            title: "Pre-Written Content",
+            description:
+                "Use ready-made content to save time and avoid the stress of writing from scratch.",
+        },
+        {
+            icon: "/images/ai-icon.png",
+            title: "Easy with AI",
+            description:
+                "AI sparks ideas and helps you find the right words to highlight your skills.",
+        },
+        {
+            icon: "/images/beat-competition-icon.png",
+            title: "Beat the Competition",
+            description:
+                "Stand out with an impressive resume that shows off your strengths.",
+        },
+        {
+            icon: "/images/paid-more-icon.png",
+            title: "Get Paid More",
+            description:
+                "A strong resume opens doors. BetterCV helps you move toward better job offers.",
+        },
+    ];
+
+    return (
+        <div className="min-h-screen bg-[#f4faff] flex flex-col items-center font-sans px-0">
+            <Head title="CVeezy | Build Your Job-Winning Resume" />
 
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between px-8 py-6 shadow-sm">
@@ -237,323 +270,384 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </section>
 
-      {/* Features Section */}
-              <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
-            Why use <span className="text-[#2196f3]">CVeezy's</span> Resume Builder?
-          </h2>
+            {/* Features Section */}
+            <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
+                <div className="max-w-7xl mx-auto text-center">
+                    <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
+                        Why use <span className="text-[#2196f3]">CVeezy's</span>{" "}
+                        Resume Builder?
+                    </h2>
 
-          {/* Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-white rounded-2xl border border-[#e3f2fd] p-8 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.03]"
-              >
-                <img
-                  src={feature.icon}
-                  alt={`${feature.title} icon`}
-                  className="w-16 h-16 mb-6 mx-auto"
-                />
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">{feature.title}</h3>
-                <p className="text-gray-600 text-base leading-relaxed">{feature.description}</p>
-              </div>
-            ))}
-          </div>
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                        {features.map((feature, index) => (
+                            <div
+                                key={index}
+                                className="bg-white rounded-2xl border border-[#e3f2fd] p-8 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.03]"
+                            >
+                                <img
+                                    src={feature.icon}
+                                    alt={`${feature.title} icon`}
+                                    className="w-16 h-16 mb-6 mx-auto"
+                                />
+                                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                                    {feature.title}
+                                </h3>
+                                <p className="text-gray-600 text-base leading-relaxed">
+                                    {feature.description}
+                                </p>
+                            </div>
+                        ))}
+                    </div>
 
-          {/* CTA Button */}
-          <div className="mt-16   mb-10">
-            <Link href="/choose-template">
-              <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
-                Create My Resume
-              </button>
-            </Link>
-          </div>
+                    {/* CTA Button */}
+                    <div className="mt-16   mb-10">
+                        <Link href="/choose-template">
+                            <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
+                                Create My Resume
+                            </button>
+                        </Link>
+                    </div>
 
-          {/* FAQ Section */}
-          <FAQ />
-        </div>
-      </section>
-
-      {/* Templates Section */}
-              <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
-          <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
-                      <h1 className="text-white text-4xl font-bold mb-4">
-              Choose your <span className="text-sky-400">resume template</span>, AI will do the rest
-            </h1>
-          <p className="text-white text-sm max-w-2xl mx-auto mb-6">
-            With CVeezy's AI resume generator, you'll get a professional, typo-free, and ATS-friendly resume ready in no time. Explore 40+ modern templates.
-          </p>
-          <Link href="/choose-template">
-
-            <button className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition-colors duration-300 mb-8">
-              View All Templates
-            </button>
-          </Link>
-
-          
-          <div className="relative w-full flex justify-center">
-            {/* Left Arrow */}
-            <button
-              onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            {/* Template Cards */}
-            <div
-              className="flex justify-center gap-6 overflow-hidden px-10"
-              style={{ width: `${CARD_WIDTH * ITEMS_PER_PAGE}px`, margin: "0 auto" }}
-            >
-              {getVisibleTemplates().map((template) => (
-                <div
-                  key={template.name}
-                  className="flex flex-col items-center"
-                  style={{ width: `${CARD_WIDTH}px`, flex: "0 0 auto" }}
-                >
-                  <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
-                    <img
-                      src={template.image}
-                      alt={template.name}
-                      className="w-full object-cover h-96"
-                    />
-                  </div>
-                  <div className="mt-2 text-center text-lg font-semibold text-gray-800">
-                    {template.name}
-                  </div>
+                    {/* FAQ Section */}
+                    <FAQ />
                 </div>
+            </section>
 
-              ))}
-            </div>
+            {/* Templates Section - Enhanced with Smooth Animation */}
+            <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
+                <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
+                    <h1 className="text-white text-4xl font-bold mb-4">
+                        Choose your{" "}
+                        <span className="text-sky-400">resume template</span>,
+                        AI will do the rest
+                    </h1>
+                    <p className="text-white text-sm max-w-2xl mx-auto mb-6">
+                        With CVeezy's AI resume generator, you'll get a
+                        professional, typo-free, and ATS-friendly resume ready
+                        in no time. Explore 40+ modern templates.
+                    </p>
+                    <Link href="/choose-template">
+                        <button className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition-colors duration-300 mb-8">
+                            View All Templates
+                        </button>
+                    </Link>
 
-            {/* Right Arrow */}
-            <button
-              onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-2 rounded-full shadow  hover:bg-slate-600 z-10 opacity-60 hover:opacity-100"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </section>
+                    <div className="relative w-full flex justify-center">
+                        {/* Left Arrow */}
+                        <button
+                            onClick={scrollLeft}
+                            disabled={isAnimating}
+                            className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-3 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M15 19l-7-7 7-7"
+                                />
+                            </svg>
+                        </button>
 
+                        {/* Template Slider Container */}
+                        <div
+                            className="overflow-hidden"
+                            style={{
+                                width: `${
+                                    (CARD_WIDTH + GAP) * ITEMS_PER_PAGE - GAP
+                                }px`,
+                            }}
+                        >
+                            <div
+                                className="flex gap-6 transition-transform duration-300 ease-in-out"
+                                style={{
+                                    transform: getTransformValue(),
+                                    width: `${
+                                        extendedTemplates.length *
+                                        (CARD_WIDTH + GAP)
+                                    }px`,
+                                }}
+                                ref={containerRef}
+                            >
+                                {extendedTemplates.map((template, index) => (
+                                    <div
+                                        key={`${template.name}-${index}`}
+                                        className="flex flex-col items-center flex-shrink-0"
+                                        style={{ width: `${CARD_WIDTH}px` }}
+                                    >
+                                        <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
+                                            <img
+                                                src={template.image}
+                                                alt={template.name}
+                                                className="w-full object-cover h-96"
+                                                draggable={false}
+                                            />
+                                        </div>
+                                        <div className="mt-2 text-center text-lg font-semibold text-gray-800">
+                                            {template.name}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
 
-      {/* Banner Section */}
-      <div className="relative w-full max-w-[1130px] h-[200px] sm:h-[280px] md:h-[356.6px] bg-[#2E404A] rounded-2xl shadow-lg overflow-hidden mt-[30px]">
-        <img
-          src="/images/banner.webp"
-          alt="Banner"
-          className="absolute inset-0 w-full h-full object-cover z-0"
-        />
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-1/2 left-1/2 w-[150px] h-[75px] sm:w-[200px] sm:h-[100px] md:w-[300px] md:h-[150px] bg-white opacity-20 rounded-full blur-[60px] transform -translate-x-1/2 -translate-y-1/2" />
-        </div>
-        <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-8 pt-[40px] sm:pt-[60px] md:pt-[90px]">
-          <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-3 leading-tight text-white">
-            Get noticed, get hired faster
-          </h1>
-          <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 max-w-[90%] md:max-w-[700px] text-white">
-            It's easier with CVeezy. Build a professional, job-winning resume in minutes!
-          </p>
-          <Link href="/choose-template">
-            <button
-              style={{ backgroundColor: "#05A2FF" }}
-              className="hover:bg-blue-600 text-white font-semibold py-2 px-4 md:py-3 md:px-6 rounded-lg shadow-lg transition duration-300 text-sm md:text-base"
-            >
-              Land My Dream Job
-            </button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Footer */}
-     <footer
-        className="w-full bg-[#2E404A] mt-8 md:mt-20 py-8 md:py-16 px-4 md:px-8"
-        style={{ fontFamily: "Nunito Sans, sans-serif" }}
-      >
-        <div className="max-w-7xl mx-auto text-white">
-          <div className="block md:hidden">
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center mb-4">
-                <img
-                  src="/images/supsoft-logo.jpg"
-                  alt="CVeezy Logo"
-                  className="w-6 h-6 rounded mr-2 object-contain"
-                />
-                <span className="text-xl font-bold">CVeezy</span>
-              </div>
-              <p className="text-gray-300 text-sm leading-relaxed">
-                We Help job seekers stand out in the highly competitive labor market
-                with CVeezy!
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-6 mb-6 justify-items-center">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">About</h3>
-                <ul className="space-y-1 text-sm text-gray-300">
-                  <li>
-                    <Link
-                      href="/privacy-policy"
-                      className="hover:text-white transition-colors"
-                    >
-                      Privacy Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/cookie-policy"
-                      className="hover:text-white transition-colors"
-                    >
-                      Cookie Policy
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/terms-and-conditions"
-                      className="hover:text-white transition-colors"
-                    >
-                      Terms and Conditions
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/payment-terms"
-                      className="hover:text-white transition-colors"
-                    >
-                      Payment Terms
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/contact"
-                      className="hover:text-white transition-colors"
-                    >
-                      Contact us
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="mb-3">
-                <h3 className="text-lg font-semibold mb-2">Need Help?</h3>
-                <p className="text-sm text-gray-300 mb-2">Email: help@cveezy.com</p>
-              </div>
-              <div className="text-sm text-gray-300 mb-3">
-                <div className="flex items-center justify-center mb-1">
-                  <img
-                    src="/images/CerticodeLogo.jpg"
-                    alt="Certicode Logo"
-                    className="w-4 h-4 rounded mr-2 object-contain"
-                  />
-                  <p>© 2025. Certicode.</p>
+                        {/* Right Arrow */}
+                        <button
+                            onClick={scrollRight}
+                            disabled={isAnimating}
+                            className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-3 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                        >
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9 5l7 7-7 7"
+                                />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <p>All rights reserved.</p>
-              </div>
-              <div className="flex justify-center">
+            </section>
+
+            {/* Banner Section */}
+            <div className="relative w-full max-w-[1130px] h-[200px] sm:h-[280px] md:h-[356.6px] bg-[#2E404A] rounded-2xl shadow-lg overflow-hidden mt-[30px]">
                 <img
-                  src="/images/gcash-logo.png"
-                  alt="GCash"
-                  className="h-5 object-contain"
+                    src="/images/banner.webp"
+                    alt="Banner"
+                    className="absolute inset-0 w-full h-full object-cover z-0"
                 />
-              </div>
-            </div>
-          </div>
-          <div className="hidden md:grid grid-cols-3 gap-8">
-            <div className="col-span-1">
-              <div className="flex items-center mb-6">
-                <img
-                  src="/images/supsoft-logo.jpg"
-                  alt="CVeezy Logo"
-                  className="w-8 h-8 rounded mr-3 object-contain"
-                />
-                <span className="text-2xl font-bold">CVeezy</span>
-              </div>
-              <p className="text-gray-300 text-base leading-relaxed">
-                We Help job seekers stand out in the highly competitive labor market
-                with CVeezy!
-              </p>
-            </div>
-            <div className="col-span-1 ml-24">
-              <h3 className="text-xl font-semibold mb-4">About</h3>
-              <ul className="space-y-2 text-base text-gray-300">
-                <li>
-                  <Link
-                    href="/privacy-policy"
-                    className="hover:text-white transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/cookie-policy"
-                    className="hover:text-white transition-colors"
-                  >
-                    Cookie Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/terms-and-conditions"
-                    className="hover:text-white transition-colors"
-                  >
-                    Terms and Conditions
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/payment-terms"
-                    className="hover:text-white transition-colors"
-                  >
-                    Payment Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/contact"
-                    className="hover:text-white transition-colors"
-                  >
-                    Contact us
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div className="col-span-1 ml-8">
-              <h3 className="text-xl font-semibold mb-4">Need Help?</h3>
-              <div className="mb-4">
-                <p className="text-base text-gray-300">Email: help@cveezy.com</p>
-              </div>
-              <div className="text-base text-gray-300 mb-4">
-                <div className="flex items-center mb-1">
-                  <img
-                    src="\images\CerticodeLogo.jpg"
-                    alt="Certicode Logo"
-                    className="w-6 h-6 rounded mr-2 object-contain"
-                  />
-                  <p>© 2025. Certicode.</p>
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute top-1/2 left-1/2 w-[150px] h-[75px] sm:w-[200px] sm:h-[100px] md:w-[300px] md:h-[150px] bg-white opacity-20 rounded-full blur-[60px] transform -translate-x-1/2 -translate-y-1/2" />
                 </div>
-                <p>All rights reserved.</p>
-              </div>
-              <div className="flex">
-                <img
-                  src="/images/gcash-logo.png"
-                  alt="GCash"
-                  className="h-6 object-contain"
-                />
-              </div>
+                <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-8 pt-[40px] sm:pt-[60px] md:pt-[90px]">
+                    <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-3 leading-tight text-white">
+                        Get noticed, get hired faster
+                    </h1>
+                    <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 max-w-[90%] md:max-w-[700px] text-white">
+                        It's easier with CVeezy. Build a professional,
+                        job-winning resume in minutes!
+                    </p>
+                    <Link href="/choose-template">
+                        <button
+                            style={{ backgroundColor: "#05A2FF" }}
+                            className="hover:bg-blue-600 text-white font-semibold py-2 px-4 md:py-3 md:px-6 rounded-lg shadow-lg transition duration-300 text-sm md:text-base"
+                        >
+                            Land My Dream Job
+                        </button>
+                    </Link>
+                </div>
             </div>
-          </div>
+
+            {/* Footer */}
+            <footer
+                className="w-full bg-[#2E404A] mt-8 md:mt-20 py-8 md:py-16 px-4 md:px-8"
+                style={{ fontFamily: "Nunito Sans, sans-serif" }}
+            >
+                <div className="max-w-7xl mx-auto text-white">
+                    <div className="block md:hidden">
+                        <div className="text-center mb-6">
+                            <div className="flex items-center justify-center mb-4">
+                                <img
+                                    src="/images/supsoft-logo.jpg"
+                                    alt="CVeezy Logo"
+                                    className="w-6 h-6 rounded mr-2 object-contain"
+                                />
+                                <span className="text-xl font-bold">
+                                    CVeezy
+                                </span>
+                            </div>
+                            <p className="text-gray-300 text-sm leading-relaxed">
+                                We help job seekers stand out in the highly
+                                competitive labor market with CVeezy!
+                            </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6 mb-6 justify-items-center">
+                            <div>
+                                <h3 className="text-lg font-semibold mb-3">
+                                    About
+                                </h3>
+                                <ul className="space-y-1 text-sm text-gray-300">
+                                    <li>
+                                        <Link
+                                            href="/privacy-policy"
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            Privacy Policy
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href="/cookie-policy"
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            Cookie Policy
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href="/terms-and-conditions"
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            Terms and Conditions
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href="/payment-terms"
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            Payment Terms
+                                        </Link>
+                                    </li>
+                                    <li>
+                                        <Link
+                                            href="/contact"
+                                            className="hover:text-white transition-colors"
+                                        >
+                                            Contact us
+                                        </Link>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div className="text-center">
+                            <div className="mb-3">
+                                <h3 className="text-lg font-semibold mb-2">
+                                    Need Help?
+                                </h3>
+                                <p className="text-sm text-gray-300 mb-2">
+                                    Email: help@cveezy.com
+                                </p>
+                            </div>
+                            <div className="text-sm text-gray-300 mb-3">
+                                <div className="flex items-center justify-center mb-1">
+                                    <img
+                                        src="/images/CerticodeLogo.jpg"
+                                        alt="Certicode Logo"
+                                        className="w-4 h-4 rounded mr-2 object-contain"
+                                    />
+                                    <p>© 2025. Certicode.</p>
+                                </div>
+                                <p>All rights reserved.</p>
+                            </div>
+                            <div className="flex justify-center">
+                                <img
+                                    src="/images/gcash-logo.png"
+                                    alt="GCash"
+                                    className="h-6 object-contain rounded-2xl"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="hidden md:grid grid-cols-3 gap-8">
+                        <div className="col-span-1">
+                            <div className="flex items-center mb-6">
+                                <img
+                                    src="/images/supsoft-logo.jpg"
+                                    alt="CVeezy Logo"
+                                    className="w-8 h-8 rounded mr-3 object-contain"
+                                />
+                                <span className="text-2xl font-bold">
+                                    CVeezy
+                                </span>
+                            </div>
+                            <p className="text-gray-300 text-base leading-relaxed">
+                                We Help job seekers stand out in the highly
+                                competitive labor market with CVeezy!
+                            </p>
+                        </div>
+                        <div className="col-span-1 ml-24">
+                            <h3 className="text-xl font-semibold mb-4">
+                                About
+                            </h3>
+                            <ul className="space-y-2 text-base text-gray-300">
+                                <li>
+                                    <Link
+                                        href="/privacy-policy"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        Privacy Policy
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/cookie-policy"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        Cookie Policy
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/terms-and-conditions"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        Terms and Conditions
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/payment-terms"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        Payment Terms
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/contact"
+                                        className="hover:text-white transition-colors"
+                                    >
+                                        Contact us
+                                    </Link>
+                                </li>
+                            </ul>
+                        </div>
+                        <div className="col-span-1 ml-8">
+                            <h3 className="text-xl font-semibold mb-4">
+                                Need Help?
+                            </h3>
+                            <div className="mb-4">
+                                <p className="text-base text-gray-300">
+                                    Email: help@cveezy.com
+                                </p>
+                            </div>
+                            <div className="text-base text-gray-300 mb-4">
+                                <div className="flex items-center mb-1">
+                                    <img
+                                        src="\images\CerticodeLogo.jpg"
+                                        alt="Certicode Logo"
+                                        className="w-6 h-6 rounded mr-2 object-contain"
+                                    />
+                                    <p>© 2025. Certicode.</p>
+                                </div>
+                                <p>All rights reserved.</p>
+                            </div>
+                            <div className="flex">
+                                <img
+                                    src="/images/gcash-logo.png"
+                                    alt="GCash"
+                                    className="h-7 object-contain rounded-2xl"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
-      </footer>
-    </div>
-  );
+    );
 };
 
 export default HomePage;
