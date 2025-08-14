@@ -166,6 +166,8 @@ interface ExperienceSectionProps {
   errors: Record<string, string>;
 }
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setExperiences, errors }) => {
+  const [loadingId, setLoadingId] = React.useState<number | null>(null);
+
   const addExperience = () => {
     setExperiences([
       ...experiences,
@@ -181,6 +183,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       },
     ]);
   };
+
   const updateExperience = (id: number, field: keyof Experience, value: string) => {
     setExperiences(
       experiences.map((exp) =>
@@ -188,9 +191,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       )
     );
   };
+
   const removeExperience = (id: number) => {
     setExperiences(experiences.filter((exp) => exp.id !== id));
   };
+
   const toggleExpand = (id: number) => {
     setExperiences(
       experiences.map((exp) =>
@@ -198,10 +203,30 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       )
     );
   };
+
+  // Call Gemini API for experience description revision
+  const reviseExperienceDescription = async (id: number, description: string) => {
+    if (!description.trim()) return;
+    setLoadingId(id);
+    try {
+      const res = await fetch("/revise-experience-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: description }),
+      });
+      const data = await res.json();
+      updateExperience(id, "description", data.revised_text);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2">Experience</h2>
-      {experiences.map((exp, idx) => (
+      {experiences.map((exp) => (
         <div key={exp.id} className="bg-white rounded-xl border p-6 mb-4 shadow-sm relative">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-gray-700">
@@ -281,6 +306,13 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                   placeholder="Sample Text" 
                 />
                 {errors[`exp_${exp.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`exp_${exp.id}_description`]}</p>}
+
+                <button
+                  onClick={() => reviseExperienceDescription(exp.id, exp.description)}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                >
+                  {loadingId === exp.id ? "Asking AI for assistance..." : "Improve description using AI"}
+                </button>
               </div>
             </>
           )}
@@ -290,6 +322,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
     </div>
   );
 };
+
 
 // Education Section
 interface EducationSectionProps {
@@ -448,7 +481,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                     loadingId === edu.id ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
                   }`}
                 >
-                  {loadingId === edu.id ? "Asking AI for assistance..." : "Revise Summary"}
+                  {loadingId === edu.id ? "Asking AI for assistance..." : "Improve summary using AI"}
                 </button>
               </div>
             </>

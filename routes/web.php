@@ -190,4 +190,11 @@ Route::withoutMiddleware([
     Route::post('/reviseEducationDescription', [AIController::class, 'reviseEducationDescription']);
 });
 
+//Routing for AI assistance in experience page
+Route::withoutMiddleware([
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+])->group(function () {
+    Route::post('/revise-experience-text', [AIController::class, 'reviseExperienceDescription']);
+});
+
 require __DIR__ . '/auth.php';
