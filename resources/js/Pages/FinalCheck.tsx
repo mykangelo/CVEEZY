@@ -83,6 +83,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentSection, setCurrentSection] = useState<string>("design");
+  const [clientSpellcheck, setClientSpellcheck] = useState<SpellCheckMatch[]>([]);
+  const [isClientChecking, setIsClientChecking] = useState<boolean>(false);
   
   // Debug: Log the resumeId and other props
   console.log('FinalCheck - Props received:', {
@@ -189,6 +191,83 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections, templateName } = resumeData;
 
 
+
+  // Build the exact text we render to run client-side spellcheck when needed
+  const buildTextToCheck = (): string => {
+    const experienceTexts = (experiences || []).map((exp: any) => [
+      exp.jobTitle || '',
+      exp.employer || exp.company || '',
+      exp.description || ''
+    ].filter(Boolean).join(' '));
+
+    const educationTexts = (educations || []).map((edu: any) => [
+      edu.degree || '',
+      edu.school || '',
+      edu.description || ''
+    ].filter(Boolean).join(' '));
+
+    const skillsText = (skills || []).map((s: any) => s.name).filter(Boolean).join(', ');
+
+    return [
+      summary || '',
+      contact?.desiredJobTitle || '',
+      ...experienceTexts,
+      ...educationTexts,
+      skillsText
+    ].filter(Boolean).join('\n');
+  };
+
+  // Client-side fallback spellcheck: runs when server returned none
+  useEffect(() => {
+    const serverIssues = spellcheck?.length || 0;
+    if (serverIssues > 0) {
+      setClientSpellcheck([]);
+      return;
+    }
+
+    const text = buildTextToCheck();
+    if (!text || text.trim().length === 0) {
+      setClientSpellcheck([]);
+      return;
+    }
+
+    let isCancelled = false;
+    setIsClientChecking(true);
+    const language = (navigator.language || 'en-US').replace('_', '-');
+    const endpoint = 'https://api.languagetool.org/v2/check';
+
+    const body = new URLSearchParams({ text, language });
+
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString()
+    })
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({ matches: [] }));
+        const allMatches: SpellCheckMatch[] = (data?.matches || []) as SpellCheckMatch[];
+        // Keep only spelling-related issues (not grammar/style)
+        const keywords = ['spelling', 'typos', 'typo', 'morfologik', 'morfo'];
+        const filtered = allMatches.filter((m: any) => {
+          const category = String(m?.rule?.category?.name || '').toLowerCase();
+          const ruleId = String(m?.rule?.id || '').toLowerCase();
+          const message = String(m?.message || '').toLowerCase();
+          const categoryMatches = keywords.some((kw) => category.includes(kw));
+          const ruleOrMessageMatches = keywords.some((kw) => ruleId.includes(kw) || message.includes(kw));
+          return categoryMatches || ruleOrMessageMatches;
+        });
+        if (!isCancelled) setClientSpellcheck(filtered);
+      })
+      .catch(() => {
+        if (!isCancelled) setClientSpellcheck([]);
+      })
+      .finally(() => {
+        if (!isCancelled) setIsClientChecking(false);
+      });
+
+    return () => { isCancelled = true; };
+  // Re-run when inputs that affect the on-screen text change
+  }, [spellcheck, summary, contact?.desiredJobTitle, experiences, educations, skills]);
 
    // Function to handle clicking the "Download PDF" button
   const handleDownloadButtonClick = () => {
@@ -552,9 +631,12 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
             <div>
               <h2 className="text-2xl font-bold mb-6">Spell Check</h2>
               <p className="text-gray-600">Review and correct any spelling or grammar errors.</p>
-              {spellcheck.length > 0 ? (
+              {(() => {
+                const issues = (spellcheck && spellcheck.length > 0) ? spellcheck : clientSpellcheck;
+                if (issues.length > 0) {
+                  return (
                 <div className="mt-6 space-y-4">
-                  {spellcheck.map((issue: SpellCheckMatch, index) => {
+                  {issues.map((issue: SpellCheckMatch, index) => {
                     const severityIcon = getSpellCheckSeverityIcon(issue.rule.category.name);
                     return (
                       <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -601,19 +683,23 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
                     );
                   })}
                 </div>
-              ) : (
+                  );
+                }
+                // Empty state
+                return (
                 <div className="mt-6" role="status" aria-live="polite">
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
                     <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5" aria-hidden="true">
                       <span className="text-white text-xs">✓</span>
                     </div>
                     <div className="text-green-800">
-                      <p className="font-medium">No spelling issues found</p>
+                      <p className="font-medium">No spelling issues found{isClientChecking ? ' (checking...)' : ''}</p>
                       <p className="text-sm text-green-700">Your resume looks good.</p>
                     </div>
                   </div>
                 </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </div>
