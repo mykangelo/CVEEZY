@@ -38,43 +38,28 @@ class FinalCheckController extends Controller
         }
 
         // Combine all text fields into one string for spell checking
+        // Combine non-sensitive text fields for spell checking (avoid PII)
         $textToCheck = implode("\n", [
-            // Contact information - ALL fields including job title
-            $resumeData['contact']['firstName'] ?? '',
-            $resumeData['contact']['lastName'] ?? '',
-            $resumeData['contact']['desiredJobTitle'] ?? '',
-            $resumeData['contact']['phone'] ?? '',
-            $resumeData['contact']['email'] ?? '',
-            $resumeData['contact']['address'] ?? '',
-            $resumeData['contact']['city'] ?? '',
-            $resumeData['contact']['country'] ?? '',
-            $resumeData['contact']['postCode'] ?? '',
-            
             // Summary
             $resumeData['summary'] ?? '',
-            
-            // Experiences - ALL fields including job titles, company names, etc.
-            ...array_map(function($exp) {
+
+            // Experiences: include jobTitle (optional) and description
+            ...array_map(function ($exp) {
                 return implode(' ', [
                     $exp['jobTitle'] ?? '',
-                    $exp['employer'] ?? '',
-                    $exp['company'] ?? '',
-                    $exp['location'] ?? '',
-                    $exp['description'] ?? ''
+                    $exp['description'] ?? '',
                 ]);
             }, $resumeData['experiences'] ?? []),
-            
-            // Educations - ALL fields including school names, degrees, etc.
-            ...array_map(function($edu) {
+
+            // Educations: include degree (optional) and description
+            ...array_map(function ($edu) {
                 return implode(' ', [
-                    $edu['school'] ?? '',
-                    $edu['location'] ?? '',
                     $edu['degree'] ?? '',
-                    $edu['description'] ?? ''
+                    $edu['description'] ?? '',
                 ]);
             }, $resumeData['educations'] ?? []),
-            
-            // Skills
+
+            // Skills: names only
             implode(', ', array_column($resumeData['skills'] ?? [], 'name')),
         ]);
 
