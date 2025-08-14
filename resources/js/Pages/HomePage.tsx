@@ -165,8 +165,9 @@ const HomePage: React.FC<HomePageProps> = ({
                     <div className="flex-1 max-w-2xl">
                         <p className="text-[#2196f3] font-semibold mb-2 flex items-center text-lg">
                             <span className="inline-block w-3 h-3 bg-[#3bb2f6] rounded-full mr-2 align-middle"></span>
-                            <span className="font-bold">50,435</span> resumes
-                            created today
+                            <span className="font-bold">50,435 resumes
+                            created today</span>
+
                         </p>
                         <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
                             Create your{" "}
