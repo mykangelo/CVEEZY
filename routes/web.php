@@ -67,7 +67,7 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handlePro
 */
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
@@ -94,7 +94,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/resumes/bulk-delete', [DashboardController::class, 'destroyMultiple'])->name('resumes.bulk-delete');
     Route::get('/resumes/{resume}/download', [DashboardController::class, 'download'])->name('resumes.download');
     Route::post('/resumes/{resume}/duplicate', [DashboardController::class, 'duplicate'])->name('resumes.duplicate');
-    
+
     // Resume API
     Route::post('/save-resume', [ResumeController::class, 'store'])->name('resume.save');
     Route::get('/user/resume-status', [ResumeController::class, 'status'])->name('resume.status');
@@ -120,26 +120,24 @@ Route::middleware(['auth', 'verified', 'check.pending.payments'])->group(functio
 */
 
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    
+
     // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/admin/dashboard-data', [AdminController::class, 'dashboardData'])->name('admin.dashboard.data');
     Route::get('/admin', function () {
         return Inertia::render('AdminPanel', ['user' => Auth::user()]);
     })->name('admin.panel');
-    
+
     // Payment Management
     Route::get('/admin/payments', [AdminController::class, 'index'])->name('admin.payments');
     Route::get('/admin/payment/{id}/view', [AdminController::class, 'viewPaymentProof'])->name('admin.payment.view');
     Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve'])->name('admin.payment.approve');
     Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject'])->name('admin.payment.reject');
-    Route::get('/admin/payment-storage-path', [AdminController::class, 'getStoragePath'])->name('admin.payment.storage-path');
-    Route::post('/admin/open-storage-folder', [AdminController::class, 'openStorageFolder'])->name('admin.payment.open-folder');
-    
+
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/admin/users/{id}', [AdminController::class, 'viewUser'])->name('admin.user.view');
-    
+
     // Resume Management
     Route::get('/admin/resumes', [AdminController::class, 'resumes'])->name('admin.resumes');
     Route::get('/admin/resumes/{id}', [AdminController::class, 'viewResume'])->name('admin.resume.view');
@@ -147,7 +145,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::delete('/admin/resumes/{id}', [AdminController::class, 'deleteResume'])->name('admin.resume.delete');
     Route::delete('/admin/resumes/bulk-delete/unfinished', [AdminController::class, 'bulkDeleteUnfinishedResumes'])->name('admin.resumes.bulk-delete-unfinished');
     Route::get('/admin/resumes/debug', [AdminController::class, 'debugResumes'])->name('admin.resumes.debug');
-    
+
     // Statistics
     Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');
 });
@@ -169,4 +167,34 @@ Route::middleware(['auth', 'verified', 'throttle:10,1'])->prefix('api')->group(f
 |--------------------------------------------------------------------------
 */
 
-require __DIR__.'/auth.php';
+/*
+|--------------------------------------------------------------------------
+| AI Routing
+|--------------------------------------------------------------------------
+*/
+use App\Http\Controllers\AIController;
+
+Route::get('/ask-ai', [AIController::class, 'ask']);
+
+// Routing for AI assistance in summary page
+Route::withoutMiddleware([
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+])->group(function () {
+    Route::post('/revise-text', [AIController::class, 'reviseText']);
+});
+
+//Routing for AI assistance in education page
+Route::withoutMiddleware([
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+])->group(function () {
+    Route::post('/reviseEducationDescription', [AIController::class, 'reviseEducationDescription']);
+});
+
+//Routing for AI assistance in experience page
+Route::withoutMiddleware([
+    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
+])->group(function () {
+    Route::post('/revise-experience-text', [AIController::class, 'reviseExperienceDescription']);
+});
+
+require __DIR__ . '/auth.php';
