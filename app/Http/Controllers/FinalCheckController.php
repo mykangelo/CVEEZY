@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use GuzzleHttp\Client;
+use Illuminate\Support\Str;
 
 class FinalCheckController extends Controller
 {
@@ -39,39 +40,66 @@ class FinalCheckController extends Controller
 
         // Combine all text fields into one string for spell checking
         // Combine non-sensitive text fields for spell checking (avoid PII)
-        $textToCheck = implode("\n", [
+        // Exclude contact PII (first/last name, phone, email, address, city, country, postCode)
+        // Keep only: summary, desiredJobTitle, experience (jobTitle/employer/company/description),
+        // education (degree/school/description), and skills names
+        $textParts = [
             // Summary
             $resumeData['summary'] ?? '',
 
-            // Experiences: include jobTitle (optional) and description
+            // Optional desired job title (non-sensitive)
+            $resumeData['contact']['desiredJobTitle'] ?? '',
+
+            // Experiences: include jobTitle, employer/company, and description
             ...array_map(function ($exp) {
-                return implode(' ', [
+                return implode(' ', array_filter([
                     $exp['jobTitle'] ?? '',
+                    $exp['employer'] ?? ($exp['company'] ?? ''),
                     $exp['description'] ?? '',
-                ]);
+                ]));
             }, $resumeData['experiences'] ?? []),
 
-            // Educations: include degree (optional) and description
+            // Educations: include degree, school, and description
             ...array_map(function ($edu) {
-                return implode(' ', [
+                return implode(' ', array_filter([
                     $edu['degree'] ?? '',
+                    $edu['school'] ?? '',
                     $edu['description'] ?? '',
-                ]);
+                ]));
             }, $resumeData['educations'] ?? []),
 
             // Skills: names only
             implode(', ', array_column($resumeData['skills'] ?? [], 'name')),
-        ]);
+        ];
+
+        $textToCheck = implode("\n", array_filter($textParts));
 
         // Spell & grammar check via LanguageTool API
         $spellcheckMatches = [];
         if (!empty($textToCheck)) {
             try {
-                $client = new Client();
-                $response = $client->post('https://api.languagetool.org/v2/check', [
+                // Cap payload size and avoid ellipsis which would skew offsets
+                $textToCheck = Str::limit($textToCheck, 20000, '');
+
+                // Derive language from app locale (e.g., en-US)
+                $language = str_replace('_', '-', app()->getLocale() ?? 'en-US');
+
+                // Allow custom/self-hosted LanguageTool endpoint via config
+                $baseEndpoint = rtrim(config('services.languagetool.endpoint', 'https://api.languagetool.org'), '/');
+                $endpoint = $baseEndpoint . '/v2/check';
+
+                $client = new Client([
+                    'timeout' => 5.0,
+                    'connect_timeout' => 2.0,
+                    'headers' => [
+                        'User-Agent' => config('app.name', 'CVeezy') . '/1.0',
+                    ],
+                ]);
+
+                $response = $client->post($endpoint, [
                     'form_params' => [
                         'text'     => $textToCheck,
-                        'language' => 'en-US',
+                        'language' => $language,
                     ],
                 ]);
                 $spellcheckData = json_decode($response->getBody(), true);
@@ -79,14 +107,27 @@ class FinalCheckController extends Controller
                 
                 // Filter to only include actual spelling mistakes, not grammar/style issues
                 $spellcheckMatches = array_filter($allMatches, function($match) {
-                    $category = $match['rule']['category']['name'] ?? '';
-                    $ruleId = $match['rule']['id'] ?? '';
-                    $message = $match['message'] ?? '';
-                    
-                    // Only include actual spelling mistakes, not grammar, style, or formatting issues
-                    return strtolower($category) === 'spelling' || 
-                           strpos(strtolower($ruleId), 'spell') !== false ||
-                           strpos(strtolower($message), 'spell') !== false;
+                    $category = strtolower($match['rule']['category']['name'] ?? '');
+                    $ruleId   = strtolower($match['rule']['id'] ?? '');
+                    $message  = strtolower($match['message'] ?? '');
+
+                    // Allowlist of known spelling-related markers
+                    $keywords = ['spelling', 'typos', 'typo', 'morfologik', 'morfo'];
+
+                    $categoryMatches = false;
+                    foreach ($keywords as $kw) {
+                        if (strpos($category, $kw) !== false) { $categoryMatches = true; break; }
+                    }
+
+                    $ruleOrMessageMatches = false;
+                    foreach ($keywords as $kw) {
+                        if (strpos($ruleId, $kw) !== false || strpos($message, $kw) !== false) {
+                            $ruleOrMessageMatches = true; break;
+                        }
+                    }
+
+                    // Only include items that clearly indicate spelling/typo issues
+                    return $categoryMatches || $ruleOrMessageMatches;
                 });
                 
                 // Re-index the array

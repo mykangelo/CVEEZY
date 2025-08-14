@@ -110,6 +110,10 @@ export default function UpdatePasswordForm({
                             type="button"
                             className="absolute inset-y-0 right-0 pr-3 flex items-center"
                             onClick={() => setShowNewPassword(!showNewPassword)}
+                            aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                            aria-pressed={showNewPassword}
+                            aria-controls="password"
+                            title={showNewPassword ? 'Hide password' : 'Show password'}
                         >
                             {showNewPassword ? (
                                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -148,6 +152,10 @@ export default function UpdatePasswordForm({
                             type="button"
                             className="absolute inset-y-0 right-0 pr-3 flex items-center"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                            aria-pressed={showConfirmPassword}
+                            aria-controls="password_confirmation"
+                            title={showConfirmPassword ? 'Hide password' : 'Show password'}
                         >
                             {showConfirmPassword ? (
                                 <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

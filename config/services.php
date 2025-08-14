@@ -47,4 +47,9 @@ return [
     'redirect' => env('APPLE_REDIRECT_URI'),
 ],
 
+    // LanguageTool configuration
+    'languagetool' => [
+        'endpoint' => env('LANGUAGETOOL_ENDPOINT', 'https://api.languagetool.org'),
+    ],
+
 ];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '@inertiajs/react';
+// No Link here; parent decides whether logo is clickable
 
 interface LogoProps {
   className?: string;
@@ -35,8 +35,7 @@ const Logo: React.FC<LogoProps> = ({
   } as const;
   
   return (
-    <Link
-      href="/"
+    <div
       className={`flex items-center space-x-3 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg ${className}`}
     >
       <div className={`${containerSizeClasses[size]} overflow-hidden rounded-none`}> 
@@ -57,7 +56,7 @@ const Logo: React.FC<LogoProps> = ({
           </span>
         </div>
       )}
-    </Link>
+    </div>
   );
 };
 
