@@ -41,11 +41,16 @@ class PaymentController extends Controller
             ->latest()
             ->get()
             ->map(function ($proof) {
+                $resume = $proof->resume;
                 return [
                     'id' => $proof->id,
                     'status' => $proof->status,
                     'created_at' => $proof->created_at->toDateTimeString(),
                     'resume_id' => $proof->resume_id,
+                    'is_paid' => $resume?->is_paid ?? false,
+                    'needs_payment' => $resume?->needs_payment ?? false,
+                    'is_downloadable' => $resume ? $resume->isDownloadable() : false,
+                    'status_effective' => $resume ? $resume->getPaymentStatus() : $proof->status,
                 ];
             });
 

@@ -7,305 +7,243 @@ type Props = {
 
 const Professional: React.FC<Props> = ({ resumeData }) => {
   const {
-    contact,
-    experiences,
-    education,
-    skills,
-    summary,
-    languages,
-    certifications,
-    awards,
-    websites,
-    references,
-    hobbies,
-    customSections,
-    showExperienceLevel,
+    contact = {
+      firstName: "",
+      lastName: "",
+      desiredJobTitle: "",
+      address: "",
+      city: "",
+      phone: "",
+      email: "",
+    },
+    experiences = [],
+    education = [],
+    skills = [],
+    summary = "",
+    languages = [],
+    certifications = [],
+    awards = [],
+    websites = [],
+    hobbies = [],
+    customSections = [],
   } = resumeData;
 
-  const hasLocationInfo =
-    contact.address || contact.city || contact.country || contact.postCode;
+  const Divider = () => (
+    <div className="h-px bg-orange-700 opacity-70 w-full mb-1"></div>
+  );
 
-  const getSkillLevelBullets = (level: string): number => {
-    switch (level) {
-      case "Novice":
-        return 1;
-      case "Beginner":
-        return 2;
-      case "Skillful":
-        return 3;
-      case "Experienced":
-        return 4;
-      case "Expert":
-        return 5;
-      default:
-        return 1;
-    }
-  };
+  // Function to convert skill level
+  const getSkillDots = (level: string) => {
+    const levels = ["Novice", "Beginner", "Skillful", "Experienced", "Expert"];
+    const levelIndex = levels.indexOf(level);
+    const maxDots = 5;
 
+    let activeDots = levelIndex + 1;
+    if (activeDots < 0) activeDots = 1;
+    if (activeDots > maxDots) activeDots = maxDots;
 
     return (
-        <div className="space-y-6 text-gray-800">
-            <h1 className="text-3xl font-bold text-center text-black mb-6">
-                This is the Professional Template
-            </h1>
-
-            {/* Contact Info */}
-            <div>
-                <h2 className="text-2xl font-bold">
-                    {contact.firstName} {contact.lastName}
-                </h2>
-                <p className="text-lg text-gray-600">
-                    {contact.desiredJobTitle}
-                </p>
-                <div className="space-y-1 mt-2">
-                    <p>
-                        <strong>Phone:</strong> {contact.phone}
-                    </p>
-                    <p>
-                        <strong>Email:</strong> {contact.email}
-                    </p>
-                    {hasLocationInfo && (
-                        <p>
-                            <strong>Location:</strong>{" "}
-                            {[
-                                contact.address,
-                                contact.city,
-                                contact.country,
-                                contact.postCode,
-                            ]
-                                .filter(Boolean)
-                                .join(", ")}
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            {/* Experience */}
-            {experiences.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Experience
-                    </h3>
-                    <div className="space-y-4">
-                        {experiences.map((exp) => (
-                            <div key={exp.id} className="border-b pb-2">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-bold">
-                                        {exp.jobTitle}
-                                    </h4>
-                                    <span className="text-sm text-gray-500">
-                                        {exp.startDate} - {exp.endDate}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-700 italic">
-                                    {exp.company} — {exp.location}
-                                </p>
-                                {exp.description && (
-                                    <p className="text-sm mt-1">
-                                        {exp.description}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Education */}
-            {education.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Education
-                    </h3>
-                    <div className="space-y-4">
-                        {education.map((edu) => (
-                            <div key={edu.id} className="border-b pb-2">
-                                <div className="flex justify-between items-center">
-                                    <h4 className="font-bold">{edu.degree}</h4>
-                                    <span className="text-sm text-gray-500">
-                                        {edu.startDate} - {edu.endDate}
-                                    </span>
-                                </div>
-                                <p className="text-sm text-gray-700 italic">
-                                    {edu.school} — {edu.location}
-                                </p>
-                                {edu.description && (
-                                    <p className="text-sm mt-1">
-                                        {edu.description}
-                                    </p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Skills */}
-            {skills.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Skills
-                    </h3>
-                    <div className="space-y-2">
-                        {skills.map((skill, index) => (
-                            <div key={index} className="flex items-center gap-1">
-                                <span className="text-sm text-gray-800 font-medium">
-                                    {skill.name}
-                                </span>
-                                {skill.level && showExperienceLevel && (
-                                    <div className="flex items-center gap-0.5">
-                                        {Array.from({ length: 5 }, (_, i) => (
-                                            <div
-                                                key={i}
-                                                className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                                                    i < getSkillLevelBullets(skill.level || "Novice")
-                                                        ? "bg-black"
-                                                        : "bg-gray-300"
-                                                }`}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Summary */}
-            {summary && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Summary
-                    </h3>
-                    <p className="text-sm text-gray-800 whitespace-pre-line">
-                        {summary}
-                    </p>
-                </div>
-            )}
-
-            {/* Languages */}
-            {languages && languages.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Languages
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {languages.map((lang) => (
-                            <li key={lang.id}>
-                                {lang.name}{" "}
-                                {lang.proficiency && `– ${lang.proficiency}`}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Certifications */}
-            {certifications && certifications.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Certifications
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {certifications.map((cert) => (
-                            <li key={cert.id}>{cert.title}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Awards */}
-            {awards && awards.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Awards
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {awards.map((award) => (
-                            <li key={award.id}>{award.title}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Websites */}
-            {websites && websites.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Websites
-                    </h3>
-                    <ul className="space-y-1 text-sm">
-                        {websites.map((site) => (
-                            <li key={site.id}>
-                                <strong>{site.label}:</strong>{" "}
-                                <a
-                                    href={site.url}
-                                    className="text-blue-600 underline"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    {site.url}
-                                </a>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* References */}
-            {references && references.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        References
-                    </h3>
-                    <ul className="space-y-2 text-sm">
-                        {references.map((ref) => (
-                            <li key={ref.id}>
-                                <strong>{ref.name}</strong>
-                                {ref.relationship && ` — ${ref.relationship}`}
-                                {ref.contactInfo && (
-                                    <div className="text-gray-600">
-                                        {ref.contactInfo}
-                                    </div>
-                                )}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Hobbies */}
-            {hobbies && hobbies.length > 0 && (
-                <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                        Hobbies
-                    </h3>
-                    <ul className="list-disc list-inside text-sm">
-                        {hobbies.map((hobby) => (
-                            <li key={hobby.id}>{hobby.name}</li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-
-            {/* Custom Sections */}
-            {customSections && customSections.length > 0 && (
-                <div>
-                    {customSections.map((custom) => (
-                        <div key={custom.id}>
-                            <h3 className="text-xl font-semibold mb-2 text-gray-700">
-                                {custom.title}
-                            </h3>
-                            <p className="text-sm text-gray-800 whitespace-pre-line">
-                                {custom.content}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            )}
-        </div>
+      <span className="text-black-500 tracking-widest">
+        {"●".repeat(activeDots)}
+        {"○".repeat(maxDots - activeDots)}
+      </span>
     );
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto text-gray-800 font-sans p-4 space-y-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold leading-tight">
+          {contact.firstName} {contact.lastName}
+        </h1>
+        <p className="text-lg">{contact.desiredJobTitle}</p>
+        <div className="text-sm text-gray-600 mt-1 flex flex-wrap gap-1">
+          {contact.address && <span>{contact.address}</span>}
+          {contact.city && <span>{contact.city}</span>}
+          {contact.phone && (
+            <>
+              <span>┃</span>
+              <span>{contact.phone}</span>
+            </>
+          )}
+          {contact.email && (
+            <>
+              <span>┃</span>
+              <span>{contact.email}</span>
+            </>
+          )}
+          {websites.length > 0 && (
+            <>
+              <span>┃</span>
+              <span>{websites[0].url}</span>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Summary */}
+      {summary && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">Summary</h2>
+          <p className="text-sm mt-1 leading-relaxed">{summary}</p>
+        </div>
+      )}
+
+      {/* Experience */}
+      {experiences.length > 0 && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">
+            Professional Experience
+          </h2>
+          {experiences.map(exp => (
+            <div key={exp.id} className="mt-2">
+              <div className="flex justify-between text-sm font-semibold">
+                <span>
+                  {exp.jobTitle}, {exp.company}
+                </span>
+                <span>
+                  {exp.startDate} - {exp.endDate}
+                </span>
+              </div>
+              {exp.description && (
+                <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
+                  {exp.description.split("\n").map((point, i) => (
+                    <li key={i}>{point}</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Projects */}
+      {customSections && customSections.length > 0 && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">Projects</h2>
+          {customSections.map(section => (
+            <div key={section.id} className="mt-2">
+              <div className="flex justify-between text-sm font-semibold">
+                <span>{section.title}</span>
+                {section.title && <span>{section.title}</span>}
+              </div>
+              <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
+                {section.content.split("\n").map((point, i) => (
+                  <li key={i}>{point}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Education */}
+      {education.length > 0 && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">Education</h2>
+          {education.map(edu => (
+            <div key={edu.id} className="mt-2">
+              <div className="flex justify-between text-sm font-semibold">
+                <span>
+                  {edu.degree}, {edu.school}
+                </span>
+                <span>
+                  {edu.startDate} - {edu.endDate}
+                </span>
+              </div>
+              {edu.description && (
+                <p className="text-sm mt-1 leading-relaxed">{edu.description}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Skills */}
+      {skills.length > 0 && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">Skills</h2>
+          <ul className="text-sm grid grid-cols-2 gap-x-8 gap-y-2">
+            {skills.map((skill, i) => (
+              <li key={i} className="flex items-center">
+                <span className="w-32">{skill.name}</span>
+                <span className="ml-1">{getSkillDots(skill.level || "Novice")}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Additional Information */}
+      {(languages.length > 0 ||
+        certifications.length > 0 ||
+        awards.length > 0) && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">
+            Additional Information
+          </h2>
+          {languages.length > 0 && (
+            <p className="text-sm mt-1">
+              <strong>Languages:</strong>{" "}
+              {languages.map(l => `${l.name} (${l.proficiency})`).join(", ")}
+            </p>
+          )}
+          {certifications.length > 0 && (
+            <p className="text-sm mt-1">
+              <strong>Certifications:</strong>{" "}
+              {certifications.map(c => c.title).join(", ")}
+            </p>
+          )}
+          {awards.length > 0 && (
+            <p className="text-sm mt-1">
+              <strong>Awards/Activities:</strong>{" "}
+              {awards.map(a => a.title).join(", ")}
+            </p>
+          )}
+          {hobbies.length > 0 && (
+            <p className="text-sm mt-1">
+              <strong>Hobbies:</strong>{" "}
+              {hobbies.map(l => l.name).join(", ")}
+            </p>
+          )}
+          {websites.length > 0 && (
+            <p className="text-sm mt-1">
+              <strong>Websites:</strong>{" "}
+              {websites.map(w => `${w.label}: ${w.url}`).join(", ")}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* References */}
+      {resumeData.references && resumeData.references.length > 0 && (
+        <div>
+          <Divider />
+          <h2 className="text-lg font-semibold uppercase">References</h2>
+          {resumeData.references.map(ref => (
+            <div key={ref.id} className="mt-2">
+              <div className="flex justify-between text-sm font-semibold">
+                <span>{ref.name}</span>
+                {ref.relationship && (
+                  <span>({ref.relationship})</span>
+                )}
+              </div>
+              {ref.contactInfo && (
+                <p className="text-sm mt-1">{ref.contactInfo}</p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default Professional;

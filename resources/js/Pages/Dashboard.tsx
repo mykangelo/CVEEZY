@@ -85,27 +85,14 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         setResumeList(resumes);
     }, [resumes]);
 
-    // Add focus event listener to refresh data when user returns to tab
-    useEffect(() => {
-        const handleFocus = () => {
-            if (!isRefreshing) {
-                refreshDashboardData();
-            }
-        };
-
-        window.addEventListener('focus', handleFocus);
-        return () => window.removeEventListener('focus', handleFocus);
-    }, [isRefreshing]);
+    // Removed auto-refresh on window focus to avoid unexpected UI updates
 
     // Update payment proofs when props change
     useEffect(() => {
         setPaymentProofs(initialPaymentProofs);
     }, [initialPaymentProofs]);
 
-    // Initial data refresh when component mounts
-    useEffect(() => {
-        refreshDashboardData();
-    }, []);
+    // Removed automatic initial re-fetch; rely on server-provided props and manual refresh/actions
 
     // Check if user has pending payments
     const hasPendingPayments = () => {
@@ -130,6 +117,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
 
     // Function to refresh dashboard data
+    // Public method so other components/actions can request an on-demand refresh
     const refreshDashboardData = async () => {
         setIsRefreshing(true);
         try {
@@ -157,19 +145,22 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         }
     };
 
-    // Poll for dashboard updates
-    useEffect(() => {
-        const pollDashboardData = async () => {
-            await refreshDashboardData();
-        };
+    // Removed periodic polling; dashboard refreshes only on explicit actions or when changes occur
 
-        // Poll every 30 seconds
-        const interval = setInterval(pollDashboardData, 30000);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    const handlePaymentStatusChange = (status: 'pending' | 'approved' | 'rejected') => {
+    const handlePaymentStatusChange = (status: 'pending' | 'approved' | 'rejected', resumeId?: number) => {
+        // debounced/once-per-session notification guard per resumeId
+        const key = resumeId ? `toastShown:${resumeId}:${status}` : `toastShown:global:${status}`;
+        try {
+            const already = sessionStorage.getItem(key);
+            if (already) {
+                // Still refresh data but don't re-toast
+                if (status === 'approved' || status === 'rejected') {
+                    refreshDashboardData();
+                }
+                return;
+            }
+            sessionStorage.setItem(key, '1');
+        } catch {}
         if (status === 'approved') {
             addToast({
                 type: 'success',
@@ -359,13 +350,11 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
                         {/* Left: Logo */}
-                        <div className="flex items-center">
+                        <div className="flex items-center h-full">
                             <Logo 
-                                size="sm"
-                                text="CVeezy"
-                                imageSrc="/images/supsoft-logo.jpg"
-                                imageAlt="CVeezy Logo"
-                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                size="lg"
+                                showText={false}
+                                className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                             />
                         </div>
 

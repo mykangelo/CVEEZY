@@ -1,245 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Professional Resume</title>
-    <style>
-        body {
-            font-family: DejaVu Sans, sans-serif;
-            margin: 40px;
-            font-size: 14px;
-            color: #333;
-            line-height: 1.6;
-        }
+<meta charset="UTF-8">
+<title>Professional Resume</title>
+<style>
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    color: #111827;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .container {
+    width: 100%;
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 24px;
+    background: white;
+    box-sizing: border-box;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0;
+  }
+  .role {
+    font-size: 12px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+  .contact {
+    font-size: 12px;
+    color: #374151;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .divider {
+    border-top: 2px solid #c2410c;
+    margin: 8px 0;
+  }
+  .section-title {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .job {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+  }
+  ul {
+    margin: 2px 0 6px 20px;
+    padding: 0;
+  }
+  ul li {
+    margin-bottom: 2px;
+  }
 
-        h1, h2, h3 {
-            margin: 0;
-            padding: 0;
-        }
+  /* Updated skills section for 2-column print compatibility */
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 30px;
+    margin: 8px 0;
+  }
+  .skill-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: calc(50% - 15px);
+    box-sizing: border-box;
+  }
+  .skill-name {
+    flex: 1;
+    font-weight: 500;
+  }
+  .dots {
+    letter-spacing: 3px;
+    color: #c2410c;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .skill-level {
+    font-size: 11px;
+    color: #6b7280;
+    white-space: nowrap;
+    font-style: italic;
+  }
 
-        h1 {
-            font-size: 28px;
-            font-weight: bold;
-            color: #2c3e50;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
+  .info p {
+    margin: 2px 0;
+  }
+  .info strong {
+    font-weight: 600;
+  }
+  .references {
+    margin-top: 4px;
+  }
+  .ref-contact {
+    font-size: 12px;
+    color: #374151;
+  }
 
-        h2 {
-            font-size: 16px;
-            margin-top: 25px;
-            margin-bottom: 10px;
-            color: #34495e;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #3498db;
-            padding-bottom: 5px;
-        }
+  /* Print styles */
+  @media print {
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 100%;
+      max-width: none;
+      padding: 16px;
+    }
+    h1, .section-title {
+      page-break-after: avoid;
+    }
+    .skills-grid {
+      display: flex !important;
+      flex-wrap: wrap !important;
+    }
+    .skill-item {
+      width: 50% !important;
+    }
+  }
 
-        .section {
-            margin-bottom: 20px;
-        }
-
-        .subsection {
-            margin-bottom: 15px;
-        }
-
-        .label {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .small-text {
-            font-size: 12px;
-            color: #7f8c8d;
-        }
-
-        .contact-info {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .job-title {
-            font-size: 18px;
-            color: #3498db;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        ul {
-            padding-left: 20px;
-        }
-
-        li {
-            margin-bottom: 5px;
-        }
-    </style>
+  /* Responsive adjustments */
+  @media (max-width: 600px) {
+    .container {
+      padding: 16px;
+    }
+    h1 {
+      font-size: 18px;
+    }
+    .role, .contact, .section-title {
+      font-size: 10px;
+    }
+  }
+</style>
 </head>
 <body>
-    {{-- Contact Info --}}
-    <div class="contact-info">
-        <h1>{{ $resume['contact']['firstName'] ?? '' }} {{ $resume['contact']['lastName'] ?? '' }}</h1>
-        <div class="job-title">{{ $resume['contact']['desiredJobTitle'] ?? '' }}</div>
-        <p class="small-text">
-            {{ $resume['contact']['email'] ?? '' }} | {{ $resume['contact']['phone'] ?? '' }}<br>
-            {{ $resume['contact']['address'] ?? '' }}, {{ $resume['contact']['city'] ?? '' }}, {{ $resume['contact']['country'] ?? '' }} {{ $resume['contact']['postCode'] ?? '' }}
-        </p>
+<div class="container">
+
+  {{-- Header --}}
+  <h1>{{ $resume['contact']['firstName'] ?? '' }} {{ $resume['contact']['lastName'] ?? '' }}</h1>
+  <div class="role">{{ strtoupper($resume['contact']['desiredJobTitle'] ?? '') }}</div>
+  <div class="contact">
+    @if(!empty($resume['contact']['address']))
+      <span>{{ $resume['contact']['address'] }}</span>
+    @endif
+    @if(!empty($resume['contact']['phone']))
+      <span>┃</span><span>{{ $resume['contact']['phone'] }}</span>
+    @endif
+    @if(!empty($resume['contact']['email']))
+      <span>┃</span><span>{{ $resume['contact']['email'] }}</span>
+    @endif
+    @if(!empty($resume['websites'][0]['url']))
+      <span>┃</span><span>{{ $resume['websites'][0]['url'] }}</span>
+    @endif
+  </div>
+
+  {{-- Summary --}}
+  @if (!empty($resume['summary']))
+    <div class="divider"></div>
+    <div class="section-title">Summary</div>
+    <p>{{ $resume['summary'] }}</p>
+  @endif
+
+  {{-- Experience --}}
+  @if (!empty($resume['experiences']))
+    <div class="divider"></div>
+    <div class="section-title">Professional Experience</div>
+    @foreach ($resume['experiences'] as $exp)
+      <div class="job">
+        <span>{{ $exp['jobTitle'] ?? '' }}, {{ $exp['company'] ?? '' }}</span>
+        <span>{{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }}</span>
+      </div>
+      @if (!empty($exp['description']))
+        <ul>
+          @foreach (explode("\n", $exp['description']) as $point)
+            @if (trim($point) !== '')
+              <li>{{ $point }}</li>
+            @endif
+          @endforeach
+        </ul>
+      @endif
+    @endforeach
+  @endif
+
+  {{-- Education --}}
+  @if (!empty($resume['education']))
+    <div class="divider"></div>
+    <div class="section-title">Education</div>
+    @foreach ($resume['education'] as $edu)
+      <div class="job">
+        <span>{{ $edu['degree'] ?? '' }}, {{ $edu['school'] ?? '' }}</span>
+        <span>{{ $edu['startDate'] ?? '' }} - {{ $edu['endDate'] ?? '' }}</span>
+      </div>
+      @if (!empty($edu['description']))
+        <p>{{ $edu['description'] }}</p>
+      @endif
+    @endforeach
+  @endif
+
+  {{-- Skills --}}
+  @if (!empty($resume['skills']))
+    <div class="divider"></div>
+    <div class="section-title">Skills</div>
+    <div class="skills-grid">
+      @foreach ($resume['skills'] as $skill)
+        @php
+          $levels = ['Novice', 'Beginner', 'Skillful', 'Experienced', 'Expert'];
+          $index = array_search($skill['level'] ?? 'Novice', $levels);
+          if ($index === false) {
+              $activeDots = 1;
+              $levelName = 'Novice';
+          } else {
+              $activeDots = $index + 1;
+              $levelName = $levels[$index];
+          }
+          if ($activeDots < 1) $activeDots = 1;
+          if ($activeDots > 5) $activeDots = 5;
+          $dots = str_repeat('•', $activeDots) . str_repeat('◦', 5 - $activeDots);
+        @endphp
+        <div class="skill-item">
+          <span class="skill-name">{{ $skill['name'] }}</span>
+          <span class="dots">{{ $dots }}</span>
+          <span class="skill-level">{{ $levelName }}</span>
+        </div>
+      @endforeach
     </div>
+  @endif
 
-    {{-- Summary --}}
-    @if (!empty($resume['summary']))
-        <div class="section">
-            <h2>Professional Summary</h2>
-            <p>{{ $resume['summary'] }}</p>
+  {{-- Additional Information --}}
+  @if (!empty($resume['languages']) || !empty($resume['certifications']) || !empty($resume['awards']) || !empty($resume['hobbies']) || !empty($resume['websites']))
+    <div class="divider"></div>
+    <div class="section-title">Additional Information</div>
+    <div class="info">
+      @if (!empty($resume['languages']))
+        <p><strong>Languages:</strong> {{ collect($resume['languages'])->map(fn($l) => $l['name'].' ('.$l['proficiency'].')')->join(', ') }}</p>
+      @endif
+      @if (!empty($resume['certifications']))
+        <p><strong>Certifications:</strong> {{ collect($resume['certifications'])->pluck('title')->join(', ') }}</p>
+      @endif
+      @if (!empty($resume['awards']))
+        <p><strong>Awards/Activities:</strong> {{ collect($resume['awards'])->pluck('title')->join(', ') }}</p>
+      @endif
+      @if (!empty($resume['hobbies']))
+        <p><strong>Hobbies:</strong> {{ collect($resume['hobbies'])->pluck('name')->join(', ') }}</p>
+      @endif
+      @if (!empty($resume['websites']))
+        <p><strong>Websites:</strong> {{ collect($resume['websites'])->map(fn($w) => $w['label'].': '.$w['url'])->join(', ') }}</p>
+      @endif
+    </div>
+  @endif
+
+  {{-- References --}}
+  @if (!empty($resume['references']))
+    <div class="divider"></div>
+    <div class="section-title">References</div>
+    <div class="references">
+      @foreach ($resume['references'] as $ref)
+        <div class="job">
+          <span>{{ $ref['name'] }}</span>
+          @if (!empty($ref['relationship']))
+            <span>({{ $ref['relationship'] }})</span>
+          @endif
         </div>
-    @endif
+        @if (!empty($ref['contactInfo']))
+          <div class="ref-contact">{{ $ref['contactInfo'] }}</div>
+        @endif
+      @endforeach
+    </div>
+  @endif
 
-    {{-- Experience --}}
-    @if (!empty($resume['experiences']))
-        <div class="section">
-            <h2>Professional Experience</h2>
-            @foreach ($resume['experiences'] as $exp)
-                <div class="subsection">
-                    <p><span class="label">{{ $exp['jobTitle'] ?? '' }}</span> | {{ $exp['company'] ?? '' }}</p>
-                    <p class="small-text">{{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }} | {{ $exp['location'] ?? '' }}</p>
-                    <p>{{ $exp['description'] ?? '' }}</p>
-                </div>
-            @endforeach
-        </div>
-    @endif
-
-    {{-- Education --}}
-    @if (!empty($resume['education']))
-        <div class="section">
-            <h2>Education</h2>
-            @foreach ($resume['education'] as $edu)
-                <div class="subsection">
-                    <p><span class="label">{{ $edu['degree'] ?? '' }}</span> | {{ $edu['school'] ?? '' }}</p>
-                    <p class="small-text">{{ $edu['startDate'] ?? '' }} - {{ $edu['endDate'] ?? '' }} | {{ $edu['location'] ?? '' }}</p>
-                    <p>{{ $edu['description'] ?? '' }}</p>
-                </div>
-            @endforeach
-        </div>
-    @endif
-
-    {{-- Skills --}}
-    @if (!empty($resume['skills']))
-        <div class="section">
-            <h2>Technical Skills</h2>
-            @foreach ($resume['skills'] as $skill)
-                <div style="margin-bottom: 8px;">
-                    <span style="font-weight: bold;">{{ $skill['name'] }}</span>
-                    @if (isset($skill['level']) && ($resume['showExperienceLevel'] ?? false))
-                        <span style="margin-left: 10px;">
-                            @php
-                                $level = $skill['level'] ?? 'Novice';
-                                $bulletCount = 0;
-                                switch ($level) {
-                                    case 'Novice': $bulletCount = 1; break;
-                                    case 'Beginner': $bulletCount = 2; break;
-                                    case 'Skillful': $bulletCount = 3; break;
-                                    case 'Experienced': $bulletCount = 4; break;
-                                    case 'Expert': $bulletCount = 5; break;
-                                    default: $bulletCount = 1;
-                                }
-                            @endphp
-                            @for ($i = 0; $i < 5; $i++)
-                                <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 2px; background-color: {{ $i < $bulletCount ? '#000000' : '#cccccc' }};"></span>
-                            @endfor
-                        </span>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    @endif
-
-    {{-- Languages --}}
-    @if (!empty($resume['languages']))
-        <div class="section">
-            <h2>Languages</h2>
-            <ul>
-                @foreach ($resume['languages'] as $lang)
-                    <li><strong>{{ $lang['name'] }}</strong> - {{ $lang['proficiency'] ?? 'Unknown' }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    {{-- Certifications --}}
-    @if (!empty($resume['certifications']))
-        <div class="section">
-            <h2>Certifications</h2>
-            <ul>
-                @foreach ($resume['certifications'] as $cert)
-                    <li>{{ $cert['title'] }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    {{-- Awards --}}
-    @if (!empty($resume['awards']))
-        <div class="section">
-            <h2>Awards & Honors</h2>
-            <ul>
-                @foreach ($resume['awards'] as $award)
-                    <li>{{ $award['title'] }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    {{-- Websites --}}
-    @if (!empty($resume['websites']))
-        <div class="section">
-            <h2>Websites & Social Media</h2>
-            <ul>
-                @foreach ($resume['websites'] as $site)
-                    <li><strong>{{ $site['label'] }}:</strong> {{ $site['url'] }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    {{-- References --}}
-    @if (!empty($resume['references']))
-        <div class="section">
-            <h2>Professional References</h2>
-            @foreach ($resume['references'] as $ref)
-                <div class="subsection">
-                    <p><strong>{{ $ref['name'] }}</strong></p>
-                    @if (!empty($ref['relationship']))
-                        <p class="small-text">{{ $ref['relationship'] }}</p>
-                    @endif
-                    @if (!empty($ref['contactInfo']))
-                        <p class="small-text">{{ $ref['contactInfo'] }}</p>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    @endif
-
-    {{-- Hobbies --}}
-    @if (!empty($resume['hobbies']))
-        <div class="section">
-            <h2>Interests & Activities</h2>
-            <ul>
-                @foreach ($resume['hobbies'] as $hobby)
-                    <li>{{ $hobby['name'] }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    {{-- Custom Sections --}}
-    @if (!empty($resume['customSections']))
-        @foreach ($resume['customSections'] as $custom)
-            <div class="section">
-                <h2>{{ $custom['title'] }}</h2>
-                <p>{{ $custom['content'] }}</p>
-            </div>
-        @endforeach
-    @endif
-
+</div>
 </body>
-</html> 
+</html>

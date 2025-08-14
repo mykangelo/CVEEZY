@@ -3,7 +3,7 @@ import { Link } from '@inertiajs/react';
 
 interface LogoProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   showText?: boolean;
   text?: string;
   imageSrc?: string;
@@ -12,17 +12,19 @@ interface LogoProps {
 
 const Logo: React.FC<LogoProps> = ({ 
   className = '', 
-  size = 'lg', 
-  showText = true,
+  size = 'xl', 
+  showText = false,
   text = 'CVeezy',
-  imageSrc = "/images/supsoft-logo.jpg",
-  imageAlt = 'Supsoft Tech Logo'
+  imageSrc = "/images/cveezyLOGO_C.png",
+  imageAlt = 'CVeezy Logo'
 }) => {
-  const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-    xl: 'w-20 h-20'
+  // Container sizes tuned for a wide horizontal logo. These crop extra transparent margins.
+  const containerSizeClasses: Record<NonNullable<LogoProps['size']>, string> = {
+    sm: 'h-10 w-32',
+    md: 'h-12 w-40',
+    lg: 'h-14 w-48',
+    xl: 'h-16 w-60',
+    xxl: 'h-20 w-72'
   };
 
   const textSizeClasses = {
@@ -30,24 +32,24 @@ const Logo: React.FC<LogoProps> = ({
     md: 'text-xl',
     lg: 'text-2xl',
     xl: 'text-3xl'
-  };
+  } as const;
   
   return (
     <Link
       href="/"
-      className={`flex items-center space-x-3 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg p-2 ${className}`}
+      className={`flex items-center space-x-3 transition-opacity duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-lg ${className}`}
     >
-      {/* Logo Image */}
-      <img 
-        src={imageSrc}
-        alt={imageAlt}
-        className={`${sizeClasses[size]} object-contain`}
-      />
+      <div className={`${containerSizeClasses[size]} overflow-hidden rounded-none`}> 
+        <img 
+          src={imageSrc}
+          alt={imageAlt}
+          className="w-full h-full object-cover"
+        />
+      </div>
 
-      {/* Logo Text - Updated with BetterCV-style font */}
       {showText && (
         <div className="flex flex-col leading-tight">
-          <span className={`font-heavybold text-gray-800 tracking-tight ${textSizeClasses[size]} font-sans`}>
+          <span className={`font-heavybold text-gray-800 tracking-tight ${textSizeClasses[size as 'sm'|'md'|'lg'|'xl']} font-sans`}>
             {text}
           </span>
           <span className="text-xs text-gray-400 -mt-1.5 ml-2">

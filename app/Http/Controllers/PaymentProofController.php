@@ -125,6 +125,9 @@ class PaymentProofController extends Controller
                     'firstName' => $contact['firstName'] ?? '',
                     'lastName' => $contact['lastName'] ?? '',
                     'is_paid' => $resume->is_paid ?? false,
+                    'needs_payment' => $resume->needs_payment ?? false,
+                    'is_downloadable' => method_exists($resume, 'isDownloadable') ? $resume->isDownloadable() : false,
+                    'status_effective' => method_exists($resume, 'getPaymentStatus') ? $resume->getPaymentStatus() : $payment->status,
                 ];
             });
 
