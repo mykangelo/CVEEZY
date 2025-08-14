@@ -51,12 +51,14 @@ const templates = [
 
 // Template image map
 const templateImages: Record<number, string> = {
+
   1: "/images/templates/professional.png",
   2: "/images/templates/classic.png",
   3: "/images/templates/creative.jpg",
   4: "/images/templates/minimal.jpg",
   5: "/images/templates/elegant.jpg",
   6: "/images/templates/modern.jpg",
+
 };
 
 // Filter categories
