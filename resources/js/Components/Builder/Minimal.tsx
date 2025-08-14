@@ -83,25 +83,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
               ))}
             </>
           )}
-          {/* Social Media */}
-          {contact.socials && contact.socials.length > 0 && (
-            <>
-              <span>|</span>
-              {contact.socials.map((social, idx) => (
-                <React.Fragment key={social.url}>
-                  <a
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline text-black hover:text-black mr-2"
-                  >
-                    {social.label || social.url}
-                  </a>
-                  {idx < contact.socials.length - 1 && <span>|</span>}
-                </React.Fragment>
-              ))}
-            </>
-          )}
+          {/* Social Media: not part of Contact type; render via Websites above if needed */}
         </div>
       </div>
 
