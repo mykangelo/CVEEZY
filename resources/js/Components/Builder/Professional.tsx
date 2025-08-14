@@ -1,5 +1,6 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
+import Placeholder from "./Placeholder";
 
 type Props = {
   resumeData: ResumeData;
@@ -55,70 +56,55 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold leading-tight">
-          {contact.firstName} {contact.lastName}
+          <Placeholder value={`${contact.firstName} ${contact.lastName}`.trim()} placeholder="YOUR NAME" />
         </h1>
-        <p className="text-lg">{contact.desiredJobTitle}</p>
+        <p className="text-lg"><Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" /></p>
         <div className="text-sm text-gray-600 mt-1 flex flex-wrap gap-1">
-          {contact.address && <span>{contact.address}</span>}
-          {contact.city && <span>{contact.city}</span>}
-          {contact.phone && (
-            <>
-              <span>┃</span>
-              <span>{contact.phone}</span>
-            </>
-          )}
-          {contact.email && (
-            <>
-              <span>┃</span>
-              <span>{contact.email}</span>
-            </>
-          )}
-          {websites.length > 0 && (
-            <>
-              <span>┃</span>
-              <span>{websites[0].url}</span>
-            </>
-          )}
+          <span><Placeholder value={contact.address} placeholder="123 Anywhere St" /></span>
+          <span><Placeholder value={contact.city} placeholder="Any City" /></span>
+          <span>┃</span>
+          <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
+          <span>┃</span>
+          <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
+          <span>┃</span>
+          <span><Placeholder value={(websites[0] && websites[0].url) || ""} placeholder="portfolio.example.com" /></span>
         </div>
       </div>
 
-      {/* Summary */}
-      {summary && (
-        <div>
-          <Divider />
-          <h2 className="text-lg font-semibold uppercase">Summary</h2>
-          <p className="text-sm mt-1 leading-relaxed">{summary}</p>
-        </div>
-      )}
+      {/* Summary - always render */}
+      <div>
+        <Divider />
+        <h2 className="text-lg font-semibold uppercase">Summary</h2>
+        <p className="text-sm mt-1 leading-relaxed">
+          <Placeholder value={summary} placeholder={"Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."} />
+        </p>
+      </div>
 
-      {/* Experience */}
-      {experiences.length > 0 && (
-        <div>
-          <Divider />
-          <h2 className="text-lg font-semibold uppercase">
-            Professional Experience
-          </h2>
-          {experiences.map(exp => (
-            <div key={exp.id} className="mt-2">
-              <div className="flex justify-between text-sm font-semibold">
-                <span>
-                  {exp.jobTitle}, {exp.company}
-                </span>
-                <span>
-                  {exp.startDate} - {exp.endDate}
-                </span>
-              </div>
-              {exp.description && (
-                <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
-                  {exp.description.split("\n").map((point, i) => (
-                    <li key={i}>{point}</li>
-                  ))}
-                </ul>
-              )}
+      {/* Experience - always render with sample */}
+      <div>
+        <Divider />
+        <h2 className="text-lg font-semibold uppercase">Professional Experience</h2>
+        {(experiences.length > 0 ? experiences : [
+          { id: -1, jobTitle: 'Job Title', company: 'Company', startDate: '2017', endDate: '2020', description: 'Led X to achieve Y\nOptimized Z for 20% improvement' },
+          { id: -2, jobTitle: 'Job Title', company: 'Company', startDate: '2015', endDate: '2017', description: 'Built A to support B\nCollaborated with C teams' },
+        ] as any[]).map(exp => (
+          <div key={exp.id} className="mt-2">
+            <div className="flex justify-between text-sm font-semibold">
+              <span>
+                <Placeholder value={`${exp.jobTitle}, ${exp.company}`} placeholder="Job Title, Company" />
+              </span>
+              <span>
+                <Placeholder value={`${exp.startDate} - ${exp.endDate}`} placeholder="2017 — 2020" />
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+            <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
+              {((exp.description && exp.description.trim() !== '') ? exp.description : 'Led X to achieve Y\nOptimized Z for 20% improvement').split("\n").map((point: string, i: number) => (
+                <li key={i}>{point}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
 
       {/* Projects */}
       {customSections && customSections.length > 0 && (
@@ -141,49 +127,54 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
         </div>
       )}
 
-      {/* Education */}
-      {education.length > 0 && (
-        <div>
-          <Divider />
-          <h2 className="text-lg font-semibold uppercase">Education</h2>
-          {education.map(edu => (
-            <div key={edu.id} className="mt-2">
-              <div className="flex justify-between text-sm font-semibold">
-                <span>
-                  {edu.degree}, {edu.school}
-                </span>
-                <span>
-                  {edu.startDate} - {edu.endDate}
-                </span>
-              </div>
-              {edu.description && (
-                <p className="text-sm mt-1 leading-relaxed">{edu.description}</p>
-              )}
+      {/* Education - always render with sample */}
+      <div>
+        <Divider />
+        <h2 className="text-lg font-semibold uppercase">Education</h2>
+        {(education.length > 0 ? education : [
+          { id: -1, degree: 'Degree in Field of study', school: 'School Name', startDate: '2013', endDate: '2017', description: '' },
+        ] as any[]).map(edu => (
+          <div key={edu.id} className="mt-2">
+            <div className="flex justify-between text-sm font-semibold">
+              <span>
+                <Placeholder value={`${edu.degree}, ${edu.school}`} placeholder="Degree in Field of study, School Name" />
+              </span>
+              <span>
+                <Placeholder value={`${edu.startDate} - ${edu.endDate}`} placeholder="2013 — 2017" />
+              </span>
             </div>
-          ))}
-        </div>
-      )}
+            {edu.description && (
+              <p className="text-sm mt-1 leading-relaxed">{edu.description}</p>
+            )}
+          </div>
+        ))}
+      </div>
 
-      {/* Skills */}
-      {skills.length > 0 && (
-        <div>
-          <Divider />
-          <h2 className="text-lg font-semibold uppercase">Skills</h2>
-          <ul className="text-sm grid grid-cols-2 gap-x-8 gap-y-2">
-            {skills.map((skill, i) => (
-              <li key={i} className="flex items-center">
-                <span className="w-32">{skill.name}</span>
-                <span className="ml-1">{getSkillDots(skill.level || "Novice")}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {/* Skills - always render with sample */}
+      <div>
+        <Divider />
+        <h2 className="text-lg font-semibold uppercase">Skills</h2>
+        <ul className="text-sm grid grid-cols-2 gap-x-8 gap-y-2">
+          {(skills.length > 0 ? skills : [
+            { id: -1, name: 'Skill 1', level: 'Experienced' },
+            { id: -2, name: 'Skill 2', level: 'Experienced' },
+            { id: -3, name: 'Skill 3', level: 'Experienced' },
+            { id: -4, name: 'Skill 4', level: 'Experienced' },
+          ] as any[]).map((skill, i) => (
+            <li key={i} className="flex items-center">
+              <span className="w-32"><Placeholder value={skill.name} placeholder={`Skill ${i + 1}`} /></span>
+              <span className="ml-1">{getSkillDots((skill.level as string) || "Experienced")}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {/* Additional Information */}
       {(languages.length > 0 ||
         certifications.length > 0 ||
-        awards.length > 0) && (
+        awards.length > 0 ||
+        hobbies.length > 0 ||
+        websites.length > 0) && (
         <div>
           <Divider />
           <h2 className="text-lg font-semibold uppercase">
@@ -192,7 +183,7 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
           {languages.length > 0 && (
             <p className="text-sm mt-1">
               <strong>Languages:</strong>{" "}
-              {languages.map(l => `${l.name} (${l.proficiency})`).join(", ")}
+              {languages.map(l => `${l.name}${l.proficiency ? ` (${l.proficiency})` : ''}`).join(", ")}
             </p>
           )}
           {certifications.length > 0 && (

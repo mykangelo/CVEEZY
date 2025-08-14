@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import Logo from "@/Components/Logo";
+import Classic from "@/Components/Builder/Classic";
+import Modern from "@/Components/Builder/Modern";
+import Creative from "@/Components/Builder/Creative";
+import Elegant from "@/Components/Builder/Elegant";
+import Professional from "@/Components/Builder/Professional";
+import Minimal from "@/Components/Builder/Minimal";
 
 type Contact = {
   firstName: string;
@@ -188,8 +194,46 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   };
 
   const resumeData = getResumeData();
-  const { contact, experiences, educations, skills, summary, languages, certifications, awards, websites, references, hobbies, customSections, templateName } = resumeData;
+  const templateName = (resumeData as any).templateName || 'classic';
 
+  // Normalize resume data shape to what builder templates expect
+  const normalizedResumeData: any = {
+    contact: {
+      firstName: (resumeData as any)?.contact?.firstName || '',
+      lastName: (resumeData as any)?.contact?.lastName || '',
+      desiredJobTitle: (resumeData as any)?.contact?.desiredJobTitle || '',
+      phone: (resumeData as any)?.contact?.phone || '',
+      email: (resumeData as any)?.contact?.email || '',
+      address: (resumeData as any)?.contact?.address || '',
+      city: (resumeData as any)?.contact?.city || '',
+      country: (resumeData as any)?.contact?.country || '',
+      postCode: (resumeData as any)?.contact?.postCode || '',
+    },
+    experiences: (resumeData as any)?.experiences || [],
+    // Templates expect `education` (singular)
+    education: (resumeData as any)?.education || (resumeData as any)?.educations || [],
+    skills: (resumeData as any)?.skills || [],
+    summary: (resumeData as any)?.summary || '',
+    showExperienceLevel: (resumeData as any)?.showExperienceLevel ?? false,
+    languages: (resumeData as any)?.languages || [],
+    certifications: (resumeData as any)?.certifications || [],
+    awards: (resumeData as any)?.awards || [],
+    websites: (resumeData as any)?.websites || [],
+    references: (resumeData as any)?.references || [],
+    hobbies: (resumeData as any)?.hobbies || [],
+    customSections: (resumeData as any)?.customSections || [],
+  };
+
+  const templateComponents: Record<string, React.FC<{ resumeData: any }>> = {
+    classic: Classic,
+    modern: Modern,
+    creative: Creative,
+    elegant: Elegant,
+    professional: Professional,
+    minimal: Minimal,
+  };
+
+  const SelectedTemplate = templateComponents[templateName || 'classic'] || Classic;
 
 
   // Build the exact text we render to run client-side spellcheck when needed
@@ -270,6 +314,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   }, [spellcheck, summary, contact?.desiredJobTitle, experiences, educations, skills]);
 
    // Function to handle clicking the "Download PDF" button
+
   const handleDownloadButtonClick = () => {
     // Check if resumeId is available
     if (!resumeId) {
@@ -279,7 +324,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     }
     
     // Get resume name from contact data
-    const resumeName = `${contact.firstName} ${contact.lastName}`.trim() || 'My Resume';
+    const resumeName = `${normalizedResumeData.contact.firstName} ${normalizedResumeData.contact.lastName}`.trim() || 'My Resume';
     
     console.log('Redirecting to payment with:', { resumeId, resumeName });
     
@@ -317,274 +362,13 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   };
 
   const renderResumeContent = () => (
-    <div className="w-full h-full bg-white p-8 overflow-auto space-y-8 text-gray-800">
-      {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-center text-black mb-8">
-          This is the {templateName?.charAt(0).toUpperCase() + templateName?.slice(1)} Template
-        </h1>
-
-        {/* Contact Info */}
-        <div className="flex items-start gap-8">
-          <div className="flex-1">
-            <h2 className="text-3xl font-bold">
-              {contact.firstName} {contact.lastName}
-            </h2>
-            <p className="text-xl text-gray-600">
-              {contact.desiredJobTitle}
-            </p>
-            <div className="space-y-2 mt-4">
-              <p className="text-lg">
-                <strong>Phone:</strong> {contact.phone}
-              </p>
-              <p className="text-lg">
-                <strong>Email:</strong> {contact.email}
-              </p>
-              {(contact.address || contact.city || contact.country || contact.postCode) && (
-                <p className="text-lg">
-                  <strong>Location:</strong>{" "}
-                  {[
-                    contact.address,
-                    contact.city,
-                    contact.country,
-                    contact.postCode,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-              )}
-            </div>
-          </div>
-          
-
-        </div>
-      </div>
-
-      {/* Experience */}
-      {experiences.length > 0 && (
-        <div>
-          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-            Experience
-          </h3>
-          <div className="space-y-6">
-            {experiences.map((exp: Experience) => (
-              <div key={exp.id} className="border-b border-gray-200 pb-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xl font-bold">
-                    {exp.jobTitle}
-                  </h4>
-                  <span className="text-base text-gray-500">
-                    {exp.startDate} - {exp.endDate}
-                  </span>
-                </div>
-                <p className="text-base text-gray-700 italic">
-                  {exp.company} — {exp.location}
-                </p>
-                {exp.description && (
-                  <p className="text-base mt-2 leading-relaxed">
-                    {exp.description}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Education */}
-      {educations.length > 0 && (
-        <div>
-          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-            Education
-          </h3>
-          <div className="space-y-6">
-            {educations.map((edu: Education) => (
-              <div key={edu.id} className="border-b border-gray-200 pb-4">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-xl font-bold">{edu.degree}</h4>
-                  <span className="text-base text-gray-500">
-                    {edu.startDate} - {edu.endDate}
-                  </span>
-                </div>
-                <p className="text-base text-gray-700 italic">
-                  {edu.school} — {edu.location}
-                </p>
-                {edu.description && (
-                  <p className="text-base mt-2 leading-relaxed">
-                    {edu.description}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Skills */}
-      {skills.length > 0 && (
-        <div>
-          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-            Skills
-          </h3>
-          <div className="space-y-3">
-            {skills.map((skill: Skill) => (
-              <div key={skill.id} className="flex items-center gap-2">
-                <span className="text-base text-gray-800 font-medium">
-                  {skill.name}
-                </span>
-                {skill.level && resumeData.showExperienceLevel && (
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <div
-                        key={i}
-                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                          i < getSkillLevelBullets(skill.level || "Novice")
-                            ? "bg-black"
-                            : "bg-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Summary */}
-      {summary && (
-        <div>
-          <h3 className="text-2xl font-semibold mb-4 text-gray-700">
-            Summary
-          </h3>
-          <p className="text-base text-gray-800 whitespace-pre-line leading-relaxed">
-            {summary}
-          </p>
-        </div>
-      )}
-
-      {/* Languages */}
-      {languages && languages.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">LANGUAGES</h2>
-          <div className="space-y-2">
-            {languages.map((lang: any) => (
-              <div key={lang.id} className="flex items-center gap-2">
-                <span className="text-sm text-gray-800 font-medium">
-                  {lang.name}
-                </span>
-                {lang.proficiency && (
-                  <span className="text-sm text-gray-600">- {lang.proficiency}</span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Certifications */}
-      {certifications && certifications.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">CERTIFICATIONS</h2>
-          <div className="space-y-2">
-            {certifications.map((cert: any) => (
-              <div key={cert.id}>
-                <p className="text-sm text-gray-800 font-medium">{cert.title}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Awards */}
-      {awards && awards.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">AWARDS & HONORS</h2>
-          <div className="space-y-2">
-            {awards.map((award: any) => (
-              <div key={award.id}>
-                <p className="text-sm text-gray-800 font-medium">{award.title}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Websites */}
-      {websites && websites.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">WEBSITES & SOCIAL MEDIA</h2>
-          <div className="space-y-2">
-            {websites.map((site: any) => (
-              <div key={site.id}>
-                <p className="text-sm text-gray-800 font-medium">{site.label}:</p>
-                <a
-                  href={site.url}
-                  className="text-sm text-blue-600 underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {site.url}
-                </a>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* References */}
-      {references && references.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">REFERENCES</h2>
-          <div className="space-y-3">
-            {references.map((ref: any) => (
-              <div key={ref.id}>
-                <p className="text-sm text-gray-800 font-medium">{ref.name}</p>
-                {ref.relationship && (
-                  <p className="text-sm text-gray-600">{ref.relationship}</p>
-                )}
-                {ref.contactInfo && (
-                  <p className="text-sm text-gray-600">{ref.contactInfo}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Hobbies */}
-      {hobbies && hobbies.length > 0 && (
-        <div className="mb-6">
-          <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">HOBBIES & INTERESTS</h2>
-          <div className="space-y-2">
-            {hobbies.map((hobby: any) => (
-              <div key={hobby.id}>
-                <p className="text-sm text-gray-800 font-medium">{hobby.name}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Custom Sections */}
-      {customSections && customSections.length > 0 && (
-        <div className="mb-6">
-          {customSections.map((section: any) => (
-            <div key={section.id} className="mb-6">
-              <h2 className="text-lg font-semibold bg-gray-100 px-3 py-1 mb-3">{section.title.toUpperCase()}</h2>
-              <div className="text-sm text-gray-700 leading-relaxed">
-                {section.content}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="w-full h-full bg-white p-8 overflow-auto text-gray-800">
+      <SelectedTemplate resumeData={normalizedResumeData} />
     </div>
   );
 
   return (
-    <div className="flex h-screen bg-[#f4f6fb]">
+    <div className="flex min-h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Final Check" />
       
       {/* Left Sidebar */}
@@ -753,10 +537,14 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
 
         {/* Resume Preview */}
-        <div className="flex-1 p-6">
-          <div className="bg-white shadow-2xl rounded-lg w-full h-full overflow-hidden">
-            <div className="h-full">
-              {renderResumeContent()}
+        <div className="flex-1 p-6 overflow-auto">
+          {/* Match Builder: center a fixed A4-sized document without stretching */}
+          <div className="flex justify-center pb-24">
+            <div
+              className="bg-white shadow-2xl border border-gray-100 relative rounded-lg overflow-hidden"
+              style={{ width: `${210 * 3.78}px`, minHeight: `${297 * 3.78}px`, padding: '40px' }}
+            >
+              <SelectedTemplate resumeData={normalizedResumeData} />
             </div>
           </div>
         </div>

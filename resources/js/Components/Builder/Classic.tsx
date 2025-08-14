@@ -1,5 +1,6 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
+import Placeholder from "./Placeholder";
 
 type Props = {
   resumeData: ResumeData;
@@ -60,29 +61,28 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
     {hasContactSection && (
       <div>
         <h2 className="text-3xl font-bold text-center">
-          {contact.firstName} {contact.lastName}
+          <Placeholder value={`${contact.firstName} ${contact.lastName}`.trim()} placeholder="FIRSTNAME LASTNAME" />
         </h2>
 
         <p className="text-lg text-gray-800 mt-2 text-center">
-          {contact.desiredJobTitle && (
-            <span className="font-bold">{contact.desiredJobTitle}</span>
-          )}
+          <span className="font-bold">
+            <Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" />
+          </span>
         </p>
         <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
 
         <div className="space-x-2 text-center">
-          {hasLocationInfo && (
-            <span>
-              {[contact.address, contact.city, contact.country, contact.postCode]
-                .filter(Boolean)
-                .join(", ")}
-            </span>
-          )}
+          <span>
+            <Placeholder
+              value={[contact.address, contact.city, contact.country, contact.postCode].filter(Boolean).join(", ")}
+              placeholder="123 Anywhere St, Any City | 12345"
+            />
+          </span>
           {hasLocationInfo && contact.email && <span>|</span>}
-          {contact.email && <span>{contact.email}</span>}
+          <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
 
           {hasLocationInfo && contact.phone && <span>|</span>}
-          {contact.phone && <span>{contact.phone}</span>}
+          <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
         </div>
         <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
       </div>
@@ -90,13 +90,13 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
 
       {/* Summary Section - Always rendered */}
       <div>
-        {summary && (
-          <>
-            <p className="text-sm text-gray-800 whitespace-pre-line -mt-2">
-              {summary}
-            </p>
-          </>
-        )}
+        <p className="text-sm text-gray-800 whitespace-pre-line -mt-2">
+          <Placeholder
+            value={summary}
+            placeholder={"Motivated professional with a background in [field]. Eager to apply skills in [areas] and grow within a dynamic organization."}
+            as="span"
+          />
+        </p>
       </div>
 
       {/* Skills Section - Always rendered */}
@@ -108,10 +108,10 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
             </h3>
             <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-              {skills.map((skill, index) => (
+              {(skills.length > 0 ? skills : [{ id: 1, name: 'Sample Skill', level: 'Experienced' }]).map((skill, index) => (
                 <div key={index} className="flex items-center gap-1">
                   <span className="text-sm text-gray-800 font-medium">
-                    {skill.name}
+                    <Placeholder value={skill.name} placeholder="Sample Skill" />
                   </span>
                   {skill.name?.trim() && skill.level && showExperienceLevel && (
                     <div className="flex items-center gap-0.5">
@@ -143,24 +143,22 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
             </h3>
             <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
             <div className="space-y-4">
-              {experiences.map((exp) => (
+              {(experiences.length > 0 ? experiences : [{ id: -1, jobTitle: 'Job Title', company: 'Company', location: 'City, ST', startDate: '2020', endDate: '2022', description: 'Describe impact and achievements', expanded: true } as any]).map((exp) => (
                 <div key={exp.id}>
                   <div className="flex justify-between items-center">
                     <h4 className="font-bold">
-                      {exp.jobTitle}
+                      <Placeholder value={exp.jobTitle} placeholder="Job Title" />
                     </h4>
                     <span className="text-sm text-gray-800 font-semibold">
-                      {exp.startDate} - {exp.endDate}
+                      <Placeholder value={`${exp.startDate} - ${exp.endDate}`} placeholder="Jan 2020 - Dec 2022" />
                     </span>
                   </div>
                   <p className="text-sm text-gray-800 italic">
-                    {exp.company} — {exp.location}
+                    <Placeholder value={`${exp.company} — ${exp.location}`} placeholder="Company — City, ST" />
                   </p>
-                  {exp.description && (
-                    <li className="text-sm mt-1 ml-4">
-                      {exp.description}
-                    </li>
-                  )}
+                  <li className="text-sm mt-1 ml-4">
+                    <Placeholder value={exp.description} placeholder="Describe impact and achievements" />
+                  </li>
                 </div>
               ))}
             </div>
@@ -170,34 +168,30 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
 
       {/* Education Section - Always rendered */}
       <div>
-        {education.length > 0 && (
-          <>
-            <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7">
-              EDUCATION
-            </h3>
-            <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
-            <div className="space-y-4">
-              {education.map((edu) => (
-                <div key={edu.id}>
-                  <div className="flex justify-between items-center">
-                    <h4 className="font-bold">{edu.degree}</h4>
-                    <span className="text-sm text-gray-800 font-semibold">
-                      {edu.startDate} - {edu.endDate}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-800 italic">
-                    {edu.school} — {edu.location}
-                  </p>
-                  {edu.description && (
-                    <li className="text-sm mt-1 ml-4">
-                      {edu.description}
-                    </li>
-                  )}
+        <>
+          <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7">
+            EDUCATION
+          </h3>
+          <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
+          <div className="space-y-4">
+            {(education.length > 0 ? education : [{ id: -1, degree: 'Degree', school: 'University Name', location: 'City, ST', startDate: '2016', endDate: '2020', description: 'Relevant coursework or achievements' } as any]).map((edu) => (
+              <div key={edu.id}>
+                <div className="flex justify-between items-center">
+                  <h4 className="font-bold"><Placeholder value={edu.degree} placeholder="Degree" /></h4>
+                  <span className="text-sm text-gray-800 font-semibold">
+                    <Placeholder value={`${edu.startDate} - ${edu.endDate}`} placeholder="2016 - 2020" />
+                  </span>
                 </div>
-              ))}
-            </div>
-          </>
-        )}
+                <p className="text-sm text-gray-800 italic">
+                  <Placeholder value={`${edu.school} — ${edu.location}`} placeholder="University — City, ST" />
+                </p>
+                <li className="text-sm mt-1 ml-4">
+                  <Placeholder value={edu.description} placeholder="Relevant coursework or achievements" />
+                </li>
+              </div>
+            ))}
+          </div>
+        </>
       </div>
       {/* Hobbies Section - Always rendered */}
       <div>

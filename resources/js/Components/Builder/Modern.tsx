@@ -1,5 +1,6 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
+import Placeholder from "./Placeholder";
 
 // Add Montserrat font
 const fontLink = document.createElement('link');
@@ -158,48 +159,42 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
             {/* Left Column */}
             <div className="w-3/5 p-8 border-r border-gray-300">
                 {/* Header */}
-                {(contact.firstName ||
-                    contact.lastName ||
-                    contact.desiredJobTitle) && (
-                    <div className="mb-8 pb-8 border-b border-gray-300">
-                        {contact.firstName && (
-                            <h1 className="font-semibold text-gray-800 mb-2 tracking-wider" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase' }}>
-                                {contact.firstName.toUpperCase()}
-                            </h1>
-                        )}
-                        {contact.lastName && (
-                            <h1 className="font-semibold text-gray-800 mb-4 tracking-wider" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase', display: 'block' }}>
-                                {contact.lastName.toUpperCase()}
-                            </h1>
-                        )}
-                        {contact.desiredJobTitle && (
-                            <h2 className="font-normal text-gray-600 tracking-widest uppercase mb-8" style={{ fontSize: '20px', letterSpacing: '0.1em', marginTop: '8px' }}>
-                                {contact.desiredJobTitle}
-                            </h2>
-                        )}
-                    </div>
-                )}
+                <div className="mb-8 pb-8 border-b border-gray-300">
+                    <h1 className="font-semibold text-gray-800 mb-2 tracking-wider" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase' }}>
+                        <Placeholder value={`${contact.firstName || ''}`.toUpperCase()} placeholder="YOUR" />
+                    </h1>
+                    <h1 className="font-semibold text-gray-800 mb-4 tracking-wider" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase', display: 'block' }}>
+                        <Placeholder value={`${contact.lastName || ''}`.toUpperCase()} placeholder="NAME" />
+                    </h1>
+                    <h2 className="font-normal text-gray-600 tracking-widest uppercase mb-8" style={{ fontSize: '20px', letterSpacing: '0.1em', marginTop: '8px' }}>
+                        <Placeholder value={contact.desiredJobTitle} placeholder="Job Title" />
+                    </h2>
+                </div>
 
                 {/* Profile/Summary */}
-                {summary && (
-                    <div className="mb-8 pb-8 border-b border-gray-300">
-                        <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '15px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '2px solid #374151' }}>
-                            Profile
-                        </h3>
-                        <p className="text-gray-600 leading-relaxed" style={{ fontSize: '14px', lineHeight: '1.5', textAlign: 'justify' }}>
-                            {summary}
-                        </p>
-                    </div>
-                )}
+                <div className="mb-8 pb-8 border-b border-gray-300">
+                    <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '15px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '2px solid #374151' }}>
+                        Profile
+                    </h3>
+                    <p className="text-gray-600 leading-relaxed" style={{ fontSize: '14px', lineHeight: '1.5', textAlign: 'justify' }}>
+                        <Placeholder
+                            value={summary}
+                            placeholder={"Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."}
+                            as="span"
+                        />
+                    </p>
+                </div>
 
                 {/*Work Experience -Timeline */}
-                {experiences && experiences.length > 0 && (
-                    <div className="mb-8 pb-8 border-b border-gray-300">
+                <div className="mb-8 pb-8 border-b border-gray-300">
                         <h3 className="font-semibold text-gray-800 mb-6 tracking-widest uppercase" style={{ fontSize: '15px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '2px solid #374151' }}>
                             Work Experience
                         </h3>
                         <div className="relative">
-                            {experiences.map((exp, index) => (
+                            {(experiences && experiences.length > 0 ? experiences : [
+                                { id: -1, jobTitle: 'Job Title 1', company: 'Company Name', location: 'Location', startDate: 'Sep 2017', endDate: 'May 2020', description: '• Responsibilities\n• Responsibilities' },
+                                { id: -2, jobTitle: 'Job Title 2', company: 'Company Name', location: 'Location', startDate: 'Sep 2017', endDate: 'May 2020', description: '• Responsibilities\n• Responsibilities' }
+                            ] as any[]).map((exp, index) => (
                                 <div
                                     key={exp.id}
                                     className="relative flex mb-8 last:mb-0"
@@ -216,63 +211,35 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
 
                                     {/* Content */}
                                     <div className="flex-1">
-                                        {(exp.startDate || exp.endDate) && (
-                                            <div className="font-medium text-gray-600 uppercase mb-1" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
-                                                {exp.startDate && exp.startDate}
-                                                {(exp.startDate || exp.endDate) && " – "}
-                                                {exp.endDate && exp.endDate}
-                                            </div>
-                                        )}
+                                        <div className="font-medium text-gray-600 uppercase mb-1" style={{ fontSize: '11px', textTransform: 'uppercase' }}>
+                                            <Placeholder value={`${exp.startDate || ''}${(exp.startDate || exp.endDate) ? ' – ' : ''}${exp.endDate || ''}`} placeholder="Sep 2017 — May 2020" />
+                                        </div>
 
-                                        {exp.jobTitle && (
-                                            <h4 className="font-medium text-gray-800 mb-2" style={{ fontSize: '14px' }}>
-                                                {exp.jobTitle}{exp.company && ` at ${exp.company}`}
-                                            </h4>
-                                        )}
+                                        <h4 className="font-medium text-gray-800 mb-2" style={{ fontSize: '14px' }}>
+                                            <Placeholder value={`${exp.jobTitle || ''}${exp.company ? ` at ${exp.company}` : ''}`} placeholder="Job Title 1" />
+                                        </h4>
 
-                                        {exp.description && (
-                                            <div className="text-gray-600 leading-relaxed" style={{ fontSize: '13px', lineHeight: '1.4' }}>
-                                                {exp.description
-                                                    .split("\n")
-                                                    .map((line, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className="mb-1"
-                                                        >
-                                                            {line
-                                                                .trim()
-                                                                .startsWith(
-                                                                    "•"
-                                                                ) ||
-                                                            line
-                                                                .trim()
-                                                                .startsWith(
-                                                                    "-"
-                                                                ) ? (
-                                                                <div className="flex items-start pl-3 relative">
-                                                                    <div className="absolute w-1 h-1 bg-gray-600 rounded-full" style={{ left: '0', top: '0.5em' }}></div>
-                                                                    <span>
-                                                                        {line.replace(
-                                                                            /^[•-]\s*/,
-                                                                            ""
-                                                                        )}
-                                                                    </span>
-                                                                </div>
-                                                            ) : line.trim() ? (
-                                                                <div>
-                                                                    {line}
-                                                                </div>
-                                                            ) : null}
-                                                        </div>
-                                                    ))}
-                                            </div>
-                                        )}
+                                        <div className="text-gray-600 leading-relaxed" style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                                            {(exp.description || '• Responsibilities\n• Responsibilities')
+                                                .split("\n")
+                                                .map((line: string, index: number) => (
+                                                    <div key={index} className="mb-1">
+                                                        {(line.trim().startsWith("•") || line.trim().startsWith("-")) ? (
+                                                            <div className="flex items-start pl-3 relative">
+                                                                <div className="absolute w-1 h-1 bg-gray-600 rounded-full" style={{ left: '0', top: '0.5em' }}></div>
+                                                                <span>{line.replace(/^[•-]\s*/, "")}</span>
+                                                            </div>
+                                                        ) : line.trim() ? (
+                                                            <div>{line}</div>
+                                                        ) : null}
+                                                    </div>
+                                                ))}
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                )}
 
                 {/* Certifications */}
                 {certifications && certifications.length > 0 && (
@@ -318,80 +285,71 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
             {/* Right Column */}
             <div className="w-2/5 bg-white p-8">
                 {/* Contact Info */}
-                {(contact.phone ||
-                    contact.email ||
-                    hasLocationInfo ||
-                    (websites && websites.length > 0)) && (
-                    <div className="mb-8 pb-8 border-b border-gray-300">
-                        <div className="space-y-3 text-gray-600" style={{ fontSize: '12px', fontWeight: '300', lineHeight: '1.3' }}>
-                            {contact.phone && (
-                                <div className="flex items-center gap-2">
-                                    <span className="flex items-center justify-center w-3.5 h-3.5">
-                                        <PhoneIcon />
-                                    </span>
-                                    <span>{contact.phone}</span>
-                                </div>
-                            )}
+                <div className="mb-8 pb-8 border-b border-gray-300">
+                    <div className="space-y-3 text-gray-600" style={{ fontSize: '12px', fontWeight: '300', lineHeight: '1.3' }}>
+                        <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-3.5 h-3.5">
+                                <PhoneIcon />
+                            </span>
+                            <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
+                        </div>
 
-                            {contact.email && (
-                                <div className="flex items-center gap-2">
-                                    <span className="flex items-center justify-center w-3.5 h-3.5">
-                                        <MailIcon />
-                                    </span>
-                                    <span>{contact.email}</span>
-                                </div>
-                            )}
+                        <div className="flex items-center gap-2">
+                            <span className="flex items-center justify-center w-3.5 h-3.5">
+                                <MailIcon />
+                            </span>
+                            <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
+                        </div>
 
-                            {hasLocationInfo && (
-                                <div className="flex items-start gap-2">
-                                    <span className="flex items-center justify-center w-3.5 h-3.5 mt-0.5">
-                                        <MapPinIcon />
-                                    </span>
-                                    <span>
-                                        {[
-                                            contact.address,
-                                            contact.city,
-                                            contact.country,
-                                            contact.postCode,
-                                        ]
-                                            .filter(Boolean)
-                                            .join(", ")}
-                                    </span>
-                                </div>
-                            )}
+                        <div className="flex items-start gap-2">
+                            <span className="flex items-center justify-center w-3.5 h-3.5 mt-0.5">
+                                <MapPinIcon />
+                            </span>
+                            <span>
+                                <Placeholder
+                                    value={[
+                                        contact.address,
+                                        contact.city,
+                                        contact.country,
+                                        contact.postCode,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(", ")}
+                                    placeholder="123 Anywhere St, Any City, Country 12345"
+                                />
+                            </span>
+                        </div>
 
-                            {websites && websites.length > 0 && (
-                                <div className="flex items-start gap-2">
-                                    <span className="flex items-center justify-center w-3.5 h-3.5 mt-0.5">
-                                        <GlobeIcon />
-                                    </span>
-                                    <div className="flex flex-col space-y-1">
-                                        {websites.map((site) => (
-                                            <a
-                                                key={site.id}
-                                                href={site.url}
-                                                className="text-gray-700 hover:text-gray-900"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {site.url}
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                        <div className="flex items-start gap-2">
+                            <span className="flex items-center justify-center w-3.5 h-3.5 mt-0.5">
+                                <GlobeIcon />
+                            </span>
+                            <div className="flex flex-col space-y-1">
+                                {(websites && websites.length > 0 ? websites : [{ id: -1, label: 'Portfolio', url: 'https://portfolio.example.com' }] as any[]).map((site: any) => (
+                                    <a
+                                        key={site.id}
+                                        href={site.url}
+                                        className="text-gray-700 hover:text-gray-900"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >
+                                        {site.url}
+                                    </a>
+                                ))}
+                            </div>
                         </div>
                     </div>
-                )}
 
                 {/* Education - Remove timeline, keep bullets */}
-                {education && education.length > 0 && (
-                    <div className="mb-8 pb-8 border-b border-gray-300">
+                <div className="mb-8 pb-8 border-b border-gray-300">
                         <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '13px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb' }}>
                             Education
                         </h3>
                         <div className="space-y-4">
-                            {education.map((edu, index) => (
+                            {(education && education.length > 0 ? education : [
+                                { id: -1, degree: 'Degree in Field of study', school: 'School Name, Location', startDate: '2017', endDate: '2020', description: '' },
+                                { id: -2, degree: 'Degree in Field of study', school: 'School Name, Location', startDate: '2017', endDate: '2020', description: '' }
+                            ] as any[]).map((edu, index) => (
                                 <div
                                     key={edu.id}
                                     className="relative flex items-start pl-3"
@@ -409,29 +367,21 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
 
                                     {/* Content */}
                                     <div className="flex-1">
-                                        {(edu.startDate || edu.endDate) && (
-                                            <div className="font-medium text-gray-600 uppercase mb-1" style={{ fontSize: '11px' }}>
-                                                {edu.startDate && edu.startDate}
-                                                {(edu.startDate || edu.endDate) && " – "}
-                                                {edu.endDate && edu.endDate}
-                                            </div>
-                                        )}
-                                        {edu.school && (
-                                            <div className="text-gray-600 uppercase tracking-wide mb-1" style={{ fontSize: '12px', fontWeight: '300', letterSpacing: '.04em' }}>
-                                                {edu.school}
-                                            </div>
-                                        )}
-                                        {edu.degree && (
-                                            <h4 className="font-medium text-gray-800 mb-1" style={{ fontSize: '13px', lineHeight: '1.3' }}>
-                                                {edu.degree}
-                                            </h4>
-                                        )}
+                                        <div className="font-medium text-gray-600 uppercase mb-1" style={{ fontSize: '11px' }}>
+                                            <Placeholder value={`${edu.startDate || ''}${(edu.startDate || edu.endDate) ? ' – ' : ''}${edu.endDate || ''}`} placeholder="2017 — 2020" />
+                                        </div>
+                                        <div className="text-gray-600 uppercase tracking-wide mb-1" style={{ fontSize: '12px', fontWeight: '300', letterSpacing: '.04em' }}>
+                                            <Placeholder value={edu.school} placeholder="School Name, Location" />
+                                        </div>
+                                        <h4 className="font-medium text-gray-800 mb-1" style={{ fontSize: '13px', lineHeight: '1.3' }}>
+                                            <Placeholder value={edu.degree} placeholder="Degree in Field of study" />
+                                        </h4>
 
                                         {edu.description && (
                                             <div className="text-gray-600 leading-relaxed" style={{ fontSize: '12px', fontWeight: '400', lineHeight: '1.35' }}>
                                                 {edu.description
                                                     .split("\n")
-                                                    .map((line, index) => (
+                                                    .map((line: string, index: number) => (
                                                         <div
                                                             key={index}
                                                             className="mb-1"
@@ -469,20 +419,19 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                             ))}
                         </div>
                     </div>
-                )}
+                </div>
 
                 {/* Skills */}
-                {skills && skills.length > 0 && (
-                    <div className="mb-8 pb-8 border-b border-gray-300">
+                <div className="mb-8 pb-8 border-b border-gray-300">
                         <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '13px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb' }}>
                             Skills
                         </h3>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                            {skills.map((skill, index) => (
+                            {(skills && skills.length > 0 ? skills : [{ id: -1, name: 'Skill 1' } as any, { id: -2, name: 'Skill 2' } as any, { id: -3, name: 'Skill 3' } as any, { id: -4, name: 'Skill 4' } as any]).map((skill: any, index: number) => (
                                 <div key={index}>
                                     <div className="flex justify-between items-center mb-1">
                                         <span className="text-gray-800" style={{ fontSize: '13px', fontWeight: '500' }}>
-                                            {skill.name}
+                                            <Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} />
                                         </span>
                                     </div>
                                     {skill.level && showExperienceLevel && (
@@ -510,7 +459,6 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                             ))}
                         </div>
                     </div>
-                )}
 
                 {/* Languages */}
                 {languages && languages.length > 0 && (
@@ -612,7 +560,8 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                     </div>
                 )}
             </div>
-        </div>
+            </div>
+
     );
 };
 

@@ -594,11 +594,13 @@ const HomePage: React.FC<HomePageProps> = ({
                     <div className="hidden md:grid grid-cols-3 gap-8">
                         <div className="col-span-1">
                             <div className="flex items-center mb-6">
-                                <Logo
-                                    size="xxl"
-                                    showText={false}
-                                    className=""
-                                />
+                                <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
+                                    <Logo
+                                        size="xxl"
+                                        showText={false}
+                                        className=""
+                                    />
+                                </Link>
                             </div>
                             <p className="text-gray-300 text-base leading-relaxed">
                                 We Help job seekers stand out in the highly

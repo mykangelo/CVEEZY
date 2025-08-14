@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
 import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera, User, Briefcase, GraduationCap, Code, FileText, Flag } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { SectionStepper } from '@/Components/Builder/SectionStepper';
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
@@ -15,6 +16,7 @@ import Creative from '@/Components/Builder/Creative';
 import Elegant from '@/Components/Builder/Elegant';
 import Professional from '@/Components/Builder/Professional';
 import Minimal from '@/Components/Builder/Minimal';
+import Logo from "@/Components/Logo";
 
 const templateComponents: Record<string, React.FC<{ resumeData: ResumeData }>> = {
   classic: Classic,
@@ -166,6 +168,8 @@ interface ExperienceSectionProps {
   errors: Record<string, string>;
 }
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setExperiences, errors }) => {
+  const [loadingId, setLoadingId] = React.useState<number | null>(null);
+
   const addExperience = () => {
     setExperiences([
       ...experiences,
@@ -181,6 +185,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       },
     ]);
   };
+
   const updateExperience = (id: number, field: keyof Experience, value: string) => {
     setExperiences(
       experiences.map((exp) =>
@@ -188,9 +193,11 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       )
     );
   };
+
   const removeExperience = (id: number) => {
     setExperiences(experiences.filter((exp) => exp.id !== id));
   };
+
   const toggleExpand = (id: number) => {
     setExperiences(
       experiences.map((exp) =>
@@ -198,10 +205,30 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       )
     );
   };
+
+  // Call Gemini API for experience description revision
+  const reviseExperienceDescription = async (id: number, description: string) => {
+    if (!description.trim()) return;
+    setLoadingId(id);
+    try {
+      const res = await fetch("/revise-experience-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: description }),
+      });
+      const data = await res.json();
+      updateExperience(id, "description", data.revised_text);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2">Experience</h2>
-      {experiences.map((exp, idx) => (
+      {experiences.map((exp) => (
         <div key={exp.id} className="bg-white rounded-xl border p-6 mb-4 shadow-sm relative">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-gray-700">
@@ -281,6 +308,13 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                   placeholder="Sample Text" 
                 />
                 {errors[`exp_${exp.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`exp_${exp.id}_description`]}</p>}
+
+                <button
+                  onClick={() => reviseExperienceDescription(exp.id, exp.description)}
+                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                >
+                  {loadingId === exp.id ? "Asking AI for assistance..." : "Improve description using AI"}
+                </button>
               </div>
             </>
           )}
@@ -291,13 +325,17 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
   );
 };
 
+
 // Education Section
 interface EducationSectionProps {
   educations: Education[];
   setEducations: React.Dispatch<React.SetStateAction<Education[]>>;
   errors: Record<string, string>;
 }
+
 const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEducations, errors }) => {
+  const [loadingId, setLoadingId] = React.useState<number | null>(null);
+
   const addEducation = () => {
     setEducations([
       ...educations,
@@ -313,6 +351,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       },
     ]);
   };
+
   const updateEducation = (id: number, field: keyof Education, value: string) => {
     setEducations(
       educations.map((edu) =>
@@ -320,9 +359,11 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       )
     );
   };
+
   const removeEducation = (id: number) => {
     setEducations(educations.filter((edu) => edu.id !== id));
   };
+
   const toggleExpand = (id: number) => {
     setEducations(
       educations.map((edu) =>
@@ -330,10 +371,29 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       )
     );
   };
+
+  // Call Gemini API for description revision
+  const reviseDescription = async (id: number, description: string) => {
+    if (!description.trim()) return;
+    setLoadingId(id); // Start loading for this education entry
+    try {
+      const res = await fetch("/reviseEducationDescription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: description }),
+      });
+      const data = await res.json();
+      updateEducation(id, "description", data.revised_text);
+    } catch (err) {
+      console.error(err);
+    }
+    setLoadingId(null); // Stop loading
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-2">Education</h2>
-      {educations.map((edu, idx) => (
+      {educations.map((edu) => (
         <div key={edu.id} className="bg-white rounded-xl border p-6 mb-4 shadow-sm relative">
           <div className="flex justify-between items-center mb-2">
             <span className="font-semibold text-gray-700">
@@ -353,66 +413,78 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                 <div>
                   <label className="block text-gray-700 mb-1">School Name</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_school`] ? 'border-red-500' : ''}`}
-                    value={edu.school} 
-                    onChange={e => updateEducation(edu.id, 'school', e.target.value)} 
-                    placeholder="UCLA" 
+                    value={edu.school}
+                    onChange={e => updateEducation(edu.id, 'school', e.target.value)}
+                    placeholder="UCLA"
                   />
                   {errors[`edu_${edu.id}_school`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_school`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">Location</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_location`] ? 'border-red-500' : ''}`}
-                    value={edu.location} 
-                    onChange={e => updateEducation(edu.id, 'location', e.target.value)} 
-                    placeholder="New York" 
+                    value={edu.location}
+                    onChange={e => updateEducation(edu.id, 'location', e.target.value)}
+                    placeholder="New York"
                   />
                   {errors[`edu_${edu.id}_location`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_location`]}</p>}
                 </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
                 <div>
                   <label className="block text-gray-700 mb-1">Degree</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_degree`] ? 'border-red-500' : ''}`}
-                    value={edu.degree} 
-                    onChange={e => updateEducation(edu.id, 'degree', e.target.value)} 
-                    placeholder="Bachelor of Science in Information Tech" 
+                    value={edu.degree}
+                    onChange={e => updateEducation(edu.id, 'degree', e.target.value)}
+                    placeholder="Bachelor of Science in Information Tech"
                   />
                   {errors[`edu_${edu.id}_degree`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_degree`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">Start Date</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_startDate`] ? 'border-red-500' : ''}`}
-                    value={edu.startDate} 
-                    onChange={e => updateEducation(edu.id, 'startDate', e.target.value)} 
-                    placeholder="MM/YYYY" 
+                    value={edu.startDate}
+                    onChange={e => updateEducation(edu.id, 'startDate', e.target.value)}
+                    placeholder="MM/YYYY"
                   />
                   {errors[`edu_${edu.id}_startDate`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_startDate`]}</p>}
                 </div>
                 <div>
                   <label className="block text-gray-700 mb-1">End Date</label>
-                  <input 
+                  <input
                     className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_endDate`] ? 'border-red-500' : ''}`}
-                    value={edu.endDate} 
-                    onChange={e => updateEducation(edu.id, 'endDate', e.target.value)} 
-                    placeholder="MM/YYYY" 
+                    value={edu.endDate}
+                    onChange={e => updateEducation(edu.id, 'endDate', e.target.value)}
+                    placeholder="MM/YYYY"
                   />
                   {errors[`edu_${edu.id}_endDate`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_endDate`]}</p>}
                 </div>
               </div>
+
               <div>
                 <label className="block text-gray-700 mb-1">Description</label>
-                <textarea 
+                <textarea
                   className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_description`] ? 'border-red-500' : ''}`}
-                  value={edu.description} 
-                  onChange={e => updateEducation(edu.id, 'description', e.target.value)} 
-                  placeholder="Sample Text" 
+                  value={edu.description}
+                  onChange={e => updateEducation(edu.id, 'description', e.target.value)}
+                  placeholder="Sample Text"
                 />
                 {errors[`edu_${edu.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_description`]}</p>}
+
+                <button
+                  onClick={() => reviseDescription(edu.id, edu.description)}
+                  disabled={loadingId === edu.id}
+                  className={`mt-2 px-3 py-1 text-white rounded transition ${
+                    loadingId === edu.id ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                  }`}
+                >
+                  {loadingId === edu.id ? "Asking AI for assistance..." : "Improve summary using AI"}
+                </button>
               </div>
             </>
           )}
@@ -614,8 +686,8 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
   );
 };
 
-
 // Summary Section
+// 8/12/2025 Modfified Summary text area to allow for AI Improve button
 const summarySuggestions = [
   "Detail-oriented professional with 3+ years of experience in [field]. Skilled in [key skills]. Seeking to contribute to [type of team/company or goal].",
   "Motivated recent graduate with a background in [field]. Eager to apply skills in [skill area] and grow within a dynamic organization.",
@@ -627,35 +699,74 @@ interface SummarySectionProps {
   setSummary: React.Dispatch<React.SetStateAction<string>>;
   errors: Record<string, string>;
 }
-const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors }) => (
-  <div>
-    <h2 className="text-2xl font-bold mb-2">Summary</h2>
-    <p className="text-gray-600 mb-6">Write a short introduction that highlights your experience, key skills, and career goals.</p>
-    <label className="block text-gray-700 mb-1">Professional Summary</label>
-    <textarea
-      className={`w-full border rounded-md p-3 mb-4 ${errors.summary ? 'border-red-500' : ''}`}
-      value={summary}
-      onChange={e => setSummary(e.target.value)}
-      placeholder="Write your summary here..."
-      rows={4}
-    />
-    {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
-    <div className="bg-gray-50 rounded-lg p-4">
-      <div className="font-semibold mb-2">Suggested summary structure</div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {summarySuggestions.map((s, i) => (
-          <button
-            key={i}
-            className="text-left bg-white border border-gray-200 rounded-lg p-3 hover:bg-blue-50 transition"
-            onClick={() => setSummary(s)}
-          >
-            + {s}
-          </button>
-        ))}
+const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors }) => {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleRevise = async () => {
+    if (!summary.trim()) return;
+    setLoading(true);
+
+    try {
+      const res = await fetch("/revise-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: summary }),
+      });
+
+      const data = await res.json();
+      setSummary(data.revised_text);
+    } catch (err) {
+      console.error(err);
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div>
+      <h2 className="text-2xl font-bold mb-2">Summary</h2>
+      <p className="text-gray-600 mb-6">
+        Write a short introduction that highlights your experience, key skills, and career goals.
+      </p>
+
+      <label className="block text-gray-700 mb-1">Professional Summary</label>
+      <textarea
+        className={`w-full border rounded-md p-3 mb-4 ${errors.summary ? "border-red-500" : ""}`}
+        value={summary}
+        onChange={e => setSummary(e.target.value)}
+        placeholder="Write your summary here..."
+        rows={4}
+      />
+
+      {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
+
+      {/* Revise button */}
+      <button
+        onClick={handleRevise}
+        disabled={loading}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+      >
+        {loading ? "Revising..." : "Improve Summary using AI"}
+      </button>
+
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="font-semibold mb-2">Suggested summary structure</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {summarySuggestions.map((s, i) => (
+            <button
+              key={i}
+              className="text-left bg-white border border-gray-200 rounded-lg p-3 hover:bg-blue-50 transition"
+              onClick={() => setSummary(s)}
+            >
+              + {s}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
+
 
 // Finalize Section
 const finalizeSections = [
@@ -2164,6 +2275,16 @@ const Builder: React.FC<BuilderProps> = ({
     }));
       }, [contacts, experiences, educations, skills, summary, showExperienceLevel, languages, certifications, awards, websites, references, hobbies, customSections]);
 
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        window.location.href = '/choose-resume-maker';
+      }
+    };
+    window.addEventListener('keydown', onKeyDown as any);
+    return () => window.removeEventListener('keydown', onKeyDown as any);
+  }, []);
+
   return (
     <div className="flex flex-col h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Build Your Resume" />
@@ -2178,23 +2299,7 @@ const Builder: React.FC<BuilderProps> = ({
         </div>
       )}
       
-      {/* Header with Back Button */}
-      <header className="w-full bg-white flex items-center justify-between px-8 py-4 shadow-sm">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold text-gray-800">Resume Builder</h1>
-          {isUpdating && (
-            <div className="flex items-center space-x-2 text-blue-600">
-              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span className="text-sm">Saving...</span>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center space-x-4">
-          <span className="text-sm text-gray-600">
-            Step {currentStep + 1} of {steps.length}: {steps[currentStep]}
-          </span>
-        </div>
-      </header>
+      {/* Header removed to maximize editor space */}
 
       {/* Warning for pending payments */}
       {hasPendingPayments && (
@@ -2212,15 +2317,13 @@ const Builder: React.FC<BuilderProps> = ({
       )}
 
       {/* Main Content */}
-        <Link
-            href="/choose-resume-maker"
-            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors mt-3 ml-2"
-          >
-            <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            <span className="text-sm font-medium">Back</span>
+        <div className="mt-3 ml-2">
+          <Link href="/choose-resume-maker" className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 bg-white/90 hover:bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm font-semibold">Back to Make Option</span>
+            <span className="ml-2 hidden sm:inline-flex items-center text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Esc</span>
           </Link>
+        </div>
       {!isLoading && (
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Left Side */}
