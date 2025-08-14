@@ -363,7 +363,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                             <Logo 
                                 size="sm"
                                 text="CVeezy"
-                                imageSrc="/images/CveezyLOGO.png"
+                                imageSrc="/images/supsoft-logo.jpg"
                                 imageAlt="CVeezy Logo"
                                 className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
                             />

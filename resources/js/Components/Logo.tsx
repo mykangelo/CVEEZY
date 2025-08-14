@@ -15,14 +15,14 @@ const Logo: React.FC<LogoProps> = ({
   size = 'lg', 
   showText = true,
   text = 'CVeezy',
-  imageSrc = "/images/CveezyLOGO.png",
-  imageAlt = 'CVeezy Logo'
+  imageSrc = "/images/supsoft-logo.jpg",
+  imageAlt = 'Supsoft Tech Logo'
 }) => {
   const sizeClasses = {
-    sm: 'h-8 w-auto',
-    md: 'h-10 w-auto',
-    lg: 'h-12 w-auto',
-    xl: 'h-16 w-auto'
+    sm: 'w-8 h-8',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-20 h-20'
   };
 
   const textSizeClasses = {
@@ -44,16 +44,17 @@ const Logo: React.FC<LogoProps> = ({
         className={`${sizeClasses[size]} object-contain`}
       />
 
-      
-      {/* Logo Text - Updated with BetterCV-style font 
+      {/* Logo Text - Updated with BetterCV-style font */}
       {showText && (
         <div className="flex flex-col leading-tight">
           <span className={`font-heavybold text-gray-800 tracking-tight ${textSizeClasses[size]} font-sans`}>
             {text}
           </span>
+          <span className="text-xs text-gray-400 -mt-1.5 ml-2">
+            by Certicode
+          </span>
         </div>
       )}
-      */}
     </Link>
   );
 };
