@@ -87,6 +87,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Resume Management
     Route::post('/resumes', [DashboardController::class, 'store'])->name('resumes.store');
     Route::get('/resumes/{resume}', [DashboardController::class, 'show'])->name('resumes.show');
+    Route::get('/resumes/{resume}/payment-status', [DashboardController::class, 'paymentStatus'])->name('resumes.payment-status');
     Route::patch('/resumes/{resume}', [DashboardController::class, 'update'])->name('resumes.update');
     Route::patch('/resumes/{resume}/rename', [DashboardController::class, 'rename'])->name('resumes.rename');
     Route::patch('/resumes/{resume}/mark-modified', [DashboardController::class, 'markAsModifiedForEdit'])->name('resumes.mark-modified');
@@ -100,7 +101,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/resume/{id}', [ResumeController::class, 'show'])->name('resume.show');
 
     // Payment & Payment Proof Management
-    Route::inertia('/payment', 'Payment')->name('payment.page');
+    Route::get('/payment', [PaymentController::class, 'index'])->name('payment.page');
     Route::get('/payment-upload', [PaymentUploadController::class, 'index'])->name('payment.upload.page');
     Route::post('/upload-payment-proof', [PaymentProofController::class, 'store'])->name('payment.upload');
     Route::get('/user/payment-proofs', [PaymentProofController::class, 'userPayments'])->name('payment.proofs');
