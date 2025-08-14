@@ -238,23 +238,30 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
   // Build the exact text we render to run client-side spellcheck when needed
   const buildTextToCheck = (): string => {
-    const experienceTexts = (experiences || []).map((exp: any) => [
+    const rd: any = resumeData || {};
+    const rdExperiences: any[] = (rd.experiences || []) as any[];
+    const rdEducations: any[] = (rd.educations || rd.education || []) as any[];
+    const rdSkills: any[] = (rd.skills || []) as any[];
+    const rdSummary: string = rd.summary || '';
+    const rdDesiredJobTitle: string = (rd.contact && rd.contact.desiredJobTitle) || '';
+
+    const experienceTexts = rdExperiences.map((exp: any) => [
       exp.jobTitle || '',
       exp.employer || exp.company || '',
       exp.description || ''
     ].filter(Boolean).join(' '));
 
-    const educationTexts = (educations || []).map((edu: any) => [
+    const educationTexts = rdEducations.map((edu: any) => [
       edu.degree || '',
       edu.school || '',
       edu.description || ''
     ].filter(Boolean).join(' '));
 
-    const skillsText = (skills || []).map((s: any) => s.name).filter(Boolean).join(', ');
+    const skillsText = rdSkills.map((s: any) => s.name).filter(Boolean).join(', ');
 
     return [
-      summary || '',
-      contact?.desiredJobTitle || '',
+      rdSummary,
+      rdDesiredJobTitle,
       ...experienceTexts,
       ...educationTexts,
       skillsText
@@ -311,7 +318,14 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
     return () => { isCancelled = true; };
   // Re-run when inputs that affect the on-screen text change
-  }, [spellcheck, summary, contact?.desiredJobTitle, experiences, educations, skills]);
+  }, [
+    spellcheck,
+    (resumeData as any)?.summary,
+    (resumeData as any)?.contact?.desiredJobTitle,
+    (resumeData as any)?.experiences,
+    (resumeData as any)?.educations || (resumeData as any)?.education,
+    (resumeData as any)?.skills,
+  ]);
 
    // Function to handle clicking the "Download PDF" button
 
