@@ -161,4 +161,27 @@ class PaymentProofController extends Controller
 
         return response()->json($paymentProofs);
     }
+
+    /**
+     * Stream a payment proof file directly from storage/app/public
+     * (no need for the public/storage symlink).
+     * Route: GET /admin/payments/{id}/download  (under admin middleware)
+     */
+    public function download($id)
+    {
+        $payment = PaymentProof::findOrFail($id);
+
+        // Ensure we build a safe absolute path inside storage/app/public
+        $relativePath = ltrim($payment->file_path, '/'); // e.g. "proofs/abc.pdf"
+        $fullPath = storage_path('app/public/' . $relativePath);
+
+        if (!file_exists($fullPath)) {
+            abort(404, 'File not found.');
+        }
+
+        // Show inline (images/pdf will open in browser; others may download)
+        return response()->file($fullPath);
+        // If you want to force download instead, use:
+        // return response()->download($fullPath);
+    }
 }

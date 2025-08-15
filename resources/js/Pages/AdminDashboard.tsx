@@ -476,8 +476,8 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
     };
 
     const viewPaymentProof = (payment: PaymentProof) => {
-        // Open payment proof file in new tab
-        const fileUrl = `/storage/${payment.file_path}`;
+        // Use backend route to fetch file directly from storage/app/public
+        const fileUrl = `/admin/payments/${payment.id}/download`;
         window.open(fileUrl, '_blank');
     };
 
@@ -686,13 +686,12 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                 </div>
                                                                 {payment.file_path && (
                                                                     <div className="flex items-center space-x-2">
-                                                                        <Button 
-                                                                            size="sm" 
+                                                                        <Button
                                                                             variant="outline"
+                                                                            size="sm"
                                                                             onClick={() => viewPaymentProof(payment)}
                                                                         >
-                                                                            <Eye className="h-4 w-4 mr-1" />
-                                                                            View Proof
+                                                                            View
                                                                         </Button>
                                                                         <Button 
                                                                             size="sm" 

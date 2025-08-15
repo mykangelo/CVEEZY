@@ -134,6 +134,10 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::post('/admin/payment/{id}/approve', [AdminController::class, 'approve'])->name('admin.payment.approve');
     Route::post('/admin/payment/{id}/reject', [AdminController::class, 'reject'])->name('admin.payment.reject');
 
+    // ✅ New route for serving files directly from storage/app/public
+    Route::get('/admin/payments/{id}/download', [PaymentProofController::class, 'download'])->name('admin.payments.download');
+
+
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/admin/users/{id}', [AdminController::class, 'viewUser'])->name('admin.user.view');
