@@ -120,9 +120,12 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
                     {websites.map((site) => (
                       <div key={site.id} className="flex items-start gap-2">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="mt-0.5 text-[#333333]"><circle cx="12" cy="12" r="9" stroke="#333" strokeWidth="1.5"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" stroke="#333" strokeWidth="1.5"/></svg>
-                        <a href={site.url} target="_blank" rel="noreferrer" className="underline text-[#333333]">
-                          {site.url}
-                        </a>
+                        <div className="text-[13px]">
+                          <span className="font-medium mr-1">{site.label || 'Website'}:</span>
+                          <a href={site.url} target="_blank" rel="noreferrer" className="underline text-[#333333] break-all">
+                            {site.url}
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -186,6 +189,19 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
                       {lang.name}
                       {lang.proficiency ? ` (${lang.proficiency})` : ""}
                     </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Hobbies & Interests */}
+            {hobbies && hobbies.length > 0 && <div className="border-t border-gray-300" />}
+            {hobbies && hobbies.length > 0 && (
+              <div className="py-5 pr-6">
+                <h3 className="elegant-section-title mb-3">Hobbies</h3>
+                <ul className="list-disc pl-5 text-[13px] space-y-1">
+                  {hobbies.map((hobby) => (
+                    <li key={hobby.id}>{hobby.name}</li>
                   ))}
                 </ul>
               </div>

@@ -99,6 +99,7 @@ body {
   letter-spacing: 0.05em;
   padding-bottom: 6px;
   border-bottom: 2px solid #374151;
+  page-break-after: avoid; /* keep heading with content */
 }
 
 /* ---------- Sections ---------- */
@@ -488,6 +489,7 @@ body {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
+  h1, h2, h3, .section-title { page-break-after: avoid !important; }
   
   /* Prevent orphans and widows */
   p, .timeline-description, .profile-text {
@@ -619,6 +621,30 @@ body {
   }
 }
 
+/* Additional page break and overflow prevention */
+.language-item, .website-item {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Ensure proper page breaks for all elements */
+.section {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+/* Force page breaks when content exceeds page height */
+.section:last-child {
+  page-break-inside: auto;
+}
+
+/* Prevent text overflow and ensure proper wrapping */
+.profile-text, .timeline-description, .skill-name, .language-name {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
 /* ---------- Screen optimizations ---------- */
 @media screen {
   .paper {
@@ -668,6 +694,9 @@ body {
                   <h4 class="timeline-title">
                     {{ trim(($exp['jobTitle'] ?? '').(!empty($exp['jobTitle']) && !empty($exp['company']) ? ' at ' : '').($exp['company'] ?? '')) }}
                   </h4>
+                  @if (!empty($exp['location']))
+                    <div class="timeline-location">{{ $exp['location'] }}</div>
+                  @endif
 
                   @if (!empty($exp['description']))
                     <div class="timeline-description">
@@ -749,7 +778,7 @@ body {
             @if (!empty($site['url']))
               <div class="contact-item">
                 <span class="contact-icon icon-globe"></span>
-                <span>{{ $site['url'] }}</span>
+                <span><strong>{{ $site['label'] ?? 'Website' }}:</strong> {{ $site['url'] }}</span>
               </div>
             @endif
           @endforeach
@@ -767,7 +796,11 @@ body {
                   @if(!empty($edu['startDate'])){{ $edu['startDate'] }}@endif
                   @if(!empty($edu['endDate']))@if(!empty($edu['startDate'])) – @endif{{ $edu['endDate'] }}@endif
                 </div>
-                @if (!empty($edu['school'])) <div class="timeline-location">{{ $edu['school'] }}</div> @endif
+                @if (!empty($edu['school']))
+                  <div class="timeline-location">
+                    {{ $edu['school'] }}@if(!empty($edu['location'])) — {{ $edu['location'] }}@endif
+                  </div>
+                @endif
                 @if (!empty($edu['degree'])) <h4 class="timeline-title">{{ $edu['degree'] }}</h4> @endif
 
                 @if (!empty($edu['description']))

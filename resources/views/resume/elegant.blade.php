@@ -27,6 +27,31 @@
         .grid { width: 100%; border-collapse: separate; border-spacing: 0; border-top: 1px solid #D3D3D3; border-bottom: 1px solid #D3D3D3; page-break-inside: auto; }
         .grid td { vertical-align: top; page-break-inside: avoid; }
         .grid tr { page-break-inside: avoid; page-break-after: auto; }
+        h1, h2, h3, .heading { page-break-after: avoid; }
+
+        /* Enhanced page break and overflow prevention */
+        .experience-item, .education-item, .skill-item, .hobby-item, .website-item, .reference-item, .language-item, .certification-item, .award-item {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        /* Ensure proper page breaks for all elements */
+        h1, h2, h3, .heading, .section-title {
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        
+        /* Prevent text overflow and ensure proper wrapping */
+        p, li, .job-title, .company, .degree, .school, .skill-name, .hobby-name, .website-label, .reference-name, .language-name, .certification-title, .award-title {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        /* Force page breaks when content exceeds page height */
+        .section:last-child, .grid:last-child {
+            page-break-inside: auto;
+        }
         .grid tr + tr td { border-top: 1px solid #D3D3D3; }
         .cell-left { width: 35%; padding: 8px 0 8px 0; border-right: 1px solid #D3D3D3; }
         .cell-right { width: 65%; padding: 8px 0 8px 16px; }
@@ -153,7 +178,10 @@
                             @foreach ($websites as $site)
                                 <tr>
                                     <td class="icon-cell">www</td>
-                                    <td class="text-cell" style="text-decoration: none;">{{ $site['url'] }}</td>
+                                    <td class="text-cell" style="text-decoration: none;">
+                                        <strong>{{ $site['label'] ?? 'Website' }}:</strong>
+                                        <a href="{{ $site['url'] ?? '' }}" class="no-underline">{{ $site['url'] ?? '' }}</a>
+                                    </td>
                                 </tr>
                             @endforeach
                         @endif

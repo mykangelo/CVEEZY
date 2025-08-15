@@ -129,6 +129,28 @@
     }
   }
 
+  /* Page break and overflow prevention */
+  .job, .skill-item, .info p, .references div {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .section-title {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  /* Ensure content flows properly */
+  .container {
+    overflow: visible;
+  }
+  
+  /* Prevent text overflow */
+  p, li, .contact, .ref-contact {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
   /* Responsive adjustments */
   @media (max-width: 600px) {
     .container {
@@ -150,18 +172,25 @@
   <h1>{{ $resume['contact']['firstName'] ?? '' }} {{ $resume['contact']['lastName'] ?? '' }}</h1>
   <div class="role">{{ strtoupper($resume['contact']['desiredJobTitle'] ?? '') }}</div>
   <div class="contact">
-    @if(!empty($resume['contact']['address']))
-      <span>{{ $resume['contact']['address'] }}</span>
-    @endif
-    @if(!empty($resume['contact']['phone']))
-      <span>┃</span><span>{{ $resume['contact']['phone'] }}</span>
-    @endif
-    @if(!empty($resume['contact']['email']))
-      <span>┃</span><span>{{ $resume['contact']['email'] }}</span>
-    @endif
-    @if(!empty($resume['websites'][0]['url']))
-      <span>┃</span><span>{{ $resume['websites'][0]['url'] }}</span>
-    @endif
+    @php
+      $contactParts = [];
+      if (!empty($resume['contact']['address']) || !empty($resume['contact']['city']) || !empty($resume['contact']['country']) || !empty($resume['contact']['postCode'])) {
+        $contactParts[] = collect([
+          $resume['contact']['address'] ?? '',
+          $resume['contact']['city'] ?? '',
+          $resume['contact']['country'] ?? '',
+          $resume['contact']['postCode'] ?? ''
+        ])->filter()->implode(', ');
+      }
+      if (!empty($resume['contact']['phone'])) $contactParts[] = $resume['contact']['phone'];
+      if (!empty($resume['contact']['email'])) $contactParts[] = $resume['contact']['email'];
+      if (!empty($resume['websites'])) {
+        foreach ($resume['websites'] as $site) {
+          if (!empty($site['url'])) $contactParts[] = ($site['label'] ?? 'Website') . ': ' . $site['url'];
+        }
+      }
+    @endphp
+    {{ implode(' ┃ ', $contactParts) }}
   </div>
 
   {{-- Summary --}}
@@ -180,6 +209,9 @@
         <span>{{ $exp['jobTitle'] ?? '' }}, {{ $exp['company'] ?? '' }}</span>
         <span>{{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }}</span>
       </div>
+      @if (!empty($exp['location']))
+        <div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:2px;">{{ $exp['location'] }}</div>
+      @endif
       @if (!empty($exp['description']))
         <ul>
           @foreach (explode("\n", $exp['description']) as $point)
@@ -201,6 +233,9 @@
         <span>{{ $edu['degree'] ?? '' }}, {{ $edu['school'] ?? '' }}</span>
         <span>{{ $edu['startDate'] ?? '' }} - {{ $edu['endDate'] ?? '' }}</span>
       </div>
+      @if (!empty($edu['location']))
+        <div style="font-size:12px;color:#6b7280;margin:2px 0;">{{ $edu['location'] }}</div>
+      @endif
       @if (!empty($edu['description']))
         <p>{{ $edu['description'] }}</p>
       @endif

@@ -143,6 +143,31 @@
             table-layout: fixed;
             page-break-inside: avoid; /* Prevent breaking sections */
         }
+        h1, h2, h3 { page-break-after: avoid; }
+
+        /* Enhanced page break and overflow prevention */
+        .content-section, .experience-item, .education-item, .skill-item, .hobby-item, .website-item, .reference-item {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        /* Ensure proper page breaks for all elements */
+        h1, h2, h3, .section-title {
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        
+        /* Prevent text overflow and ensure proper wrapping */
+        p, li, .job-title, .company, .degree, .school, .skill-name, .hobby-name, .website-label, .reference-name {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        /* Force page breaks when content exceeds page height */
+        .content-section:last-child {
+            page-break-inside: auto;
+        }
 
         /* Dynamic section spacing based on content */
         .content-section.compact {
@@ -665,6 +690,9 @@
                                     <h3>{{ $exp['company'] ?? '' }} {{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }}</h3>
                                     <p class="experience-title">{{ $exp['jobTitle'] ?? '' }}</p>
                                 </div>
+                                @if (!empty($exp['location']))
+                                    <p class="experience-title" style="color:#666; font-style: italic; margin-top:-4px;">{{ $exp['location'] }}</p>
+                                @endif
                                 @if (!empty($exp['description']))
                                     <p class="experience-description">{{ $exp['description'] }}</p>
                                 @endif

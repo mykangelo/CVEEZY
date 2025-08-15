@@ -84,7 +84,7 @@
         }
 
         /* Experience */
-        .experience-item { margin-bottom: 4px; }
+        .experience-item { margin-bottom: 4px; page-break-inside: avoid; }
         table.experience-table {
             width: 100%;
             border-collapse: collapse;
@@ -122,7 +122,7 @@
         }
 
         /* Education */
-        .education-item { margin-bottom: 4px; }
+        .education-item { margin-bottom: 4px; page-break-inside: avoid; }
         table.education-table {
             width: 100%;
             border-collapse: collapse;
@@ -224,6 +224,32 @@
         a {
             color: inherit;
             text-decoration: underline;
+        }
+        /* prevent headings from detaching from content */
+        .section-title, .skills-title { page-break-after: avoid; }
+
+        /* Enhanced page break and overflow prevention */
+        .experience-item, .education-item, .hobbies-table, .websites-table, .references-table {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        /* Ensure proper page breaks for all elements */
+        h1, h2, h3, .section-title, .skills-title {
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        
+        /* Prevent text overflow and ensure proper wrapping */
+        p, li, .contact-info, .job-title, .company, .degree, .school, .hobby-item, .website-item, .reference-item {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        /* Force page breaks when content exceeds page height */
+        .section:last-child {
+            page-break-inside: auto;
         }
     </style>
 </head>
@@ -360,7 +386,7 @@
                             <td class="education-dates">{{ $edu['startDate'] }} - {{ $edu['endDate'] }}</td>
                         </tr>
                     </table>
-                    <div class="education-school">{{ $edu['school'] }} — {{ $edu['location'] }}</div>
+                    <div class="education-school">{{ $edu['school'] }} @if(!empty($edu['location'])) — {{ $edu['location'] }} @endif</div>
                     @if(!empty($edu['description']))
                         <ul class="education-description-list">
                             <li class="education-description">{{ $edu['description'] }}</li>

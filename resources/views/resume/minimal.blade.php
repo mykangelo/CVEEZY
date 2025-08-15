@@ -55,12 +55,14 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            page-break-inside: avoid;
         }
         .section-header {
             background-color: #e5e7eb;
             padding: 6px 12px;
             margin-bottom: 8px;
             border-radius: 9999px;
+            page-break-after: avoid;
         }
         .section-title {
             font-size: 13px;
@@ -87,6 +89,8 @@
         
         .experience-item, .education-item {
             margin-bottom: 12px;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
         .experience-header, .education-header {
             display: grid;  
@@ -262,6 +266,30 @@
                 font-size: 10px;
             }
           
+        }
+
+        /* Enhanced page break and overflow prevention */
+        .info-item, .references-item, .custom-section, .skill-row {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        /* Ensure proper page breaks for all elements */
+        h1, h2, .section-title, .section-header {
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        
+        /* Prevent text overflow and ensure proper wrapping */
+        .info-content, .reference-name, .custom-section-content, .bullet-text {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+        }
+        
+        /* Force page breaks when content exceeds page height */
+        .section:last-child {
+            page-break-inside: auto;
         }
     </style>
 </head>

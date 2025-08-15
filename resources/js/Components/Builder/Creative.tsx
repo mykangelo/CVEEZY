@@ -325,6 +325,11 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                                             placeholder="Job Title"
                                         />
                                     </p>
+                                    {exp.location && (
+                                      <p className="text-gray-600 text-xs italic">
+                                        {exp.location}
+                                      </p>
+                                    )}
                                 </div>
                                 <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
                                     {(exp.description ||

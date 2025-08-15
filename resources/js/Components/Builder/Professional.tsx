@@ -34,7 +34,7 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
   );
 
   // Function to convert skill level
-  const getSkillDots = (level: string) => {
+  const getSkillDots = (level: string, muted: boolean = false) => {
     const levels = ["Novice", "Beginner", "Skillful", "Experienced", "Expert"];
     const levelIndex = levels.indexOf(level);
     const maxDots = 5;
@@ -44,7 +44,7 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
     if (activeDots > maxDots) activeDots = maxDots;
 
     return (
-      <span className="text-black-500 tracking-widest">
+      <span className={`${muted ? 'text-gray-300' : 'text-gray-700'} tracking-widest`}>
         {"●".repeat(activeDots)}
         {"○".repeat(maxDots - activeDots)}
       </span>
@@ -66,8 +66,6 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
           <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
           <span>┃</span>
           <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
-          <span>┃</span>
-          <span><Placeholder value={(websites[0] && websites[0].url) || ""} placeholder="portfolio.example.com" /></span>
         </div>
       </div>
 
@@ -85,40 +83,51 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
         <Divider />
         <h2 className="text-lg font-semibold uppercase">Professional Experience</h2>
         {(experiences.length > 0 ? experiences : [
-          { id: -1, jobTitle: 'Job Title', company: 'Company', startDate: '2017', endDate: '2020', description: 'Led X to achieve Y\nOptimized Z for 20% improvement' },
-          { id: -2, jobTitle: 'Job Title', company: 'Company', startDate: '2015', endDate: '2017', description: 'Built A to support B\nCollaborated with C teams' },
+          { id: -1, jobTitle: '', company: '', startDate: '', endDate: '', description: '' },
         ] as any[]).map(exp => (
           <div key={exp.id} className="mt-2">
             <div className="flex justify-between text-sm font-semibold">
               <span>
-                <Placeholder value={`${exp.jobTitle}, ${exp.company}`} placeholder="Job Title, Company" />
+                <Placeholder value={(exp.jobTitle || exp.company) ? `${exp.jobTitle}${exp.jobTitle && exp.company ? ', ' : ''}${exp.company}` : ''} placeholder="Job Title, Company" />
               </span>
               <span>
-                <Placeholder value={`${exp.startDate} - ${exp.endDate}`} placeholder="2017 — 2020" />
+                <Placeholder value={(exp.startDate || exp.endDate) ? `${exp.startDate} - ${exp.endDate}` : ''} placeholder="2017 — 2020" />
               </span>
             </div>
-            <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
-              {((exp.description && exp.description.trim() !== '') ? exp.description : 'Led X to achieve Y\nOptimized Z for 20% improvement').split("\n").map((point: string, i: number) => (
-                <li key={i}>{point}</li>
-              ))}
-            </ul>
+            {/* Employer (stored as location in resumeData mapping) */}
+            <p className="text-xs text-gray-600 italic mt-0.5">
+              <Placeholder value={(exp as any).location} placeholder="Employer" />
+            </p>
+            {(() => {
+              const points = (exp.description && String(exp.description).trim() !== '')
+                ? String(exp.description).split("\n")
+                : ['Sample Text'];
+              const isPlaceholder = !(exp.description && String(exp.description).trim().length > 0);
+              return (
+                <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
+                  {points.map((point: string, i: number) => (
+                    <li key={i} className={isPlaceholder ? 'text-gray-400 italic' : ''}>{point}</li>
+                  ))}
+                </ul>
+              );
+            })()}
           </div>
         ))}
       </div>
 
-      {/* Projects */}
+      {/* Projects - only show if user adds custom sections */}
       {customSections && customSections.length > 0 && (
         <div>
           <Divider />
           <h2 className="text-lg font-semibold uppercase">Projects</h2>
-          {customSections.map(section => (
+          {customSections.map((section: any) => (
             <div key={section.id} className="mt-2">
               <div className="flex justify-between text-sm font-semibold">
                 <span>{section.title}</span>
-                {section.title && <span>{section.title}</span>}
+                {section.date && <span className="text-gray-500">{section.date}</span>}
               </div>
               <ul className="list-disc list-inside text-sm mt-1 space-y-0.5">
-                {section.content.split("\n").map((point, i) => (
+                {String(section.content || '').split("\n").filter(Boolean).map((point: string, i: number) => (
                   <li key={i}>{point}</li>
                 ))}
               </ul>
@@ -132,17 +141,20 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
         <Divider />
         <h2 className="text-lg font-semibold uppercase">Education</h2>
         {(education.length > 0 ? education : [
-          { id: -1, degree: 'Degree in Field of study', school: 'School Name', startDate: '2013', endDate: '2017', description: '' },
+          { id: -1, degree: '', school: '', startDate: '', endDate: '', description: '', location: '' },
         ] as any[]).map(edu => (
           <div key={edu.id} className="mt-2">
             <div className="flex justify-between text-sm font-semibold">
               <span>
-                <Placeholder value={`${edu.degree}, ${edu.school}`} placeholder="Degree in Field of study, School Name" />
+                <Placeholder value={(edu.degree || edu.school) ? `${edu.degree}${edu.degree && edu.school ? ', ' : ''}${edu.school}` : ''} placeholder="Degree in Field of study, School Name" />
               </span>
               <span>
-                <Placeholder value={`${edu.startDate} - ${edu.endDate}`} placeholder="2013 — 2017" />
+                <Placeholder value={(edu.startDate || edu.endDate) ? `${edu.startDate} - ${edu.endDate}` : ''} placeholder="2013 — 2017" />
               </span>
             </div>
+            {(edu as any).location && (
+              <p className="text-xs text-gray-600 italic mt-0.5">{(edu as any).location}</p>
+            )}
             {edu.description && (
               <p className="text-sm mt-1 leading-relaxed">{edu.description}</p>
             )}
@@ -156,62 +168,57 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
         <h2 className="text-lg font-semibold uppercase">Skills</h2>
         <ul className="text-sm grid grid-cols-2 gap-x-8 gap-y-2">
           {(skills.length > 0 ? skills : [
-            { id: -1, name: 'Skill 1', level: 'Experienced' },
-            { id: -2, name: 'Skill 2', level: 'Experienced' },
-            { id: -3, name: 'Skill 3', level: 'Experienced' },
-            { id: -4, name: 'Skill 4', level: 'Experienced' },
-          ] as any[]).map((skill, i) => (
+            { id: -1, name: '', level: 'Experienced' },
+            { id: -2, name: '', level: 'Experienced' },
+            { id: -3, name: '', level: 'Experienced' },
+            { id: -4, name: '', level: 'Experienced' },
+          ] as any[]).map((skill: any, i: number) => (
             <li key={i} className="flex items-center">
               <span className="w-32"><Placeholder value={skill.name} placeholder={`Skill ${i + 1}`} /></span>
-              <span className="ml-1">{getSkillDots((skill.level as string) || "Experienced")}</span>
+              <span className="ml-1">{getSkillDots((skill.level as string) || 'Experienced', !(skill.name && String(skill.name).trim().length > 0))}</span>
             </li>
           ))}
         </ul>
       </div>
 
-      {/* Additional Information */}
-      {(languages.length > 0 ||
-        certifications.length > 0 ||
-        awards.length > 0 ||
-        hobbies.length > 0 ||
-        websites.length > 0) && (
-        <div>
-          <Divider />
-          <h2 className="text-lg font-semibold uppercase">
-            Additional Information
-          </h2>
-          {languages.length > 0 && (
-            <p className="text-sm mt-1">
-              <strong>Languages:</strong>{" "}
-              {languages.map(l => `${l.name}${l.proficiency ? ` (${l.proficiency})` : ''}`).join(", ")}
-            </p>
-          )}
-          {certifications.length > 0 && (
-            <p className="text-sm mt-1">
-              <strong>Certifications:</strong>{" "}
-              {certifications.map(c => c.title).join(", ")}
-            </p>
-          )}
-          {awards.length > 0 && (
-            <p className="text-sm mt-1">
-              <strong>Awards/Activities:</strong>{" "}
-              {awards.map(a => a.title).join(", ")}
-            </p>
-          )}
-          {hobbies.length > 0 && (
-            <p className="text-sm mt-1">
-              <strong>Hobbies:</strong>{" "}
-              {hobbies.map(l => l.name).join(", ")}
-            </p>
-          )}
-          {websites.length > 0 && (
-            <p className="text-sm mt-1">
-              <strong>Websites:</strong>{" "}
-              {websites.map(w => `${w.label}: ${w.url}`).join(", ")}
-            </p>
-          )}
-        </div>
-      )}
+      {/* Additional Information - always show with placeholders */}
+      <div>
+        <Divider />
+        <h2 className="text-lg font-semibold uppercase">Additional Information</h2>
+        <p className="text-sm mt-1">
+          <strong>Languages:</strong>{" "}
+          <Placeholder
+            value={languages.length ? languages.map(l => `${l.name}${l.proficiency ? ` (${l.proficiency})` : ''}`).join(', ') : ''}
+            placeholder="English, French, Mandarin"
+          />
+        </p>
+        <p className="text-sm mt-1">
+          <strong>Certifications:</strong>{" "}
+          <Placeholder
+            value={certifications.length ? certifications.map(c => c.title).join(', ') : ''}
+            placeholder="Professional Design Engineer (PDE), Project Management Tech (PMT), Structural Process Design (SPD)"
+          />
+        </p>
+        <p className="text-sm mt-1">
+          <strong>Awards/Activities:</strong>{" "}
+          <Placeholder
+            value={awards.length ? awards.map(a => a.title).join(', ') : ''}
+            placeholder="Most Innovative Intern of the Year (2022), Overall Best Intern (2022), Onboarding Project Lead (2024)"
+          />
+        </p>
+        {websites && websites.length > 0 && (
+          <p className="text-sm mt-1">
+            <strong>Websites:</strong>{" "}
+            {websites.map(w => `${w.label}: ${w.url}`).join(', ')}
+          </p>
+        )}
+        {hobbies && hobbies.length > 0 && (
+          <p className="text-sm mt-1">
+            <strong>Hobbies:</strong>{" "}
+            {hobbies.map(h => h.name).join(', ')}
+          </p>
+        )}
+      </div>
 
       {/* References */}
       {resumeData.references && resumeData.references.length > 0 && (

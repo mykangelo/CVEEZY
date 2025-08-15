@@ -154,6 +154,12 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
         </div>
     );
 
+    // Normalize URLs for display/click (prepend https:// if missing)
+    const normalizeUrl = (u?: string) => {
+        if (!u) return '';
+        return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+    };
+
     return (
         <div className="w-full text-gray-800 font-sans flex min-h-screen" style={{ fontFamily: 'Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Arial Unicode MS", "Noto Sans", sans-serif' }}>
             {/* Left Column */}
@@ -215,9 +221,12 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                                             <Placeholder value={`${exp.startDate || ''}${(exp.startDate || exp.endDate) ? ' – ' : ''}${exp.endDate || ''}`} placeholder="Sep 2017 — May 2020" />
                                         </div>
 
-                                        <h4 className="font-medium text-gray-800 mb-2" style={{ fontSize: '14px' }}>
+                                        <h4 className="font-medium text-gray-800" style={{ fontSize: '14px' }}>
                                             <Placeholder value={`${exp.jobTitle || ''}${exp.company ? ` at ${exp.company}` : ''}`} placeholder="Job Title 1" />
                                         </h4>
+                                        {exp.location && (
+                                          <div className="text-xs text-gray-600 italic mb-2">{exp.location}</div>
+                                        )}
 
                                         <div className="text-gray-600 leading-relaxed" style={{ fontSize: '13px', lineHeight: '1.4' }}>
                                             {(exp.description || '• Responsibilities\n• Responsibilities')
@@ -326,15 +335,21 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                             </span>
                             <div className="flex flex-col space-y-1">
                                 {(websites && websites.length > 0 ? websites : [{ id: -1, label: 'Portfolio', url: 'https://portfolio.example.com' }] as any[]).map((site: any) => (
-                                    <a
-                                        key={site.id}
-                                        href={site.url}
-                                        className="text-gray-700 hover:text-gray-900"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                    >
-                                        {site.url}
-                                    </a>
+                                    <div key={site.id} className="text-gray-700">
+                                        <span className="font-medium mr-1">{site.label || 'Website'}:</span>
+                                        {site.url ? (
+                                            <a
+                                                href={normalizeUrl(site.url)}
+                                                className="hover:text-gray-900 underline break-all"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                {site.url}
+                                            </a>
+                                        ) : (
+                                            <span className="text-gray-500 italic">No URL</span>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -371,7 +386,7 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                                             <Placeholder value={`${edu.startDate || ''}${(edu.startDate || edu.endDate) ? ' – ' : ''}${edu.endDate || ''}`} placeholder="2017 — 2020" />
                                         </div>
                                         <div className="text-gray-600 uppercase tracking-wide mb-1" style={{ fontSize: '12px', fontWeight: '300', letterSpacing: '.04em' }}>
-                                            <Placeholder value={edu.school} placeholder="School Name, Location" />
+                                            <Placeholder value={`${edu.school || ''}${(edu as any).location ? ` — ${(edu as any).location}` : ''}`} placeholder="School Name — Location" />
                                         </div>
                                         <h4 className="font-medium text-gray-800 mb-1" style={{ fontSize: '13px', lineHeight: '1.3' }}>
                                             <Placeholder value={edu.degree} placeholder="Degree in Field of study" />

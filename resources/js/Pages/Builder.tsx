@@ -1505,24 +1505,24 @@ const Builder: React.FC<BuilderProps> = ({
   const [experiences, setExperiences] = useState<Experience[]>([
     {
       id: Date.now(),
-      jobTitle: "Software Developer",
-      employer: "ABC Company",
-      company: "ABC Corp",
+      jobTitle: "",
+      employer: "",
+      company: "",
       startDate: "",
       endDate: "",
-      description: "Sample Text",
+      description: "",
       expanded: true,
     },
   ]);
   const [educations, setEducations] = useState<Education[]>([
     {
       id: Date.now() + 1,
-      school: "UCLA",
-      location: "New York",
-      degree: "Bachelor of Science in Information Tech",
+      school: "",
+      location: "",
+      degree: "",
       startDate: "",
       endDate: "",
-      description: "Sample Text",
+      description: "",
       expanded: true,
     },
   ]);
@@ -1613,33 +1613,17 @@ const Builder: React.FC<BuilderProps> = ({
               if (resumeData.skills) {
                 setSkills(resumeData.skills);
               }
-              if (resumeData.summary) {
-                setSummary(resumeData.summary);
-              }
+              setSummary(resumeData.summary || '');
               if (resumeData.showExperienceLevel !== undefined) {
                 setShowExperienceLevel(resumeData.showExperienceLevel);
               }
-              if (resumeData.languages) {
-                setLanguages(resumeData.languages);
-              }
-              if (resumeData.certifications) {
-                setCertifications(resumeData.certifications);
-              }
-              if (resumeData.awards) {
-                setAwards(resumeData.awards);
-              }
-              if (resumeData.websites) {
-                setWebsites(resumeData.websites);
-              }
-              if (resumeData.references) {
-                setReferences(resumeData.references);
-              }
-              if (resumeData.hobbies) {
-                setHobbies(resumeData.hobbies);
-              }
-              if (resumeData.customSections) {
-                setCustomSections(resumeData.customSections);
-              }
+              setLanguages(resumeData.languages || []);
+              setCertifications(resumeData.certifications || []);
+              setAwards(resumeData.awards || []);
+              setWebsites(resumeData.websites || []);
+              setReferences(resumeData.references || []);
+              setHobbies(resumeData.hobbies || []);
+              setCustomSections(resumeData.customSections || []);
 
             }
             
@@ -1684,33 +1668,17 @@ const Builder: React.FC<BuilderProps> = ({
                 if (resumeData.skills) {
                   setSkills(resumeData.skills);
                 }
-                if (resumeData.summary) {
-                  setSummary(resumeData.summary);
-                }
+                setSummary(resumeData.summary || '');
                 if (resumeData.showExperienceLevel !== undefined) {
                   setShowExperienceLevel(resumeData.showExperienceLevel);
                 }
-                if (resumeData.languages) {
-                  setLanguages(resumeData.languages);
-                }
-                if (resumeData.certifications) {
-                  setCertifications(resumeData.certifications);
-                }
-                if (resumeData.awards) {
-                  setAwards(resumeData.awards);
-                }
-                if (resumeData.websites) {
-                  setWebsites(resumeData.websites);
-                }
-                if (resumeData.references) {
-                  setReferences(resumeData.references);
-                }
-                if (resumeData.hobbies) {
-                  setHobbies(resumeData.hobbies);
-                }
-                if (resumeData.customSections) {
-                  setCustomSections(resumeData.customSections);
-                }
+                setLanguages(resumeData.languages || []);
+                setCertifications(resumeData.certifications || []);
+                setAwards(resumeData.awards || []);
+                setWebsites(resumeData.websites || []);
+                setReferences(resumeData.references || []);
+                setHobbies(resumeData.hobbies || []);
+                setCustomSections(resumeData.customSections || []);
 
               }
               
@@ -1750,46 +1718,19 @@ const Builder: React.FC<BuilderProps> = ({
             // Load resume data
             const resumeData = editingResumeData;
             if (resumeData) {
-              if (resumeData.contact) {
-                setContacts(resumeData.contact);
-              }
-              if (resumeData.experiences) {
-                setExperiences(resumeData.experiences);
-              }
-              if (resumeData.educations) {
-                setEducations(resumeData.educations);
-              }
-              if (resumeData.skills) {
-                setSkills(resumeData.skills);
-              }
-              if (resumeData.summary) {
-                setSummary(resumeData.summary);
-              }
-              if (resumeData.showExperienceLevel !== undefined) {
-                setShowExperienceLevel(resumeData.showExperienceLevel);
-              }
-              if (resumeData.languages) {
-                setLanguages(resumeData.languages);
-              }
-              if (resumeData.certifications) {
-                setCertifications(resumeData.certifications);
-              }
-              if (resumeData.awards) {
-                setAwards(resumeData.awards);
-              }
-              if (resumeData.websites) {
-                setWebsites(resumeData.websites);
-              }
-              if (resumeData.references) {
-                setReferences(resumeData.references);
-              }
-              if (resumeData.hobbies) {
-                setHobbies(resumeData.hobbies);
-              }
-              if (resumeData.customSections) {
-                setCustomSections(resumeData.customSections);
-              }
-
+              if (resumeData.contact) setContacts(resumeData.contact);
+              if (resumeData.experiences) setExperiences(resumeData.experiences);
+              if (resumeData.educations) setEducations(resumeData.educations);
+              if (resumeData.skills) setSkills(resumeData.skills);
+              setSummary(resumeData.summary || '');
+              if (resumeData.showExperienceLevel !== undefined) setShowExperienceLevel(resumeData.showExperienceLevel);
+              setLanguages(resumeData.languages || []);
+              setCertifications(resumeData.certifications || []);
+              setAwards(resumeData.awards || []);
+              setWebsites(resumeData.websites || []);
+              setReferences(resumeData.references || []);
+              setHobbies(resumeData.hobbies || []);
+              setCustomSections(resumeData.customSections || []);
             }
             
             console.log('Loaded recent draft from server props:', resumeData);
@@ -2330,48 +2271,48 @@ const Builder: React.FC<BuilderProps> = ({
           <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
             <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
               {/* Section Stepper */}
-              <SectionStepper
-                currentSection={currentStep.toString()}
-                sections={[
-                  {
-                    id: "0",
-                    label: "Contacts",
-                    icon: <User className="w-5 h-5" />,
-                    isCompleted: !!(resumeData.contact?.firstName && resumeData.contact?.lastName && resumeData.contact?.email)
-                  },
-                  {
-                    id: "1",
-                    label: "Experience",
-                    icon: <Briefcase className="w-5 h-5" />,
-                    isCompleted: resumeData.experiences?.length > 0
-                  },
-                  {
-                    id: "2",
-                    label: "Education",
-                    icon: <GraduationCap className="w-5 h-5" />,
-                    isCompleted: resumeData.education?.length > 0
-                  },
-                  {
-                    id: "3",
-                    label: "Skills",
-                    icon: <Code className="w-5 h-5" />,
-                    isCompleted: resumeData.skills?.length > 0
-                  },
-                  {
-                    id: "4",
-                    label: "Summary",
-                    icon: <FileText className="w-5 h-5" />,
-                    isCompleted: !!resumeData.summary
-                  },
-                  {
-                    id: "5",
-                    label: "Finalize",
-                    icon: <Flag className="w-5 h-5" />,
-                    isCompleted: false
-                  }
-                ]}
-                onSectionChange={(id) => setCurrentStep(parseInt(id))}
-              />
+              {(() => {
+                const isContactsComplete = !!(
+                  (contacts.firstName || '').trim() &&
+                  (contacts.lastName || '').trim() &&
+                  (contacts.email || '').trim() &&
+                  (contacts.phone || '').trim() &&
+                  (contacts.desiredJobTitle || '').trim()
+                );
+                const isExperienceComplete = experiences.some(exp =>
+                  (exp.jobTitle || '').trim() &&
+                  (exp.employer || '').trim() &&
+                  (exp.company || '').trim() &&
+                  (exp.startDate || '').trim() &&
+                  (exp.endDate || '').trim() &&
+                  (exp.description || '').trim()
+                );
+                const isEducationComplete = educations.some(edu =>
+                  (edu.school || '').trim() &&
+                  (edu.location || '').trim() &&
+                  (edu.degree || '').trim() &&
+                  (edu.startDate || '').trim() &&
+                  (edu.endDate || '').trim() &&
+                  (edu.description || '').trim()
+                );
+                const isSkillsComplete = skills.some(skill => (skill.name || '').trim());
+                const isSummaryComplete = !!(summary || '').trim();
+
+                return (
+                  <SectionStepper
+                    currentSection={currentStep.toString()}
+                    sections={[
+                      { id: '0', label: 'Contacts', icon: <User className="w-5 h-5" />, isCompleted: isContactsComplete },
+                      { id: '1', label: 'Experience', icon: <Briefcase className="w-5 h-5" />, isCompleted: isExperienceComplete },
+                      { id: '2', label: 'Education', icon: <GraduationCap className="w-5 h-5" />, isCompleted: isEducationComplete },
+                      { id: '3', label: 'Skills', icon: <Code className="w-5 h-5" />, isCompleted: isSkillsComplete },
+                      { id: '4', label: 'Summary', icon: <FileText className="w-5 h-5" />, isCompleted: isSummaryComplete },
+                      { id: '5', label: 'Finalize', icon: <Flag className="w-5 h-5" />, isCompleted: false },
+                    ]}
+                    onSectionChange={(id) => setCurrentStep(parseInt(id))}
+                  />
+                );
+              })()}
 
               {/* Resume Score Display */}
               {currentStep === 5 && (
