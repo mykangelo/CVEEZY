@@ -355,7 +355,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, resumeId, 
               className={`flex-1 py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
                 uploadStatus === 'uploading' || !selectedFile
                   ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-500 hover:bg-blue-600'
+                  : 'bg-[#354eab] hover:bg-[#4a5fc7]'
               }`}
             >
               {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload Payment'}

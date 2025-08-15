@@ -32,7 +32,7 @@ export default function ResetPassword({
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+            <div className="min-h-screen bg-gradient-to-br from-[#e3f2fd] to-[#e8f4fd] flex flex-col">
                 <Head title="Reset Password" />
                 {/* Header with Logo */}
                 <Header />
@@ -128,7 +128,7 @@ export default function ResetPassword({
 
                             <div className="mt-4 flex items-center justify-end">
                                 <PrimaryButton
-                                    className="!bg-[#05A2FF] ms-4"
+                                    className="!bg-[#354eab] ms-4"
                                     disabled={processing}
                                 >
                                     Reset Password

@@ -1,6 +1,8 @@
+/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
 
 /* Custom Alte Haas Grotesk Font */
 @font-face {
@@ -62,6 +64,192 @@
   }
 }
 
+@layer components {
+  /* Template card hover effects */
+  .template-card {
+    @apply relative bg-white shadow-md rounded-md transition-all duration-500 ease-out mx-2;
+  }
+  
+  .template-card:hover {
+    @apply shadow-2xl transform scale-110 z-20 -translate-y-2;
+  }
+  
+  .template-card:hover .template-image {
+    @apply scale-100;
+  }
+  
+  .template-card:hover .template-overlay {
+    @apply opacity-0;
+  }
+  
+  .template-image {
+    @apply w-full transition-all duration-700 ease-out;
+  }
+  
+  .template-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 transition-all duration-500 ease-out flex items-center justify-center pointer-events-none;
+  }
+  
+  .template-overlay-content {
+    @apply text-white text-center opacity-0 transform translate-y-6 scale-95 transition-all duration-500 ease-out;
+  }
+  
+  .template-card:hover .template-overlay-content {
+    @apply opacity-0 transform translate-y-6 scale-95;
+  }
+  
+  .template-name {
+    @apply mt-2 text-center text-lg font-semibold text-gray-800 transition-all duration-300 ease-out;
+  }
+  
+  .template-card:hover + .template-name {
+    @apply text-[#354eab] font-bold transform scale-105;
+  }
+  
+  /* Enhanced template card effects */
+  .template-card::before {
+    @apply content-[''] absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 transition-opacity duration-300 ease-out;
+  }
+  
+  .template-card:hover::before {
+    @apply opacity-100;
+  }
+  
+  /* Smooth carousel transitions */
+  .template-carousel {
+    @apply transition-all duration-500 ease-out;
+  }
+  
+  /* Template card entrance animation */
+  .template-card-entrance {
+    @apply animate-in slide-in-from-bottom-4 duration-500;
+  }
+  
+  /* Hover state improvements - show full image */
+  .template-card:hover {
+    @apply shadow-2xl transform scale-110 z-20 -translate-y-2;
+  }
+  
+  .template-card:hover .template-image {
+    @apply scale-100;
+  }
+  
+  /* Remove overlay on hover to show full image */
+  .template-overlay {
+    @apply absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent opacity-0 transition-all duration-500 ease-out flex items-center justify-center pointer-events-none;
+  }
+  
+  .template-overlay-content {
+    @apply text-white text-center opacity-0 transform translate-y-6 scale-95 transition-all duration-500 ease-out;
+  }
+  
+  .template-card:hover .template-overlay-content {
+    @apply opacity-0 transform translate-y-6 scale-95;
+  }
+  
+  /* Add subtle border highlight on hover */
+  .template-card:hover {
+    @apply ring-4 ring-[#bcd6f6] ring-opacity-50;
+  }
+  
+  /* No zoom - show full image */
+  .template-card:hover .template-image {
+    @apply scale-100 transition-transform duration-700 ease-out;
+  }
+  
+  /* Template actions button */
+  .template-actions {
+    @apply mt-3 text-center;
+  }
+  
+  .template-actions button {
+    @apply shadow-lg hover:shadow-xl transition-all duration-200;
+  }
+  
+  /* Ensure full image visibility on hover */
+  .template-card:hover {
+    @apply shadow-2xl transform scale-110 z-20 -translate-y-2 overflow-visible;
+  }
+  
+  .template-card:hover .template-image {
+    @apply scale-100 transition-transform duration-700 ease-out;
+  }
+  
+  /* Add a subtle glow effect on hover */
+  .template-card:hover {
+    @apply shadow-2xl shadow-[#bcd6f6]/50 transform scale-110 z-20 -translate-y-2;
+  }
+  
+  /* Ensure proper spacing between template cards */
+  .template-card {
+    @apply relative bg-white shadow-md rounded-md transition-all duration-500 ease-out mx-2;
+  }
+  
+  /* Prevent hover effects from overlapping */
+  .template-card:hover {
+    @apply shadow-2xl shadow-[#bcd6f6]/50 transform scale-110 z-20 -translate-y-2 mx-2;
+  }
+  
+  /* Smooth transition for all hover states */
+  .template-card,
+  .template-card:hover,
+  .template-image,
+  .template-name,
+  .template-actions {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  /* Enhanced template showcase hover effects */
+  .template-showcase-card {
+    @apply relative bg-white shadow-lg rounded-xl transition-all duration-500 ease-out mx-2 overflow-hidden;
+  }
+  
+  .template-showcase-card:hover {
+    @apply shadow-2xl transform scale-110 z-20 -translate-y-3 ring-4 ring-[#354eab] ring-opacity-40;
+  }
+  
+  .template-showcase-card::after {
+    @apply content-[''] absolute inset-0 bg-gradient-to-br from-[#354eab]/10 via-transparent to-[#4a5fc7]/10 opacity-0 transition-opacity duration-500 ease-out;
+  }
+  
+  .template-showcase-card:hover::after {
+    @apply opacity-100;
+  }
+  
+  .template-showcase-image {
+    @apply w-full transition-all duration-700 ease-out transform;
+  }
+  
+  .template-showcase-card:hover .template-showcase-image {
+    @apply scale-100 blur-sm;
+  }
+  
+  .template-showcase-name {
+    @apply mt-3 text-center text-lg font-bold text-gray-800 transition-all duration-300 ease-out;
+  }
+  
+  .template-showcase-card:hover + .template-showcase-name {
+    @apply text-[#354eab] transform scale-110;
+  }
+  
+  .template-showcase-actions {
+    @apply absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 ease-out transform scale-95 group-hover:scale-100 z-10;
+  }
+  
+  .template-showcase-actions button {
+    @apply bg-gradient-to-r from-[#354eab] to-[#4a5fc7] text-white px-6 py-3 rounded-lg font-bold text-sm shadow-xl hover:shadow-2xl hover:from-[#4a5fc7] hover:to-[#2d3f8f] transition-all duration-300 transform hover:scale-105;
+  }
+  
+  /* Floating animation for cards */
+  .template-showcase-card {
+    @apply animate-float;
+  }
+  
+  .template-showcase-card:hover {
+    @apply animate-float-hover;
+  }
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -108,5 +296,202 @@
       transform: translateX(0);
       opacity: 1;
     }
+  }
+  
+  /* Template hover animations */
+  .animate-template-hover {
+    animation: templateHover 0.5s ease-out;
+  }
+  
+  @keyframes templateHover {
+    0% {
+      transform: scale(1) translateY(0);
+    }
+    50% {
+      transform: scale(1.05) translateY(-5px);
+    }
+    100% {
+      transform: scale(1.1) translateY(-10px);
+    }
+  }
+  
+  .animate-template-image-zoom {
+    animation: templateImageZoom 0.7s ease-out;
+  }
+  
+  @keyframes templateImageZoom {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(1.25);
+    }
+  }
+  
+  /* Smooth entrance animations */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out;
+  }
+  
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.4s ease-out;
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  /* Hover state utilities */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  
+  .hover-lift:hover {
+    @apply transform -translate-y-2 shadow-lg;
+  }
+  
+  /* Smooth transitions */
+  .transition-smooth {
+    @apply transition-all duration-500 ease-out;
+  }
+  
+  .transition-fast {
+    @apply transition-all duration-200 ease-out;
+  }
+  
+  .transition-slow {
+    @apply transition-all duration-700 ease-out;
+  }
+  
+  /* Floating animations for template showcase */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-hover {
+    animation: float-hover 2s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-6px) rotate(0.5deg);
+    }
+    50% {
+      transform: translateY(-12px) rotate(0deg);
+    }
+    75% {
+      transform: translateY(-6px) rotate(-0.5deg);
+    }
+  }
+  
+  @keyframes float-hover {
+    0%, 100% {
+      transform: translateY(-3px) scale(1.05) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-8px) scale(1.05) rotate(0.3deg);
+    }
+  }
+  
+  /* Enhanced floating for template images */
+  .template-showcase-image {
+    @apply w-full transition-all duration-700 ease-out transform animate-float;
+  }
+  
+  .template-showcase-card:hover .template-showcase-image {
+    @apply scale-100 blur-sm animate-float-hover;
+  }
+  
+  /* Staggered floating for multiple templates */
+  .template-showcase-card:nth-child(1) .template-showcase-image {
+    animation-delay: 0s;
+  }
+  
+  .template-showcase-card:nth-child(2) .template-showcase-image {
+    animation-delay: 0.5s;
+  }
+  
+  .template-showcase-card:nth-child(3) .template-showcase-image {
+    animation-delay: 1s;
+  }
+  
+  .template-showcase-card:nth-child(4) .template-showcase-image {
+    animation-delay: 1.5s;
+  }
+  
+  .template-showcase-card:nth-child(5) .template-showcase-image {
+    animation-delay: 2s;
+  }
+  
+  /* Enhanced shadow animation for floating effect */
+  .template-showcase-card {
+    animation: float-shadow 6s ease-in-out infinite;
+  }
+  
+  .template-showcase-card:hover {
+    animation: float-shadow-hover 2s ease-in-out infinite;
+  }
+  
+  @keyframes float-shadow {
+    0%, 100% {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    50% {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+  }
+  
+  @keyframes float-shadow-hover {
+    0%, 100% {
+      box-shadow: 0 25px 50px -12px rgba(53, 78, 171, 0.25), 0 0 0 1px rgba(53, 78, 171, 0.05);
+    }
+    50% {
+      box-shadow: 0 35px 60px -12px rgba(53, 78, 171, 0.3), 0 0 0 1px rgba(53, 78, 171, 0.1);
+    }
+  }
+  
+  /* Live indicator ping-pulse effect */
+  .live-indicator {
+    @apply relative;
+  }
+  
+  .live-indicator::before {
+    @apply content-[''] absolute inset-0 rounded-full bg-[#354eab] animate-ping opacity-75;
+  }
+  
+  .live-indicator::after {
+    @apply content-[''] absolute inset-0 rounded-full bg-[#354eab] opacity-100;
+  }
+  
+  @keyframes ping {
+    75%, 100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+  
+  .animate-ping {
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
 }

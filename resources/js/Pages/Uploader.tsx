@@ -177,21 +177,21 @@ const Uploader: React.FC<UploaderProps> = ({
         <div className="flex items-center gap-3">
           <Link
             href="/contact"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
           >
             Contact us
           </Link>
           {user ? (
             <Link
               href="/dashboard"
-              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
             >
               Dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
             >
               Login
             </Link>
@@ -202,7 +202,7 @@ const Uploader: React.FC<UploaderProps> = ({
       <main className="flex-grow">
         {/* Go Back Link */}
         <button
-          className="flex items-center text-[#2196f3] cursor-pointer hover:underline w-fit mt-5 ml-5 text-md font-semibold gap-1"
+          className="flex items-center text-[#354eab] cursor-pointer hover:underline w-fit mt-5 ml-5 text-md font-semibold gap-1"
           onClick={() => router.visit("/")}
         >
           <svg className="w-6 h-6 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
@@ -267,14 +267,14 @@ const Uploader: React.FC<UploaderProps> = ({
                 <>
                   <svg className="mx-auto text-slate-400/70 mb-4" width="56" height="56" fill="none" viewBox="0 0 56 56">
                     <rect width="56" height="56" rx="12" fill="#f4faff"/>
-                    <path d="M28 38V18M28 18l-7 7m7-7l7 7" stroke="#2196f3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <rect x="16" y="38" width="24" height="2" rx="1" fill="#2196f3"/>
+                    <path d="M28 38V18M28 18l-7 7m7-7l7 7" stroke="#354eab" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <rect x="16" y="38" width="24" height="2" rx="1" fill="#354eab"/>
                   </svg>
                   <h2 className="text-2xl font-semibold mb-1">Drag and drop your resume here</h2>
                   <p className="text-gray-400 mb-1">or</p>
                   <button
                     type="button"
-                    className="bg-[#2196f3] text-white px-6 py-2 rounded-md hover:bg-[#1976d2] transition duration-200 disabled:opacity-50"
+                    className="bg-[#354eab] text-white px-6 py-2 rounded-md hover:bg-[#2d3f8f] transition duration-200 disabled:opacity-50"
                     onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
                     disabled={isUploading}
                   >
@@ -302,7 +302,7 @@ const Uploader: React.FC<UploaderProps> = ({
             <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 z-10">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#2196f3] rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[#354eab] rounded-lg flex items-center justify-center">
                     <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
@@ -330,7 +330,7 @@ const Uploader: React.FC<UploaderProps> = ({
                 <div className="mb-6">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-[#2196f3] rounded-lg flex items-center justify-center">
+                                              <div className="w-12 h-12 bg-[#354eab] rounded-lg flex items-center justify-center">
                         <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -370,7 +370,7 @@ const Uploader: React.FC<UploaderProps> = ({
                         </span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="w-4 h-4 bg-[#2196f3] rounded-full"></div>
+                        <div className="w-4 h-4 bg-[#354eab] rounded-full"></div>
                         <span className="font-medium text-gray-900">
                           Score: {qualityAssessment.overall_score}%
                         </span>
@@ -416,16 +416,16 @@ const Uploader: React.FC<UploaderProps> = ({
                     {qualityAssessment.suggestions.length > 0 && (
                       <div className="mb-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-4 h-4 text-[#2196f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                          <p className="text-sm font-medium text-[#2196f3]">Suggestions:</p>
+                          <p className="text-sm font-medium text-[#354eab]">Suggestions:</p>
                         </div>
                         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                           <ul className="text-sm text-gray-700 space-y-2">
                             {qualityAssessment.suggestions.map((suggestion, index) => (
                               <li key={index} className="flex items-start gap-3">
-                                <div className="w-1.5 h-1.5 bg-[#2196f3] rounded-full mt-2 flex-shrink-0"></div>
+                                <div className="w-1.5 h-1.5 bg-[#354eab] rounded-full mt-2 flex-shrink-0"></div>
                                 <span>{suggestion}</span>
                               </li>
                             ))}
@@ -457,7 +457,7 @@ const Uploader: React.FC<UploaderProps> = ({
                       {/* Contact Information */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-4 h-4 text-[#2196f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           <h4 className="font-semibold text-gray-900">Contact Information</h4>
@@ -486,7 +486,7 @@ const Uploader: React.FC<UploaderProps> = ({
                       {/* Summary */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-4 h-4 text-[#2196f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                           </svg>
                           <h4 className="font-semibold text-gray-900">Summary</h4>
@@ -499,7 +499,7 @@ const Uploader: React.FC<UploaderProps> = ({
                       {/* Experience */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-4 h-4 text-[#2196f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
                           </svg>
                           <h4 className="font-semibold text-gray-900">Experience ({parsedData.experiences?.length || 0})</h4>
@@ -520,7 +520,7 @@ const Uploader: React.FC<UploaderProps> = ({
                       {/* Skills */}
                       <div className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <svg className="w-4 h-4 text-[#2196f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                           </svg>
                           <h4 className="font-semibold text-gray-900">Skills ({parsedData.skills?.length || 0})</h4>
@@ -563,7 +563,7 @@ const Uploader: React.FC<UploaderProps> = ({
                 <button
                   onClick={confirmUpload}
                   disabled={isUploading}
-                  className="px-6 py-2 bg-[#2196f3] text-white rounded-lg hover:bg-[#1976d2] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-[#354eab] text-white rounded-lg hover:bg-[#2d3f8f] transition-colors font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isUploading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

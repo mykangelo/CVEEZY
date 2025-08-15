@@ -286,7 +286,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
               </p>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors duration-200"
+                                            className="inline-flex items-center px-6 py-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold rounded-lg transition-colors duration-200"
               >
                 Go to Dashboard
               </Link>
@@ -344,7 +344,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
-            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                            className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
           >
             Dashboard
           </Link>
@@ -534,7 +534,7 @@ const Payment: React.FC<PaymentProps> = ({ resumeId: propResumeId, resumeName: p
                     disabled={uploadStatus === 'uploading' || !selectedFile}
                     className={`w-full py-4 px-8 rounded-lg font-bold text-white text-lg transition-colors ${uploadStatus === 'uploading' || !selectedFile
                       ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-500 hover:bg-blue-600'
+                      : 'bg-[#354eab] hover:bg-[#4a5fc7]'
                       }`}
                   >
                     {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload Payment Proof'}

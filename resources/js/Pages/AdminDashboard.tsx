@@ -555,7 +555,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                             <div className="flex items-center justify-between mb-8">
                                 <h1 className="text-3xl font-bold">Admin Dashboard</h1>
                                 {isRefreshing && (
-                                    <div className="flex items-center text-blue-600 text-sm">
+                                    <div className="flex items-center text-[#354eab] text-sm">
                                         <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -633,7 +633,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                 </button>
                                                 <button
                                                     onClick={handleShowStoragePath}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg transition-colors"
+                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-[#e3f2fd] text-[#354eab] hover:bg-[#bcd6f6] rounded-lg transition-colors"
                                                     title="Show storage location info"
                                                 >
                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -734,7 +734,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                             <User className="h-5 w-5 text-gray-400" />
                                                                             <h3 className="font-semibold">{user.name}</h3>
                                                                             {user.is_admin && (
-                                                                                <Badge className="bg-blue-100 text-blue-800">Admin</Badge>
+                                                                                <Badge className="bg-[#e3f2fd] text-[#354eab]">Admin</Badge>
                                                                             )}
                                                                         </div>
                                                                         <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -916,7 +916,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                 <select
                                     value={selectedTimeFilter}
                                     onChange={(e) => setSelectedTimeFilter(e.target.value)}
-                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#354eab] focus:border-[#354eab]"
                                 >
                                     <option value="1_minute">1 minute (testing)</option>
                                     <option value="1_hour">1 hour (testing)</option>
@@ -955,7 +955,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                         setSelectedStatuses(selectedStatuses.filter(s => s !== status.value));
                                                     }
                                                 }}
-                                                className="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                                className="mt-1 w-4 h-4 text-[#354eab] border-gray-300 rounded focus:ring-[#354eab]"
                                             />
                                             <div className="flex-1">
                                                 <div className="text-sm font-medium text-gray-900">{status.label}</div>
@@ -1106,7 +1106,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                         
                                         <div>
                                             <span className="font-medium text-gray-600">Files Count:</span>
-                                            <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">
+                                            <span className="ml-2 px-2 py-1 bg-[#e3f2fd] text-[#354eab] rounded text-xs font-medium">
                                                 {storagePathModal.data.file_count} files
                                             </span>
                                         </div>
@@ -1120,12 +1120,12 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                     </div>
                                 </div>
                                 
-                                <div className="bg-blue-50 p-4 rounded-lg">
-                                    <h4 className="font-medium text-blue-900 mb-2">Access Information</h4>
-                                    <p className="text-sm text-blue-700 mb-2">
+                                <div className="bg-[#e3f2fd] p-4 rounded-lg">
+                                    <h4 className="font-medium text-[#2d3f8f] mb-2">Access Information</h4>
+                                    <p className="text-sm text-[#354eab] mb-2">
                                         Payment proof files are accessible via web at:
                                     </p>
-                                    <div className="p-2 bg-blue-100 rounded border font-mono text-xs break-all text-blue-800">
+                                    <div className="p-2 bg-[#bcd6f6] rounded border font-mono text-xs break-all text-[#354eab]">
                                         {storagePathModal.data.url_prefix}[filename]
                                     </div>
                                 </div>

@@ -16,7 +16,7 @@ export default function Authenticated({
 
     return (
         <div className="min-h-screen bg-[#f4faff]">
-            <nav className="border-b border-blue-100 bg-white shadow-sm">
+            <nav className="border-b border-[#e3f2fd] bg-white shadow-sm">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex h-16 justify-between">
                         <div className="flex">
@@ -27,7 +27,7 @@ export default function Authenticated({
                                         text="CVeezy"
                                         imageSrc="/images/cveezyLOGO_C.png"
                                         imageAlt="CVeezy Logo"
-                                        className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                        className="text-2xl font-bold text-gray-800 font-sans hover:scale-110 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
                                     />
                                 </Link>
                             </div>
@@ -52,7 +52,7 @@ export default function Authenticated({
 
                             {header && (
                                 <div className="hidden sm:flex items-center sm:ms-6">
-                                    <span className="mx-4 h-6 w-px bg-blue-200" aria-hidden="true" />
+                                    <span className="mx-4 h-6 w-px bg-[#bcd6f6]" aria-hidden="true" />
                                     <div className="text-gray-800 text-lg font-semibold leading-tight truncate">
                                         {header}
                                     </div>
@@ -67,7 +67,7 @@ export default function Authenticated({
                                         <span className="inline-flex rounded-md">
                                             <button
                                                 type="button"
-                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-[#05A2FF] focus:outline-none"
+                                                className="inline-flex items-center rounded-md border border-transparent bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-500 transition duration-150 ease-in-out hover:text-[#354eab] focus:outline-none"
                                             >
                                                 {user.name}
 
@@ -112,7 +112,7 @@ export default function Authenticated({
                                         (previousState) => !previousState,
                                     )
                                 }
-                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-blue-50 hover:text-[#05A2FF] focus:bg-blue-50 focus:text-[#05A2FF] focus:outline-none"
+                                className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 transition duration-150 ease-in-out hover:bg-[#e3f2fd] hover:text-[#354eab] focus:bg-[#e3f2fd] focus:text-[#354eab] focus:outline-none"
                             >
                                 <svg
                                     className="h-6 w-6"
@@ -172,7 +172,7 @@ export default function Authenticated({
                         )}
                     </div>
 
-                    <div className="border-t border-blue-200 pb-1 pt-4">
+                                            <div className="border-t border-[#bcd6f6] pb-1 pt-4">
                         <div className="px-4">
                             <div className="text-base font-medium text-gray-800">
                                 {user.name}

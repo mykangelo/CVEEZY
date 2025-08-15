@@ -34,14 +34,14 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
           {user ? (
             <Link
               href="/dashboard"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Login
             </Link>
@@ -61,7 +61,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({
           ) : (
             <Link
               href="/choose-template"
-              className="bg-[#05A2FF] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2196f3] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#4a5fc7] transition"
             >
               Create my resume
             </Link>

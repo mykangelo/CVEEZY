@@ -78,14 +78,14 @@ const Contact: React.FC<ContactProps> = ({
           {user ? (
             <Link
               href="/dashboard"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Login
             </Link>
@@ -105,7 +105,7 @@ const Contact: React.FC<ContactProps> = ({
           ) : (
             <Link
               href="/choose-template"
-              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
             >
               Create my resume
             </Link>
@@ -176,7 +176,7 @@ const Contact: React.FC<ContactProps> = ({
               <button
                 type="submit"
                 disabled={processing}
-                className="bg-[#2196f3] text-white w-full py-3 rounded-md font-semibold hover:bg-[#1976d2] transition"
+                className="bg-[#354eab] text-white w-full py-3 rounded-md font-semibold hover:bg-[#2d3f8f] transition"
               >
                 Submit
               </button>
@@ -206,9 +206,9 @@ const Contact: React.FC<ContactProps> = ({
           {supportData.map((item, i) => (
             <div
               key={i}
-              className="border border-dashed border-[#2196f3] rounded-lg p-6 bg-blue-50 space-y-4"
+              className="border border-dashed border-[#354eab] rounded-lg p-6 bg-blue-50 space-y-4"
             >
-              <div className="w-12 h-12 bg-[#2196f3] rounded-full flex items-center justify-center text-white text-xl">
+              <div className="w-12 h-12 bg-[#354eab] rounded-full flex items-center justify-center text-white text-xl">
                 {i === 0 ? "📄" : i === 1 ? "⚙️" : "📨"}
               </div>
               <h2 className="text-xl font-semibold">{item.title}</h2>
@@ -246,14 +246,14 @@ const Contact: React.FC<ContactProps> = ({
                 {item.phone && (
                   <a
                     href={`tel:${item.phone}`}
-                    className="bg-[#2196f3] text-white px-4 py-2 rounded hover:bg-[#1976d2] transition"
+                    className="bg-[#354eab] text-white px-4 py-2 rounded hover:bg-[#2d3f8f] transition"
                   >
                     Call us
                   </a>
                 )}
                 <a
                   href={`mailto:${item.email}`}
-                  className="bg-[#2196f3] text-white px-4 py-2 rounded hover:bg-[#1976d2] transition"
+                  className="bg-[#354eab] text-white px-4 py-2 rounded hover:bg-[#2d3f8f] transition"
                 >
                   Email us
                 </a>

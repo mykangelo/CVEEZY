@@ -538,7 +538,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
             <button
               onClick={handleDownloadButtonClick}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                                          className="bg-[#354eab] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#4a5fc7] transition-colors"
             >
               Download PDF
             </button>

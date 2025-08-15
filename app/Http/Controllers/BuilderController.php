@@ -86,7 +86,8 @@ class BuilderController extends Controller
             'editingResumeId' => $resume?->id,
             'editingResumeName' => $resume?->name,
             'editingResumeData' => $resumeData,
-            'editingTemplateName' => $resume?->template_name
+            'editingTemplateName' => $resume?->template_name,
+            'skipInitialLoading' => $templateName ? true : false
         ]);
     }
 } 

@@ -31,14 +31,14 @@ const CookiePolicy: React.FC<CookiePolicyProps> = ({
           {user ? (
             <Link
               href="/dashboard"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Login
             </Link>
@@ -47,7 +47,7 @@ const CookiePolicy: React.FC<CookiePolicyProps> = ({
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs">
               <div className="flex items-center gap-1 mb-1">
                 <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span className="text-yellow-800 font-semibold">Payment Pending</span>
               </div>
@@ -58,7 +58,7 @@ const CookiePolicy: React.FC<CookiePolicyProps> = ({
           ) : (
             <Link
               href="/choose-template"
-              className="bg-[#05A2FF] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2196f3] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#4a5fc7] transition"
             >
               Create my resume
             </Link>

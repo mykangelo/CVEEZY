@@ -150,32 +150,32 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                 <Logo
                   size="sm"
                   showText={false}
-                  className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                  className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
                 />
               </Link>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Link
+                        <Link
               href="/contact"
-              className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
             >
               Contact us
             </Link>
             {user ? (
               <Link
                 href="/dashboard"
-                className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
               >
                 Dashboard
               </Link>
             ) : (
               <Link
                 href="/login"
-                className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
               >
                 Login
-              </Link>
+            </Link>
             )}
           </div>
         </header>
@@ -215,14 +215,14 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
             {isImported ? (
               <button
                 onClick={() => router.visit(`/builder?resume=${resumeId}`)}
-                className="text-blue-600 underline hover:text-blue-800 text-sm"
+                className="text-[#354eab] underline hover:text-[#4a5fc7] text-sm"
               >
                 Skip template selection
               </button>
             ) : (
               <Link
                 href="/"
-                className="text-blue-600 underline hover:text-blue-800 text-sm"
+                className="text-[#354eab] underline hover:text-[#4a5fc7] text-sm"
               >
                 Choose later
               </Link>
@@ -237,7 +237,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                   key={category.id}
                   onClick={() => setCurrentFilter(category.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${currentFilter === category.id
-                    ? "bg-blue-100 text-blue-600 border-b-2 border-blue-600"
+                    ? "bg-[#e3f2fd] text-[#354eab] border-b-2 border-[#354eab]"
                     : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
                     }`}
                 >
@@ -277,7 +277,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                       {!hasPendingPayments && (
                         <button
                           onClick={() => handleTemplateSelect(template.name)}
-                          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-blue-700"
+                          className="bg-[#354eab] text-white px-6 py-3 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#4a5fc7]"
                         >
                           {isImported ? 'Apply Template' : 'Use This Template'}
                         </button>

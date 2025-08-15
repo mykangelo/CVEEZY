@@ -355,7 +355,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                 <Logo 
                                     size="sm"
                                     showText={false}
-                                    className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                                    className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
                                 />
                             </Link>
                         </div>
@@ -364,14 +364,14 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                         <nav className="hidden md:flex items-center space-x-8">
                             <Link 
                                 href="/dashboard" 
-                                className="text-gray-700 hover:text-blue-600 font-medium text-base transition-colors"
+                                className="text-gray-700 hover:text-[#354eab] font-medium text-base transition-colors"
                             >
                                 Resume Review
                             </Link>
                             {/* Updated Interview Preparation button to trigger modal */}
                             <button 
                                 onClick={() => setIsInterviewModalOpen(true)}
-                                className="text-gray-700 hover:text-blue-600 font-medium text-base transition-colors"
+                                className="text-gray-700 hover:text-[#354eab] font-medium text-base transition-colors"
                             >
                                 Interview Preparation
                             </button>
@@ -435,7 +435,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                     {canCreateNewResume() ? (
                         <button
                             onClick={() => router.visit('/choose-template')}
-                            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                            className="bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -470,7 +470,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                         <button
                             onClick={refreshDashboardData}
                             disabled={isRefreshing}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-[#354eab] hover:text-[#4a5fc7] text-sm font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -489,7 +489,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                             <p className="text-gray-600 mb-4">Get started by creating your first professional resume.</p>
                             <Link
                                 href="/choose-template"
-                                className="inline-flex items-center px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors duration-200"
+                                className="inline-flex items-center px-4 py-2 bg-[#354eab] hover:bg-[#4a5fc7] text-white font-medium rounded-lg transition-colors duration-200"
                             >
                                 Create Your First Resume
                             </Link>
@@ -560,7 +560,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                         : resume.status === 'completed' 
                                                         ? 'bg-green-100 text-green-800' 
                                                         : resume.status === 'in_progress'
-                                                        ? 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-[#e3f2fd] text-[#354eab]'
                                                         : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
                                                     {resume.status === 'in_progress' 
@@ -644,7 +644,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                     className={`${
                                                         canDownloadResume(resume.id) 
                                                             ? 'text-amber-600 hover:text-amber-900' 
-                                                            : 'text-blue-600 hover:text-blue-900'
+                                                            : 'text-[#354eab] hover:text-[#4a5fc7]'
                                                     } inline-flex items-center space-x-1 transition-colors duration-200`}
                                                     title={canDownloadResume(resume.id) ? 'Edit will require new payment' : 'Edit resume'}
                                                 >
@@ -746,7 +746,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                                     setSelectedResumeId(resume.id);
                                                                     setIsPaymentModalOpen(true);
                                                                 }}
-                                                                className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
+                                                                className="text-[#354eab] hover:text-[#4a5fc7] inline-flex items-center space-x-1"
                                                             >
                                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -768,12 +768,12 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 </div>
 
                 {/* Interview Guide Promotion Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-[#e3f2fd] to-[#e8f4fd] rounded-xl border border-[#bcd6f6] overflow-hidden">
                     <div className="flex flex-col lg:flex-row items-center">
                         {/* Content */}
                         <div className="flex-1 p-8">
                             <h3 className="text-2xl font-bold text-gray-800 mb-4">
-                                Get Ready to Impress: Your <span className="text-blue-600">Interview Guide</span> is Here!
+                                Get Ready to Impress: Your <span className="text-[#354eab]">Interview Guide</span> is Here!
                             </h3>
                             
                             <div className="space-y-3 mb-6">
@@ -824,7 +824,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
                             <button
                                 onClick={() => setIsInterviewModalOpen(true)}
-                                className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center space-x-2"
+                                className="bg-[#354eab] hover:bg-[#4a5fc7] text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center space-x-2"
                             >
                                 <span>Get it Now</span>
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -839,10 +839,10 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                 {/* Mock illustration - replace with actual interview guide illustration */}
                                 <div className="bg-white rounded-lg shadow-lg p-6 transform rotate-3">
                                     <div className="space-y-3">
-                                        <div className="h-4 bg-blue-200 rounded w-3/4"></div>
+                                        <div className="h-4 bg-[#bcd6f6] rounded w-3/4"></div>
                                         <div className="h-3 bg-gray-200 rounded w-full"></div>
                                         <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                                        <div className="h-8 bg-blue-100 rounded"></div>
+                                        <div className="h-8 bg-[#e3f2fd] rounded"></div>
                                         <div className="h-3 bg-gray-200 rounded w-2/3"></div>
                                     </div>
                                 </div>

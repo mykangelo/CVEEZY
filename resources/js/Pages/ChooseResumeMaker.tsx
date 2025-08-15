@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
+import LoadingSpinner from "@/Components/LoadingSpinner";
 
 interface ChooseResumeMakerProps {
   hasPendingPayments?: boolean;
@@ -14,6 +15,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
 }) => {
   const { auth } = usePage().props as any;
   const user = auth.user;
+  const [isLoading, setIsLoading] = useState(false);
   
   // Get template name from URL parameters
   const urlParams = new URLSearchParams(window.location.search);
@@ -22,6 +24,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
   return (
     <div className="flex flex-col min-h-screen bg-white font-sans">
       <Head title="CVeezy | How will you make your resume?" />
+      {isLoading && <LoadingSpinner text="Processing..." />}
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
         <div className="flex items-center space-x-4">
@@ -41,21 +44,21 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
         <div className="flex items-center gap-3">
           <Link
             href="/contact"
-            className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+            className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
           >
             Contact us
           </Link>
           {user ? (
             <Link
               href="/dashboard"
-              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
             >
               Dashboard
             </Link>
           ) : (
             <Link
               href="/login"
-              className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
             >
               Login
             </Link>
@@ -80,6 +83,8 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
         <h1 className="text-center text-3xl md:text-4xl font-bold mb-10 text-gray-700">
           How will you make your resume?
         </h1>
+        
+
 
         {/* Warning for pending payments */}
         {user && hasPendingPayments && (
@@ -150,6 +155,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
               if (hasPendingPayments) {
                 return; // Do nothing if pending payments
               }
+              setIsLoading(true);
               if (user) {
                 router.visit(`/builder?template=${templateName}`);
               } else {
@@ -164,6 +170,7 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
                 if (hasPendingPayments) {
                   return; // Do nothing if pending payments
                 }
+                setIsLoading(true);
                 if (user) {
                   router.visit(`/builder?template=${templateName}`);
                 } else {

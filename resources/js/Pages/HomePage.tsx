@@ -131,28 +131,28 @@ const HomePage: React.FC<HomePageProps> = ({
                         <Logo
                             size="xxl"
                             showText={false}
-                            className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
+                            className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
                         />
                     </Link>
                 </div>
                 <div className="flex items-center gap-3">
                     <Link
                         href="/contact"
-                        className="border border-[#2196f3] text-[#2196f3] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+                        className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
                     >
                         Contact us
                     </Link>
                     {user ? (
                         <Link
                             href="/dashboard"
-                            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                            className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
                         >
                             Dashboard
                         </Link>
                     ) : (
                         <Link
                             href="/login"
-                            className="bg-[#2196f3] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#1976d2] transition"
+                            className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
                         >
                             Login
                         </Link>
@@ -165,15 +165,15 @@ const HomePage: React.FC<HomePageProps> = ({
                 <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-7xl mx-auto">
                     {/* Left Side */}
                     <div className="flex-1 max-w-2xl">
-                        <p className="text-[#2196f3] font-semibold mb-2 flex items-center text-lg">
-                            <span className="inline-block w-3 h-3 bg-[#3bb2f6] rounded-full mr-2 align-middle"></span>
-                            <span className="font-bold">50,435 resumes
-                            created today</span>
+                        <p className="text-[#354eab] font-semibold mb-2 flex items-center text-lg">
+                            <span className="inline-block w-3 h-3 bg-[#354eab] rounded-full mr-2 align-middle live-indicator"></span>
+                            <span className="font-bold">50,435 Resumes
+                            Created Today</span>
 
                         </p>
                         <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
                             Create your{" "}
-                            <span className="text-[#2196f3]">
+                            <span className="text-[#354eab]">
                                 job-winning resume
                             </span>{" "}
                             in minutes
@@ -212,12 +212,12 @@ const HomePage: React.FC<HomePageProps> = ({
                             ) : (
                                 <>
                                     <Link href="/choose-template">
-                                        <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
+                                        <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
                                             Create New Resume
                                         </button>
                                     </Link>
                                     <Link href="/uploader">
-                                        <button className="bg-white border border-[#2196f3] text-[#2196f3] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
+                                        <button className="bg-white border border-[#354eab] text-[#354eab] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
                                             Improve My Resume
                                         </button>
                                     </Link>
@@ -246,67 +246,153 @@ const HomePage: React.FC<HomePageProps> = ({
                     </div>
                     {/* Right Side */}
                     <div className="flex-1 flex justify-center items-center mt-10 md:mt-0">
-                        <div className="relative w-[400px] h-[480px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center">
-                            <img
-                                src="/images/TemplateHome"
-                                alt="Resume Example"
-                                className="w-[340px] h-[440px] object-cover rounded-xl shadow"
-                            />
-                            {/* Color palette circles */}
-                            <div className="absolute left-24 top-[340px] flex gap-3">
-                                <span className="w-5 h-5 rounded-full bg-[#e3f2fd] border border-[#b3e0ff]"></span>
-                                <span className="w-5 h-5 rounded-full bg-[#bbdefb] border border-[#90caf9]"></span>
-                                <span className="w-5 h-5 rounded-full bg-[#90caf9] border border-[#64b5f6]"></span>
-                                <span className="w-5 h-5 rounded-full bg-[#2196f3] border border-[#1976d2]"></span>
+                        <div className="relative w-[400px] h-[480px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center group">
+                            {/* Resume Template Content */}
+                            <div className="w-[340px] h-[440px] bg-white rounded-xl shadow-lg p-6 relative">
+                                {/* Header Section */}
+                                <div className="flex items-start gap-4 mb-6">
+                                    {/* Profile Photo */}
+                                    <div className="w-16 h-16 bg-gray-300 rounded-full flex-shrink-0"></div>
+                                    
+                                    {/* Name and Contact Placeholders */}
+                                    <div className="flex-1">
+                                        <div className="w-32 h-6 bg-gray-200 rounded mb-2"></div>
+                                        <div className="w-24 h-5 bg-gray-200 rounded mb-3"></div>
+                                        <div className="space-y-2">
+                                            <div className="w-28 h-4 bg-gray-200 rounded"></div>
+                                            <div className="w-36 h-4 bg-gray-200 rounded"></div>
+                                            <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-3">
+                                            <div className="w-4 h-4 bg-[#bcd6f6] rounded"></div>
+                                            <div className="w-16 h-4 bg-[#bcd6f6] rounded"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                {/* Two Column Layout */}
+                                <div className="flex gap-6">
+                                    {/* Left Column */}
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="w-32 h-5 bg-gray-200 rounded"></div>
+                                            <div className="flex gap-1">
+                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                                                <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                                                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2 mb-4">
+                                            <div className="w-full h-3 bg-gray-200 rounded"></div>
+                                            <div className="w-3/4 h-3 bg-gray-200 rounded"></div>
+                                            <div className="w-2/3 h-3 bg-gray-200 rounded"></div>
+                                        </div>
+                                        
+                                        <div className="w-16 h-5 bg-gray-200 rounded mb-3"></div>
+                                        <div className="space-y-2">
+                                            {[...Array(6)].map((_, i) => (
+                                                <div key={i} className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 bg-[#354eab] rounded-full"></div>
+                                                    <div className="w-20 h-3 bg-gray-200 rounded"></div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Right Column */}
+                                    <div className="flex-1">
+                                        <div className="w-24 h-5 bg-gray-200 rounded mb-3"></div>
+                                        
+                                        <div className="mb-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                                                <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                                            </div>
+                                            <div className="w-32 h-3 bg-gray-200 rounded mb-2"></div>
+                                            <div className="space-y-1 ml-4">
+                                                <div className="w-full h-3 bg-gray-200 rounded"></div>
+                                                <div className="w-4/5 h-3 bg-gray-200 rounded"></div>
+                                                <div className="w-3/4 h-3 bg-gray-200 rounded"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mb-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div className="w-28 h-4 bg-gray-200 rounded"></div>
+                                                <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                                            </div>
+                                            <div className="w-32 h-3 bg-gray-200 rounded mb-2"></div>
+                                            <div className="space-y-1 ml-4">
+                                                <div className="w-full h-3 bg-gray-200 rounded"></div>
+                                                <div className="w-3/4 h-3 bg-gray-200 rounded"></div>
+                                                <div className="w-2/3 h-3 bg-gray-200 rounded"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="w-20 h-5 bg-gray-200 rounded mb-3"></div>
+                                        <div className="mb-2">
+                                            <div className="w-40 h-4 bg-gray-200 rounded mb-1"></div>
+                                            <div className="w-36 h-3 bg-gray-200 rounded mb-1"></div>
+                                            <div className="w-16 h-3 bg-gray-200 rounded"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            {/* ATS Perfect badge */}
-                            <div className="absolute left-8 bottom-24 bg-[#e6fff4] text-[#43d19e] px-5 py-2 rounded-full text-base font-semibold shadow">
+                            
+
+                            
+                            {/* ATS Perfect Badge - Clean positioning below Professional Summary */}
+                            <div className="absolute left-6 top-[280px] bg-[#e6fff4] text-[#43d19e] px-3 py-1.5 rounded-full text-xs font-bold shadow-md border border-[#43d19e]/20 flex items-center gap-1.5">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
                                 ATS Perfect
                             </div>
-                            {/* AI-powered ideas box */}
-                            <div className="absolute right-0 bottom-0 bg-white rounded-xl shadow-lg p-6 w-[280px] text-base text-[#2196f3] flex flex-col gap-2">
-                                <div className="font-semibold mb-2 text-[#2196f3]">
+                            
+                            {/* AI-powered Ideas Box - Clean positioning at bottom right */}
+                            <div className="absolute right-0 bottom-0 bg-white rounded-xl shadow-2xl p-5 w-[260px] text-sm text-[#354eab] flex flex-col gap-3 border border-[#e3f2fd]">
+                                <div className="font-bold mb-2 text-[#354eab] flex items-center gap-2">
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
                                     AI-powered ideas:
                                 </div>
-                                <div className="flex items-start gap-2">
-                                    <span className="inline-block w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center">
-                                        <svg
-                                            width="18"
-                                            height="18"
-                                            fill="#2196f3"
-                                        >
-                                            <circle cx="9" cy="9" r="9" />
+                                <div className="flex items-start gap-3">
+                                    <span className="inline-block w-6 h-6 rounded-full bg-[#354eab] flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                         </svg>
                                     </span>
-                                    <span className="text-[#2196f3]">
-                                        Analyzed market trends to identify new
-                                        growth opportunities.
+                                    <span className="text-[#354eab] leading-relaxed">
+                                        Analyzed market trends to identify new growth opportunities.
                                     </span>
                                 </div>
-                                <div className="flex items-start gap-2">
-                                    <span className="inline-block w-7 h-7 rounded-full bg-[#e3f2fd] flex items-center justify-center">
-                                        <svg
-                                            width="18"
-                                            height="18"
-                                            fill="#2196f3"
-                                        >
-                                            <circle cx="9" cy="9" r="9" />
+                                <div className="flex items-start gap-3">
+                                    <span className="inline-block w-6 h-6 rounded-full bg-[#354eab] flex items-center justify-center flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                         </svg>
                                     </span>
-                                    <span className="text-[#2196f3]">
-                                        Reduced operational costs by 15% through
-                                        process optimization.
+                                    <span className="text-[#354eab] leading-relaxed">
+                                        Reduced operational costs by 15% through process optimization.
                                     </span>
                                 </div>
                             </div>
-                            {/* Decorative floating squares */}
-                            <div className="absolute right-8 top-8 flex flex-col gap-4">
-                                <span className="w-10 h-10 bg-[#e3f2fd] rounded-xl shadow"></span>
-                                <span className="w-10 h-10 bg-white rounded-xl shadow"></span>
-                            </div>
-                            {/* Decorative sparkles */}
-                            <div className="absolute right-16 top-[320px] text-[#2196f3] text-2xl">
-                                <span>✨</span>
+                            
+                            {/* Download Buttons - Right side */}
+                            <div className="absolute -right-16 top-8 flex flex-col gap-3">
+                                <div className="w-12 h-12 bg-white border-2 border-[#354eab] rounded-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 flex items-center justify-center group">
+                                    <img 
+                                        src="/icons/pdf.png" 
+                                        alt="PDF Download" 
+                                        className="w-8 h-8 group-hover:scale-110 transition-transform"
+                                    />
+                                </div>
+                                <div className="w-12 h-12 bg-white border-2 border-[#354eab] rounded-lg shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-200 flex items-center justify-center group">
+                                    <svg className="w-6 h-6 text-[#354eab] group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" />
+                                    </svg>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -317,7 +403,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
                 <div className="max-w-7xl mx-auto text-center">
                     <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
-                        Why use <span className="text-[#2196f3]">CVeezy's</span>{" "}
+                        Why use <span className="text-[#354eab]">CVeezy's</span>{" "}
                         Resume Builder?
                     </h2>
 
@@ -346,7 +432,7 @@ const HomePage: React.FC<HomePageProps> = ({
                     {/* CTA Button */}
                     <div className="mt-16   mb-10">
                         <Link href="/choose-template">
-                            <button className="bg-[#2196f3] hover:bg-[#1976d2] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
+                            <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
                                 Create My Resume
                             </button>
                         </Link>
@@ -362,7 +448,7 @@ const HomePage: React.FC<HomePageProps> = ({
                 <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
                     <h1 className="text-white text-4xl font-bold mb-4">
                         Choose your{" "}
-                        <span className="text-sky-400">resume template</span>,
+                        <span className="text-[#354eab]">RESUME TEMPLATES</span>,
                         AI will do the rest
                     </h1>
                     <p className="text-white text-sm max-w-2xl mx-auto mb-6">
@@ -371,7 +457,7 @@ const HomePage: React.FC<HomePageProps> = ({
                         in no time. Explore 40+ modern templates.
                     </p>
                     <Link href="/choose-template">
-                        <button className="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-6 rounded-full shadow-md transition-colors duration-300 mb-8">
+                        <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-2 px-6 rounded-full shadow-md transition-colors duration-300 mb-8">
                             View All Templates
                         </button>
                     </Link>
@@ -408,7 +494,7 @@ const HomePage: React.FC<HomePageProps> = ({
                             }}
                         >
                             <div
-                                className="flex gap-6 transition-transform duration-300 ease-in-out"
+                                className="flex gap-6 transition-transform duration-500 ease-out"
                                 style={{
                                     transform: getTransformValue(),
                                     width: `${
@@ -421,18 +507,26 @@ const HomePage: React.FC<HomePageProps> = ({
                                 {extendedTemplates.map((template, index) => (
                                     <div
                                         key={`${template.name}-${index}`}
-                                        className="flex flex-col items-center flex-shrink-0"
-                                        style={{ width: `${CARD_WIDTH}px` }}
+                                        className="flex flex-col items-center flex-shrink-0 group animate-fade-in-up"
+                                        style={{ 
+                                            width: `${CARD_WIDTH}px`,
+                                            animationDelay: `${index * 0.1}s`
+                                        }}
                                     >
-                                        <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
+                                        <div className="template-showcase-card w-full h-auto relative overflow-hidden group">
                                             <img
                                                 src={template.image}
                                                 alt={template.name}
-                                                className="w-full object-cover h-96"
+                                                className="template-showcase-image w-full h-auto object-contain"
                                                 draggable={false}
                                             />
+                                            <div className="template-showcase-actions">
+                                                <button className="bg-gradient-to-r from-[#354eab] to-[#4a5fc7] text-white px-6 py-3 rounded-lg font-bold text-sm shadow-xl hover:shadow-2xl hover:from-[#4a5fc7] hover:to-[#2d3f8f] transition-all duration-300 transform hover:scale-105">
+                                                    Use This Template
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div className="mt-2 text-center text-lg font-semibold text-gray-800">
+                                        <div className="template-showcase-name">
                                             {template.name}
                                         </div>
                                     </div>
@@ -484,8 +578,8 @@ const HomePage: React.FC<HomePageProps> = ({
                     </p>
                     <Link href="/choose-template">
                         <button
-                            style={{ backgroundColor: "#05A2FF" }}
-                            className="hover:bg-blue-600 text-white font-semibold py-2 px-4 md:py-3 md:px-6 rounded-lg shadow-lg transition duration-300 text-sm md:text-base"
+                            style={{ backgroundColor: "#354eab" }}
+                            className="hover:bg-[#4a5fc7] text-white font-semibold py-2 px-4 md:py-3 md:px-6 rounded-lg shadow-lg transition duration-300 text-sm md:text-base"
                         >
                             Land My Dream Job
                         </button>
@@ -495,18 +589,20 @@ const HomePage: React.FC<HomePageProps> = ({
 
             {/* Footer */}
             <footer
-                className="w-full bg-[#2E404A] mt-8 md:mt-20 py-8 md:py-16 px-4 md:px-8"
+                className="w-full bg-[#1f2937] mt-8 md:mt-20 py-8 md:py-16 px-4 md:px-8"
                 style={{ fontFamily: "Nunito Sans, sans-serif" }}
             >
                 <div className="max-w-7xl mx-auto text-white">
                     <div className="block md:hidden">
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center mb-4">
-                                <img
-                                    src="/images/cveezyLOGO_C.png"
-                                    alt="CVeezy Logo"
-                                    className="w-12 h-12 rounded mr-2 object-contain"
-                                />
+                                <div className="bg-gradient-to-br from-white via-[#f8fbff] to-[#e3f2fd] rounded-2xl p-4 shadow-2xl border-2 border-[#354eab] hover:border-[#4a5fc7] transition-all duration-500 hover:shadow-[#354eab]/30 hover:scale-110 hover:rotate-1 hover:from-[#f0f8ff] hover:via-[#e8f4fd] hover:to-[#d4edff] group relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-[#354eab]/5 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
+                                    <img
+                                        src="/images/cveezyLOGO_C.png"
+                                        alt="CVeezy Logo"
+                                        className="w-16 h-16 object-contain transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg group-hover:brightness-110"
+                                    />
+                                </div>
                             </div>
                             <p className="text-gray-300 text-sm leading-relaxed">
                                 We help job seekers stand out in the highly
@@ -595,11 +691,13 @@ const HomePage: React.FC<HomePageProps> = ({
                         <div className="col-span-1">
                             <div className="flex items-center mb-6">
                                 <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
-                                    <Logo
-                                        size="xxl"
-                                        showText={false}
-                                        className=""
-                                    />
+                                    <div className="bg-gradient-to-br from-[#93c5fd] via-[#f8fbff] to-[#93c5fd] rounded-2xl p-6 shadow-2xl border-1 border-[#354eab] hover:border-[#4a5fc7] transition-all duration-500 hover:shadow-[#354eab]/30 hover:scale-110 hover:rotate-1 hover:from-[#f0f8ff] hover:via-[#93c5fd] hover:to-[#d4edff] group relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-[#354eab]/5 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
+                                        <Logo
+                                            size="xxl"
+                                            showText={false}
+                                            className=""
+                                        />
+                                    </div>
                                 </Link>
                             </div>
                             <p className="text-gray-300 text-base leading-relaxed">

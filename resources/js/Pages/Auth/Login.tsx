@@ -115,7 +115,7 @@ export default function Login({
                                 name="email"
                                 type="email"
                                 required
-                                className="appearance-none relative block w-full px-4 py-3 border border-[#bde3fa] placeholder-gray-400 text-[#222] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05A2FF] focus:border-transparent focus:z-10 text-lg bg-white"
+                                className="appearance-none relative block w-full px-4 py-3 border border-[#bde3fa] placeholder-gray-400 text-[#222] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] focus:border-transparent focus:z-10 text-lg bg-white"
                                 value={data.email}
                                 onChange={(e) =>
                                     setData("email", e.target.value)
@@ -147,7 +147,7 @@ export default function Login({
                                 {canResetPassword && (
                                     <Link
                                         href={route("password.request")}
-                                        className="text-lg text-[#05A2FF] hover:text-[#2196f3] transition-colors font-semibold"
+                                        className="text-lg text-[#354eab] hover:text-[#4a5fc7] transition-colors font-semibold"
                                         style={{
                                             fontFamily:
                                                 "Nunito Sans, sans-serif",
@@ -163,7 +163,7 @@ export default function Login({
                                     name="password"
                                     type={showPassword ? "text" : "password"}
                                     required
-                                    className="appearance-none relative block w-full px-4 py-3 pr-12 border border-[#bde3fa] placeholder-gray-400 text-[#222] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#05A2FF] focus:border-transparent focus:z-10 text-lg bg-white"
+                                    className="appearance-none relative block w-full px-4 py-3 pr-12 border border-[#bde3fa] placeholder-gray-400 text-[#222] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] focus:border-transparent focus:z-10 text-lg bg-white"
                                     value={data.password}
                                     onChange={(e) =>
                                         setData("password", e.target.value)
@@ -230,7 +230,7 @@ export default function Login({
                         <div>
                             <button
                                 type="submit"
-                                className="w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-lg text-white bg-[#05A2FF] hover:bg-[#2196f3] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#05A2FF] transition-colors shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full flex justify-center py-3 px-4 border border-transparent text-lg font-bold rounded-lg text-white bg-[#354eab] hover:bg-[#4a5fc7] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#354eab] transition-colors shadow disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{
                                     fontFamily: "Nunito Sans, sans-serif",
                                 }}
@@ -251,7 +251,7 @@ export default function Login({
                                 Don't have an account?{" "}
                                 <Link
                                     href={route("register")}
-                                    className="text-[#05A2FF] hover:text-[#2196f3] font-bold transition-colors"
+                                    className="text-[#354eab] hover:text-[#4a5fc7] font-bold transition-colors"
                                     style={{
                                         fontFamily: "Nunito Sans, sans-serif",
                                     }}

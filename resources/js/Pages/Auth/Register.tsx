@@ -27,7 +27,7 @@ export default function Register() {
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+            <div className="min-h-screen bg-gradient-to-br from-[#e3f2fd] to-[#e8f4fd] flex flex-col">
                 <Head title="Register" />
                 {/* Head Title */}
                 <Header />
@@ -196,7 +196,7 @@ export default function Register() {
 
                             <div>
                                 <PrimaryButton
-                                    className="w-full !bg-[#05A2FF] hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-center flex items-center justify-center"
+                                    className="w-full !bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-center flex items-center justify-center"
                                     disabled={processing}
                                 >
                                     {processing ? "Signing up..." : "SIGN UP"}
@@ -209,7 +209,7 @@ export default function Register() {
                                 </span>
                                 <Link
                                     href={route("login")}
-                                    className="text-sm text-[#05A2FF] hover:text-blue-500 font-medium"
+                                    className="text-sm text-[#354eab] hover:text-[#4a5fc7] font-medium"
                                 >
                                     Log in here
                                 </Link>

@@ -19,7 +19,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+            <div className="min-h-screen bg-gradient-to-br from-[#e3f2fd] to-[#e8f4fd] flex flex-col"
                 <Head title="Forgot Password" />
 
                 {/* Header with Logo */}
@@ -72,7 +72,7 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
                         <div>
                             <PrimaryButton
-                                className="w-full !bg-[#0582FF] hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-center flex items-center justify-center text-lg"
+                                className="w-full !bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-center flex items-center justify-center text-lg"
                                 disabled={processing}
                             >
                                 Send Reset Link

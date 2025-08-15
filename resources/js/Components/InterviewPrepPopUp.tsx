@@ -111,7 +111,7 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                             {/* Get Guide Button */}
                             <button
                                 onClick={handleGetGuide}
-                                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-2xl transition-colors duration-200 text-lg mt-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                                className="w-full bg-[#354eab] hover:bg-[#4a5fc7] text-white font-bold py-3 px-6 rounded-2xl transition-colors duration-200 text-lg mt-6 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                             >
                                 Get the Guide Now
                             </button>
