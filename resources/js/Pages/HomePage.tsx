@@ -358,8 +358,8 @@ const HomePage: React.FC<HomePageProps> = ({
             </section>
 
             {/* Templates Section - Enhanced with Smooth Animation */}
-            <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
-                <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
+            <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden template-section-bg">
+                <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px] relative">
                     <h1 className="text-white text-4xl font-bold mb-4">
                         Choose your{" "}
                         <span className="text-sky-400">resume template</span>,
@@ -381,7 +381,7 @@ const HomePage: React.FC<HomePageProps> = ({
                         <button
                             onClick={scrollLeft}
                             disabled={isAnimating}
-                            className="absolute left-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-3 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="absolute left-0 top-1/2 -translate-y-1/2 bg-gradient-to-r from-slate-700 to-slate-800 text-white p-3 rounded-full shadow-lg hover:shadow-xl z-10 opacity-80 hover:opacity-100 transition-all duration-300 ease-out disabled:opacity-30 disabled:cursor-not-allowed hover:scale-110 hover:-translate-x-1"
                         >
                             <svg
                                 className="w-6 h-6"
@@ -400,7 +400,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
                         {/* Template Slider Container */}
                         <div
-                            className="overflow-hidden"
+                            className="overflow-hidden rounded-2xl bg-gradient-to-br from-white via-gray-50 to-gray-100 p-8 shadow-xl border border-gray-200/50 backdrop-blur-sm"
                             style={{
                                 width: `${
                                     (CARD_WIDTH + GAP) * ITEMS_PER_PAGE - GAP
@@ -408,7 +408,7 @@ const HomePage: React.FC<HomePageProps> = ({
                             }}
                         >
                             <div
-                                className="flex gap-6 transition-transform duration-300 ease-in-out"
+                                className="flex gap-6 transition-transform duration-500 ease-out"
                                 style={{
                                     transform: getTransformValue(),
                                     width: `${
@@ -421,18 +421,37 @@ const HomePage: React.FC<HomePageProps> = ({
                                 {extendedTemplates.map((template, index) => (
                                     <div
                                         key={`${template.name}-${index}`}
-                                        className="flex flex-col items-center flex-shrink-0"
-                                        style={{ width: `${CARD_WIDTH}px` }}
+                                        className="flex flex-col items-center flex-shrink-0 group template-stagger"
+                                        style={{ 
+                                            width: `${CARD_WIDTH}px`,
+                                            animationDelay: `${index * 0.15}s`
+                                        }}
                                     >
-                                        <div className="bg-white shadow-md rounded-md overflow-hidden transition-transform duration-300 hover:scale-105 w-full">
+                                        <div className="template-card w-full h-96 relative overflow-hidden hover-lift gpu-accelerated">
                                             <img
                                                 src={template.image}
                                                 alt={template.name}
-                                                className="w-full object-cover h-96"
+                                                className="template-image w-full h-full object-cover"
                                                 draggable={false}
                                             />
+                                            <div className="template-overlay">
+                                                <div className="template-overlay-content">
+                                                    <div className="bg-gradient-to-br from-blue-600 to-blue-700 bg-opacity-95 backdrop-blur-sm rounded-xl px-6 py-5 shadow-2xl border border-blue-400/20">
+                                                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mb-3 mx-auto">
+                                                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                        </div>
+                                                        <h3 className="text-xl font-bold mb-2 text-white">{template.name}</h3>
+                                                        <p className="text-sm text-blue-100 mb-4">Professional Resume Template</p>
+                                                        <button className="bg-white text-blue-600 px-5 py-2.5 rounded-lg font-semibold hover:bg-blue-50 transition-all duration-200 hover-lift focus-ring shadow-lg">
+                                                            Use Template
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="mt-2 text-center text-lg font-semibold text-gray-800">
+                                        <div className="template-name group-hover:text-blue-600 group-hover:font-bold transition-all duration-300 ease-out">
                                             {template.name}
                                         </div>
                                     </div>
@@ -444,7 +463,7 @@ const HomePage: React.FC<HomePageProps> = ({
                         <button
                             onClick={scrollRight}
                             disabled={isAnimating}
-                            className="absolute right-0 top-1/2 -translate-y-1/2 bg-slate-700 text-white p-3 rounded-full shadow hover:bg-slate-600 z-10 opacity-60 hover:opacity-100 transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="absolute right-0 top-1/2 -translate-y-1/2 bg-gradient-to-l from-slate-700 to-slate-800 text-white p-3 rounded-full shadow-lg hover:shadow-xl z-10 opacity-80 hover:opacity-100 transition-all duration-300 ease-out disabled:opacity-30 disabled:cursor-not-allowed hover:scale-110 hover:translate-x-1"
                         >
                             <svg
                                 className="w-6 h-6"
