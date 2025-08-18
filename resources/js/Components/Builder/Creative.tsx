@@ -76,8 +76,6 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
         return 3; // default
     };
 
-    // Using explicit section construction later with fallbacks, so remove unused derived arrays
-
     const renderSectionContent = (section: any) => {
         switch (section.id) {
             case "languages":
@@ -204,239 +202,298 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto bg-white shadow-lg">
+        <div className="max-w-4xl mx-auto">
             {/* Header Section */}
             <div className="flex">
                 {/* Left Column */}
                 <div className="w-[60%] flex items-start">
                     <div className="bg-black text-white px-8 py-8">
                         <h1 className="text-3xl font-bold uppercase tracking-wide mb-2">
-                            <Placeholder value={`${contact.firstName} ${contact.lastName}`.trim()} placeholder="YOUR NAME" />
+                            <Placeholder
+                                value={`${contact.firstName} ${contact.lastName}`.trim()}
+                                placeholder="YOUR NAME"
+                            />
                         </h1>
                         <p className="text-lg uppercase tracking-wider text-gray-300">
-                            <Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" />
+                            <Placeholder
+                                value={contact.desiredJobTitle}
+                                placeholder="JOB TITLE"
+                            />
                         </p>
                     </div>
                 </div>
 
                 {/* Right Column */}
                 <div className="bg-white px-8 pb-8 w-[40%] flex flex-col justify-center space-y-4 pt-5">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                             <span className="text-black text-sm">☎</span>
                         </div>
-                        <span className="text-sm text-black">
-                            <Placeholder value={contact.phone} placeholder="(123) 456-7890" />
-                        </span>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-sm text-black break-all leading-snug block">
+                                <Placeholder
+                                    value={contact.phone}
+                                    placeholder="(123) 456-7890"
+                                />
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                             <Mail className="w-4 h-4 text-black" />
                         </div>
-                        <span className="text-sm text-black">
-                            <Placeholder value={contact.email} placeholder="email@example.com" />
-                        </span>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-sm text-black break-all leading-snug block">
+                                <Placeholder
+                                    value={contact.email}
+                                    placeholder="email@example.com"
+                                />
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                             <span className="text-black text-sm">⚲</span>
                         </div>
-                        <span className="text-sm text-black">
-                            <Placeholder
-                                value={[
-                                    contact.address,
-                                    contact.city,
-                                    contact.country,
-                                    contact.postCode,
-                                ]
-                                    .filter(Boolean)
-                                    .join(", ")}
-                                placeholder="123 Anywhere St, Any City, Country 12345"
-                            />
-                        </span>
+                        <div className="flex-1 min-w-0">
+                            <span className="text-sm text-black break-words leading-snug block">
+                                <Placeholder
+                                    value={[
+                                        contact.address,
+                                        contact.city,
+                                        contact.country,
+                                        contact.postCode,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(", ")}
+                                    placeholder="123 Anywhere St, Any City, Country 12345"
+                                />
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {/* Main Content - Two Column Layout */}
-            <div className="px-8 pb-8">
+            <div className="pb-8">
                 {/* About Me / Summary */}
-                <div className="flex border-t border-black py-6">
-                    <div className="w-1/4 pr-8">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
-                            ABOUT ME
-                        </h2>
-                    </div>
-                    <div className="w-3/4">
-                        <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-                            <Placeholder
-                                value={summary}
-                                placeholder={
-                                    "Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."
-                                }
-                            />
-                        </p>
+                <div className="border-t border-black py-6">
+                    <div className="flex">
+                        <div className="w-1/4">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                ABOUT ME
+                            </h2>
+                        </div>
+                        <div className="w-3/4">
+                            <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
+                                <Placeholder
+                                    value={summary}
+                                    placeholder={
+                                        "Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."
+                                    }
+                                />
+                            </p>
+                        </div>
                     </div>
                 </div>
 
                 {/* Experience */}
-                <div className="flex border-t border-black py-6">
-                    <div className="w-1/4 pr-8">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
-                            EXPERIENCE
-                        </h2>
-                    </div>
-                    <div className="w-3/4 space-y-6">
-                        {(experiences.length > 0
-                            ? experiences
-                            : [
-                                  {
-                                      id: -1,
-                                      company: "Company Name",
-                                      jobTitle: "Job Title",
-                                      startDate: "Sep 2017",
-                                      endDate: "May 2020",
-                                      description:
-                                          "• Responsibilities\n• Responsibilities",
-                                  },
-                                  {
-                                      id: -2,
-                                      company: "Company Name",
-                                      jobTitle: "Job Title",
-                                      startDate: "Jun 2015",
-                                      endDate: "Aug 2017",
-                                      description:
-                                          "• Responsibilities\n• Responsibilities",
-                                  },
-                              ]).map((exp: any) => (
-                            <div key={exp.id}>
-                                <div className="mb-1">
-                                    <h3 className="font-bold text-sm">
-                                        <Placeholder
-                                            value={`${exp.company} ${exp.startDate} - ${exp.endDate}`}
-                                            placeholder="Company Name Sep 2017 - May 2020"
-                                        />
-                                    </h3>
-                                    <p className="text-gray-700 text-sm">
-                                        <Placeholder
-                                            value={exp.jobTitle}
-                                            placeholder="Job Title"
-                                        />
+                <div className="border-t border-black py-6">
+                    <div className="flex">
+                        <div className="w-1/4">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                EXPERIENCE
+                            </h2>
+                        </div>
+                        <div className="w-3/4 space-y-6">
+                            {(experiences.length > 0
+                                ? experiences
+                                : [
+                                      {
+                                          id: -1,
+                                          company: "Company Name",
+                                          jobTitle: "Job Title",
+                                          startDate: "Sep 2017",
+                                          endDate: "May 2020",
+                                          description:
+                                              "• Responsibilities\n• Responsibilities",
+                                      },
+                                      {
+                                          id: -2,
+                                          company: "Company Name",
+                                          jobTitle: "Job Title",
+                                          startDate: "Jun 2015",
+                                          endDate: "Aug 2017",
+                                          description:
+                                              "• Responsibilities\n• Responsibilities",
+                                      },
+                                  ]
+                            ).map((exp: any) => (
+                                <div key={exp.id}>
+                                    <div className="mb-1">
+                                        <h3 className="font-bold text-sm">
+                                            <Placeholder
+                                                value={`${exp.company} ${exp.startDate} - ${exp.endDate}`}
+                                                placeholder="Company Name Sep 2017 - May 2020"
+                                            />
+                                        </h3>
+                                        <p className="text-gray-700 text-sm">
+                                            <Placeholder
+                                                value={exp.jobTitle}
+                                                placeholder="Job Title"
+                                            />
+                                        </p>
+                                        {exp.location && (
+                                            <p className="text-gray-600 text-xs italic">
+                                                {exp.location}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
+                                        {exp.description ||
+                                            "• Responsibilities\n• Responsibilities"}
                                     </p>
-                                    {exp.location && (
-                                      <p className="text-gray-600 text-xs italic">
-                                        {exp.location}
-                                      </p>
-                                    )}
                                 </div>
-                                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-                                    {(exp.description ||
-                                        "• Responsibilities\n• Responsibilities")}
-                                </p>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Education */}
-                <div className="flex border-t border-black py-6">
-                    <div className="w-1/4 pr-8">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
-                            EDUCATION
-                        </h2>
-                    </div>
-                    <div className="w-3/4 space-y-4">
-                        {(education.length > 0
-                            ? education
-                            : [
-                                  {
-                                      id: -1,
-                                      degree: "Degree in Field of study",
-                                      school: "School Name",
-                                      location: "Location",
-                                      startDate: "2017",
-                                      endDate: "2020",
-                                      description: "",
-                                  },
-                              ]).map((edu: any) => (
-                            <div key={edu.id} className="flex gap-2">
-                                {/* Date and School Info Column */}
-                                <div className="w-1/2">
-                                    <p className="text-xs font-bold mb-1">
-                                        <Placeholder
-                                            value={`${edu.startDate} - ${edu.endDate}`}
-                                            placeholder="2017 - 2020"
-                                        />
-                                    </p>
-                                    <p className="text-xs text-gray-700 mb-1">
-                                        <Placeholder
-                                            value={`${edu.school}${edu.location ? ` — ${edu.location}` : ""}`}
-                                            placeholder="School Name — Location"
-                                        />
-                                    </p>
-                                    <h4 className="font-bold text-xs">
-                                        <Placeholder
-                                            value={edu.degree}
-                                            placeholder="Degree in Field of study"
-                                        />
-                                    </h4>
-                                </div>
-
-                                {/* Description Column */}
-                                <div className="w-1/2 -ml-3">
-                                    {edu.description && (
-                                        <p className="text-xs text-gray-800 leading-relaxed">
-                                            {edu.description}
+                <div className="border-t border-black py-6">
+                    <div className="flex">
+                        <div className="w-1/4">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                EDUCATION
+                            </h2>
+                        </div>
+                        <div className="w-3/4 space-y-4">
+                            {(education.length > 0
+                                ? education
+                                : [
+                                      {
+                                          id: -1,
+                                          degree: "Degree in Field of study",
+                                          school: "School Name",
+                                          location: "Location",
+                                          startDate: "2017",
+                                          endDate: "2020",
+                                          description: "",
+                                      },
+                                  ]
+                            ).map((edu: any) => (
+                                <div key={edu.id} className="flex gap-2">
+                                    {/* Date and School Info Column */}
+                                    <div className="w-1/2">
+                                        <p className="text-xs font-bold mb-1">
+                                            <Placeholder
+                                                value={`${edu.startDate} - ${edu.endDate}`}
+                                                placeholder="2017 - 2020"
+                                            />
                                         </p>
-                                    )}
+                                        <p className="text-xs text-gray-700 mb-1">
+                                            <Placeholder
+                                                value={`${edu.school}${
+                                                    edu.location
+                                                        ? ` — ${edu.location}`
+                                                        : ""
+                                                }`}
+                                                placeholder="School Name — Location"
+                                            />
+                                        </p>
+                                        <h4 className="font-bold text-xs">
+                                            <Placeholder
+                                                value={edu.degree}
+                                                placeholder="Degree in Field of study"
+                                            />
+                                        </h4>
+                                    </div>
+
+                                    {/* Description Column */}
+                                    <div className="w-1/2 -ml-3">
+                                        {edu.description && (
+                                            <p className="text-xs text-gray-800 leading-relaxed">
+                                                {edu.description}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* Skills */}
-                <div className="flex border-t border-black py-6">
-                    <div className="w-1/4 pr-8">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
-                            SKILLS
-                        </h2>
-                    </div>
-                    <div className="w-3/4">
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                            {(skills.length > 0
-                                ? skills
-                                : [
-                                      { id: -1, name: "Skill 1", level: "Experienced" },
-                                      { id: -2, name: "Skill 2", level: "Experienced" },
-                                      { id: -3, name: "Skill 3", level: "Experienced" },
-                                      { id: -4, name: "Skill 4", level: "Experienced" },
-                                  ]).map((skill: any, index: number) => (
-                                <div
-                                    key={index}
-                                    className="flex items-center gap-3"
-                                >
-                                    <span className="text-sm text-gray-800 font-medium">
-                                        <Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} />
-                                    </span>
-                                    {(
+                <div className="border-t border-black py-6">
+                    <div className="flex">
+                        <div className="w-1/4">
+                            <h2 className="text-sm font-bold uppercase tracking-wider">
+                                SKILLS
+                            </h2>
+                        </div>
+                        <div className="w-3/4">
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                {(skills.length > 0
+                                    ? skills
+                                    : [
+                                          {
+                                              id: -1,
+                                              name: "Skill 1",
+                                              level: "Experienced",
+                                          },
+                                          {
+                                              id: -2,
+                                              name: "Skill 2",
+                                              level: "Experienced",
+                                          },
+                                          {
+                                              id: -3,
+                                              name: "Skill 3",
+                                              level: "Experienced",
+                                          },
+                                          {
+                                              id: -4,
+                                              name: "Skill 4",
+                                              level: "Experienced",
+                                          },
+                                      ]
+                                ).map((skill: any, index: number) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-3"
+                                    >
+                                        <span className="text-sm text-gray-800 font-medium">
+                                            <Placeholder
+                                                value={skill.name}
+                                                placeholder={`Skill ${
+                                                    index + 1
+                                                }`}
+                                            />
+                                        </span>
                                         <div className="flex items-center gap-0.5">
-                                            {Array.from({ length: 5 }, (_, i) => (
-                                                <div
-                                                    key={i}
-                                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                                                        i < getSkillLevelBullets(skill.level || "Experienced")
-                                                            ? "bg-black"
-                                                            : "bg-gray-300"
-                                                    }`}
-                                                />
-                                            ))}
+                                            {Array.from(
+                                                { length: 5 },
+                                                (_, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                                                            i <
+                                                            getSkillLevelBullets(
+                                                                skill.level ||
+                                                                    "Experienced"
+                                                            )
+                                                                ? "bg-black"
+                                                                : "bg-gray-300"
+                                                        }`}
+                                                    />
+                                                )
+                                            )}
                                         </div>
-                                    )}
-                                </div>
-                            ))}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -449,62 +506,89 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                                 id: "languages",
                                 title: "Languages",
                                 content:
-                                    (languages && languages.length > 0)
+                                    languages && languages.length > 0
                                         ? languages
                                         : [
-                                              { id: -1, name: "English", proficiency: "Fluent" },
-                                              { id: -2, name: "Spanish", proficiency: "Basic" },
+                                              {
+                                                  id: -1,
+                                                  name: "English",
+                                                  proficiency: "Fluent",
+                                              },
+                                              {
+                                                  id: -2,
+                                                  name: "Spanish",
+                                                  proficiency: "Basic",
+                                              },
                                           ],
                             },
                             {
                                 id: "certifications",
                                 title: "Certifications",
                                 content:
-                                    (certifications && certifications.length > 0)
+                                    certifications && certifications.length > 0
                                         ? certifications
                                         : [
-                                              { id: -1, title: "Certification Title" },
+                                              {
+                                                  id: -1,
+                                                  title: "Certification Title",
+                                              },
                                           ],
                             },
                             {
                                 id: "awards",
                                 title: "Awards",
                                 content:
-                                    (awards && awards.length > 0)
+                                    awards && awards.length > 0
                                         ? awards
                                         : [
-                                              { id: -1, title: "Award Title" },
+                                              {
+                                                  id: -1,
+                                                  title: "Award Title",
+                                              },
                                           ],
                             },
                             {
                                 id: "websites",
                                 title: "Websites",
                                 content:
-                                    (websites && websites.length > 0)
+                                    websites && websites.length > 0
                                         ? websites
                                         : [
-                                              { id: -1, label: "Portfolio", url: "https://portfolio.example.com" },
+                                              {
+                                                  id: -1,
+                                                  label: "Portfolio",
+                                                  url: "https://portfolio.example.com",
+                                              },
                                           ],
                             },
                             {
                                 id: "hobbies",
                                 title: "Interests",
                                 content:
-                                    (hobbies && hobbies.length > 0)
+                                    hobbies && hobbies.length > 0
                                         ? hobbies
                                         : [
                                               { id: -1, name: "Reading" },
-                                              { id: -2, name: "Photography" },
+                                              {
+                                                  id: -2,
+                                                  name: "Photography",
+                                              },
                                           ],
                             },
                             {
                                 id: "references",
                                 title: "References",
                                 content:
-                                    (references && references.length > 0)
+                                    references && references.length > 0
                                         ? references
                                         : [
-                                              { id: -1, name: "Jane Doe", relationship: "Manager", contactInfo: "jane@example.com" },
+                                              {
+                                                  id: -1,
+                                                  name: "Jane Doe",
+                                                  relationship: "Manager",
+                                                  contactInfo:
+                                                      "jane@example.com",
+                                              },
                                           ],
                             },
                         ].map((section) => (
@@ -524,17 +608,19 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                         {customSections.map((custom) => (
                             <div
                                 key={custom.id}
-                                className="flex border-t border-black py-6"
+                                className="border-t border-black py-6"
                             >
-                                <div className="w-1/4 pr-8">
-                                    <h2 className="text-sm font-bold uppercase tracking-wider">
-                                        {custom.title}
-                                    </h2>
-                                </div>
-                                <div className="w-3/4">
-                                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
-                                        {custom.content}
-                                    </p>
+                                <div className="flex">
+                                    <div className="w-1/4">
+                                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                                            {custom.title}
+                                        </h2>
+                                    </div>
+                                    <div className="w-3/4">
+                                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                                            {custom.content}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         ))}

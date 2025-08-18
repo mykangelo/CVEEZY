@@ -75,6 +75,8 @@
             margin-bottom: 16px;
             position: relative;
             padding-left: 55px;
+            display: flex;
+            align-items: flex-start;
         }
 
         .contact-item:last-child {
@@ -95,6 +97,7 @@
             font-size: 18px;
             font-weight: normal;
             color: #000;
+            flex-shrink: 0;
         }
 
         .contact-icon.phone::before {
@@ -127,7 +130,12 @@
         .contact-text {
             font-size: 14px;
             color: #000;
-            line-height: 30px; 
+            line-height: 1.4;
+            word-break: break-all;
+            overflow-wrap: anywhere;
+            hyphens: auto;
+            flex: 1;
+            min-width: 0;
         }
 
         /* Main Content - Improved spacing */
@@ -599,6 +607,12 @@
 
             .header-section {
                 margin-bottom: 16px !important;
+            }
+
+            .contact-text {
+                word-break: break-all !important;
+                overflow-wrap: anywhere !important;
+                hyphens: auto !important;
             }
         }
 
