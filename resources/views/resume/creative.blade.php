@@ -74,9 +74,10 @@
         .contact-item {
             margin-bottom: 16px;
             position: relative;
-            padding-left: 55px;
+            padding-left: 60px;
             display: flex;
             align-items: flex-start;
+            min-height: 45px;
         }
 
         .contact-item:last-child {
@@ -131,11 +132,12 @@
             font-size: 14px;
             color: #000;
             line-height: 1.4;
-            word-break: break-all;
-            overflow-wrap: anywhere;
+            word-break: break-word;
+            overflow-wrap: break-word;
             hyphens: auto;
             flex: 1;
             min-width: 0;
+            margin-top: 12px;
         }
 
         /* Main Content - Improved spacing */
@@ -610,9 +612,10 @@
             }
 
             .contact-text {
-                word-break: break-all !important;
-                overflow-wrap: anywhere !important;
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
                 hyphens: auto !important;
+                margin-top: 12px !important;
             }
         }
 
