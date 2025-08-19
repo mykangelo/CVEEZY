@@ -19,9 +19,9 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
     return (
         <>
-            <div className="min-h-screen bg-gradient-to-br from-[#e3f2fd] to-[#e8f4fd] flex flex-col"
-                <Head title="Forgot Password" />
+            <Head title="Forgot Password" />
 
+            <div className="min-h-screen bg-gradient-to-br from-[#e3f2fd] to-[#e8f4fd] flex flex-col">
                 {/* Header with Logo */}
                 <Header />
 
