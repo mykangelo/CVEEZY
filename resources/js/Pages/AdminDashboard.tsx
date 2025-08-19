@@ -693,12 +693,11 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                                         >
                                                                             View
                                                                         </Button>
-                                                                        <Button 
-                                                                            size="sm" 
+                                                                        <Button
                                                                             variant="outline"
-                                                                            onClick={() => window.open(`/storage/${payment.file_path}`, '_blank')}
+                                                                            size="sm"
+                                                                            onClick={() => viewPaymentProof(payment)}
                                                                         >
-                                                                            <Download className="h-4 w-4 mr-1" />
                                                                             Download
                                                                         </Button>
                                                                         <span className="text-xs text-gray-500">
