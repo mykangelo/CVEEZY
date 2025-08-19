@@ -1065,7 +1065,6 @@
                                                     @endif
                                                     @if (!empty($ref['contactInfo']))
                                                         <div class="reference-contact">
-                                                            <div class="label">Phone</div>
                                                             <div>{{ $ref['contactInfo'] }}</div>
                                                         </div>
                                                     @endif

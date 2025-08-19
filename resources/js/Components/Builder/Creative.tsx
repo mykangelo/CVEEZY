@@ -161,13 +161,12 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                                     {ref.name}
                                 </div>
                                 {ref.relationship && (
-                                    <div className="text-gray-600 text-xs uppercase tracking-wide mb-1">
+                                    <div className="text-gray-600 text-xs uppercase tracking-wide">
                                         {ref.relationship}
                                     </div>
                                 )}
                                 {ref.contactInfo && (
                                     <div className="text-gray-700">
-                                        <div className="font-medium">Phone</div>
                                         <div>{ref.contactInfo}</div>
                                     </div>
                                 )}
