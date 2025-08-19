@@ -180,11 +180,11 @@ use App\Http\Controllers\AIController;
 
 Route::get('/ask-ai', [AIController::class, 'ask']);
 
-// Routing for AI assistance in summary page
+// AI summary generation (no CSRF)
 Route::withoutMiddleware([
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ])->group(function () {
-    Route::post('/revise-text', [AIController::class, 'reviseText']);
+    Route::post('/generate-summary', [AIController::class, 'generateSummary']);
 });
 
 //Routing for AI assistance in education page

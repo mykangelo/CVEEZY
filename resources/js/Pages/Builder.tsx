@@ -206,15 +206,17 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
     );
   };
 
-  // Call Gemini API for experience description revision
-  const reviseExperienceDescription = async (id: number, description: string) => {
-    if (!description.trim()) return;
+  // Generate/Improve experience description via AI
+  const reviseExperienceDescription = async (id: number, description: string, exp: Experience) => {
     setLoadingId(id);
     try {
+      const seed = description && description.trim().length > 0
+        ? description
+        : `Generate a concise, results-focused experience description for the role ${exp.jobTitle} at ${exp.company || exp.employer || ''} (${exp.startDate} - ${exp.endDate || 'Present'}). Emphasize achievements, impact, tools, and collaboration.`;
       const res = await fetch("/revise-experience-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: description }),
+        body: JSON.stringify({ text: seed }),
       });
       const data = await res.json();
       updateExperience(id, "description", data.revised_text);
@@ -310,10 +312,10 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 {errors[`exp_${exp.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`exp_${exp.id}_description`]}</p>}
 
                 <button
-                  onClick={() => reviseExperienceDescription(exp.id, exp.description)}
-                  className="mt-2 px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                  onClick={() => reviseExperienceDescription(exp.id, exp.description, exp)}
+                  className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                 >
-                  {loadingId === exp.id ? "Asking AI for assistance..." : "Improve description using AI"}
+                  {loadingId === exp.id ? "Generating…" : "Generate Description with AI"}
                 </button>
               </div>
             </>
@@ -372,22 +374,24 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
     );
   };
 
-  // Call Gemini API for description revision
-  const reviseDescription = async (id: number, description: string) => {
-    if (!description.trim()) return;
-    setLoadingId(id); // Start loading for this education entry
+  // Generate/Improve education description via AI
+  const reviseDescription = async (id: number, description: string, edu: Education) => {
+    setLoadingId(id);
     try {
+      const seed = description && description.trim().length > 0
+        ? description
+        : `Generate a concise, professional education description for ${edu.degree} at ${edu.school}. Emphasize relevant coursework, projects, tools, and academic achievements in 1-2 sentences.`;
       const res = await fetch("/reviseEducationDescription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: description }),
+        body: JSON.stringify({ text: seed }),
       });
       const data = await res.json();
       updateEducation(id, "description", data.revised_text);
     } catch (err) {
       console.error(err);
     }
-    setLoadingId(null); // Stop loading
+    setLoadingId(null);
   };
 
   return (
@@ -477,13 +481,13 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 {errors[`edu_${edu.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_description`]}</p>}
 
                 <button
-                  onClick={() => reviseDescription(edu.id, edu.description)}
+                  onClick={() => reviseDescription(edu.id, edu.description, edu)}
                   disabled={loadingId === edu.id}
                   className={`mt-2 px-3 py-1 text-white rounded transition ${
-                    loadingId === edu.id ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
+                    loadingId === edu.id ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
                   }`}
                 >
-                  {loadingId === edu.id ? "Asking AI for assistance..." : "Improve summary using AI"}
+                  {loadingId === edu.id ? "Generating…" : "Generate Description with AI"}
                 </button>
               </div>
             </>
@@ -698,28 +702,60 @@ interface SummarySectionProps {
   summary: string;
   setSummary: React.Dispatch<React.SetStateAction<string>>;
   errors: Record<string, string>;
+  desiredJobTitle: string;
+  skills: Skill[];
+  experiences: Experience[];
+  educations: Education[];
 }
-const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors }) => {
-  const [loading, setLoading] = React.useState(false);
+const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors, desiredJobTitle, skills, experiences, educations }) => {
+  const [genLoading, setGenLoading] = React.useState(false);
 
-  const handleRevise = async () => {
-    if (!summary.trim()) return;
-    setLoading(true);
-
+  const handleGenerate = async () => {
     try {
-      const res = await fetch("/revise-text", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: summary }),
-      });
+      const jobTitle = (desiredJobTitle || '').trim();
+      const skillNames = (skills || []).map(s => s.name).filter(n => !!n && n.trim().length > 0);
 
-      const data = await res.json();
-      setSummary(data.revised_text);
+      if (!jobTitle) {
+        alert('Please fill in Desired job title first.');
+        return;
+      }
+
+      setGenLoading(true);
+      const res = await fetch('/generate-summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          job_title: jobTitle,
+          skills: skillNames,
+          current_summary: summary,
+          experiences: (experiences || []).map(e => ({
+            jobTitle: e.jobTitle,
+            company: e.company || e.employer || '',
+            startDate: e.startDate,
+            endDate: e.endDate
+          })),
+          education: (educations || []).map(ed => ({
+            degree: ed.degree,
+            school: ed.school
+          }))
+        })
+      });
+      const raw = await res.text();
+      try {
+        const data = JSON.parse(raw);
+        if (data && typeof data.revised_text === 'string') {
+          setSummary(data.revised_text);
+        } else {
+          console.error('Invalid AI response shape:', data);
+        }
+      } catch (e) {
+        console.error('AI response is not valid JSON:', raw.substring(0, 300));
+      }
     } catch (err) {
       console.error(err);
+    } finally {
+      setGenLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
@@ -740,13 +776,12 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
 
       {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
 
-      {/* Revise button */}
       <button
-        onClick={handleRevise}
-        disabled={loading}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        onClick={handleGenerate}
+        disabled={genLoading}
+        className="mb-4 px-4 py-2 bg-[#354eab] text-white rounded hover:bg-[#2d3f8f] transition"
       >
-        {loading ? "Revising..." : "Improve Summary using AI"}
+        {genLoading ? 'Generating…' : 'Generate Summary with AI'}
       </button>
 
       <div className="bg-gray-50 rounded-lg p-4">
@@ -2137,7 +2172,7 @@ const Builder: React.FC<BuilderProps> = ({
       case 3:
         return <SkillsSection skills={skills} setSkills={setSkills} showExperienceLevel={showExperienceLevel} setShowExperienceLevel={setShowExperienceLevel} errors={errors} />;
       case 4:
-        return <SummarySection summary={summary} setSummary={setSummary} errors={errors} />;
+        return <SummarySection summary={summary} setSummary={setSummary} errors={errors} desiredJobTitle={contacts.desiredJobTitle || ''} skills={skills} experiences={experiences} educations={educations} />;
       case 5:
         return <FinalizeSection 
           onAddSection={(sectionType) => {

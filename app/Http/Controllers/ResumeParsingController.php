@@ -95,7 +95,7 @@ class ResumeParsingController extends Controller
                 'resume_id' => $resume->id,
                 'parsed_data' => $parsingResult['data'],
                 'redirect_url' => route('builder', ['resume' => $resume->id])
-            ]);
+            ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
             
         } catch (\Exception $e) {
             Log::error('Resume parsing error: ' . $e->getMessage(), [
@@ -148,8 +148,8 @@ class ResumeParsingController extends Controller
                 'success' => true,
                 'preview_data' => $parsingResult['data'],
                 'quality_assessment' => $qualityAssessment,
-                'raw_text_preview' => substr($parsingResult['raw_text'], 0, 500) . '...'
-            ]);
+                'raw_text_preview' => mb_substr($parsingResult['raw_text'] ?? '', 0, 500) . '...'
+            ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
             
         } catch (\Exception $e) {
             Log::error('Resume preview error: ' . $e->getMessage());
@@ -230,7 +230,10 @@ class ResumeParsingController extends Controller
             'references' => $data['references'] ?? [],
             'hobbies' => $data['hobbies'] ?? []
         ];
-        
+
+        // Deep sanitize to valid UTF-8 to avoid JSON encoding issues
+        $cleanData = $this->sanitizeDeep($cleanData);
+
         return $cleanData;
     }
     
@@ -302,6 +305,33 @@ class ResumeParsingController extends Controller
         }
         
         return $cleaned;
+    }
+
+    /**
+     * Recursively sanitize all strings in an array to valid UTF-8
+     */
+    private function sanitizeDeep($value)
+    {
+        if (is_array($value)) {
+            $sanitized = [];
+            foreach ($value as $k => $v) {
+                $sanitized[$k] = $this->sanitizeDeep($v);
+            }
+            return $sanitized;
+        }
+        if (is_string($value)) {
+            $converted = @iconv('UTF-8', 'UTF-8//IGNORE', $value);
+            if ($converted === false) {
+                $converted = @mb_convert_encoding($value, 'UTF-8', 'auto');
+            }
+            if (!is_string($converted)) {
+                $converted = $value;
+            }
+            // Strip non-printable control characters (keep tabs/newlines)
+            $converted = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $converted);
+            return $converted ?? '';
+        }
+        return $value;
     }
     
     /**
