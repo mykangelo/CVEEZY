@@ -5,9 +5,10 @@ import Placeholder from "./Placeholder";
 
 type Props = {
     resumeData: ResumeData;
+    showSkillLevels?: boolean; // New prop to control skill level display
 };
 
-const Creative: React.FC<Props> = ({ resumeData }) => {
+const Creative: React.FC<Props> = ({ resumeData, showSkillLevels = true }) => {
     const {
         contact,
         experiences,
@@ -89,20 +90,22 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                                 <span className="text-xs font-medium">
                                     {lang.name}
                                 </span>
-                                <div className="flex space-x-0.5 flex-shrink-0">
-                                    {[1, 2, 3, 4, 5].map((bar) => (
-                                        <div
-                                            key={bar}
-                                            className={`w-2 h-0.5 ${
-                                                getProficiencyLevel(
-                                                    lang.proficiency || ""
-                                                ) >= bar
-                                                    ? "bg-black"
-                                                    : "bg-gray-300"
-                                            }`}
-                                        ></div>
-                                    ))}
-                                </div>
+                                {showSkillLevels && (
+                                    <div className="flex space-x-0.5 flex-shrink-0">
+                                        {[1, 2, 3, 4, 5].map((bar) => (
+                                            <div
+                                                key={bar}
+                                                className={`w-2 h-0.5 ${
+                                                    getProficiencyLevel(
+                                                        lang.proficiency || ""
+                                                    ) >= bar
+                                                        ? "bg-black"
+                                                        : "bg-gray-300"
+                                                }`}
+                                            ></div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -436,199 +439,226 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                             </h2>
                         </div>
                         <div className="w-3/4">
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                                {(skills.length > 0
-                                    ? skills
-                                    : [
-                                          {
-                                              id: -1,
-                                              name: "Skill 1",
-                                              level: "Experienced",
-                                          },
-                                          {
-                                              id: -2,
-                                              name: "Skill 2",
-                                              level: "Experienced",
-                                          },
-                                          {
-                                              id: -3,
-                                              name: "Skill 3",
-                                              level: "Experienced",
-                                          },
-                                          {
-                                              id: -4,
-                                              name: "Skill 4",
-                                              level: "Experienced",
-                                          },
-                                      ]
-                                ).map((skill: any, index: number) => (
-                                    <div
-                                        key={index}
-                                        className="flex items-center gap-3"
-                                    >
-                                        <span className="text-sm text-gray-800 font-medium">
+                            {showSkillLevels ? (
+                                <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                    {(skills.length > 0
+                                        ? skills
+                                        : [
+                                              {
+                                                  id: -1,
+                                                  name: "Skill 1",
+                                                  level: "Experienced",
+                                              },
+                                              {
+                                                  id: -2,
+                                                  name: "Skill 2",
+                                                  level: "Experienced",
+                                              },
+                                              {
+                                                  id: -3,
+                                                  name: "Skill 3",
+                                                  level: "Experienced",
+                                              },
+                                              {
+                                                  id: -4,
+                                                  name: "Skill 4",
+                                                  level: "Experienced",
+                                              },
+                                          ]
+                                    ).map((skill: any, index: number) => (
+                                        <div
+                                            key={index}
+                                            className="flex items-center gap-3"
+                                        >
+                                            <span className="text-sm text-gray-800 font-medium">
+                                                <Placeholder
+                                                    value={skill.name}
+                                                    placeholder={`Skill ${
+                                                        index + 1
+                                                    }`}
+                                                />
+                                            </span>
+                                            <div className="flex items-center gap-0.5">
+                                                {Array.from(
+                                                    { length: 5 },
+                                                    (_, i) => (
+                                                        <div
+                                                            key={i}
+                                                            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                                                                i <
+                                                                getSkillLevelBullets(
+                                                                    skill.level ||
+                                                                        "Experienced"
+                                                                )
+                                                                    ? "bg-black"
+                                                                    : "bg-gray-300"
+                                                            }`}
+                                                        />
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-sm text-gray-800">
+                                    {(skills.length > 0
+                                        ? skills
+                                        : [
+                                              { id: -1, name: "Skill 1" },
+                                              { id: -2, name: "Skill 2" },
+                                              { id: -3, name: "Skill 3" },
+                                              { id: -4, name: "Skill 4" },
+                                          ]
+                                    ).map((skill: any, index: number) => (
+                                        <span key={index}>
                                             <Placeholder
                                                 value={skill.name}
                                                 placeholder={`Skill ${
                                                     index + 1
                                                 }`}
                                             />
+                                            {index <
+                                                (skills.length > 0
+                                                    ? skills.length
+                                                    : 4) -
+                                                    1 && " • "}
                                         </span>
-                                        <div className="flex items-center gap-0.5">
-                                            {Array.from(
-                                                { length: 5 },
-                                                (_, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                                                            i <
-                                                            getSkillLevelBullets(
-                                                                skill.level ||
-                                                                    "Experienced"
-                                                            )
-                                                                ? "bg-black"
-                                                                : "bg-gray-300"
-                                                        }`}
-                                                    />
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {/* Additional Sections - 3 Column Grid Layout with samples */}
-                <div className="border-t border-black py-6">
-                    <div className="grid grid-cols-3 gap-6">
-                        {[
-                            {
-                                id: "languages",
-                                title: "Languages",
-                                content:
-                                    languages && languages.length > 0
-                                        ? languages
-                                        : [
-                                              {
-                                                  id: -1,
-                                                  name: "English",
-                                                  proficiency: "Fluent",
-                                              },
-                                              {
-                                                  id: -2,
-                                                  name: "Spanish",
-                                                  proficiency: "Basic",
-                                              },
-                                          ],
-                            },
-                            {
-                                id: "certifications",
-                                title: "Certifications",
-                                content:
-                                    certifications && certifications.length > 0
-                                        ? certifications
-                                        : [
-                                              {
-                                                  id: -1,
-                                                  title: "Certification Title",
-                                              },
-                                          ],
-                            },
-                            {
-                                id: "awards",
-                                title: "Awards",
-                                content:
-                                    awards && awards.length > 0
-                                        ? awards
-                                        : [
-                                              {
-                                                  id: -1,
-                                                  title: "Award Title",
-                                              },
-                                          ],
-                            },
-                            {
-                                id: "websites",
-                                title: "Websites",
-                                content:
-                                    websites && websites.length > 0
-                                        ? websites
-                                        : [
-                                              {
-                                                  id: -1,
-                                                  label: "Portfolio",
-                                                  url: "https://portfolio.example.com",
-                                              },
-                                          ],
-                            },
-                            {
-                                id: "hobbies",
-                                title: "Interests",
-                                content:
-                                    hobbies && hobbies.length > 0
-                                        ? hobbies
-                                        : [
-                                              { id: -1, name: "Reading" },
-                                              {
-                                                  id: -2,
-                                                  name: "Photography",
-                                              },
-                                          ],
-                            },
-                            {
-                                id: "references",
-                                title: "References",
-                                content:
-                                    references && references.length > 0
-                                        ? references
-                                        : [
-                                              {
-                                                  id: -1,
-                                                  name: "Jane Doe",
-                                                  relationship: "Manager",
-                                                  contactInfo:
-                                                      "jane@example.com",
-                                              },
-                                          ],
-                            },
-                        ].map((section) => (
-                            <div key={section.id as string} className="w-full">
-                                <h3 className="text-xs font-bold mb-3 text-gray-800 uppercase tracking-wide">
-                                    {section.title as string}
-                                </h3>
-                                {renderSectionContent(section)}
-                            </div>
-                        ))}
-                    </div>
+            {/* Additional Sections - 3 Column Grid Layout with samples */}
+            <div className="border-t border-black py-6">
+                <div className="grid grid-cols-3 gap-6">
+                    {[
+                        {
+                            id: "languages",
+                            title: "Languages",
+                            content:
+                                languages && languages.length > 0
+                                    ? languages
+                                    : [
+                                          {
+                                              id: -1,
+                                              name: "English",
+                                              proficiency: "Fluent",
+                                          },
+                                          {
+                                              id: -2,
+                                              name: "Spanish",
+                                              proficiency: "Basic",
+                                          },
+                                      ],
+                        },
+                        {
+                            id: "certifications",
+                            title: "Certifications",
+                            content:
+                                certifications && certifications.length > 0
+                                    ? certifications
+                                    : [
+                                          {
+                                              id: -1,
+                                              title: "Certification Title",
+                                          },
+                                      ],
+                        },
+                        {
+                            id: "awards",
+                            title: "Awards",
+                            content:
+                                awards && awards.length > 0
+                                    ? awards
+                                    : [
+                                          {
+                                              id: -1,
+                                              title: "Award Title",
+                                          },
+                                      ],
+                        },
+                        {
+                            id: "websites",
+                            title: "Websites",
+                            content:
+                                websites && websites.length > 0
+                                    ? websites
+                                    : [
+                                          {
+                                              id: -1,
+                                              label: "Portfolio",
+                                              url: "https://portfolio.example.com",
+                                          },
+                                      ],
+                        },
+                        {
+                            id: "hobbies",
+                            title: "Interests",
+                            content:
+                                hobbies && hobbies.length > 0
+                                    ? hobbies
+                                    : [
+                                          { id: -1, name: "Reading" },
+                                          {
+                                              id: -2,
+                                              name: "Photography",
+                                          },
+                                      ],
+                        },
+                        {
+                            id: "references",
+                            title: "References",
+                            content:
+                                references && references.length > 0
+                                    ? references
+                                    : [
+                                          {
+                                              id: -1,
+                                              name: "Jane Doe",
+                                              relationship: "Manager",
+                                              contactInfo: "jane@example.com",
+                                          },
+                                      ],
+                        },
+                    ].map((section) => (
+                        <div key={section.id as string} className="w-full">
+                            <h3 className="text-xs font-bold mb-3 text-gray-800 uppercase tracking-wide">
+                                {section.title as string}
+                            </h3>
+                            {renderSectionContent(section)}
+                        </div>
+                    ))}
                 </div>
+            </div>
 
-                {/* Custom Sections */}
-                {customSections && customSections.length > 0 && (
-                    <>
-                        {customSections.map((custom) => (
-                            <div
-                                key={custom.id}
-                                className="border-t border-black py-6"
-                            >
-                                <div className="flex">
-                                    <div className="w-1/4">
-                                        <h2 className="text-sm font-bold uppercase tracking-wider">
-                                            {custom.title}
-                                        </h2>
-                                    </div>
-                                    <div className="w-3/4">
-                                        <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
-                                            {custom.content}
-                                        </p>
-                                    </div>
+            {/* Custom Sections */}
+            {customSections && customSections.length > 0 && (
+                <>
+                    {customSections.map((custom) => (
+                        <div
+                            key={custom.id}
+                            className="border-t border-black py-6"
+                        >
+                            <div className="flex">
+                                <div className="w-1/4">
+                                    <h2 className="text-sm font-bold uppercase tracking-wider">
+                                        {custom.title}
+                                    </h2>
+                                </div>
+                                <div className="w-3/4">
+                                    <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-line">
+                                        {custom.content}
+                                    </p>
                                 </div>
                             </div>
-                        ))}
-                    </>
-                )}
-            </div>
+                        </div>
+                    ))}
+                </>
+            )}
         </div>
     );
 };
