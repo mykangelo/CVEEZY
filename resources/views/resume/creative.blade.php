@@ -42,7 +42,7 @@
             color: white;
             padding: 32px;
             vertical-align: middle;
-            width: 60%;
+            width: 53%;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -68,7 +68,7 @@
             background: white;
             padding: 20px 32px;
             vertical-align: middle;
-            width: 40%;
+            width: 47%;
         }
 
         .contact-item {
@@ -76,7 +76,7 @@
             position: relative;
             padding-left: 60px;
             display: flex;
-            align-items: flex-start;
+            align-items: center; /* Back to center for proper alignment */
             min-height: 45px;
         }
 
@@ -87,7 +87,7 @@
         .contact-icon {
             position: absolute;
             left: 0;
-            top: 0;
+            top: 0; /* Keep at top for consistent positioning */
             width: 45px;
             height: 45px;
             border: 1px solid #000;
@@ -108,6 +108,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            line-height: 1; /* Remove extra line height */
         }
 
         .contact-icon.email::before {
@@ -137,7 +138,8 @@
             hyphens: auto;
             flex: 1;
             min-width: 0;
-            margin-top: 12px;
+            margin: 0;
+            /* Removed padding-top to use flexbox centering instead */
         }
 
         /* Main Content - Improved spacing */
@@ -615,7 +617,6 @@
                 word-break: break-word !important;
                 overflow-wrap: break-word !important;
                 hyphens: auto !important;
-                margin-top: 12px !important;
             }
         }
 

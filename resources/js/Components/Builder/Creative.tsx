@@ -225,9 +225,11 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
 
                 {/* Right Column */}
                 <div className="bg-white px-8 pb-8 w-[40%] flex flex-col justify-center space-y-4 pt-5">
-                    <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                            <span className="text-black text-sm">☎</span>
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-black text-sm leading-none">
+                                ☎
+                            </span>
                         </div>
                         <div className="flex-1 min-w-0">
                             <span className="text-sm text-black break-all leading-snug block">
@@ -239,8 +241,8 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                         </div>
                     </div>
 
-                    <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 border border-black rounded-full flex items-center justify-center flex-shrink-0">
                             <Mail className="w-4 h-4 text-black" />
                         </div>
                         <div className="flex-1 min-w-0">
