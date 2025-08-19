@@ -5,10 +5,9 @@ import Placeholder from "./Placeholder";
 
 type Props = {
     resumeData: ResumeData;
-    showSkillLevels?: boolean; // New prop to control skill level display
 };
 
-const Creative: React.FC<Props> = ({ resumeData, showSkillLevels = true }) => {
+const Creative: React.FC<Props> = ({ resumeData }) => {
     const {
         contact,
         experiences,
@@ -22,57 +21,37 @@ const Creative: React.FC<Props> = ({ resumeData, showSkillLevels = true }) => {
         references,
         hobbies,
         customSections,
+        showExperienceLevel, // Using the same prop name as Modern template
     } = resumeData;
 
     const hasLocationInfo =
         contact.address || contact.city || contact.country || contact.postCode;
 
-    const getSkillLevelBullets = (level: string | undefined): number => {
-        if (!level) {
-            return 3;
-        }
-
-        const normalizedLevel = level.toLowerCase().trim();
-
-        if (normalizedLevel.includes("expert")) {
-            return 5;
-        } else if (
-            normalizedLevel.includes("experienced") ||
-            normalizedLevel.includes("advanced")
-        ) {
-            return 4;
-        } else if (normalizedLevel.includes("intermediate")) {
-            return 3;
-        } else if (normalizedLevel.includes("beginner")) {
-            return 2;
-        } else if (normalizedLevel.includes("novice")) {
-            return 1;
-        } else {
-            // Try exact matches as fallback
-            switch (normalizedLevel) {
-                case "expert":
-                    return 5;
-                case "experienced":
-                case "advanced":
-                    return 4;
-                case "intermediate":
-                    return 3;
-                case "beginner":
-                    return 2;
-                case "novice":
-                    return 1;
-                default:
-                    return 3;
-            }
+    // Updated to match Modern template's exact function
+    const getSkillLevelBullets = (level: string): number => {
+        switch (level) {
+            case "Novice":
+                return 1;
+            case "Beginner":
+                return 2;
+            case "Skillful":
+                return 3;
+            case "Experienced":
+                return 4;
+            case "Expert":
+                return 5;
+            default:
+                return 1;
         }
     };
 
     const getProficiencyLevel = (proficiency: string): number => {
         if (!proficiency) return 3; // default
         const level = proficiency.toLowerCase();
-        if (level.includes("beginner") || level.includes("basic")) return 2;
-        if (level.includes("intermediate")) return 3;
-        if (level.includes("advanced") || level.includes("fluent")) return 4;
+        if (level.includes("beginner") || level.includes("basic")) return 1;
+        if (level.includes("intermediate")) return 2;
+        if (level.includes("advanced")) return 3;
+        if (level.includes("fluent")) return 4;
         if (level.includes("native") || level.includes("expert")) return 5;
         return 3; // default
     };
@@ -90,22 +69,20 @@ const Creative: React.FC<Props> = ({ resumeData, showSkillLevels = true }) => {
                                 <span className="text-xs font-medium">
                                     {lang.name}
                                 </span>
-                                {showSkillLevels && (
-                                    <div className="flex space-x-0.5 flex-shrink-0">
-                                        {[1, 2, 3, 4, 5].map((bar) => (
-                                            <div
-                                                key={bar}
-                                                className={`w-2 h-0.5 ${
-                                                    getProficiencyLevel(
-                                                        lang.proficiency || ""
-                                                    ) >= bar
-                                                        ? "bg-black"
-                                                        : "bg-gray-300"
-                                                }`}
-                                            ></div>
-                                        ))}
-                                    </div>
-                                )}
+                                <div className="flex space-x-0.5 flex-shrink-0">
+                                    {[1, 2, 3, 4, 5].map((bar) => (
+                                        <div
+                                            key={bar}
+                                            className={`w-2 h-0.5 ${
+                                                getProficiencyLevel(
+                                                    lang.proficiency || ""
+                                                ) >= bar
+                                                    ? "bg-black"
+                                                    : "bg-gray-300"
+                                            }`}
+                                        ></div>
+                                    ))}
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -282,252 +259,247 @@ const Creative: React.FC<Props> = ({ resumeData, showSkillLevels = true }) => {
             </div>
 
             {/* Main Content - Two Column Layout */}
-            <div className="pb-8">
-                {/* About Me / Summary */}
-                <div className="border-t border-black py-6">
-                    <div className="flex">
-                        <div className="w-1/4">
-                            <h2 className="text-sm font-bold uppercase tracking-wider">
-                                ABOUT ME
-                            </h2>
-                        </div>
-                        <div className="w-3/4">
-                            <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-                                <Placeholder
-                                    value={summary}
-                                    placeholder={
-                                        "Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."
-                                    }
-                                />
-                            </p>
-                        </div>
+            {/* About Me / Summary */}
+            <div className="border-t border-black py-6">
+                <div className="flex">
+                    <div className="w-1/4">
+                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                            ABOUT ME
+                        </h2>
+                    </div>
+                    <div className="w-3/4">
+                        <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
+                            <Placeholder
+                                value={summary}
+                                placeholder={
+                                    "Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."
+                                }
+                            />
+                        </p>
                     </div>
                 </div>
+            </div>
 
-                {/* Experience */}
-                <div className="border-t border-black py-6">
-                    <div className="flex">
-                        <div className="w-1/4">
-                            <h2 className="text-sm font-bold uppercase tracking-wider">
-                                EXPERIENCE
-                            </h2>
-                        </div>
-                        <div className="w-3/4 space-y-6">
-                            {(experiences.length > 0
-                                ? experiences
-                                : [
-                                      {
-                                          id: -1,
-                                          company: "Company Name",
-                                          jobTitle: "Job Title",
-                                          startDate: "Sep 2017",
-                                          endDate: "May 2020",
-                                          description:
-                                              "• Responsibilities\n• Responsibilities",
-                                      },
-                                      {
-                                          id: -2,
-                                          company: "Company Name",
-                                          jobTitle: "Job Title",
-                                          startDate: "Jun 2015",
-                                          endDate: "Aug 2017",
-                                          description:
-                                              "• Responsibilities\n• Responsibilities",
-                                      },
-                                  ]
-                            ).map((exp: any) => (
-                                <div key={exp.id}>
-                                    <div className="mb-1">
-                                        <h3 className="font-bold text-sm">
-                                            <Placeholder
-                                                value={`${exp.company} ${exp.startDate} - ${exp.endDate}`}
-                                                placeholder="Company Name Sep 2017 - May 2020"
-                                            />
-                                        </h3>
-                                        <p className="text-gray-700 text-sm">
-                                            <Placeholder
-                                                value={exp.jobTitle}
-                                                placeholder="Job Title"
-                                            />
-                                        </p>
-                                        {exp.location && (
-                                            <p className="text-gray-600 text-xs italic">
-                                                {exp.location}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-                                        {exp.description ||
-                                            "• Responsibilities\n• Responsibilities"}
+            {/* Experience */}
+            <div className="border-t border-black py-6">
+                <div className="flex">
+                    <div className="w-1/4">
+                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                            EXPERIENCE
+                        </h2>
+                    </div>
+                    <div className="w-3/4 space-y-6">
+                        {(experiences.length > 0
+                            ? experiences
+                            : [
+                                  {
+                                      id: -1,
+                                      company: "Company Name",
+                                      jobTitle: "Job Title",
+                                      startDate: "Sep 2017",
+                                      endDate: "May 2020",
+                                      description:
+                                          "• Responsibilities\n• Responsibilities",
+                                  },
+                                  {
+                                      id: -2,
+                                      company: "Company Name",
+                                      jobTitle: "Job Title",
+                                      startDate: "Jun 2015",
+                                      endDate: "Aug 2017",
+                                      description:
+                                          "• Responsibilities\n• Responsibilities",
+                                  },
+                              ]
+                        ).map((exp: any) => (
+                            <div key={exp.id}>
+                                <div className="mb-1">
+                                    <h3 className="font-bold text-sm">
+                                        <Placeholder
+                                            value={`${exp.company} ${exp.startDate} - ${exp.endDate}`}
+                                            placeholder="Company Name Sep 2017 - May 2020"
+                                        />
+                                    </h3>
+                                    <p className="text-gray-700 text-sm">
+                                        <Placeholder
+                                            value={exp.jobTitle}
+                                            placeholder="Job Title"
+                                        />
                                     </p>
+                                    {exp.location && (
+                                        <p className="text-gray-600 text-xs italic">
+                                            {exp.location}
+                                        </p>
+                                    )}
                                 </div>
-                            ))}
-                        </div>
+                                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
+                                    {exp.description ||
+                                        "• Responsibilities\n• Responsibilities"}
+                                </p>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Education */}
-                <div className="border-t border-black py-6">
-                    <div className="flex">
-                        <div className="w-1/4">
-                            <h2 className="text-sm font-bold uppercase tracking-wider">
-                                EDUCATION
-                            </h2>
-                        </div>
-                        <div className="w-3/4 space-y-4">
-                            {(education.length > 0
-                                ? education
-                                : [
-                                      {
-                                          id: -1,
-                                          degree: "Degree in Field of study",
-                                          school: "School Name",
-                                          location: "Location",
-                                          startDate: "2017",
-                                          endDate: "2020",
-                                          description: "",
-                                      },
-                                  ]
-                            ).map((edu: any) => (
-                                <div key={edu.id} className="flex gap-2">
-                                    {/* Date and School Info Column */}
-                                    <div className="w-1/2">
-                                        <p className="text-xs font-bold mb-1">
-                                            <Placeholder
-                                                value={`${edu.startDate} - ${edu.endDate}`}
-                                                placeholder="2017 - 2020"
-                                            />
-                                        </p>
-                                        <p className="text-xs text-gray-700 mb-1">
-                                            <Placeholder
-                                                value={`${edu.school}${
-                                                    edu.location
-                                                        ? ` — ${edu.location}`
-                                                        : ""
-                                                }`}
-                                                placeholder="School Name — Location"
-                                            />
-                                        </p>
-                                        <h4 className="font-bold text-xs">
-                                            <Placeholder
-                                                value={edu.degree}
-                                                placeholder="Degree in Field of study"
-                                            />
-                                        </h4>
-                                    </div>
-
-                                    {/* Description Column */}
-                                    <div className="w-1/2 -ml-3">
-                                        {edu.description && (
-                                            <p className="text-xs text-gray-800 leading-relaxed">
-                                                {edu.description}
-                                            </p>
-                                        )}
-                                    </div>
+            {/* Education */}
+            <div className="border-t border-black py-6">
+                <div className="flex">
+                    <div className="w-1/4">
+                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                            EDUCATION
+                        </h2>
+                    </div>
+                    <div className="w-3/4 space-y-4">
+                        {(education.length > 0
+                            ? education
+                            : [
+                                  {
+                                      id: -1,
+                                      degree: "Degree in Field of study",
+                                      school: "School Name",
+                                      location: "Location",
+                                      startDate: "2017",
+                                      endDate: "2020",
+                                      description: "",
+                                  },
+                              ]
+                        ).map((edu: any) => (
+                            <div key={edu.id} className="flex gap-2">
+                                {/* Date and School Info Column */}
+                                <div className="w-1/2">
+                                    <p className="text-xs font-bold mb-1">
+                                        <Placeholder
+                                            value={`${edu.startDate} - ${edu.endDate}`}
+                                            placeholder="2017 - 2020"
+                                        />
+                                    </p>
+                                    <p className="text-xs text-gray-700 mb-1">
+                                        <Placeholder
+                                            value={`${edu.school}${
+                                                edu.location
+                                                    ? ` — ${edu.location}`
+                                                    : ""
+                                            }`}
+                                            placeholder="School Name — Location"
+                                        />
+                                    </p>
+                                    <h4 className="font-bold text-xs">
+                                        <Placeholder
+                                            value={edu.degree}
+                                            placeholder="Degree in Field of study"
+                                        />
+                                    </h4>
                                 </div>
-                            ))}
-                        </div>
+
+                                {/* Description Column */}
+                                <div className="w-1/2 -ml-3">
+                                    {edu.description && (
+                                        <p className="text-xs text-gray-800 leading-relaxed">
+                                            {edu.description}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Skills */}
-                <div className="border-t border-black py-6">
-                    <div className="flex">
-                        <div className="w-1/4">
-                            <h2 className="text-sm font-bold uppercase tracking-wider">
-                                SKILLS
-                            </h2>
-                        </div>
-                        <div className="w-3/4">
-                            {showSkillLevels ? (
-                                <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                                    {(skills.length > 0
-                                        ? skills
-                                        : [
-                                              {
-                                                  id: -1,
-                                                  name: "Skill 1",
-                                                  level: "Experienced",
-                                              },
-                                              {
-                                                  id: -2,
-                                                  name: "Skill 2",
-                                                  level: "Experienced",
-                                              },
-                                              {
-                                                  id: -3,
-                                                  name: "Skill 3",
-                                                  level: "Experienced",
-                                              },
-                                              {
-                                                  id: -4,
-                                                  name: "Skill 4",
-                                                  level: "Experienced",
-                                              },
-                                          ]
-                                    ).map((skill: any, index: number) => (
-                                        <div
-                                            key={index}
-                                            className="flex items-center gap-3"
-                                        >
-                                            <span className="text-sm text-gray-800 font-medium">
-                                                <Placeholder
-                                                    value={skill.name}
-                                                    placeholder={`Skill ${
-                                                        index + 1
-                                                    }`}
-                                                />
-                                            </span>
-                                            <div className="flex items-center gap-0.5">
-                                                {Array.from(
-                                                    { length: 5 },
-                                                    (_, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                                                                i <
-                                                                getSkillLevelBullets(
-                                                                    skill.level ||
-                                                                        "Experienced"
-                                                                )
-                                                                    ? "bg-black"
-                                                                    : "bg-gray-300"
-                                                            }`}
-                                                        />
-                                                    )
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-sm text-gray-800">
-                                    {(skills.length > 0
-                                        ? skills
-                                        : [
-                                              { id: -1, name: "Skill 1" },
-                                              { id: -2, name: "Skill 2" },
-                                              { id: -3, name: "Skill 3" },
-                                              { id: -4, name: "Skill 4" },
-                                          ]
-                                    ).map((skill: any, index: number) => (
-                                        <span key={index}>
+            {/* Skills */}
+            <div className="border-t border-black py-6">
+                <div className="flex">
+                    <div className="w-1/4">
+                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                            SKILLS
+                        </h2>
+                    </div>
+                    <div className="w-3/4">
+                        {showExperienceLevel ? (
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                                {(skills.length > 0
+                                    ? skills
+                                    : [
+                                          {
+                                              id: -1,
+                                              name: "Skill 1",
+                                              level: "Experienced",
+                                          },
+                                          {
+                                              id: -2,
+                                              name: "Skill 2",
+                                              level: "Experienced",
+                                          },
+                                          {
+                                              id: -3,
+                                              name: "Skill 3",
+                                              level: "Experienced",
+                                          },
+                                          {
+                                              id: -4,
+                                              name: "Skill 4",
+                                              level: "Experienced",
+                                          },
+                                      ]
+                                ).map((skill: any, index: number) => (
+                                    <div
+                                        key={index}
+                                        className="flex items-center gap-3"
+                                    >
+                                        <span className="text-sm text-gray-800 font-medium">
                                             <Placeholder
                                                 value={skill.name}
                                                 placeholder={`Skill ${
                                                     index + 1
                                                 }`}
                                             />
-                                            {index <
-                                                (skills.length > 0
-                                                    ? skills.length
-                                                    : 4) -
-                                                    1 && " • "}
                                         </span>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                        <div className="flex items-center gap-0.5">
+                                            {Array.from(
+                                                { length: 5 },
+                                                (_, i) => (
+                                                    <div
+                                                        key={i}
+                                                        className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                                                            i <
+                                                            getSkillLevelBullets(
+                                                                skill.level ||
+                                                                    "Experienced"
+                                                            )
+                                                                ? "bg-black"
+                                                                : "bg-gray-300"
+                                                        }`}
+                                                    />
+                                                )
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            // Grid layout for skills without level indicators
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-1">
+                                {(skills.length > 0
+                                    ? skills
+                                    : [
+                                          { id: -1, name: "Skill 1" },
+                                          { id: -2, name: "Skill 2" },
+                                          { id: -3, name: "Skill 3" },
+                                          { id: -4, name: "Skill 4" },
+                                      ]
+                                ).map((skill: any, index: number) => (
+                                    <div
+                                        key={index}
+                                        className="text-sm text-gray-800"
+                                    >
+                                        <Placeholder
+                                            value={skill.name}
+                                            placeholder={`Skill ${index + 1}`}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

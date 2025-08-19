@@ -323,7 +323,7 @@
             line-height: 1.5;
         }
 
-        /* Skills - Responsive grid */
+        /* Skills - Updated to match React component behavior */
         .skills-grid {
             display: table;
             width: 100%;
@@ -382,6 +382,30 @@
             background-color: #000;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+
+        /* Skills without level display - Updated to match React grid layout */
+        .skills-simple-grid {
+            display: table;
+            width: 100%;
+        }
+
+        .skills-simple-row {
+            display: table-row;
+        }
+
+        .skills-simple-item {
+            display: table-cell;
+            width: 50%;
+            padding-right: 32px;
+            padding-bottom: 4px;
+            vertical-align: top;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .skills-simple-item:last-child {
+            padding-right: 0;
         }
 
         /* Additional Sections - More compact */
@@ -800,7 +824,7 @@
                 </div>
             @endif
 
-            {{-- Skills --}}
+            {{-- Skills - Updated to match React component --}}
             @php
                 $validSkills = [];
                 if (!empty($resume['skills']) && is_array($resume['skills'])) {
@@ -811,6 +835,9 @@
                         }
                     }
                 }
+                
+                // Check if showExperienceLevel is enabled
+                $showExperienceLevel = $resume['showExperienceLevel'] ?? false;
             @endphp
 
             @if (!empty($validSkills))
@@ -822,27 +849,28 @@
                         <h2>SKILLS</h2>
                     </div>
                     <div class="section-content">
-                        <div class="skills-grid">
-                            @php
-                                $skillChunks = array_chunk($validSkills, 2);
-                            @endphp
-                            @foreach ($skillChunks as $skillPair)
-                                <div class="skills-row">
-                                    @foreach ($skillPair as $skill)
-                                        <div class="skill-item">
-                                            <div class="skill-content">
-                                                <span class="skill-name">{{ $skill['name'] }}</span>
-                                                @if (!empty($skill['level']))
+                        @if ($showExperienceLevel)
+                            {{-- Grid layout with skill level bullets --}}
+                            <div class="skills-grid">
+                                @php
+                                    $skillChunks = array_chunk($validSkills, 2);
+                                @endphp
+                                @foreach ($skillChunks as $skillPair)
+                                    <div class="skills-row">
+                                        @foreach ($skillPair as $skill)
+                                            <div class="skill-item">
+                                                <div class="skill-content">
+                                                    <span class="skill-name">{{ $skill['name'] }}</span>
                                                     <div class="skill-bullets">
                                                         @php
                                                             $level = strtolower(trim($skill['level'] ?? ''));
-                                                            $bulletCount = 3;
+                                                            $bulletCount = 1; // default
                                                             
                                                             if (str_contains($level, 'expert')) {
                                                                 $bulletCount = 5;
-                                                            } elseif (str_contains($level, 'experienced') || str_contains($level, 'advanced')) {
+                                                            } elseif (str_contains($level, 'experienced')) {
                                                                 $bulletCount = 4;
-                                                            } elseif (str_contains($level, 'intermediate')) {
+                                                            } elseif (str_contains($level, 'skillful')) {
                                                                 $bulletCount = 3;
                                                             } elseif (str_contains($level, 'beginner')) {
                                                                 $bulletCount = 2;
@@ -854,17 +882,37 @@
                                                             <div class="skill-bullet {{ $i <= $bulletCount ? 'active' : '' }}"></div>
                                                         @endfor
                                                     </div>
-                                                @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                    @endforeach
-                                    {{-- Fill empty cell if odd number of skills --}}
-                                    @if (count($skillPair) == 1)
-                                        <div class="skill-item"></div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
+                                        @endforeach
+                                        {{-- Fill empty cell if odd number of skills --}}
+                                        @if (count($skillPair) == 1)
+                                            <div class="skill-item"></div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            {{-- Simple grid layout without level indicators --}}
+                            <div class="skills-simple-grid">
+                                @php
+                                    $skillChunks = array_chunk($validSkills, 2);
+                                @endphp
+                                @foreach ($skillChunks as $skillPair)
+                                    <div class="skills-simple-row">
+                                        @foreach ($skillPair as $skill)
+                                            <div class="skills-simple-item">
+                                                {{ $skill['name'] }}
+                                            </div>
+                                        @endforeach
+                                        {{-- Fill empty cell if odd number of skills --}}
+                                        @if (count($skillPair) == 1)
+                                            <div class="skills-simple-item"></div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -980,10 +1028,12 @@
                                                             $barCount = 3;
                                                             
                                                             if (str_contains($proficiency, 'beginner') || str_contains($proficiency, 'basic')) {
-                                                                $barCount = 2;
+                                                                $barCount = 1;
                                                             } elseif (str_contains($proficiency, 'intermediate')) {
+                                                                $barCount = 2;
+                                                            } elseif (str_contains($proficiency, 'advanced')) {
                                                                 $barCount = 3;
-                                                            } elseif (str_contains($proficiency, 'advanced') || str_contains($proficiency, 'fluent')) {
+                                                            } elseif (str_contains($proficiency, 'fluent')) {
                                                                 $barCount = 4;
                                                             } elseif (str_contains($proficiency, 'native') || str_contains($proficiency, 'expert')) {
                                                                 $barCount = 5;
