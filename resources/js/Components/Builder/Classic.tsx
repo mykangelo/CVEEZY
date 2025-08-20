@@ -52,12 +52,13 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
     {/* Contact Info - Always visible with placeholders */}
     <div>
       <h2 className="text-3xl font-bold text-center">
-        <Placeholder value={`${(contact.firstName || '').trim()} ${(contact.lastName || '').trim()}`.trim()} placeholder="FIRSTNAME LASTNAME" />
+        
+        <Placeholder className="font-bold" value={`${(contact.firstName || '').trim()} ${(contact.lastName || '').trim()}`.trim()} placeholder="FIRSTNAME LASTNAME" />
       </h2>
 
       <p className="text-lg text-gray-800 mt-2 text-center">
         <span className="font-bold">
-          <Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" />
+          <Placeholder className="font-bold" value={contact.desiredJobTitle} placeholder="JOB TITLE" />
         </span>
       </p>
       <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
@@ -88,34 +89,44 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
         </p>
       </div>
 
-      {/* Skills Section - Always rendered with placeholders */}
-      <div>
-        <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7">
-          AREA OF EXPERTISE
-        </h3>
-        <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-          {(skills.length > 0 ? skills : [{ id: -1, name: '', level: 'Experienced' }, { id: -2, name: '', level: 'Experienced' }]).map((skill: any, index: number) => (
-            <div key={index} className="flex items-center gap-1">
-              <span className="text-sm text-gray-800 font-medium">
-                <Placeholder value={skill.name} placeholder="Sample Skill" />
-              </span>
-              {skill.level && showExperienceLevel && (
-                <div className="flex items-center gap-0.5">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <div
-                      key={i}
-                      className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
-                        i < getSkillLevelBullets(skill.level || 'Novice') ? 'bg-black' : 'bg-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+      
+    {/* Skills Section - Always rendered with placeholders */}
+    <div>
+      <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7">
+        AREA OF EXPERTISE
+      </h3>
+      <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+        {(skills.length > 0
+          ? skills
+          : [
+              { id: -1, name: '', level: 'Experienced' },
+              { id: -2, name: '', level: 'Experienced' },
+            ]
+        ).map((skill: any, index: number) => (
+          <div key={index} className="flex items-center gap-1">
+            <span className="text-sm text-gray-800 font-medium">
+              <Placeholder value={skill.name} placeholder="Sample Skill" />
+            </span>
+            {skill.name && skill.level && showExperienceLevel && (
+              <div className="flex items-center gap-0.5">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <div
+                    key={i}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+                      i < getSkillLevelBullets(skill.level || 'Novice')
+                        ? 'bg-black'
+                        : 'bg-gray-300'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
+    </div>
+
 
       {/* Experience Section - Always rendered with placeholders */}
       <div>
