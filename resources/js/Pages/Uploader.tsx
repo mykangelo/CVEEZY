@@ -5,6 +5,7 @@ import Logo from "@/Components/Logo";
 import Modal from "@/Components/Modal";
 import PrimaryButton from "@/Components/PrimaryButton";
 import SecondaryButton from "@/Components/SecondaryButton";
+ 
 
 interface UploaderProps {
   hasPendingPayments?: boolean;
@@ -42,6 +43,8 @@ const Uploader: React.FC<UploaderProps> = ({
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [qualityAssessment, setQualityAssessment] = useState<QualityAssessment | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState<string>('classic');
+  
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -123,7 +126,7 @@ const Uploader: React.FC<UploaderProps> = ({
     try {
       const formData = new FormData();
       formData.append('resume_file', selectedFile);
-      formData.append('template_name', 'classic'); // Default template
+      formData.append('template_name', templateName);
 
       const response = await fetch('/api/resume/parse', {
         method: 'POST',
@@ -163,6 +166,16 @@ const Uploader: React.FC<UploaderProps> = ({
   return (
             <div className="min-h-screen flex flex-col bg-white font-sans">
       <Head title="CVeezy | Improve Your Resume" />
+
+      {isUploading && (
+        <div className="fixed inset-0 z-[10000] bg-white/80 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center text-center px-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-[#354eab]/20 border-t-[#354eab] mb-6"></div>
+            <h2 className="text-xl font-semibold text-gray-900">Processing....</h2>
+            <p className="mt-2 text-gray-700 max-w-xl">Please wait while our artificial intelligence processes the information from your resume and selects the right fields</p>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
         <div className="flex items-center">
@@ -538,6 +551,8 @@ const Uploader: React.FC<UploaderProps> = ({
                           )}
                         </div>
                       </div>
+                      
+                      {/* Template selection removed from preview per request; default remains 'classic' and can be changed later in builder */}
                     </div>
                   </div>
                 </div>
