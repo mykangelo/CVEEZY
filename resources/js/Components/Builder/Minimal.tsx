@@ -46,11 +46,28 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
     }
   };
 
+  const getLanguageLevelBullets = (level: string): number => {
+    switch (level) {
+      case "Basic":
+        return 1;
+      case "Conversational":
+        return 2;
+      case "Fluent":
+        return 3;
+      case "Proficient":
+        return 4;
+      case "Native":
+        return 5;
+      default:
+        return 1;
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto p-8 bg-white text-black font-sans">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-black mb-2 tracking-wide">
+        <h1 className="text-4xl font-bold text-[#383741] mb-2 tracking-wide">
           <Placeholder value={`${(contact.firstName||'').toUpperCase()} ${(contact.lastName||'').toUpperCase()}`.trim()} placeholder="YOUR NAME" />
         </h1>
         <p className="text-xl font-bold text-black mb-3">
@@ -108,26 +125,26 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {/* Summary */}
       <div className="mb-6">
         <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-          <h2 className="text-lg font-semibold italic text-black">SUMMARY</h2>
+          <h2 className="text-lg font-semibold italic" style={{color: '#383741'}}>SUMMARY</h2>
         </div>
-        <p className="text-sm text-black leading-relaxed break-words">
+        <p className="text-sm text-[#383741] leading-relaxed break-words">
           <Placeholder value={summary} placeholder={"Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."} />
         </p>
       </div>
 
        {/* Skills */}
-       <div className="mb-6">
+       <div className="mb-6" style={{fontFamily: 'sans-serif'}}>
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">TECHNICAL SKILLS</h2>
+            <h2 className="text-lg font-semibold italic" style={{color: '#383741', fontFamily: 'sans-serif'}}>TECHNICAL SKILLS</h2>
           </div>
-          <div className="grid grid-cols-3 gap-x-8 gap-y-2">
+          <div className="grid grid-cols-3 gap-x-8 gap-y-2" style={{fontFamily: 'sans-serif'}}>
             {(skills.length > 0 ? skills : [{ id: -1, name: 'Skill 1', level: 'Experienced' }, { id: -2, name: 'Skill 2', level: 'Experienced' }, { id: -3, name: 'Skill 3', level: 'Experienced' }] as any[]).map((skill: any, index: number) => (
-              <div key={index} className="flex items-center gap-1">
-                <span className="text-sm text-black font-medium"><Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} /></span>
+              <div key={index} className="flex items-center gap-1" style={{fontFamily: 'sans-serif'}}>
+                <span className="text-sm text-[#383741] font-medium" style={{fontFamily: 'sans-serif'}}><Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} /></span>
                 {showExperienceLevel && (
-                  <div className="flex items-center gap-0.5">
+                  <div className="flex items-center gap-0.5" style={{fontFamily: 'sans-serif'}}>
                     {Array.from({ length: 5 }, (_, i) => (
-                      <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${i < getSkillLevelBullets(skill.level || 'Novice') ? 'bg-black' : 'bg-gray-300'}`} />
+                      <div key={i} className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${i < getSkillLevelBullets(skill.level || 'Novice') ? 'bg-black' : 'bg-gray-300'}`} style={{fontFamily: 'sans-serif'}} />
                     ))}
                   </div>
                 )}
@@ -139,7 +156,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {/* Experience */}
       <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">PROFESSIONAL EXPERIENCE</h2>
+            <h2 className="text-lg font-semibold italic" style={{color: '#383741'}}>PROFESSIONAL EXPERIENCE</h2>
           </div>
           <div className="space-y-4">
             {(experiences.length > 0 ? experiences : [{ id: -1, jobTitle: 'Job Title', company: 'Company', location: 'Location', startDate: '2017', endDate: '2020', description: 'Responsibilities\nResponsibilities' }] as any[]).map((exp: any) => (
@@ -153,7 +170,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
                   {((exp.description && exp.description.trim() !== '') ? exp.description : 'Responsibilities\nResponsibilities').split('\n').map((line: string, i: number) => (
                     <div key={i} className="flex items-start gap-2">
                       <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
-                      <p className="break-words leading-relaxed min-w-0">{line}</p>
+                      <p className="break-words leading-relaxed min-w-0 text-[#383741]">{line}</p>
                     </div>
                   ))}
                 </div>
@@ -165,7 +182,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {/* Education */}
       <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">EDUCATION</h2>
+            <h2 className="text-lg font-semibold italic" style={{color: '#383741'}}>EDUCATION</h2>
           </div>
           <div className="space-y-4">
             {(education.length > 0 ? education : [{ id: -1, degree: 'Degree in Field of study', school: 'School Name', location: 'Location', startDate: '2017', endDate: '2020' }] as any[]).map((edu: any) => (
@@ -181,7 +198,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
                     {edu.description.trim() !== '' ? (
                       <div className="flex items-start gap-2">
                         <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
-                        <p className="break-words min-w-0">{edu.description.trim()}</p>
+                        <p className="break-words text-[#383741] min-w-0">{edu.description.trim()}</p>
                       </div>
                     ) : null}
                   </div>
@@ -195,24 +212,24 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {((languages && languages.length > 0) || (certifications && certifications.length > 0) || (awards && awards.length > 0) || (hobbies && hobbies.length > 0)) && (
         <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">ADDITIONAL INFORMATION</h2>
+            <h2 className="text-lg font-semibold italic" style={{color: '#383741'}}>ADDITIONAL INFORMATION</h2>
           </div>
           <div className="space-y-3">
             {/* Languages */}
             {languages && languages.length > 0 && (
-              <div>
-                <span className="text-sm text-black">• <span className="font-semibold">Languages:</span> </span>
-                <span className="text-sm text-black">
-                  {languages.map(lang => lang.name).join(', ')}
+              <div className="flex flex-wrap items-start gap-1">
+                <span className="text-sm text-black flex-shrink-0">• <span className="font-semibold">Languages:</span> </span>
+                <span className="text-sm text-[#383741] break-all min-w-0 flex-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
+                  {languages.map(lang => lang.proficiency ? `${lang.name} (${lang.proficiency})` : lang.name).join(', ')}
                 </span>
               </div>
             )}
 
             {/* Certifications */}
             {certifications && certifications.length > 0 && (
-              <div>
-                <span className="text-sm text-black">• <span className="font-semibold">Certifications:</span> </span>
-                <span className="text-sm text-black">
+              <div className="flex flex-wrap items-start gap-1">
+                <span className="text-sm text-black flex-shrink-0">• <span className="font-semibold">Certifications:</span> </span>
+                <span className="text-sm text-[#383741] break-all min-w-0 flex-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
                   {certifications.map(cert => cert.title).join(', ')}
                 </span>
               </div>
@@ -220,9 +237,9 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
 
             {/* Awards */}
             {awards && awards.length > 0 && (
-              <div>
-                <span className="text-sm text-black">• <span className="font-semibold">Awards/Activities:</span> </span>
-                <span className="text-sm text-black">
+              <div className="flex flex-wrap items-start gap-1">
+                <span className="text-sm text-black flex-shrink-0">• <span className="font-semibold">Awards/Activities:</span> </span>
+                <span className="text-sm text-[#383741] break-all min-w-0 flex-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
                   {awards.map(award => award.title).join(', ')}
                 </span>
               </div>
@@ -230,9 +247,9 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
 
             {/* Hobbies */}
             {hobbies && hobbies.length > 0 && (
-              <div>
-                <span className="text-sm text-black">• <span className="font-semibold">Hobbies:</span> </span>
-                <span className="text-sm text-black">
+              <div className="flex flex-wrap items-start gap-1">
+                <span className="text-sm text-black flex-shrink-0">• <span className="font-semibold">Hobbies:</span> </span>
+                <span className="text-sm text-[#383741] break-all min-w-0 flex-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
                   {hobbies.map(hobby => hobby.name).join(', ')}
                 </span>
               </div>
@@ -245,7 +262,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {references && references.length > 0 && (
         <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic text-black">REFERENCES</h2>
+            <h2 className="text-lg font-semibold italic text-[#383741]">REFERENCES</h2>
           </div>
           <div className="space-y-2">
             {references.map((ref) => (
@@ -266,12 +283,12 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
         <div className="space-y-6">
           {customSections.map((custom) => (
             <div key={custom.id}>
-              <div className="bg-gray-200 px-4 py-2 mb-3">
-                <h2 className="text-lg font-bold italic text-black">
+              <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
+                <h2 className="text-lg font-semibold italic text-[#383741] break-all min-w-0" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
                   {custom.title.toUpperCase()}
                 </h2>
               </div>
-              <p className="text-sm text-black whitespace-pre-line">
+              <p className="text-sm text-[#383741] whitespace-pre-line break-all min-w-0" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
                 {custom.content}
               </p>
             </div>
