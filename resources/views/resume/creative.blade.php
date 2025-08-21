@@ -33,7 +33,7 @@
             display: table;
             width: 100%;
             table-layout: fixed;
-            margin-bottom: 24px; /* Reduced margin */
+            margin-bottom: 24px; 
         }
 
         .header-left {
@@ -42,7 +42,7 @@
             color: white;
             padding: 32px;
             vertical-align: middle;
-            width: 60%;
+            width: 53%;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -68,13 +68,16 @@
             background: white;
             padding: 20px 32px;
             vertical-align: middle;
-            width: 40%;
+            width: 47%;
         }
 
         .contact-item {
             margin-bottom: 16px;
             position: relative;
-            padding-left: 55px;
+            padding-left: 60px;
+            display: flex;
+            align-items: center; /* Back to center for proper alignment */
+            min-height: 45px;
         }
 
         .contact-item:last-child {
@@ -84,7 +87,7 @@
         .contact-icon {
             position: absolute;
             left: 0;
-            top: 0;
+            top: 0; /* Keep at top for consistent positioning */
             width: 45px;
             height: 45px;
             border: 1px solid #000;
@@ -95,6 +98,7 @@
             font-size: 18px;
             font-weight: normal;
             color: #000;
+            flex-shrink: 0;
         }
 
         .contact-icon.phone::before {
@@ -104,6 +108,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
+            line-height: 1; /* Remove extra line height */
         }
 
         .contact-icon.email::before {
@@ -127,7 +132,14 @@
         .contact-text {
             font-size: 14px;
             color: #000;
-            line-height: 30px; 
+            line-height: 1.4;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            hyphens: auto;
+            flex: 1;
+            min-width: 0;
+            margin: 0;
+            /* Removed padding-top to use flexbox centering instead */
         }
 
         /* Main Content - Improved spacing */
@@ -311,7 +323,7 @@
             line-height: 1.5;
         }
 
-        /* Skills - Responsive grid */
+        /* Skills - Updated to match React component behavior */
         .skills-grid {
             display: table;
             width: 100%;
@@ -370,6 +382,30 @@
             background-color: #000;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+        }
+
+        /* Skills without level display - Updated to match React grid layout */
+        .skills-simple-grid {
+            display: table;
+            width: 100%;
+        }
+
+        .skills-simple-row {
+            display: table-row;
+        }
+
+        .skills-simple-item {
+            display: table-cell;
+            width: 50%;
+            padding-right: 32px;
+            padding-bottom: 4px;
+            vertical-align: top;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .skills-simple-item:last-child {
+            padding-right: 0;
         }
 
         /* Additional Sections - More compact */
@@ -600,6 +636,12 @@
             .header-section {
                 margin-bottom: 16px !important;
             }
+
+            .contact-text {
+                word-break: break-word !important;
+                overflow-wrap: break-word !important;
+                hyphens: auto !important;
+            }
         }
 
         /* Media queries for different content scenarios */
@@ -662,7 +704,7 @@
         {{-- Main Content --}}
         <div class="main-content">
             {{-- About Me / Summary --}}
-            @if (!empty($resume['summary']))
+            @if (!empty($resume['summary']) && trim($resume['summary']) !== '')
                 <div class="content-section compact">
                     <div class="section-title">
                         <h2>ABOUT ME</h2>
@@ -674,21 +716,41 @@
             @endif
 
             {{-- Experience --}}
-            @if (!empty($resume['experiences']) && is_array($resume['experiences']))
+            @php
+                $validExperiences = [];
+                if (!empty($resume['experiences']) && is_array($resume['experiences'])) {
+                    foreach ($resume['experiences'] as $exp) {
+                        // Check if experience has any meaningful content
+                        if (!empty($exp) && (
+                            !empty($exp['company'] ?? '') ||
+                            !empty($exp['jobTitle'] ?? '') ||
+                            !empty($exp['description'] ?? '') ||
+                            !empty($exp['startDate'] ?? '') ||
+                            !empty($exp['endDate'] ?? '')
+                        )) {
+                            $validExperiences[] = $exp;
+                        }
+                    }
+                }
+            @endphp
+
+            @if (!empty($validExperiences))
                 @php
-                    $expClass = count($resume['experiences']) === 1 ? 'experience-single' : '';
-                    $sectionClass = count($resume['experiences']) === 1 ? 'compact' : 'standard';
+                    $expClass = count($validExperiences) === 1 ? 'experience-single' : '';
+                    $sectionClass = count($validExperiences) === 1 ? 'compact' : 'standard';
                 @endphp
                 <div class="content-section {{ $sectionClass }}">
                     <div class="section-title">
                         <h2>EXPERIENCE</h2>
                     </div>
                     <div class="section-content {{ $expClass }}">
-                        @foreach ($resume['experiences'] as $exp)
+                        @foreach ($validExperiences as $exp)
                             <div class="experience-item">
                                 <div class="experience-header">
-                                    <h3>{{ $exp['company'] ?? '' }} {{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }}</h3>
-                                    <p class="experience-title">{{ $exp['jobTitle'] ?? '' }}</p>
+                                    <h3>{{ $exp['company'] ?? '' }} {{ $exp['startDate'] ?? '' }}{{ ($exp['startDate'] ?? '') && ($exp['endDate'] ?? '') ? ' - ' : '' }}{{ $exp['endDate'] ?? '' }}</h3>
+                                    @if (!empty($exp['jobTitle']))
+                                        <p class="experience-title">{{ $exp['jobTitle'] }}</p>
+                                    @endif
                                 </div>
                                 @if (!empty($exp['location']))
                                     <p class="experience-title" style="color:#666; font-style: italic; margin-top:-4px;">{{ $exp['location'] }}</p>
@@ -703,72 +765,112 @@
             @endif
 
             {{-- Education --}}
-            @if (!empty($resume['education']) && is_array($resume['education']) && count($resume['education']) > 0)
+            @php
+                $validEducation = [];
+                if (!empty($resume['education']) && is_array($resume['education'])) {
+                    foreach ($resume['education'] as $edu) {
+                        // Check if education has any meaningful content
+                        if (!empty($edu) && (
+                            !empty($edu['school'] ?? '') ||
+                            !empty($edu['degree'] ?? '') ||
+                            !empty($edu['description'] ?? '') ||
+                            !empty($edu['startDate'] ?? '') ||
+                            !empty($edu['endDate'] ?? '')
+                        )) {
+                            $validEducation[] = $edu;
+                        }
+                    }
+                }
+            @endphp
+
+            @if (!empty($validEducation))
                 @php
-                    $eduClass = count($resume['education']) === 1 ? 'education-single' : '';
-                    $sectionClass = count($resume['education']) === 1 ? 'compact' : 'standard';
+                    $eduClass = count($validEducation) === 1 ? 'education-single' : '';
+                    $sectionClass = count($validEducation) === 1 ? 'compact' : 'standard';
                 @endphp
                 <div class="content-section {{ $sectionClass }}">
                     <div class="section-title">
                         <h2>EDUCATION</h2>
                     </div>
                     <div class="section-content {{ $eduClass }}">
-                        @foreach ($resume['education'] as $edu)
-                            @if (!empty($edu))
-                                <div class="education-item">
-                                    <div class="education-left">
-                                        <p class="education-date">{{ $edu['startDate'] ?? '' }} - {{ $edu['endDate'] ?? '' }}</p>
+                        @foreach ($validEducation as $edu)
+                            <div class="education-item">
+                                <div class="education-left">
+                                    @if (!empty($edu['startDate']) || !empty($edu['endDate']))
+                                        <p class="education-date">{{ $edu['startDate'] ?? '' }}{{ ($edu['startDate'] ?? '') && ($edu['endDate'] ?? '') ? ' - ' : '' }}{{ $edu['endDate'] ?? '' }}</p>
+                                    @endif
+                                    @if (!empty($edu['school']) || !empty($edu['location']))
                                         <p class="education-school">
                                             {{ $edu['school'] ?? '' }}
-                                            @if (!empty($edu['location']))
+                                            @if (!empty($edu['location']) && !empty($edu['school']))
                                                 — {{ $edu['location'] }}
+                                            @elseif (!empty($edu['location']))
+                                                {{ $edu['location'] }}
                                             @endif
                                         </p>
-                                        <h4 class="education-degree">{{ $edu['degree'] ?? '' }}</h4>
-                                    </div>
-                                    <div class="education-right">
-                                        @if (!empty($edu['description']))
-                                            <p class="education-description">{{ $edu['description'] }}</p>
-                                        @endif
-                                    </div>
+                                    @endif
+                                    @if (!empty($edu['degree']))
+                                        <h4 class="education-degree">{{ $edu['degree'] }}</h4>
+                                    @endif
                                 </div>
-                            @endif
+                                <div class="education-right">
+                                    @if (!empty($edu['description']))
+                                        <p class="education-description">{{ $edu['description'] }}</p>
+                                    @endif
+                                </div>
+                            </div>
                         @endforeach
                     </div>
                 </div>
             @endif
 
-            {{-- Skills --}}
-            @if (!empty($resume['skills']) && is_array($resume['skills']))
+            {{-- Skills - Updated to match React component --}}
+            @php
+                $validSkills = [];
+                if (!empty($resume['skills']) && is_array($resume['skills'])) {
+                    foreach ($resume['skills'] as $skill) {
+                        // Check if skill has a name
+                        if (!empty($skill['name'] ?? '') && trim($skill['name']) !== '') {
+                            $validSkills[] = $skill;
+                        }
+                    }
+                }
+                
+                // Check if showExperienceLevel is enabled
+                $showExperienceLevel = $resume['showExperienceLevel'] ?? false;
+            @endphp
+
+            @if (!empty($validSkills))
                 @php
-                    $sectionClass = count($resume['skills']) <= 4 ? 'compact' : 'standard';
+                    $sectionClass = count($validSkills) <= 4 ? 'compact' : 'standard';
                 @endphp
                 <div class="content-section {{ $sectionClass }}">
                     <div class="section-title">
                         <h2>SKILLS</h2>
                     </div>
                     <div class="section-content">
-                        <div class="skills-grid">
-                            @php
-                                $skillChunks = array_chunk($resume['skills'], 2);
-                            @endphp
-                            @foreach ($skillChunks as $skillPair)
-                                <div class="skills-row">
-                                    @foreach ($skillPair as $skill)
-                                        <div class="skill-item">
-                                            <div class="skill-content">
-                                                <span class="skill-name">{{ $skill['name'] ?? '' }}</span>
-                                                @if (!empty($skill['level']))
+                        @if ($showExperienceLevel)
+                            {{-- Grid layout with skill level bullets --}}
+                            <div class="skills-grid">
+                                @php
+                                    $skillChunks = array_chunk($validSkills, 2);
+                                @endphp
+                                @foreach ($skillChunks as $skillPair)
+                                    <div class="skills-row">
+                                        @foreach ($skillPair as $skill)
+                                            <div class="skill-item">
+                                                <div class="skill-content">
+                                                    <span class="skill-name">{{ $skill['name'] }}</span>
                                                     <div class="skill-bullets">
                                                         @php
                                                             $level = strtolower(trim($skill['level'] ?? ''));
-                                                            $bulletCount = 3;
+                                                            $bulletCount = 1; // default
                                                             
                                                             if (str_contains($level, 'expert')) {
                                                                 $bulletCount = 5;
-                                                            } elseif (str_contains($level, 'experienced') || str_contains($level, 'advanced')) {
+                                                            } elseif (str_contains($level, 'experienced')) {
                                                                 $bulletCount = 4;
-                                                            } elseif (str_contains($level, 'intermediate')) {
+                                                            } elseif (str_contains($level, 'skillful')) {
                                                                 $bulletCount = 3;
                                                             } elseif (str_contains($level, 'beginner')) {
                                                                 $bulletCount = 2;
@@ -780,17 +882,37 @@
                                                             <div class="skill-bullet {{ $i <= $bulletCount ? 'active' : '' }}"></div>
                                                         @endfor
                                                     </div>
-                                                @endif
+                                                </div>
                                             </div>
-                                        </div>
-                                    @endforeach
-                                    {{-- Fill empty cell if odd number of skills --}}
-                                    @if (count($skillPair) == 1)
-                                        <div class="skill-item"></div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
+                                        @endforeach
+                                        {{-- Fill empty cell if odd number of skills --}}
+                                        @if (count($skillPair) == 1)
+                                            <div class="skill-item"></div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            {{-- Simple grid layout without level indicators --}}
+                            <div class="skills-simple-grid">
+                                @php
+                                    $skillChunks = array_chunk($validSkills, 2);
+                                @endphp
+                                @foreach ($skillChunks as $skillPair)
+                                    <div class="skills-simple-row">
+                                        @foreach ($skillPair as $skill)
+                                            <div class="skills-simple-item">
+                                                {{ $skill['name'] }}
+                                            </div>
+                                        @endforeach
+                                        {{-- Fill empty cell if odd number of skills --}}
+                                        @if (count($skillPair) == 1)
+                                            <div class="skills-simple-item"></div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -799,23 +921,85 @@
             @php
                 $additionalSections = [];
                 
+                // Languages
                 if (!empty($resume['languages']) && is_array($resume['languages'])) {
-                    $additionalSections[] = ['id' => 'languages', 'title' => 'Languages', 'content' => $resume['languages']];
+                    $validLanguages = [];
+                    foreach ($resume['languages'] as $lang) {
+                        if (!empty($lang['name'] ?? '') && trim($lang['name']) !== '') {
+                            $validLanguages[] = $lang;
+                        }
+                    }
+                    if (!empty($validLanguages)) {
+                        $additionalSections[] = ['id' => 'languages', 'title' => 'Languages', 'content' => $validLanguages];
+                    }
                 }
+                
+                // Certifications
                 if (!empty($resume['certifications']) && is_array($resume['certifications'])) {
-                    $additionalSections[] = ['id' => 'certifications', 'title' => 'Certifications', 'content' => $resume['certifications']];
+                    $validCertifications = [];
+                    foreach ($resume['certifications'] as $cert) {
+                        $certName = is_array($cert) ? ($cert['title'] ?? $cert['name'] ?? '') : $cert;
+                        if (!empty($certName) && trim($certName) !== '') {
+                            $validCertifications[] = $cert;
+                        }
+                    }
+                    if (!empty($validCertifications)) {
+                        $additionalSections[] = ['id' => 'certifications', 'title' => 'Certifications', 'content' => $validCertifications];
+                    }
                 }
+                
+                // Awards
                 if (!empty($resume['awards']) && is_array($resume['awards'])) {
-                    $additionalSections[] = ['id' => 'awards', 'title' => 'Awards', 'content' => $resume['awards']];
+                    $validAwards = [];
+                    foreach ($resume['awards'] as $award) {
+                        $awardName = is_array($award) ? ($award['title'] ?? $award['name'] ?? '') : $award;
+                        if (!empty($awardName) && trim($awardName) !== '') {
+                            $validAwards[] = $award;
+                        }
+                    }
+                    if (!empty($validAwards)) {
+                        $additionalSections[] = ['id' => 'awards', 'title' => 'Awards', 'content' => $validAwards];
+                    }
                 }
+                
+                // Websites
                 if (!empty($resume['websites']) && is_array($resume['websites'])) {
-                    $additionalSections[] = ['id' => 'websites', 'title' => 'Websites', 'content' => $resume['websites']];
+                    $validWebsites = [];
+                    foreach ($resume['websites'] as $site) {
+                        if (!empty($site['url'] ?? '') && trim($site['url']) !== '') {
+                            $validWebsites[] = $site;
+                        }
+                    }
+                    if (!empty($validWebsites)) {
+                        $additionalSections[] = ['id' => 'websites', 'title' => 'Websites', 'content' => $validWebsites];
+                    }
                 }
+                
+                // Hobbies/Interests
                 if (!empty($resume['hobbies']) && is_array($resume['hobbies'])) {
-                    $additionalSections[] = ['id' => 'hobbies', 'title' => 'Interests', 'content' => $resume['hobbies']];
+                    $validHobbies = [];
+                    foreach ($resume['hobbies'] as $hobby) {
+                        $hobbyName = is_array($hobby) ? ($hobby['title'] ?? $hobby['name'] ?? '') : $hobby;
+                        if (!empty($hobbyName) && trim($hobbyName) !== '') {
+                            $validHobbies[] = $hobby;
+                        }
+                    }
+                    if (!empty($validHobbies)) {
+                        $additionalSections[] = ['id' => 'hobbies', 'title' => 'Interests', 'content' => $validHobbies];
+                    }
                 }
+                
+                // References
                 if (!empty($resume['references']) && is_array($resume['references'])) {
-                    $additionalSections[] = ['id' => 'references', 'title' => 'References', 'content' => $resume['references']];
+                    $validReferences = [];
+                    foreach ($resume['references'] as $ref) {
+                        if (!empty($ref['name'] ?? '') && trim($ref['name']) !== '') {
+                            $validReferences[] = $ref;
+                        }
+                    }
+                    if (!empty($validReferences)) {
+                        $additionalSections[] = ['id' => 'references', 'title' => 'References', 'content' => $validReferences];
+                    }
                 }
                 
                 $sectionCount = count($additionalSections);
@@ -836,7 +1020,7 @@
                                         @if ($section['id'] == 'languages')
                                             @foreach ($section['content'] as $lang)
                                                 <div class="language-item">
-                                                    <span class="language-name">{{ $lang['name'] ?? '' }}</span>
+                                                    <span class="language-name">{{ $lang['name'] }}</span>
                                                     <span class="language-spacing"></span>
                                                     <div class="language-bars">
                                                         @php
@@ -844,10 +1028,12 @@
                                                             $barCount = 3;
                                                             
                                                             if (str_contains($proficiency, 'beginner') || str_contains($proficiency, 'basic')) {
-                                                                $barCount = 2;
+                                                                $barCount = 1;
                                                             } elseif (str_contains($proficiency, 'intermediate')) {
+                                                                $barCount = 2;
+                                                            } elseif (str_contains($proficiency, 'advanced')) {
                                                                 $barCount = 3;
-                                                            } elseif (str_contains($proficiency, 'advanced') || str_contains($proficiency, 'fluent')) {
+                                                            } elseif (str_contains($proficiency, 'fluent')) {
                                                                 $barCount = 4;
                                                             } elseif (str_contains($proficiency, 'native') || str_contains($proficiency, 'expert')) {
                                                                 $barCount = 5;
@@ -863,21 +1049,22 @@
                                         @elseif ($section['id'] == 'websites')
                                             @foreach ($section['content'] as $site)
                                                 <div class="website-item">
-                                                    <div class="website-label">{{ $site['label'] ?? '' }}</div>
-                                                    <a href="{{ $site['url'] ?? '' }}" class="website-url">{{ $site['url'] ?? '' }}</a>
+                                                    @if (!empty($site['label']))
+                                                        <div class="website-label">{{ $site['label'] }}</div>
+                                                    @endif
+                                                    <a href="{{ $site['url'] }}" class="website-url">{{ $site['url'] }}</a>
                                                 </div>
                                             @endforeach
                                             
                                         @elseif ($section['id'] == 'references')
                                             @foreach ($section['content'] as $ref)
                                                 <div class="reference-item">
-                                                    <div class="reference-name">{{ $ref['name'] ?? '' }}</div>
+                                                    <div class="reference-name">{{ $ref['name'] }}</div>
                                                     @if (!empty($ref['relationship']))
                                                         <div class="reference-relationship">{{ $ref['relationship'] }}</div>
                                                     @endif
                                                     @if (!empty($ref['contactInfo']))
                                                         <div class="reference-contact">
-                                                            <div class="label">Phone</div>
                                                             <div>{{ $ref['contactInfo'] }}</div>
                                                         </div>
                                                     @endif
@@ -886,11 +1073,9 @@
                                             
                                         @else
                                             <ul class="bullet-list">
-                                                @if(is_array($section['content']))
-                                                    @foreach ($section['content'] as $item)
-                                                        <li>{{ is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item }}</li>
-                                                    @endforeach
-                                                @endif
+                                                @foreach ($section['content'] as $item)
+                                                    <li>{{ is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item }}</li>
+                                                @endforeach
                                             </ul>
                                         @endif
                                     </div>
@@ -907,14 +1092,26 @@
             @endif
 
             {{-- Custom Sections --}}
-            @if (!empty($resume['customSections']) && is_array($resume['customSections']))
-                @foreach ($resume['customSections'] as $custom)
+            @php
+                $validCustomSections = [];
+                if (!empty($resume['customSections']) && is_array($resume['customSections'])) {
+                    foreach ($resume['customSections'] as $custom) {
+                        if (!empty($custom['title'] ?? '') && !empty($custom['content'] ?? '') && 
+                            trim($custom['title']) !== '' && trim($custom['content']) !== '') {
+                            $validCustomSections[] = $custom;
+                        }
+                    }
+                }
+            @endphp
+
+            @if (!empty($validCustomSections))
+                @foreach ($validCustomSections as $custom)
                     <div class="content-section compact">
                         <div class="section-title">
-                            <h2>{{ strtoupper($custom['title'] ?? '') }}</h2>
+                            <h2>{{ strtoupper($custom['title']) }}</h2>
                         </div>
                         <div class="section-content">
-                            <p class="custom-content">{{ $custom['content'] ?? '' }}</p>
+                            <p class="custom-content">{{ $custom['content'] }}</p>
                         </div>
                     </div>
                 @endforeach
