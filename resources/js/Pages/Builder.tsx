@@ -3,8 +3,9 @@ import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
 import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera, User, Briefcase, GraduationCap, Code, FileText, Flag } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
-import { SectionStepper } from '@/Components/Builder/SectionStepper';
-import { motion } from "framer-motion";
+
+import VerticalSectionNav from '@/Components/Builder/VerticalSectionNav';
+import { motion, LayoutGroup } from "framer-motion";
 import { debounce } from "lodash";
 import { ResumeData, Language, Certification, Award, Website, Reference, Hobby, CustomSection } from '@/types/resume';
 
@@ -251,7 +252,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 <div>
                   <label className="block text-gray-700 mb-1">Job Title</label>
                   <input 
-                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_jobTitle`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`exp_${exp.id}_jobTitle`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={exp.jobTitle} 
                     onChange={e => updateExperience(exp.id, 'jobTitle', e.target.value)} 
                     placeholder="Software Developer" 
@@ -261,7 +262,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 <div>
                   <label className="block text-gray-700 mb-1">Employer</label>
                   <input 
-                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_employer`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`exp_${exp.id}_employer`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={exp.employer} 
                     onChange={e => updateExperience(exp.id, 'employer', e.target.value)} 
                     placeholder="ABC Company" 
@@ -273,7 +274,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 <div>
                   <label className="block text-gray-700 mb-1">Company</label>
                   <input 
-                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_company`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`exp_${exp.id}_company`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={exp.company} 
                     onChange={e => updateExperience(exp.id, 'company', e.target.value)} 
                     placeholder="ABC Corp" 
@@ -283,7 +284,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 <div>
                   <label className="block text-gray-700 mb-1">Start Date</label>
                   <input 
-                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_startDate`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`exp_${exp.id}_startDate`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={exp.startDate} 
                     onChange={e => updateExperience(exp.id, 'startDate', e.target.value)} 
                     placeholder="MM/YYYY" 
@@ -293,7 +294,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 <div>
                   <label className="block text-gray-700 mb-1">End Date</label>
                   <input 
-                    className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_endDate`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`exp_${exp.id}_endDate`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={exp.endDate} 
                     onChange={e => updateExperience(exp.id, 'endDate', e.target.value)} 
                     placeholder="MM/YYYY" 
@@ -304,7 +305,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
               <div>
                 <label className="block text-gray-700 mb-1">Description</label>
                 <textarea 
-                  className={`w-full border rounded-md p-2 ${errors[`exp_${exp.id}_description`] ? 'border-red-500' : ''}`}
+                  className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`exp_${exp.id}_description`] ? 'border-red-500' : 'border-slate-300'}`}
                   value={exp.description} 
                   onChange={e => updateExperience(exp.id, 'description', e.target.value)} 
                   placeholder="Sample Text" 
@@ -418,7 +419,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 <div>
                   <label className="block text-gray-700 mb-1">School Name</label>
                   <input
-                    className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_school`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`edu_${edu.id}_school`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={edu.school}
                     onChange={e => updateEducation(edu.id, 'school', e.target.value)}
                     placeholder="UCLA"
@@ -428,7 +429,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 <div>
                   <label className="block text-gray-700 mb-1">Location</label>
                   <input
-                    className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_location`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`edu_${edu.id}_location`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={edu.location}
                     onChange={e => updateEducation(edu.id, 'location', e.target.value)}
                     placeholder="New York"
@@ -441,7 +442,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 <div>
                   <label className="block text-gray-700 mb-1">Degree</label>
                   <input
-                    className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_degree`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`edu_${edu.id}_degree`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={edu.degree}
                     onChange={e => updateEducation(edu.id, 'degree', e.target.value)}
                     placeholder="Bachelor of Science in Information Tech"
@@ -451,7 +452,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 <div>
                   <label className="block text-gray-700 mb-1">Start Date</label>
                   <input
-                    className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_startDate`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`edu_${edu.id}_startDate`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={edu.startDate}
                     onChange={e => updateEducation(edu.id, 'startDate', e.target.value)}
                     placeholder="MM/YYYY"
@@ -461,7 +462,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 <div>
                   <label className="block text-gray-700 mb-1">End Date</label>
                   <input
-                    className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_endDate`] ? 'border-red-500' : ''}`}
+                    className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`edu_${edu.id}_endDate`] ? 'border-red-500' : 'border-slate-300'}`}
                     value={edu.endDate}
                     onChange={e => updateEducation(edu.id, 'endDate', e.target.value)}
                     placeholder="MM/YYYY"
@@ -473,7 +474,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
               <div>
                 <label className="block text-gray-700 mb-1">Description</label>
                 <textarea
-                  className={`w-full border rounded-md p-2 ${errors[`edu_${edu.id}_description`] ? 'border-red-500' : ''}`}
+                  className={`w-full border rounded-md p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors[`edu_${edu.id}_description`] ? 'border-red-500' : 'border-slate-300'}`}
                   value={edu.description}
                   onChange={e => updateEducation(edu.id, 'description', e.target.value)}
                   placeholder="Sample Text"
@@ -656,7 +657,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({ skills, setSkills, showEx
                   updateSkill(skill.id, "name", e.target.value)
                 }
                 placeholder="Enter skill"
-                className="w-full h-12 p-2 border border-gray-200 bg-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full h-12 p-2 border border-slate-300 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
               />
             </div>
             <SkillLevelSlider
@@ -767,7 +768,7 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
 
       <label className="block text-gray-700 mb-1">Professional Summary</label>
       <textarea
-        className={`w-full border rounded-md p-3 mb-4 ${errors.summary ? "border-red-500" : ""}`}
+        className={`w-full border rounded-md p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors.summary ? "border-red-500" : "border-slate-300"}`}
         value={summary}
         onChange={e => setSummary(e.target.value)}
         placeholder="Write your summary here..."
@@ -896,7 +897,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setCertifications(newCerts);
                   }}
                   placeholder="Enter certification title"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <button
                   onClick={() => setCertifications(certifications.filter((_, i) => i !== index))}
@@ -953,7 +954,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setLanguages(newLangs);
                   }}
                   placeholder="Language"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <select
                   value={lang.proficiency || ''}
@@ -962,7 +963,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     newLangs[index].proficiency = e.target.value;
                     setLanguages(newLangs);
                   }}
-                  className="border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 >
                   <option value="">Select level</option>
                   <option value="Native">Native</option>
@@ -1026,7 +1027,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setAwards(newAwards);
                   }}
                   placeholder="Enter award title"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <button
                   onClick={() => setAwards(awards.filter((_, i) => i !== index))}
@@ -1083,7 +1084,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setWebsites(newSites);
                   }}
                   placeholder="Label (e.g., Portfolio, LinkedIn)"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <input
                   type="url"
@@ -1094,7 +1095,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setWebsites(newSites);
                   }}
                   placeholder="URL"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <button
                   onClick={() => setWebsites(websites.filter((_, i) => i !== index))}
@@ -1151,7 +1152,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setReferences(newRefs);
                   }}
                   placeholder="Reference name"
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <input
                   type="text"
@@ -1162,7 +1163,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setReferences(newRefs);
                   }}
                   placeholder="Relationship (e.g., Manager, Colleague)"
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <input
                   type="text"
@@ -1173,7 +1174,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setReferences(newRefs);
                   }}
                   placeholder="Contact info (email, phone)"
-                  className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="w-full border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <button
                   onClick={() => setReferences(references.filter((_, i) => i !== index))}
@@ -1230,7 +1231,7 @@ const FinalizeSection: React.FC<FinalizeSectionProps> = ({
                     setHobbies(newHobbies);
                   }}
                   placeholder="Enter hobby or interest"
-                  className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                  className="flex-1 border border-slate-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out"
                 />
                 <button
                   onClick={() => setHobbies(hobbies.filter((_, i) => i !== index))}
@@ -1426,7 +1427,7 @@ const Builder: React.FC<BuilderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   
   // Preview zoom and scroll states
-  const [zoomLevel, setZoomLevel] = useState(0.6); // Start with a smaller zoom to see full resume
+  const [zoomLevel, setZoomLevel] = useState(1); // Default to 100%
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
 
@@ -1445,33 +1446,9 @@ const Builder: React.FC<BuilderProps> = ({
     setTimeout(() => setIsZooming(false), 300);
   };
   
-  const handleZoomReset = () => {
-    setIsZooming(true);
-    setZoomLevel(1);
-    setTimeout(() => setIsZooming(false), 300);
-  };
+  // Removed reset/fit handlers (controls were removed). Keep keyboard hooks guarded below.
   
-  const handleFitToScreen = () => {
-    setIsZooming(true);
-    // Calculate fit-to-screen zoom level based on available container size
-    const containerHeight = isFullscreen ? window.innerHeight - 60 : 600; // Account for control panel height
-    const containerWidth = isFullscreen ? window.innerWidth - 40 : 400;
-    const resumeHeight = 297 * 3.78; // A4 height in pixels
-    const resumeWidth = 210 * 3.78; // A4 width in pixels
-    
-    // Calculate zoom to fit both width and height with padding
-    const heightFit = containerHeight / resumeHeight;
-    const widthFit = containerWidth / resumeWidth;
-    const fitZoom = Math.min(heightFit, widthFit);
-    const finalZoom = Math.max(fitZoom * 0.85, 0.25);
-    
-    setZoomLevel(finalZoom); // 85% of fit size for comfortable padding
-    setTimeout(() => setIsZooming(false), 300);
-  };
-  
-  const toggleFullscreen = () => {
-    setIsFullscreen(prev => !prev);
-  };
+  const toggleFullscreen = () => setIsFullscreen(prev => !prev);
   
   // Keyboard shortcuts for zoom controls
   useEffect(() => {
@@ -1488,8 +1465,8 @@ const Builder: React.FC<BuilderProps> = ({
             handleZoomOut();
             break;
           case '0':
+            // Reset control removed; ignore
             e.preventDefault();
-            handleZoomReset();
             break;
         }
       }
@@ -2099,8 +2076,6 @@ const Builder: React.FC<BuilderProps> = ({
 
 
   const handleNext = () => {
-    console.log('handleNext called');
-    
     // Get validation result and error count directly
     const newErrors: Record<string, string> = {};
     
@@ -2293,20 +2268,24 @@ const Builder: React.FC<BuilderProps> = ({
       )}
 
       {/* Main Content */}
-        <div className="mt-3 ml-2">
-          <Link href="/choose-resume-maker" className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 bg-white/90 hover:bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-semibold">Back to Make Option</span>
-            <span className="ml-2 hidden sm:inline-flex items-center text-xs text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Esc</span>
-          </Link>
-        </div>
       {!isLoading && (
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
-          {/* Left Side */}
-          <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-4">
-            <div className="w-full max-w-2xl bg-white rounded-xl shadow-lg p-8 overflow-auto">
-              {/* Section Stepper */}
-              {(() => {
+        <LayoutGroup>
+        <div className="flex flex-col md:flex-row flex-1 overflow-visible items-start gap-0 mt-16 md:mt-20">
+          {/* Sidebar + Form (Left) */}
+          <div className="w-full md:w-5/12 flex flex-col items-stretch md:-mr-5 ml-5 md:ml-10">
+            {/* Back Button - Positioned above the fields container */}
+            <div className="mb-3">
+              <Link href="/choose-resume-maker" className="inline-flex items-center gap-2 text-white hover:text-blue-100 bg-[#354eab]/90 hover:bg-[#354eab] backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 shadow-lg hover:shadow-xl transition-all duration-200 group">
+                <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                <span className="text-sm font-semibold">Back to Make Option</span>
+                <span className="ml-2 hidden sm:inline-flex items-center text-xs text-white/70 bg-white/20 rounded-lg px-2 py-1 font-medium">Esc</span>
+              </Link>
+            </div>
+            
+            <div className="flex w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-[#354eab]">
+            <VerticalSectionNav
+              currentSection={currentStep.toString()}
+              sections={(() => {
                 const isContactsComplete = !!(
                   (contacts.firstName || '').trim() &&
                   (contacts.lastName || '').trim() &&
@@ -2332,44 +2311,49 @@ const Builder: React.FC<BuilderProps> = ({
                 );
                 const isSkillsComplete = skills.some(skill => (skill.name || '').trim());
                 const isSummaryComplete = !!(summary || '').trim();
-
-                return (
-                  <SectionStepper
-                    currentSection={currentStep.toString()}
-                    sections={[
-                      { id: '0', label: 'Contacts', icon: <User className="w-5 h-5" />, isCompleted: isContactsComplete },
-                      { id: '1', label: 'Experience', icon: <Briefcase className="w-5 h-5" />, isCompleted: isExperienceComplete },
-                      { id: '2', label: 'Education', icon: <GraduationCap className="w-5 h-5" />, isCompleted: isEducationComplete },
-                      { id: '3', label: 'Skills', icon: <Code className="w-5 h-5" />, isCompleted: isSkillsComplete },
-                      { id: '4', label: 'Summary', icon: <FileText className="w-5 h-5" />, isCompleted: isSummaryComplete },
-                      { id: '5', label: 'Finalize', icon: <Flag className="w-5 h-5" />, isCompleted: false },
-                    ]}
-                    onSectionChange={(id) => setCurrentStep(parseInt(id))}
-                  />
-                );
+                return [
+                  { id: '0', label: 'Contacts', icon: <User className="w-7 h-7 md:w-8 md:h-8" />, isCompleted: isContactsComplete },
+                  { id: '1', label: 'Experience', icon: <Briefcase className="w-7 h-7 md:w-8 md:h-8" />, isCompleted: isExperienceComplete },
+                  { id: '2', label: 'Education', icon: <GraduationCap className="w-7 h-7 md:w-8 md:h-8" />, isCompleted: isEducationComplete },
+                  { id: '3', label: 'Skills', icon: <Code className="w-7 h-7 md:w-8 md:h-8" />, isCompleted: isSkillsComplete },
+                  { id: '4', label: 'Summary', icon: <FileText className="w-7 h-7 md:w-8 md:h-8" />, isCompleted: isSummaryComplete },
+                  { id: '5', label: 'Finalize', icon: <Flag className="w-7 h-7 md:w-8 md:h-8" />, isCompleted: false },
+                ];
               })()}
-
+              onSectionChange={(id) => setCurrentStep(parseInt(id))}
+            />
+            <div className="flex-1 min-w-0 p-3 md:p-5 overflow-auto relative h-[68vh]">
+              {/* Removed active section chip overlay */}
               {/* Resume Score Display */}
               {currentStep === 5 && (
                 <ResumeScore resumeData={resumeData} />
               )}
-
-              {renderStepContent()}
+              <motion.div
+                key={currentStep}
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+              >
+                {renderStepContent()}
+              </motion.div>
             </div>
-
-            <div className="w-full max-w-2xl mt-2 bg-white p-4 rounded-xl shadow-md flex justify-between">
+            </div>
+            {/* External Navigation Buttons */}
+            <div className="mt-3 flex justify-between sm:justify-end gap-2 pr-2">
               {currentStep > 0 && (
-                <button
+                <motion.button
                   onClick={() => setCurrentStep((prev) => Math.max(prev - 1, 0))}
-                  className="bg-gray-100 hover:bg-gray-200 px-8 py-3 rounded-lg text-gray-700 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+                  className="bg-white text-[#354eab] border border-[#354eab]/40 hover:bg-[#354eab]/5 px-6 py-2.5 rounded-full font-semibold transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   <span className="text-lg">←</span>
                   Back
-                </button>
+                </motion.button>
               )}
-              {currentStep === 0 && <div></div>}
               {currentStep === steps.length - 1 ? (
-                <button
+                <motion.button
                   onClick={async () => {
                     if (!resumeId) {
                       // Try to create resume if it doesn't exist
@@ -2439,7 +2423,9 @@ const Builder: React.FC<BuilderProps> = ({
                     }
                   }}
                   disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 px-8 py-3 rounded-lg text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="bg-[#354eab]/90 hover:bg-[#354eab] px-7 py-2.5 rounded-full text-white font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 backdrop-blur-sm border border-white/20 group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {isLoading ? (
                     <>
@@ -2449,47 +2435,50 @@ const Builder: React.FC<BuilderProps> = ({
                   ) : (
                     <>
                       Next: Download
-                      <span className="text-lg">→</span>
+                      <span className="text-lg transition-transform group-hover:translate-x-1">→</span>
                     </>
                   )}
-                </button>
+                </motion.button>
               ) : (
-                <button
+                <motion.button
                   onClick={handleNext}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2"
+                  className="bg-[#354eab]/90 hover:bg-[#354eab] text-white px-7 py-2.5 rounded-full font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 flex items-center gap-2 backdrop-blur-sm border border-white/20 group"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   Next: {steps[currentStep + 1] || "Done"}
-                  <span className="text-lg">→</span>
-                </button>
+                  <span className="text-lg transition-transform group-hover:translate-x-1">→</span>
+                </motion.button>
               )}
-            </div>
+              </div>
           </div>
 
           {/* Right Panel - Clean Resume Preview */}
-          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-100' : 'lg:w-1/2 w-full'} ${isFullscreen ? 'p-0' : 'p-6'} flex flex-col`}>
+          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-100' : 'md:w-7/12 w-full'} p-0 flex flex-col h-[84vh]`}>
             
             {/* Compact Control Panel */}
-            <div className="flex-shrink-0 mb-3">
+            <div className="flex-shrink-0 -mt-6 md:-mt-8 mb-0 flex justify-center">
               {/* Unified Control Bar */}
               <motion.div
-                className="flex items-center justify-between bg-white/95 backdrop-blur-md border border-gray-100 rounded-xl px-4 py-2.5 shadow-lg shadow-gray-200/50 mx-4"
+                className="inline-flex items-center justify-between bg-white/80 transition-all duration-200 backdrop-blur-md border border-gray-200/70 rounded-full px-2.5 py-1.5 shadow-md"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
+                style={{ maxWidth: `${210 * 3.78}px`, width: '100%' }}
               >
                 {/* Left: Live Status */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-1.5">
                   <motion.div 
-                    className="w-2 h-2 bg-emerald-500 rounded-full"
+                    className="w-1.5 h-1.5 bg-emerald-500 rounded-full"
                     animate={{ 
                       scale: [1, 1.1, 1],
                       boxShadow: ["0 0 0 0 rgba(16, 185, 129, 0.4)", "0 0 0 3px rgba(16, 185, 129, 0.1)", "0 0 0 0 rgba(16, 185, 129, 0.4)"]
                     }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
-                  <span className="text-xs font-semibold text-gray-800">LIVE</span>
+                  <span className="text-[10px] font-semibold text-gray-700">LIVE</span>
                   <motion.div 
-                    className="flex items-center gap-1.5 ml-1"
+                    className="flex items-center gap-1 ml-1"
                     key={zoomLevel}
                     initial={{ scale: 0.95 }}
                     animate={{ scale: 1 }}
@@ -2498,7 +2487,7 @@ const Builder: React.FC<BuilderProps> = ({
                     <span className="text-xs font-mono font-bold text-slate-700" title={`Exact: ${zoomLevel.toFixed(2)}`}>
                       {Math.round(zoomLevel * 100)}%
                     </span>
-                    <div className="w-8 h-1 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="w-10 h-1 bg-gray-100 rounded-full overflow-hidden">
                       <motion.div 
                         className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
                         style={{ width: `${Math.min((zoomLevel / 2) * 100, 100)}%` }}
@@ -2509,79 +2498,43 @@ const Builder: React.FC<BuilderProps> = ({
                 </div>
 
                 {/* Right: Control Groups */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 ml-auto">
                   {/* Zoom Controls */}
-                  <div className="flex items-center bg-gray-50/50 rounded-lg overflow-hidden">
+                  <div className="flex items-center bg-white/60 backdrop-blur rounded-full overflow-hidden border border-gray-200/70 shadow-sm">
                     <motion.button
                       onClick={handleZoomOut}
                       disabled={zoomLevel <= 0.25}
-                      className="p-2 hover:bg-white/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
-                      title="Zoom Out (Ctrl -)"
+                      className="w-8 h-8 grid place-items-center rounded-full hover:bg-blue-500/10 hover:ring-1 hover:ring-blue-300/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
+                      title="Zoom Out"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <ZoomOut className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                      <ZoomOut className="w-4 h-4 text-slate-700 group-hover:text-blue-600 transition-colors" />
                     </motion.button>
                     <div className="w-px h-4 bg-gray-300"></div>
                     <motion.button
                       onClick={handleZoomIn}
                       disabled={zoomLevel >= 2}
-                      className="p-2 hover:bg-white/80 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
-                      title="Zoom In (Ctrl +)"
+                      className="w-8 h-8 grid place-items-center rounded-full hover:bg-blue-500/10 hover:ring-1 hover:ring-blue-300/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
+                      title="Zoom In"
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <ZoomIn className="w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-colors" />
+                      <ZoomIn className="w-4 h-4 text-slate-700 group-hover:text-blue-600 transition-colors" />
                     </motion.button>
                   </div>
 
-                  {/* View Controls */}
-                  <div className="flex items-center bg-gray-50/50 rounded-lg overflow-hidden">
-                    <motion.button
-                      onClick={handleFitToScreen}
-                      className="p-2 hover:bg-white/80 transition-all duration-200 group"
-                      title="Fit to Screen"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Square className="w-3.5 h-3.5 text-slate-600 group-hover:text-emerald-600 transition-colors" />
-                    </motion.button>
-                    <div className="w-px h-4 bg-gray-300"></div>
-                    <motion.button
-                      onClick={handleZoomReset}
-                      className="p-2 hover:bg-white/80 transition-all duration-200 group"
-                      title="Reset Zoom (100%)"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <RotateCcw className="w-3.5 h-3.5 text-slate-600 group-hover:text-amber-600 transition-colors" />
-                    </motion.button>
-                  </div>
+                  {/* View Controls removed by request */}
 
-                  {/* Fullscreen Control */}
-                  <div className="bg-gray-50/50 rounded-lg overflow-hidden">
-                    <motion.button
-                      onClick={toggleFullscreen}
-                      className="p-2 hover:bg-white/80 transition-all duration-200 group"
-                      title={isFullscreen ? "Exit Fullscreen (F11)" : "Fullscreen (F11)"}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      {isFullscreen ? (
-                        <Minimize2 className="w-3.5 h-3.5 text-slate-600 group-hover:text-red-600 transition-colors" />
-                      ) : (
-                        <Maximize2 className="w-3.5 h-3.5 text-slate-600 group-hover:text-violet-600 transition-colors" />
-                      )}
-                    </motion.button>
-                  </div>
+                  {/* Fullscreen Control removed by request */}
                 </div>
               </motion.div>
             </div>
 
             {/* Enhanced Preview Container */}
-            <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl relative border border-gray-200/50 shadow-inner mx-4">
+            <div className="flex-1 overflow-auto relative mx-0 h-[calc(84vh-3rem)]">
               {/* Aligned preview container */}
-              <div className="min-h-full flex justify-center py-6 px-4">
+              <div className="min-h-full flex justify-center py-0 px-0 mt-2 md:mt-1">
                 {/* Premium Resume Document */}
                 <motion.div 
                   className="bg-white shadow-2xl border border-gray-100 relative rounded-lg overflow-hidden"
@@ -2625,6 +2578,7 @@ const Builder: React.FC<BuilderProps> = ({
             )}
           </div>
         </div>
+        </LayoutGroup>
       )}
 
 
