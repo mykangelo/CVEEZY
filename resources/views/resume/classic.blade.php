@@ -257,45 +257,60 @@
 
 <div class="space-y-4 text-gray-800">
 
+
+
     {{-- Contact Info --}}
-    <div>
-        <h2 class="contact-name">
-            {{ $resume['contact']['firstName'] }} {{ $resume['contact']['lastName'] }}
-        </h2>
+    @php
+        $firstName = trim($resume['contact']['firstName'] ?? '');
+        $lastName = trim($resume['contact']['lastName'] ?? '');
+        $jobTitle = trim($resume['contact']['desiredJobTitle'] ?? '');
+        $email = trim($resume['contact']['email'] ?? '');
+        $phone = trim($resume['contact']['phone'] ?? '');
 
-        @if(!empty($resume['contact']['desiredJobTitle']))
-            <div class="contact-jobtitle">
-                {{ $resume['contact']['desiredJobTitle'] }}
+        $locationInfo = collect([
+            $resume['contact']['address'] ?? null,
+            $resume['contact']['city'] ?? null,
+            $resume['contact']['country'] ?? null,
+            $resume['contact']['postCode'] ?? null
+        ])->filter()->implode(', ');
+
+        // check if ANY info is present
+        $hasContactInfo = $firstName || $lastName || $jobTitle || $email || $phone || $locationInfo;
+    @endphp
+
+    @if($hasContactInfo)
+        <div>
+            @if($firstName || $lastName)
+                <h2 class="contact-name">
+                    {{ $firstName }} {{ $lastName }}
+                </h2>
+            @endif
+
+            @if($jobTitle)
+                <div class="contact-jobtitle">
+                    {{ $jobTitle }}
+                </div>
+            @endif
+
+            <hr class="section-divider-thin" />
+
+            <div class="contact-details">
+                @if($locationInfo)
+                    {{ $locationInfo }}
+                @endif
+                @if($locationInfo && $email) | @endif
+                @if($email)
+                    {{ $email }}
+                @endif
+                @if(($locationInfo || $email) && $phone) | @endif
+                @if($phone)
+                    {{ $phone }}
+                @endif
             </div>
-        @endif
 
-        <hr class="section-divider-thin" />
-
-        @php
-            $locationInfo = collect([
-                $resume['contact']['address'] ?? null,
-                $resume['contact']['city'] ?? null,
-                $resume['contact']['country'] ?? null,
-                $resume['contact']['postCode'] ?? null
-            ])->filter()->implode(', ');
-        @endphp
-
-        <div class="contact-details">
-            @if($locationInfo)
-                {{ $locationInfo }}
-            @endif
-            @if($locationInfo && !empty($resume['contact']['email'])) | @endif
-            @if(!empty($resume['contact']['email']))
-                {{ $resume['contact']['email'] }}
-            @endif
-            @if(($locationInfo || !empty($resume['contact']['email'])) && !empty($resume['contact']['phone'])) | @endif
-            @if(!empty($resume['contact']['phone']))
-                {{ $resume['contact']['phone'] }}
-            @endif
+            <hr class="section-divider-thin" />
         </div>
-
-        <hr class="section-divider-thin" />
-    </div>
+    @endif
 
     {{-- Summary --}}
     @if(!empty($resume['summary']))
@@ -304,22 +319,28 @@
         </div>
     @endif
 
+
+
     {{-- Skills --}}
-    @if(!empty($resume['skills']))
+    @php
+        $validSkills = collect($resume['skills'] ?? [])->filter(function($skill) {
+            return isset($skill['name'], $skill['level'])
+                ? trim($skill['name']) !== '' || trim($skill['level']) !== ''
+                : false;
+        })->values();
+    @endphp
+
+    @if($validSkills->count() > 0)
         <div>
-            <h3 class="skills-title">
-                AREA OF EXPERTISE
-            </h3>
+            <h3 class="skills-title">AREA OF EXPERTISE</h3>
             <hr class="section-divider-thin" />
 
             <table class="skills-table">
-                @foreach(array_chunk($resume['skills'], 2) as $row)
+                @foreach($validSkills->chunk(2) as $row)
                     <tr>
                         @foreach($row as $skill)
                             <td>
-                                <span class="skill-name">
-                                    {{ $skill['name'] }}
-                                </span>
+                                <span class="skill-name">{{ $skill['name'] }}</span>
                                 @if(!empty($skill['level']) && !empty($resume['showExperienceLevel']))
                                     <span>
                                         @php
@@ -339,7 +360,7 @@
                                 @endif
                             </td>
                         @endforeach
-                        @if(count($row) < 2)
+                        @if($row->count() < 2)
                             <td></td>
                         @endif
                     </tr>
@@ -349,20 +370,39 @@
     @endif
 
 
+
     {{-- Experience --}}
-    @if(!empty($resume['experiences']))
+    @php
+        $validExperiences = collect($resume['experiences'] ?? [])->filter(function($exp) {
+            return !empty($exp['jobTitle']) ||
+                !empty($exp['company']) ||
+                !empty($exp['location']) ||
+                !empty($exp['startDate']) ||
+                !empty($exp['endDate']) ||
+                !empty($exp['description']);
+        });
+    @endphp
+
+    @if($validExperiences->isNotEmpty())
         <div>
             <h3 class="section-title">PROFESSIONAL EXPERIENCE</h3>
             <hr class="section-divider-thin" />
-            @foreach($resume['experiences'] as $exp)
+
+            @foreach($validExperiences as $exp)
                 <div class="experience-item">
                     <table class="experience-table">
                         <tr>
-                            <td class="experience-job-title">{{ $exp['jobTitle'] }}</td>
-                            <td class="experience-dates">{{ $exp['startDate'] }} - {{ $exp['endDate'] }}</td>
+                            <td class="experience-job-title">{{ $exp['jobTitle'] ?? '' }}</td>
+                            <td class="experience-dates">
+                                {{ $exp['startDate'] ?? '' }}
+                                @if(!empty($exp['endDate'])) - {{ $exp['endDate'] }} @endif
+                            </td>
                         </tr>
                     </table>
-                    <div class="experience-company">{{ $exp['company'] }} — {{ $exp['location'] }}</div>
+                    <div class="experience-company">
+                        {{ $exp['company'] ?? '' }}
+                        @if(!empty($exp['location'])) — {{ $exp['location'] }} @endif
+                    </div>
                     @if(!empty($exp['description']))
                         <ul class="experience-description-list">
                             <li class="experience-description">{{ $exp['description'] }}</li>
@@ -374,28 +414,50 @@
     @endif
 
     {{-- Education --}}
-    @if(!empty($resume['education']))
-        <div class="education-section">
-            <h3 class="section-title">EDUCATION</h3>
-            <hr class="section-divider-thin" />
-            @foreach($resume['education'] as $edu)
-                <div class="education-item">
-                    <table class="education-table">
-                        <tr>
-                            <td class="education-degree">{{ $edu['degree'] }}</td>
-                            <td class="education-dates">{{ $edu['startDate'] }} - {{ $edu['endDate'] }}</td>
-                        </tr>
-                    </table>
-                    <div class="education-school">{{ $edu['school'] }} @if(!empty($edu['location'])) — {{ $edu['location'] }} @endif</div>
-                    @if(!empty($edu['description']))
-                        <ul class="education-description-list">
-                            <li class="education-description">{{ $edu['description'] }}</li>
-                        </ul>
-                    @endif
-                </div>
-            @endforeach
-        </div>
+    @if(!empty($resume['education']) && count($resume['education']) > 0)
+        @php
+            // Filter only entries that have actual data
+            $validEducation = collect($resume['education'])->filter(function($edu) {
+                return !empty($edu['degree']) ||
+                    !empty($edu['school']) ||
+                    !empty($edu['location']) ||
+                    !empty($edu['startDate']) ||
+                    !empty($edu['endDate']) ||
+                    !empty($edu['description']);
+            });
+        @endphp
+
+        @if($validEducation->isNotEmpty())
+            <div class="education-section">
+                <h3 class="section-title">EDUCATION</h3>
+                <hr class="section-divider-thin" />
+
+                @foreach($validEducation as $edu)
+                    <div class="education-item">
+                        <table class="education-table">
+                            <tr>
+                                <td class="education-degree">{{ $edu['degree'] ?? '' }}</td>
+                                <td class="education-dates">
+                                    {{ $edu['startDate'] ?? '' }}
+                                    @if(!empty($edu['endDate'])) - {{ $edu['endDate'] }} @endif
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="education-school">
+                            {{ $edu['school'] ?? '' }}
+                            @if(!empty($edu['location'])) — {{ $edu['location'] }} @endif
+                        </div>
+                        @if(!empty($edu['description']))
+                            <ul class="education-description-list">
+                                <li class="education-description">{{ $edu['description'] }}</li>
+                            </ul>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endif
     @endif
+
 
     {{-- Hobbies --}}
     @if(!empty($resume['hobbies']))
