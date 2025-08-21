@@ -5,24 +5,24 @@
 <title>Resume</title>
 <style>
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700&display=swap');
+/* DOMPDF Font Reset - Sans Serif Only */
+* {
+  font-family: sans-serif !important;
+  font-style: normal !important;
+}
 
 /* Base */
 html, body {
   margin: 0;
   padding: 0;
   background: #fff;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-body {
-  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Arial Unicode MS', 'Noto Sans', sans-serif;
+  font-family: sans-serif !important;
   color: #374151;
   font-size: 15px;
   line-height: 1.4;
 }
 
-/* A4 page - FIXED */
+/* A4 page */
 .paper {
   width: 210mm;
   max-width: 210mm;
@@ -32,7 +32,7 @@ body {
   overflow: visible;
 }
 
-/* ---------- Two-column layout (table layout => most stable in PDF) ---------- */
+/* Two-column layout (table layout for PDF stability) */
 .container {
   display: table;
   table-layout: fixed;
@@ -57,7 +57,7 @@ body {
   box-sizing: border-box;
 }
 
-/* ---------- Prevent section splits  ---------- */
+/* Prevent section splits */
 .section,
 .timeline-item,
 .skill-item,
@@ -68,19 +68,21 @@ body {
   break-inside: avoid;
 }
 
-/* ---------- Header ---------- */
+/* Header */
 .first-name, .last-name {
+  font-family: sans-serif !important;
   font-size: 42px;
-  font-weight: 600;
+  font-weight: normal;
   color: #1f2937;
   margin: 0;
   letter-spacing: .2em;
   text-transform: uppercase;
   line-height: 0.9;
+  display: block;
 }
-.last-name { display: block; }
 
 .job-title {
+  font-family: sans-serif !important;
   font-size: 24px;
   font-weight: 400;
   color: #6b7280;
@@ -89,8 +91,9 @@ body {
   letter-spacing: 0.1em;
 }
 
-/* ---------- Section titles ---------- */
+/* Section titles */
 .section-title {
+  font-family: sans-serif !important;
   font-size: 16px;
   font-weight: 600;
   color: #1f2937;
@@ -98,11 +101,11 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding-bottom: 6px;
-  border-bottom: 2px solid #374151;
-  page-break-after: avoid; /* keep heading with content */
+  border-bottom: 1px solid #e5e7eb;
+  page-break-after: avoid;
 }
 
-/* ---------- Sections ---------- */
+/* Sections */
 .section {
   margin-bottom: 20px;
 }
@@ -113,19 +116,22 @@ body {
   border-bottom: 1px solid #e5e7eb; 
   margin-bottom: 10px; 
   font-size: 14px;
+  font-family: sans-serif !important;
+  font-weight: 600;
 }
 
-/* ---------- Paragraphs ---------- */
+/* Paragraphs */
 .profile-text { 
+  font-family: sans-serif !important;
   font-size: 15px; 
   font-weight: 400; 
-  color: #4b5563; 
+  color: #1f2937; 
   line-height: 1.5; 
   text-align: justify; 
   margin: 0;
 }
 
-/* ---------- TIMELINE ---------- */
+/* TIMELINE */
 .timeline { 
   margin-left: 0;
   border-left: 2px solid #374151;
@@ -140,7 +146,7 @@ body {
   margin-bottom: 0; 
 }
 
-/* Timeline dots - simplified squares */
+/* Timeline dots */
 .timeline-item:before {
   content: "";
   position: absolute;
@@ -153,6 +159,7 @@ body {
 }
 
 .timeline-dates { 
+  font-family: sans-serif !important;
   font-size: 12px; 
   font-weight: 500; 
   color: #6b7280; 
@@ -160,27 +167,50 @@ body {
   margin-bottom: 3px; 
 }
 .timeline-title { 
+  font-family: sans-serif !important;
   font-size: 15px; 
   font-weight: 500; 
   color: #1f2937; 
   margin: 0 0 4px; 
 }
 .timeline-description { 
+  font-family: sans-serif !important;
   font-size: 14px; 
-  font-weight: 400; 
-  color: #4b5563; 
+  font-weight: 500; 
+  color: #1f2937; 
   line-height: 1.4; 
 }
 
-/* ---------- Bullet points ---------- */
+.timeline-location { 
+  font-family: sans-serif !important;
+  font-size: 13px; 
+  font-weight: 300; 
+  text-transform: uppercase; 
+  letter-spacing: .04em; 
+  color: #6b7280; 
+  margin-bottom: 2px; 
+}
+
+/* Timeline employer styling */
+.timeline-employer {
+  font-family: sans-serif !important;
+  font-style: italic !important;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+/* Bullet points */
 .bullet-point, .list-item, .hobby-item {
+  font-family: sans-serif !important;
   position: relative;
   padding-left: 12px;
   margin: 0 0 4px;
-  color: #4b5563;
+  color: #1f2937;
   font-size: 14px;
+  font-weight: 400;
 }
-.hobby-item { font-size: 14px; font-weight: 400; }
+
 .bullet-point:before, .list-item:before, .hobby-item:before {
   content: "";
   position: absolute;
@@ -207,6 +237,7 @@ body {
 }
 
 .skill-name {
+  font-family: sans-serif !important;
   font-size: 14px;
   font-weight: 500;
   color: #1f2937;
@@ -231,22 +262,26 @@ body {
   background: #374151;
 }
 
-/* ---------- Languages ---------- */
+/* Languages */
 .language-item { 
+  font-family: sans-serif !important;
   margin-bottom: 6px; 
   font-size: 14px; 
+  font-weight: normal;
   color: #1f2937; 
 }
 .language-name { 
+  font-family: sans-serif !important;
   font-weight: 500; 
 }
 .language-proficiency { 
+  font-family: sans-serif !important;
   font-size: 13px; 
-  font-weight: 300; 
-  color: #6b7280; 
+  font-weight: 300;
+  color: #1f2937; 
 }
 
-/* ---------- Right-column education (no timeline) ---------- */
+/* Right-column education (no timeline) */
 .right-column .education-item {
   position: relative;
   padding-left: 12px;
@@ -264,7 +299,7 @@ body {
   background: #6b7280;
 }
 
-/* ---------- Right-column timeline (for other sections) ---------- */
+/* Right-column timeline */
 .right-column .timeline-item { 
   padding-left: 18px; 
   margin-bottom: 15px; 
@@ -286,63 +321,71 @@ body {
   background: #d1d5db;
 }
 .right-column .timeline-dates { 
+  font-family: sans-serif !important;
   font-size: 12px; 
   font-weight: 500; 
 }
-.timeline-location { 
-  font-size: 13px; 
-  font-weight: 300; 
-  text-transform: uppercase; 
-  letter-spacing: .04em; 
-  color: #6b7280; 
-  margin-bottom: 2px; 
-}
 .right-column .timeline-title { 
+  font-family: sans-serif !important;
   font-size: 14px; 
   font-weight: 500; 
   line-height: 1.3; 
 }
 .right-column .timeline-description { 
+  font-family: sans-serif !important;
   font-size: 13px; 
   font-weight: 400; 
   line-height: 1.35; 
 }
 
-/* ---------- References ---------- */
+/* References */
 .reference-item { margin-bottom: 12px; }
-.reference-name { font-size: 14px; color: #1f2937; font-weight: 500; }
+.reference-name { 
+  font-family: sans-serif !important;
+  font-size: 14px; 
+  color: #1f2937; 
+  font-weight: 500; 
+}
 .reference-relationship, .reference-contact { 
+  font-family: sans-serif !important;
   font-size: 13px; 
-  font-weight: 300; 
+  font-weight: 300;
   color: #6b7280; 
   margin: 1px 0;
 }
 
-/* ---------- Contact icons - Updated Phone and Link Icons ---------- */
+/* Contact icons */
 .contact-section { margin-bottom: 18px; }
+
 .contact-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: table;
+  width: 100%;
+  font-family: sans-serif !important;
   font-size: 13px;
   font-weight: 300;
-  color: #4b5563;
+  color: #1f2937;
   line-height: 1.3;
   margin-bottom: 8px;
 }
 
-/* Advanced CSS Icons - SVG-like quality */
 .contact-icon {
-  flex: 0 0 auto;
-  width: 16px;
+  display: table-cell;
+  width: 20px;
   height: 16px;
+  vertical-align: middle;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
-/* Modern Phone icon - simple rounded rectangle */
+.contact-item span:last-child {
+  display: table-cell;
+  vertical-align: middle;
+  padding-left: 8px;
+  font-family: sans-serif !important;
+  font-weight: 300;
+  word-break: break-word;
+}
+
+/* Phone icon */
 .icon-phone::before {
   content: "";
   position: absolute;
@@ -364,7 +407,7 @@ body {
   left: 6px;
 }
 
-/* Fixed Email icon - clean envelope */
+/* Email icon */
 .icon-email::before {
   content: "";
   position: absolute;
@@ -389,7 +432,7 @@ body {
   transform: translateX(-50%);
 }
 
-/* Advanced Location icon - detailed map pin (keeping as requested) */
+/* Location icon */
 .icon-location::before {
   content: "";
   position: absolute;
@@ -416,7 +459,7 @@ body {
   box-shadow: 0 0 0 1px rgba(31, 41, 55, 0.3);
 }
 
-/* Updated Link icon - chain link similar to 🔗 */
+/* Globe/Link icon */
 .icon-globe::before {
   content: "";
   position: absolute;
@@ -442,210 +485,7 @@ body {
   transform: rotate(-25deg);
 }
 
-.contact-item span:last-child {
-  flex: 1;
-  word-break: break-word;
-}
-
-/* ---------- Print rules - ENHANCED ---------- */
-@media print {
-  html, body {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 100% !important;
-  }
-  
-  .paper {
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-  
-  .container { 
-    display: table !important; 
-    table-layout: fixed !important; 
-    width: 100% !important; 
-  }
-  
-  .left-column, .right-column { 
-    display: table-cell !important; 
-    vertical-align: top !important;
-    padding: 15mm 12mm 15mm 15mm !important;
-  }
-  
-  .right-column { 
-    background: #f8f9fa !important; 
-    padding: 15mm 15mm 15mm 12mm !important;
-  }
-  
-  /* Ensure content doesn't get cut off */
-  .section,
-  .timeline-item,
-  .skill-item,
-  .reference-item,
-  .contact-item,
-  .hobby-item {
-    page-break-inside: avoid !important;
-    break-inside: avoid !important;
-  }
-  h1, h2, h3, .section-title { page-break-after: avoid !important; }
-  
-  /* Prevent orphans and widows */
-  p, .timeline-description, .profile-text {
-    orphans: 2;
-    widows: 2;
-  }
-
-  /* Enhanced timeline for print */
-  .timeline-item:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    left: 2.5px;
-    top: 12px;
-    width: 2px !important;
-    height: calc(100% + 2px);
-    background: #374151 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .right-column .timeline-item:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    left: 1.5px;
-    top: 10px;
-    width: 2px !important;
-    height: calc(100% - 0px);
-    background: #6b7280 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Enhanced timeline dots for print */
-  .timeline-item:before {
-    background: #374151 !important;
-    border: 2px solid #fff !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .right-column .timeline-item:before {
-    background: #6b7280 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Ensure education bullets print correctly */
-  .right-column .education-item:before {
-    background: #6b7280 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Ensure updated icons print correctly */
-  .icon-phone::before,
-  .icon-phone::after,
-  .icon-email::before,
-  .icon-email::after,
-  .icon-location::before,
-  .icon-location::after,
-  .icon-globe::before,
-  .icon-globe::after {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .icon-phone::before {
-    background-color: #1f2937 !important;
-  }
-
-  .icon-phone::after {
-    background-color: #fff !important;
-  }
-
-  .icon-email::before {
-    border-color: #1f2937 !important;
-    background-color: #fff !important;
-  }
-
-  .icon-email::after {
-    border-top-color: #1f2937 !important;
-  }
-
-  .icon-location::before {
-    background-color: #1f2937 !important;
-    box-shadow: inset 2px 2px 0 #fff !important;
-  }
-
-  .icon-location::after {
-    background-color: #fff !important;
-  }
-
-  .icon-globe::before,
-  .icon-globe::after {
-    border-color: #1f2937 !important;
-    background-color: transparent !important;
-  }
-
-  /* Ensure colors print correctly */
-  .first-name, .last-name {
-    color: #1f2937 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  .section-title {
-    color: #1f2937 !important;
-    border-bottom-color: #374151 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Compact spacing for print */
-  .section {
-    margin-bottom: 15px;
-  }
-
-  .timeline-item {
-    margin-bottom: 12px;
-  }
-
-  /* Reduce header spacing */
-  .first-name, .last-name {
-    font-size: 38px;
-  }
-
-  .job-title {
-    margin: 5px 0 0 0;
-  }
-}
-
-/* Additional page break and overflow prevention */
-.language-item, .website-item {
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-
-/* Ensure proper page breaks for all elements */
-.section {
-  page-break-inside: avoid;
-  break-inside: avoid;
-}
-
-/* Force page breaks when content exceeds page height */
-.section:last-child {
-  page-break-inside: auto;
-}
-
-/* Prevent text overflow and ensure proper wrapping */
-.profile-text, .timeline-description, .skill-name, .language-name {
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  hyphens: auto;
-}
-
-/* ---------- Screen optimizations ---------- */
+/* Screen optimizations */
 @media screen {
   .paper {
     box-shadow: 0 0 20px rgba(0,0,0,0.1);
@@ -659,7 +499,7 @@ body {
 <div class="paper">
   <div class="container">
     <div class="left-column">
-      <div class="header">
+      <div class="header" style="margin-bottom:16px;">
         <div class="name-container">
           <h1 class="first-name">{{ strtoupper($resume['contact']['firstName']) }}</h1>
           <h1 class="last-name">{{ strtoupper($resume['contact']['lastName']) }}</h1>
@@ -675,50 +515,53 @@ body {
         </div>
       @endif
 
-      {{-- Work Experience --}}
-      @if (!empty($resume['experiences']) && count($resume['experiences']) > 0)
-        <div class="section">
-          <h3 class="section-title">Work Experience</h3>
-          <div class="timeline">
-            @foreach ($resume['experiences'] as $exp)
-              @if (!empty($exp['jobTitle']) || !empty($exp['company']))
-                
-              <div class="timeline-item">
-                  <div class="timeline-dates">
-                    @if(!empty($exp['startDate'])){{ $exp['startDate'] }}@endif
-                    @if(!empty($exp['endDate']))
-                      @if(!empty($exp['startDate'])) – @endif {{ $exp['endDate'] }}
-                    @elseif(!empty($exp['startDate'])) – Present
-                    @endif
-                  </div>
-                  <h4 class="timeline-title">
-                    {{ trim(($exp['jobTitle'] ?? '').(!empty($exp['jobTitle']) && !empty($exp['company']) ? ' at ' : '').($exp['company'] ?? '')) }}
-                  </h4>
-                  @if (!empty($exp['location']))
-                    <div class="timeline-location">{{ $exp['location'] }}</div>
-                  @endif
-
-                  @if (!empty($exp['description']))
-                    <div class="timeline-description">
-                      @php $lines = preg_split('/\r\n|\r|\n/', $exp['description']); @endphp
-                      @foreach ($lines as $line)
-                        @php $t = trim($line); @endphp
-                        @if ($t !== '')
-                          @if (preg_match('/^([•\-–\*])\s*/u', $t))
-                            <div class="bullet-point">{{ preg_replace('/^([•\-–\*])\s*/u', '', $t) }}</div>
-                          @else
-                            <div style="margin-bottom:3px">{{ $t }}</div>
-                          @endif
-                        @endif
-                      @endforeach
-                    </div>
-                  @endif
-                </div>
+     {{-- Work Experience --}}
+@if (!empty($resume['experiences']) && count($resume['experiences']) > 0)
+  <div class="section">
+    <h3 class="section-title">Work Experience</h3>
+    <div class="timeline">
+      @foreach ($resume['experiences'] as $exp)
+        @if (!empty($exp['jobTitle']) || !empty($exp['company']))
+          
+        <div class="timeline-item">
+            <div class="timeline-dates">
+              @if(!empty($exp['startDate'])){{ $exp['startDate'] }}@endif
+              @if(!empty($exp['endDate']))
+                @if(!empty($exp['startDate'])) – @endif {{ $exp['endDate'] }}
+              @elseif(!empty($exp['startDate'])) – Present
               @endif
-            @endforeach
+            </div>
+            <h4 class="timeline-title">
+              {{ trim(($exp['jobTitle'] ?? '').(!empty($exp['jobTitle']) && !empty($exp['company']) ? ' at ' : '').($exp['company'] ?? '')) }}
+            </h4>
+            @if (!empty($exp['employer']))
+              <div class="timeline-employer" style="font-style: italic;">{{ $exp['employer'] }}</div>
+            @endif
+            @if (!empty($exp['location']))
+              <div class="timeline-location">{{ $exp['location'] }}</div>
+            @endif
+
+            @if (!empty($exp['description']))
+              <div class="timeline-description">
+                @php $lines = preg_split('/\r\n|\r|\n/', $exp['description']); @endphp
+                @foreach ($lines as $line)
+                  @php $t = trim($line); @endphp
+                  @if ($t !== '')
+                    @if (preg_match('/^([•\-–\*])\s*/u', $t))
+                      <div class="bullet-point">{{ preg_replace('/^([•\-–\*])\s*/u', '', $t) }}</div>
+                    @else
+                      <div style="margin-bottom:3px">{{ $t }}</div>
+                    @endif
+                  @endif
+                @endforeach
+              </div>
+            @endif
           </div>
-        </div>
-      @endif
+        @endif
+      @endforeach
+    </div>
+  </div>
+@endif
 
       {{-- Certifications --}}
       @if (!empty($resume['certifications']))
