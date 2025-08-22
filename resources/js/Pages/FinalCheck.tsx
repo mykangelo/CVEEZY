@@ -77,6 +77,15 @@ interface FinalCheckProps {
   spellcheck?: SpellCheckMatch[];
 }
 
+// Add design settings interface
+interface DesignSettings {
+  fontStyle: 'small' | 'normal' | 'large';
+  fontFamily: string;
+  sectionSpacing: number;
+  paragraphSpacing: number;
+  lineSpacing: number;
+}
+
 const FinalCheck: React.FC<FinalCheckProps> = ({ 
   contact: propContact,
   experiences: propExperiences,
@@ -91,6 +100,94 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   const [currentSection, setCurrentSection] = useState<string>("design");
   const [clientSpellcheck, setClientSpellcheck] = useState<SpellCheckMatch[]>([]);
   const [isClientChecking, setIsClientChecking] = useState<boolean>(false);
+  const [isSavingSettings, setIsSavingSettings] = useState<boolean>(false);
+  const [settingsSaved, setSettingsSaved] = useState<boolean>(false);
+  
+  // Get template-specific default font
+  const getDefaultFontForTemplate = (template: string): string => {
+    switch (template) {
+      case 'elegant':
+        return 'Alte Haas Grotesk';
+      case 'modern':
+        return 'DejaVu Sans';
+      case 'creative':
+        return 'Mont';
+      case 'professional':
+        return 'Arial';
+      case 'minimal':
+        return 'Montserrat';
+      case 'classic':
+      default:
+        return 'Montserrat';
+    }
+  };
+
+  // Add design settings state with template-specific defaults (no localStorage persistence initially)
+  const [designSettings, setDesignSettings] = useState<DesignSettings>(() => {
+    // Get template name from props or session storage
+    const templateName = propTemplateName || 'classic';
+    const defaultFont = getDefaultFontForTemplate(templateName);
+    
+    return {
+      fontStyle: 'normal',
+      fontFamily: defaultFont,
+      sectionSpacing: 50,
+      paragraphSpacing: 30,
+      lineSpacing: 60
+    };
+  });
+
+  // Track if any design settings have been changed from their defaults
+  const [hasDesignChanges, setHasDesignChanges] = useState(false);
+
+  // Check if any design settings differ from defaults
+  useEffect(() => {
+    // Check if any settings differ from defaults
+    const templateName = propTemplateName || 'classic';
+    const defaultFont = getDefaultFontForTemplate(templateName);
+    const hasChanges = designSettings.fontStyle !== 'normal' ||
+                      designSettings.fontFamily !== defaultFont ||
+                      designSettings.sectionSpacing !== 50 ||
+                      designSettings.paragraphSpacing !== 30 ||
+                      designSettings.lineSpacing !== 60;
+    
+    setHasDesignChanges(hasChanges);
+    
+    // Only save to localStorage if user has made changes
+    if (hasChanges) {
+      localStorage.setItem('resumeDesignSettings', JSON.stringify(designSettings));
+    }
+  }, [designSettings, propTemplateName]);
+
+  // Only apply CSS custom properties when user has made design changes
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (hasDesignChanges) {
+      const templateName = propTemplateName || 'classic';
+      const defaultFont = getDefaultFontForTemplate(templateName);
+      
+      // Only apply section spacing if changed from default
+      if (designSettings.sectionSpacing !== 50) {
+        root.style.setProperty('--section-spacing', `${designSettings.sectionSpacing}px`);
+      }
+      
+      // Only apply paragraph spacing if changed from default
+      if (designSettings.paragraphSpacing !== 30) {
+        root.style.setProperty('--paragraph-spacing', `${designSettings.paragraphSpacing}px`);
+      }
+      
+      // Only apply line spacing if changed from default
+      if (designSettings.lineSpacing !== 60) {
+        root.style.setProperty('--line-spacing', `${designSettings.lineSpacing / 100}`);
+      }
+    } else {
+      // Remove all custom properties when no changes are active
+      root.style.removeProperty('--section-spacing');
+      root.style.removeProperty('--paragraph-spacing');
+      root.style.removeProperty('--line-spacing');
+    }
+  }, [hasDesignChanges, designSettings, propTemplateName]);
   
   // Debug: Log the resumeId and other props
   console.log('FinalCheck - Props received:', {
@@ -327,15 +424,55 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     (resumeData as any)?.skills,
   ]);
 
-   // Function to handle clicking the "Download PDF" button
+   // Function to save design settings to the resume
+  const saveDesignSettings = async () => {
+    if (!resumeId) {
+      console.error('No resume ID available');
+      return;
+    }
 
-  const handleDownloadButtonClick = () => {
+    setIsSavingSettings(true);
+    setSettingsSaved(false);
+
+    try {
+      const response = await fetch(`/dashboard/resumes/${resumeId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({
+          settings: {
+            design: designSettings
+          }
+        })
+      });
+
+      if (response.ok) {
+        console.log('Design settings saved successfully');
+        setSettingsSaved(true);
+        setTimeout(() => setSettingsSaved(false), 3000);
+      } else {
+        console.error('Failed to save design settings');
+      }
+    } catch (error) {
+      console.error('Error saving design settings:', error);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  // Function to handle clicking the "Download PDF" button
+  const handleDownloadButtonClick = async () => {
     // Check if resumeId is available
     if (!resumeId) {
       console.error('No resume ID available');
       alert('No resume ID available. Please go back and try again.');
       return;
     }
+    
+    // Save design settings before redirecting
+    await saveDesignSettings();
     
     // Get resume name from contact data
     const resumeName = `${normalizedResumeData.contact.firstName} ${normalizedResumeData.contact.lastName}`.trim() || 'My Resume';
@@ -381,6 +518,73 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     </div>
   );
 
+  // Create a wrapper component that ONLY applies design settings when user has made changes
+  const StyledResumeWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // If no design changes have been made, return the resume without any wrapper styling
+    if (!hasDesignChanges) {
+      return <>{children}</>;
+    }
+
+    const getFontSize = () => {
+      switch (designSettings.fontStyle) {
+        case 'small': return '14px';
+        case 'large': return '18px';
+        default: return '16px';
+      }
+    };
+
+    const getLineHeight = () => {
+      return `${designSettings.lineSpacing / 100}`;
+    };
+
+    // Get template-specific default font
+    const templateName = propTemplateName || 'classic';
+    const defaultFont = getDefaultFontForTemplate(templateName);
+
+    // Only apply styles when they differ from defaults
+    const styles: React.CSSProperties & { [key: string]: string } = {};
+
+    // Only apply section spacing if changed from default
+    if (designSettings.sectionSpacing !== 50) {
+      styles['--section-spacing'] = `${designSettings.sectionSpacing}px`;
+    }
+
+    // Only apply paragraph spacing if changed from default
+    if (designSettings.paragraphSpacing !== 30) {
+      styles['--paragraph-spacing'] = `${designSettings.paragraphSpacing}px`;
+    }
+
+    // Only apply line height if changed from default
+    if (designSettings.lineSpacing !== 60) {
+      styles['--line-height'] = getLineHeight();
+    }
+
+    // Only apply font family if user specifically changed it from template default
+    if (designSettings.fontFamily !== defaultFont) {
+      styles['--font-family'] = designSettings.fontFamily;
+    }
+
+    // Only apply font size if user specifically changed it from default
+    if (designSettings.fontStyle !== 'normal') {
+      styles['--font-size'] = getFontSize();
+    }
+
+    return (
+      <div
+        style={styles}
+        className="styled-resume"
+        data-font-family={designSettings.fontFamily}
+        data-font-size={getFontSize()}
+        data-line-height={getLineHeight()}
+        data-section-spacing={designSettings.sectionSpacing}
+        data-paragraph-spacing={designSettings.paragraphSpacing}
+        data-has-changes={hasDesignChanges}
+      >
+        {children}
+      </div>
+    );
+  };
+
   return (
     <div className="flex min-h-screen bg-[#f4f6fb]">
       <Head title="CVeezy | Final Check" />
@@ -398,7 +602,9 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <span className="text-xl">🔧</span>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
+              </svg>
               <span className="font-medium">Design & Formatting</span>
             </button>
             
@@ -421,7 +627,179 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
           {currentSection === "design" && (
             <div>
               <h2 className="text-2xl font-bold mb-6">Design & Formatting</h2>
-              <p className="text-gray-600">Customize your resume's appearance and layout.</p>
+              <p className="text-gray-600 mb-6">Customize your resume's appearance and layout.</p>
+              
+              {/* Design Changes Indicator */}
+              {hasDesignChanges && (
+                <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm font-medium">Custom design settings are active</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Font Style Controls */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Font style
+                  <span className="ml-2 text-xs text-gray-500">(Default: Normal)</span>
+                </label>
+                <div className="flex gap-2">
+                  {[
+                    { value: 'small', label: 'Small', icon: 'A' },
+                    { value: 'normal', label: 'Normal', icon: 'A' },
+                    { value: 'large', label: 'Large', icon: 'A' }
+                  ].map((style) => (
+                    <button
+                      key={style.value}
+                      onClick={() => {
+                        setDesignSettings(prev => ({ ...prev, fontStyle: style.value as 'small' | 'normal' | 'large' }));
+                      }}
+                      className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                        designSettings.fontStyle === style.value
+                          ? 'border-blue-500 bg-blue-50 text-blue-600'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                      style={{ 
+                        minWidth: '80px',
+                        fontSize: style.value === 'small' ? '14px' : style.value === 'normal' ? '16px' : '18px'
+                      }}
+                    >
+                      <span className="text-2xl font-bold mb-1">{style.icon}</span>
+                      <span className="text-xs font-medium">{style.label}</span>
+                      {style.value === 'normal' && (
+                        <span className="text-xs text-blue-600 font-medium">Default</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Font Family Selection */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Font
+                  <span className="ml-2 text-xs text-gray-500">
+                    (Template default: {getDefaultFontForTemplate(propTemplateName || 'classic')})
+                  </span>
+                </label>
+                <select
+                  value={designSettings.fontFamily}
+                  onChange={(e) => {
+                    setDesignSettings(prev => ({ ...prev, fontFamily: e.target.value }));
+                  }}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={getDefaultFontForTemplate(propTemplateName || 'classic')}>
+                    {getDefaultFontForTemplate(propTemplateName || 'classic')} (Template Default)
+                  </option>
+                  <option value="Montserrat">Montserrat</option>
+                  <option value="Alte Haas Grotesk">Alte Haas Grotesk</option>
+                  <option value="Mont">Mont</option>
+                  <option value="DejaVu Sans">DejaVu Sans</option>
+                  <option value="Brush Script MT">Brush Script MT</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Verdana">Verdana</option>
+                  <option value="Roboto">Roboto</option>
+                  <option value="Open Sans">Open Sans</option>
+                  <option value="sans-serif">Sans Serif</option>
+                </select>
+              </div>
+
+              {/* Section Spacing */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Section spacing
+                  <span className="ml-2 text-xs text-gray-500">({designSettings.sectionSpacing}px)</span>
+                </label>
+                <input
+                  type="range"
+                  min="20"
+                  max="100"
+                  value={designSettings.sectionSpacing}
+                  onChange={(e) => {
+                    setDesignSettings(prev => ({ ...prev, sectionSpacing: parseInt(e.target.value) }));
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Tight</span>
+                  <span>Loose</span>
+                </div>
+              </div>
+
+              {/* Paragraph Spacing */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Paragraph spacing
+                  <span className="ml-2 text-xs text-gray-500">({designSettings.paragraphSpacing}px)</span>
+                </label>
+                <input
+                  type="range"
+                  min="15"
+                  max="60"
+                  value={designSettings.paragraphSpacing}
+                  onChange={(e) => {
+                    setDesignSettings(prev => ({ ...prev, paragraphSpacing: parseInt(e.target.value) }));
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Tight</span>
+                  <span>Loose</span>
+                </div>
+              </div>
+
+              {/* Line Spacing */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Line spacing
+                  <span className="ml-2 text-xs text-gray-500">({designSettings.lineSpacing}%)</span>
+                </label>
+                <input
+                  type="range"
+                  min="100"
+                  max="200"
+                  value={designSettings.lineSpacing}
+                  onChange={(e) => {
+                    setDesignSettings(prev => ({ ...prev, lineSpacing: parseInt(e.target.value) }));
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
+                  <span>Tight</span>
+                  <span>Loose</span>
+                </div>
+              </div>
+
+
+
+              {/* Reset Button */}
+              <button
+                onClick={() => {
+                  const templateName = propTemplateName || 'classic';
+                  const defaultFont = getDefaultFontForTemplate(templateName);
+                  setDesignSettings({
+                    fontStyle: 'normal',
+                    fontFamily: defaultFont,
+                    sectionSpacing: 50,
+                    paragraphSpacing: 30,
+                    lineSpacing: 60
+                  });
+                }}
+                className="w-full p-2 text-sm text-blue-600 border border-blue-300 rounded-md hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset to Template Default
+              </button>
             </div>
           )}
 
@@ -511,6 +889,9 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
             <div className="flex items-center gap-2">
               <Logo size="xl" showText={false} />
             </div>
+            <div className="text-sm text-gray-600">
+              Template: <span className="font-medium capitalize">{propTemplateName || 'classic'}</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-4">
@@ -558,12 +939,123 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
               className="bg-white shadow-2xl border border-gray-100 relative rounded-lg overflow-hidden"
               style={{ width: `${210 * 3.78}px`, minHeight: `${297 * 3.78}px`, padding: '40px' }}
             >
-              <SelectedTemplate resumeData={normalizedResumeData} />
+              <StyledResumeWrapper>
+                <SelectedTemplate resumeData={normalizedResumeData} />
+              </StyledResumeWrapper>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Add CSS styles for design controls */}
+      <style>{`
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+        
+        /* Custom Fonts from Templates */
+        @font-face {
+          font-family: 'Alte Haas Grotesk';
+          src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskRegular.ttf') format('truetype');
+          font-weight: 400;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        @font-face {
+          font-family: 'Alte Haas Grotesk';
+          src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskBold.ttf') format('truetype');
+          font-weight: 700;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        @font-face {
+          font-family: 'Mont';
+          src: url('/fonts/mont/Mont-ExtraLightDEMO.otf') format('opentype');
+          font-weight: 200;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        @font-face {
+          font-family: 'Mont';
+          src: url('/fonts/mont/Mont-HeavyDEMO.otf') format('opentype');
+          font-weight: 800;
+          font-style: normal;
+          font-display: swap;
+        }
+        
+        /* IMPORTANT: Only apply styles when user has made design changes */
+        .styled-resume[data-has-changes="true"] {
+          --section-spacing: 50px;
+          --paragraph-spacing: 30px;
+          --line-spacing: 1.6;
+        }
+
+        /* APPLY font changes ONLY to content text when user has made changes (descriptions, bullet points, etc.) */
+        .styled-resume[data-has-changes="true"][data-font-family]:not([data-font-family="Montserrat"]) p,
+        .styled-resume[data-has-changes="true"][data-font-family]:not([data-font-family="Montserrat"]) li,
+        .styled-resume[data-has-changes="true"][data-font-family]:not([data-font-family="Montserrat"]) span:not(.font-bold):not(.font-semibold),
+        .styled-resume[data-has-changes="true"][data-font-family]:not([data-font-family="Montserrat"]) div:not(.font-bold):not(.font-semibold):not(.text-center):not(.text-lg):not(.text-3xl) {
+          font-family: var(--font-family) !important;
+        }
+
+        .styled-resume[data-has-changes="true"][data-font-size]:not([data-font-size="16px"]) p,
+        .styled-resume[data-has-changes="true"][data-font-size]:not([data-font-size="16px"]) li,
+        .styled-resume[data-font-size]:not([data-font-size="16px"]) span:not(.font-bold):not(.font-semibold),
+        .styled-resume[data-has-changes="true"][data-font-size]:not([data-font-size="16px"]) div:not(.font-bold):not(.font-semibold):not(.text-center):not(.text-lg):not(.text-3xl) {
+          font-size: var(--font-size) !important;
+        }
+
+        .styled-resume[data-has-changes="true"] p,
+        .styled-resume[data-has-changes="true"] li,
+        .styled-resume[data-has-changes="true"] span:not(.font-bold):not(.font-semibold),
+        .styled-resume[data-has-changes="true"] div:not(.font-bold):not(.font-semibold):not(.text-center):not(.text-lg):not(.text-3xl) {
+          line-height: var(--line-height) !important;
+        }
+
+        /* Apply section spacing to all major resume sections ONLY when user has made changes */
+        .styled-resume[data-has-changes="true"] > div > div,
+        .styled-resume[data-has-changes="true"] > div > section,
+        .styled-resume[data-has-changes="true"] > div > div[class*="section"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="Section"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="experience"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="education"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="skills"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="contact"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="summary"],
+        .styled-resume[data-has-changes="true"] > div > div[class*="Summary"] {
+          margin-bottom: var(--section-spacing) !important;
+        }
+
+        /* Apply paragraph spacing to all text elements ONLY when user has made changes */
+        .styled-resume[data-has-changes="true"] p,
+        .styled-resume[data-has-changes="true"] div,
+        .styled-resume[data-has-changes="true"] span,
+        .styled-resume[data-has-changes="true"] li,
+        .styled-resume[data-has-changes="true"] td,
+        .styled-resume[data-has-changes="true"] th {
+          margin-bottom: var(--paragraph-spacing) !important;
+          line-height: var(--line-spacing) !important;
+        }
+
+        /* Specific spacing for different resume components ONLY when user has made changes */
+        .styled-resume[data-has-changes="true"] div[class*="Experience"],
+        .styled-resume[data-has-changes="true"] div[class*="Education"],
+        .styled-resume[data-has-changes="true"] div[class*="Skills"],
+        .styled-resume[data-has-changes="true"] div[class*="Contact"],
+        .styled-resume[data-has-changes="true"] div[class*="Summary"] {
+          margin-bottom: var(--section-spacing) !important;
+        }
+
+        .styled-resume[data-has-changes="true"] div[class*="experience-item"],
+        .styled-resume[data-has-changes="true"] div[class*="education-item"],
+        .styled-resume[data-has-changes="true"] div[class*="skill-item"] {
+          margin-bottom: var(--paragraph-spacing) !important;
+        }
+
+
+      `}</style>
     </div>
   );
 };
