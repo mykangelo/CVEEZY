@@ -96,8 +96,8 @@ class ResumeController extends Controller
         // Use resume_data column and it's already an array due to casting
         $resume = $resumeModel->resume_data;
 
-        // Default to "classic" if template_name is null
-        $template = $resumeModel->template_name ?? 'classic';
+        // Default to first available template from config if template_name is null
+        $template = $resumeModel->template_name ?? array_key_first(config('resume.templates', ['classic' => 'Classic']));
 
         return view("resume.$template", compact('resume'));
     }
@@ -138,19 +138,17 @@ class ResumeController extends Controller
             // Use resume_data column and it's already an array due to casting
             $resume = $resumeModel->resume_data;
             
-            // Get template name from your store method - you're saving it as 'template_name'
-            // But I notice your Resume model fillable doesn't include 'template_name'
-            // Let's check if it exists, otherwise default to 'classic'
-            $template = $resumeModel->template_name ?? 'classic';
-            Log::info("Using template: $template");
-            
-            // Validate that the template view exists
-            $viewPath = "resume.$template";
-            if (!view()->exists($viewPath)) {
-                Log::warning("Template view not found: $viewPath, falling back to classic");
-                $template = 'classic';
-                $viewPath = "resume.classic";
-            }
+                    // Get template name from config with fallback
+        $template = $resumeModel->template_name ?? array_key_first(config('resume.templates', ['classic' => 'Classic']));
+        Log::info("Using template: $template");
+        
+        // Validate that the template view exists
+        $viewPath = "resume.$template";
+        if (!view()->exists($viewPath)) {
+            Log::warning("Template view not found: $viewPath, falling back to classic");
+            $template = 'classic';
+            $viewPath = "resume.classic";
+        }
             
             Log::info("Loading view: $viewPath");
             

@@ -29,7 +29,7 @@ class PaymentProofController extends Controller
 
             $request->validate([
                 'resume_id' => 'required|exists:resumes,id',
-                'proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+                'proof' => 'required|file|mimes:jpg,jpeg,png,pdf|max:' . config('resume.uploads.max_file_size', 10240),
             ]);
 
             // Additional check: ensure the resume belongs to the current user

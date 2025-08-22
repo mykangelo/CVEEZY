@@ -992,11 +992,11 @@ class ResumeParsingService
             return [];
         }
         // Deep scanning: process the full text in chunks with overlap and merge
-        $chunks = $this->chunkText($cleanText, 10000, 800);
+                    $chunks = $this->chunkText($cleanText, config('resume.parsing.ai_parsing.chunk_size', 10000), config('resume.parsing.ai_parsing.overlap', 800));
         $accumulated = [];
 
         try {
-            $model = getenv('GEMINI_PARSER_MODEL') ?: 'gemini-1.5-pro';
+            $model = config('services.gemini.parser_model', 'gemini-2.5-flash');
             $schema = '{contact:{firstName,lastName,desiredJobTitle,phone,email,country,city,address,postCode},experiences:[{jobTitle,company,location,startDate,endDate,description}],education:[{school,location,degree,startDate,endDate,description}],skills:[{name,level}],summary,languages:[{name,proficiency}],certifications:[{title}],awards:[{title}],websites:[{label,url}],references:[{name,relationship,contactInfo}],hobbies:[string]}';
 
             // Build heuristics hint once
@@ -1022,9 +1022,9 @@ class ResumeParsingService
 
                 $response = $this->gemini->generateText($prompt, $model, [
                     'response_mime_type' => 'application/json',
-                    'maxOutputTokens' => 2048,
-                    'temperature' => 0.1,
-                    'topP' => 0.1,
+                                'maxOutputTokens' => config('resume.parsing.ai_parsing.max_output_tokens', 2048),
+            'temperature' => config('resume.parsing.ai_parsing.temperature', 0.1),
+                    'topP' => config('resume.parsing.ai_parsing.top_p', 0.1),
                 ]);
                 if (!is_array($response)) continue;
                 $jsonText = $this->extractJsonFromGeminiResponse($response);

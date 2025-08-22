@@ -24,11 +24,11 @@ class ResumeParsingController extends Controller
     public function parseResume(Request $request)
     {
         try {
-            // Validate request
-            $validator = Validator::make($request->all(), [
-                'resume_file' => 'required|file|mimes:pdf,doc,docx,txt,html,htm|max:10240', // 10MB max
-                'template_name' => 'required|string|in:classic,creative,elegant,minimal,modern,professional'
-            ]);
+                    // Validate request using config values
+        $validator = Validator::make($request->all(), [
+            'resume_file' => 'required|file|mimes:' . implode(',', config('resume.parsing.supported_formats', ['pdf', 'doc', 'docx', 'txt', 'html', 'htm'])) . '|max:' . config('resume.uploads.max_file_size', 10240),
+            'template_name' => 'required|string|in:' . implode(',', array_keys(config('resume.templates', ['classic', 'creative', 'elegant', 'minimal', 'modern', 'professional'])))
+        ]);
             
             if ($validator->fails()) {
                 return response()->json([
@@ -117,9 +117,9 @@ class ResumeParsingController extends Controller
     public function getParsingPreview(Request $request)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'resume_file' => 'required|file|mimes:pdf,doc,docx,txt,html,htm|max:10240'
-            ]);
+                    $validator = Validator::make($request->all(), [
+            'resume_file' => 'required|file|mimes:' . implode(',', config('resume.parsing.supported_formats', ['pdf', 'doc', 'docx', 'txt', 'html', 'htm'])) . '|max:' . config('resume.uploads.max_file_size', 10240)
+        ]);
             
             if ($validator->fails()) {
                 return response()->json([

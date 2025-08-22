@@ -78,8 +78,8 @@ class FinalCheckController extends Controller
         $spellcheckMatches = [];
         if (!empty($textToCheck)) {
             try {
-                // Cap payload size and avoid ellipsis which would skew offsets
-                $textToCheck = Str::limit($textToCheck, 20000, '');
+                                                // Cap payload size and avoid ellipsis which would skew offsets
+                    $textToCheck = Str::limit($textToCheck, config('resume.final_check.max_text_length', 20000), '');
 
                 // Derive language from app locale (e.g., en-US)
                 $language = str_replace('_', '-', app()->getLocale() ?? 'en-US');

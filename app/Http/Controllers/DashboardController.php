@@ -406,9 +406,10 @@ class DashboardController extends Controller
             'customSections_count' => count($pdfData['customSections'] ?? [])
         ]);
         
-        // Fallback to classic if template view doesn't exist
+        // Fallback to first available template from config if template view doesn't exist
         if (!view()->exists($viewName)) {
-            $viewName = 'resume.classic';
+            $fallbackTemplate = array_key_first(config('resume.templates', ['classic' => 'Classic']));
+            $viewName = 'resume.' . $fallbackTemplate;
         }
         
         try {

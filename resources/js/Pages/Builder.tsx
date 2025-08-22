@@ -10,6 +10,8 @@ import { debounce } from "lodash";
 import { ResumeData, Language, Certification, Award, Website, Reference, Hobby, CustomSection } from '@/types/resume';
 
 
+
+
 // Import all resume template components
 import Classic from '@/Components/Builder/Classic';
 import Modern from '@/Components/Builder/Modern';
@@ -208,18 +210,189 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
   };
 
   // Generate/Improve experience description via AI
-  const reviseExperienceDescription = async (id: number, description: string, exp: Experience) => {
+  const reviseExperienceDescription = async (id: number, description: string, exp: Experience, variant?: string) => {
     setLoadingId(id);
     try {
+      // Check if we have the required data
+      if (!exp.jobTitle || !exp.jobTitle.trim()) {
+        alert('Please fill in the Job Title first before generating a description.');
+        return;
+      }
+      
+      const companyName = (exp.company || exp.employer || '').trim();
+      const startDate = (exp.startDate || '').trim();
+      const endDate = (exp.endDate || 'Present').trim();
+      
       const seed = description && description.trim().length > 0
         ? description
-        : `Generate a concise, results-focused experience description for the role ${exp.jobTitle} at ${exp.company || exp.employer || ''} (${exp.startDate} - ${exp.endDate || 'Present'}). Emphasize achievements, impact, tools, and collaboration.`;
+        : `Generate a concise, results-focused experience description for the role ${exp.jobTitle}${companyName ? ` at ${companyName}` : ''}${startDate ? ` (${startDate} - ${endDate})` : ''}. Emphasize achievements, impact, tools, and collaboration.`;
+      
       const res = await fetch("/revise-experience-text", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: seed }),
+        body: JSON.stringify({ 
+          text: seed,
+          variant: variant || null,
+          jobTitle: exp.jobTitle,
+          company: exp.company || exp.employer
+        }),
       });
       const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI generation failed. Please check your input and try again.');
+        return;
+      }
+      
+      updateExperience(id, "description", data.revised_text);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Validation helper functions
+  const validateExperienceForAI = (exp: Experience): { isValid: boolean; errors: string[]; warnings: string[] } => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Required field validation
+    if (!exp.jobTitle || !exp.jobTitle.trim()) {
+      errors.push('Job Title is required');
+    }
+    if (!exp.company && !exp.employer) {
+      errors.push('Company/Employer is required');
+    }
+
+    // Content validation
+    if (!exp.description || exp.description.trim().length < 10) {
+      warnings.push('Description should be at least 10 characters for better AI results');
+    }
+
+    // Generic content check
+    const genericPhrases = ['Software Developer', 'Web Developer', 'Developer'];
+    const description = exp.description || '';
+    const hasGenericContent = genericPhrases.some(phrase => 
+      description.toLowerCase().includes(phrase.toLowerCase())
+    );
+    
+    if (hasGenericContent && description.length < 40) {
+      warnings.push('Consider adding more specific details for better AI enhancement');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  };
+
+  const validateEducationForAI = (edu: Education): { isValid: boolean; errors: string[]; warnings: string[] } => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Required field validation
+    if (!edu.degree || !edu.degree.trim()) {
+      errors.push('Degree is required');
+    }
+    if (!edu.school || !edu.school.trim()) {
+      errors.push('School is required');
+    }
+
+    // Content validation
+    if (!edu.description || edu.description.trim().length < 10) {
+      warnings.push('Description should be at least 10 characters for better AI results');
+    }
+
+    // Generic content check
+    const genericPhrases = ['Computer Science', 'Information Technology', 'IT'];
+    const description = edu.description || '';
+    const hasGenericContent = genericPhrases.some(phrase => 
+      description.toLowerCase().includes(phrase.toLowerCase())
+    );
+    
+    if (hasGenericContent && description.length < 30) {
+      warnings.push('Consider adding more specific details for better AI enhancement');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  };
+
+  // Polish existing experience description with AI
+  const polishExperienceDescription = async (id: number, description: string, exp: Experience) => {
+    setLoadingId(id);
+    try {
+      // Check if we have the required data
+      if (!exp.jobTitle || !exp.jobTitle.trim()) {
+        alert('Please fill in the Job Title first before polishing the description.');
+        return;
+      }
+      
+      const companyName = (exp.company || exp.employer || '').trim();
+      if (!companyName) {
+        alert('Please fill in the Company/Employer first before polishing the description.');
+        return;
+      }
+
+      const res = await fetch("/improve-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text: description,
+          type: 'experience',
+          context: {
+            jobTitle: exp.jobTitle,
+            company: companyName
+          }
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI polishing failed. Please try again.');
+        return;
+      }
+      
+      updateExperience(id, "description", data.improved_text);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to improve description. Please try again.');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Force regeneration for completely different output
+  const forceRegenerateExperience = async (id: number, description: string, exp: Experience) => {
+    setLoadingId(id);
+    try {
+      // Check if we have the required data
+      if (!exp.jobTitle || !exp.jobTitle.trim()) {
+        alert('Please fill in the Job Title first before generating a description.');
+        return;
+      }
+      
+      const res = await fetch("/force-regenerate-experience", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text: description,
+          jobTitle: exp.jobTitle,
+          company: exp.company || exp.employer
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI generation failed. Please check your input and try again.');
+        return;
+      }
+      
       updateExperience(id, "description", data.revised_text);
     } catch (err) {
       console.error(err);
@@ -312,12 +485,94 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 />
                 {errors[`exp_${exp.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`exp_${exp.id}_description`]}</p>}
 
-                <button
-                  onClick={() => reviseExperienceDescription(exp.id, exp.description, exp)}
-                  className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-                >
-                  {loadingId === exp.id ? "Generating…" : "Generate Description with AI"}
-                </button>
+                {/* AI Generation Button with Validation */}
+                {(() => {
+                  const validation = validateExperienceForAI(exp);
+                  const hasErrors = validation.errors.length > 0;
+                  const hasWarnings = validation.warnings.length > 0;
+                  
+                  return (
+                    <div className="mt-3">
+                      {/* Validation Messages */}
+                      {hasErrors && (
+                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <span className="text-red-600 mr-2">⚠️</span>
+                            <span className="text-red-800 font-medium">Required fields missing:</span>
+                          </div>
+                          <ul className="text-red-700 text-sm space-y-1">
+                            {validation.errors.map((error, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                                {error}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {!hasErrors && hasWarnings && (
+                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <span className="text-yellow-600 mr-2">💡</span>
+                            <span className="text-yellow-800 font-medium">Suggestions for better AI results:</span>
+                          </div>
+                          <ul className="text-yellow-700 text-sm space-y-1">
+                            {validation.warnings.map((warning, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                                {warning}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* AI Buttons */}
+                      <div className="flex gap-2">
+                        {/* Polish Button - Only show if user has written content */}
+                        {exp.description && exp.description.trim().length > 10 && (
+                          <button
+                            onClick={() => polishExperienceDescription(exp.id, exp.description, exp)}
+                            disabled={hasErrors || loadingId === exp.id}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium border-2 border-orange-400"
+                            title="Polish and improve your existing description with AI"
+                          >
+                            {loadingId === exp.id ? "Polishing…" : "✨ Polish with AI"}
+                          </button>
+                        )}
+                        
+                        {/* Generate/Regenerate Button */}
+                        <button
+                          onClick={() => {
+                            if (exp.description) {
+                              forceRegenerateExperience(exp.id, exp.description, exp);
+                            } else {
+                              reviseExperienceDescription(exp.id, exp.description, exp);
+                            }
+                          }}
+                          disabled={hasErrors}
+                          className={`px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium ${
+                            hasErrors 
+                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                          }`}
+                          title={hasErrors ? "Please fill in required fields first" : (exp.description ? "Regenerate with different style" : "Generate Description with AI")}
+                        >
+                          {loadingId === exp.id ? "Generating…" : exp.description ? "🔄 Regenerate with AI" : "✨ Generate with AI"}
+                        </button>
+                      </div>
+                      
+                      {/* AI Status Indicator */}
+                      {!hasErrors && !hasWarnings && (
+                        <div className="mt-2 text-green-600 text-sm flex items-center">
+                          <span className="mr-1">✅</span>
+                          Ready for AI generation
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
@@ -338,6 +593,42 @@ interface EducationSectionProps {
 
 const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEducations, errors }) => {
   const [loadingId, setLoadingId] = React.useState<number | null>(null);
+
+  // Validation helper function for education
+  const validateEducationForAI = (edu: Education): { isValid: boolean; errors: string[]; warnings: string[] } => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Required field validation
+    if (!edu.degree || !edu.degree.trim()) {
+      errors.push('Degree is required');
+    }
+    if (!edu.school || !edu.school.trim()) {
+      errors.push('School is required');
+    }
+
+    // Content validation
+    if (!edu.description || edu.description.trim().length < 10) {
+      warnings.push('Description should be at least 10 characters for better AI results');
+    }
+
+    // Generic content check
+    const genericPhrases = ['Computer Science', 'Information Technology', 'IT'];
+    const description = edu.description || '';
+    const hasGenericContent = genericPhrases.some(phrase => 
+      description.toLowerCase().includes(phrase.toLowerCase())
+    );
+    
+    if (hasGenericContent && description.length < 30) {
+      warnings.push('Consider adding more specific details for better AI enhancement');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  };
 
   const addEducation = () => {
     setEducations([
@@ -375,24 +666,91 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
     );
   };
 
-  // Generate/Improve education description via AI
-  const reviseDescription = async (id: number, description: string, edu: Education) => {
+  // Polish existing education description with AI
+  const polishEducationDescription = async (id: number, description: string, edu: Education) => {
     setLoadingId(id);
     try {
+      // Check if we have the required data
+      if (!edu.degree || !edu.degree.trim()) {
+        alert('Please fill in the Degree first before improving the description.');
+        return;
+      }
+      
+      if (!edu.school || !edu.school.trim()) {
+        alert('Please fill in the School Name first before improving the description.');
+        return;
+      }
+
+      const res = await fetch("/improve-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text: description,
+          type: 'education',
+          context: {
+            degree: edu.degree,
+            school: edu.school
+          }
+        }),
+      });
+      const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI polishing failed. Please try again.');
+        return;
+      }
+      
+      updateEducation(id, "description", data.improved_text);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to improve description. Please try again.');
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Generate/Improve education description via AI
+  const reviseDescription = async (id: number, description: string, edu: Education, variant?: string) => {
+    setLoadingId(id);
+    try {
+      // Check if we have the required data
+      if (!edu.degree || !edu.degree.trim()) {
+        alert('Please fill in the Degree first before generating a description.');
+        return;
+      }
+      
+      if (!edu.school || !edu.school.trim()) {
+        alert('Please fill in the School Name first before generating a description.');
+        return;
+      }
+      
       const seed = description && description.trim().length > 0
         ? description
         : `Generate a concise, professional education description for ${edu.degree} at ${edu.school}. Emphasize relevant coursework, projects, tools, and academic achievements in 1-2 sentences.`;
+      
       const res = await fetch("/reviseEducationDescription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: seed }),
+        body: JSON.stringify({ 
+          text: seed,
+          variant: variant || null,
+          degree: edu.degree,
+          school: edu.school
+        }),
       });
       const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI generation failed. Please check your input and try again.');
+        return;
+      }
+      
       updateEducation(id, "description", data.revised_text);
     } catch (err) {
       console.error(err);
+    } finally {
+      setLoadingId(null);
     }
-    setLoadingId(null);
   };
 
   return (
@@ -481,15 +839,88 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 />
                 {errors[`edu_${edu.id}_description`] && <p className="text-red-500 text-xs mt-1">{errors[`edu_${edu.id}_description`]}</p>}
 
-                <button
-                  onClick={() => reviseDescription(edu.id, edu.description, edu)}
-                  disabled={loadingId === edu.id}
-                  className={`mt-2 px-3 py-1 text-white rounded transition ${
-                    loadingId === edu.id ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
-                  }`}
-                >
-                  {loadingId === edu.id ? "Generating…" : "Generate Description with AI"}
-                </button>
+                {/* AI Generation Button with Validation */}
+                {(() => {
+                  const validation = validateEducationForAI(edu);
+                  const hasErrors = validation.errors.length > 0;
+                  const hasWarnings = validation.warnings.length > 0;
+                  
+                  return (
+                    <div className="mt-3">
+                      {/* Validation Messages */}
+                      {hasErrors && (
+                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <span className="text-red-600 mr-2">⚠️</span>
+                            <span className="text-red-800 font-medium">Required fields missing:</span>
+                          </div>
+                          <ul className="text-red-700 text-sm space-y-1">
+                            {validation.errors.map((error, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+                                {error}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {!hasErrors && hasWarnings && (
+                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                          <div className="flex items-center mb-2">
+                            <span className="text-yellow-600 mr-2">💡</span>
+                            <span className="text-yellow-800 font-medium">Suggestions for better AI results:</span>
+                          </div>
+                          <ul className="text-yellow-700 text-sm space-y-1">
+                            {validation.warnings.map((warning, index) => (
+                              <li key={index} className="flex items-center">
+                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
+                                {warning}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {/* AI Buttons */}
+                      <div className="flex gap-2">
+                        {/* Polish Button - Only show if user has written content */}
+                        {edu.description && edu.description.trim().length > 10 && (
+                          <button
+                            onClick={() => polishEducationDescription(edu.id, edu.description, edu)}
+                            disabled={loadingId === edu.id || hasErrors}
+                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium border-2 border-orange-400"
+                            title="Polish and improve your existing description with AI"
+                          >
+                            {loadingId === edu.id ? "Polishing…" : "✨ Polish with AI"}
+                          </button>
+                        )}
+                        
+                        {/* Generate/Regenerate Button */}
+                        <button
+                          onClick={() => reviseDescription(edu.id, edu.description, edu, edu.description ? 'regenerate-' + Date.now() : undefined)}
+                          disabled={loadingId === edu.id || hasErrors}
+                          className={`px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium ${
+                            loadingId === edu.id || hasErrors
+                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+                          }`}
+                          title={hasErrors ? "Please fill in required fields first" : (edu.description ? "Regenerate with different style" : "Generate Description with AI")}
+                        >
+                          {loadingId === edu.id ? "Generating…" : edu.description ? "🔄 Regenerate with AI" : "✨ Generate with AI"}
+                        </button>
+                      </div>
+                      
+                      {/* AI Status Indicator */}
+                      {!hasErrors && !hasWarnings && (
+                        <div className="mt-2 text-green-600 text-sm flex items-center">
+                          <span className="mr-1">✅</span>
+                          Ready for AI generation
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </>
           )}
@@ -711,7 +1142,7 @@ interface SummarySectionProps {
 const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors, desiredJobTitle, skills, experiences, educations }) => {
   const [genLoading, setGenLoading] = React.useState(false);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (variant?: string) => {
     try {
       const jobTitle = (desiredJobTitle || '').trim();
       const skillNames = (skills || []).map(s => s.name).filter(n => !!n && n.trim().length > 0);
@@ -729,6 +1160,7 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
           job_title: jobTitle,
           skills: skillNames,
           current_summary: summary,
+          variant: variant || null,
           experiences: (experiences || []).map(e => ({
             jobTitle: e.jobTitle,
             company: e.company || e.employer || '',
@@ -778,11 +1210,12 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
       {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
 
       <button
-        onClick={handleGenerate}
+        onClick={() => handleGenerate(summary ? 'regenerate-' + Date.now() : undefined)}
         disabled={genLoading}
-        className="mb-4 px-4 py-2 bg-[#354eab] text-white rounded hover:bg-[#2d3f8f] transition"
+        className="px-6 py-3 bg-gradient-to-r from-[#354eab] to-purple-600 text-white rounded-lg hover:from-[#2d3f8f] hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg"
+        title={summary ? "Regenerate with different style" : "Generate Summary with AI"}
       >
-        {genLoading ? 'Generating…' : 'Generate Summary with AI'}
+        {genLoading ? 'Generating…' : summary ? '🔄 Regenerate Summary with AI' : '✨ Generate Summary with AI'}
       </button>
 
       <div className="bg-gray-50 rounded-lg p-4">

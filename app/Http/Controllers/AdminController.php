@@ -223,11 +223,12 @@ class AdminController extends Controller
             }, $resumeData['educations'] ?? []),
         ];
 
-        // Use the selected template name for the PDF view, falling back to classic
-        $templateName = $resume->template_name ?? 'classic';
+        // Use the selected template name for the PDF view, falling back to config
+        $templateName = $resume->template_name ?? array_key_first(config('resume.templates', ['classic' => 'Classic']));
         $viewName = 'resume.' . $templateName;
         if (!view()->exists($viewName)) {
-            $viewName = 'resume.classic';
+            $fallbackTemplate = array_key_first(config('resume.templates', ['classic' => 'Classic']));
+            $viewName = 'resume.' . $fallbackTemplate;
         }
 
         try {

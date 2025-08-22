@@ -52,4 +52,13 @@ return [
         'endpoint' => env('LANGUAGETOOL_ENDPOINT', 'https://api.languagetool.org'),
     ],
 
+    // Gemini AI configuration
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+        'api_url' => env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models'),
+        'default_model' => env('GEMINI_DEFAULT_MODEL', 'gemini-1.5-flash'),  // Fallback to working model
+        'parser_model' => env('GEMINI_PARSER_MODEL', 'gemini-1.5-flash'),   // Fallback to working model
+        'premium_model' => env('GEMINI_PREMIUM_MODEL', 'gemini-1.5-flash'), // Fallback to working model
+    ],
+
 ];

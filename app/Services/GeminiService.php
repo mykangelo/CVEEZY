@@ -11,8 +11,8 @@ class GeminiService
 
     public function __construct()
     {
-        $this->apiKey = env('GEMINI_API_KEY');
-        $this->baseUrl = env('GEMINI_API_URL', 'https://generativelanguage.googleapis.com/v1beta/models');
+        $this->apiKey = config('services.gemini.api_key');
+        $this->baseUrl = config('services.gemini.api_url');
     }
 
     /**
@@ -21,8 +21,10 @@ class GeminiService
      * - response_mime_type: e.g. 'application/json'
      * - temperature, topK, topP, maxOutputTokens
      */
-    public function generateText($prompt, $model = 'gemini-1.5-flash', array $options = [])
+    public function generateText($prompt, $model = null, array $options = [])
     {
+        // Use Gemini 1.5 Flash as default since it has better quota and working API
+        $model = $model ?: 'gemini-1.5-flash';
         $url = "{$this->baseUrl}/{$model}:generateContent?key={$this->apiKey}";
 
         $payload = [
@@ -48,7 +50,7 @@ class GeminiService
             $payload['generationConfig'] = $genConfig;
         }
 
-        $client = Http::timeout(20);
+        $client = Http::timeout(config('resume.parsing.ai_parsing.timeout', 20));
         // Allow disabling SSL verification in local/dev to avoid cURL error 60
         $verify = filter_var(env('HTTP_CLIENT_VERIFY_SSL', true), FILTER_VALIDATE_BOOL);
         if ($verify === false) {
@@ -58,7 +60,16 @@ class GeminiService
         $response = $client->post($url, $payload);
 
         if ($response->successful()) {
-            return $response->json();
+            $responseData = $response->json();
+            
+            // Debug: Log the response structure for troubleshooting
+            \Log::info('Gemini API Response Structure', [
+                'response_keys' => array_keys($responseData),
+                'candidates_structure' => $responseData['candidates'] ?? 'no_candidates',
+                'content_structure' => $responseData['candidates'][0]['content'] ?? 'no_content'
+            ]);
+            
+            return $responseData;
         }
 
         return [
@@ -67,4 +78,20 @@ class GeminiService
         ];
     }
 
+    /**
+     * Generate enhanced content with Gemini 1.5 Flash for better quality
+     */
+    public function generateEnhancedContent($prompt, array $options = [])
+    {
+        $model = 'gemini-1.5-flash';
+        
+        $enhancedOptions = array_merge([
+            'temperature' => 0.7, // Lower temperature for more focused output
+            'maxOutputTokens' => 512, // Reduced for more focused output
+            'topP' => 0.8, // Lower topP for more focused output
+            'topK' => 30, // Lower topK for more focused output
+        ], $options);
+
+        return $this->generateText($prompt, $model, $enhancedOptions);
+    }
 }

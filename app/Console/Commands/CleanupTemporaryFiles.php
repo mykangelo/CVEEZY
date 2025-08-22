@@ -26,6 +26,12 @@ class CleanupTemporaryFiles extends Command
         $ageInHours = (int) $this->option('age');
         $this->info("Cleaning up temporary files older than {$ageInHours} hour(s)...");
         
+        // Check if cleanup is enabled in config
+        if (!config('resume.cleanup.temp_files.enabled', true)) {
+            $this->info('Temporary file cleanup is disabled in configuration.');
+            return 0;
+        }
+        
         $deletedCount = 0;
         
         // Clean up temporary resume files

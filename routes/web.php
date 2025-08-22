@@ -167,6 +167,29 @@ Route::middleware(['auth', 'verified', 'throttle:10,1'])->prefix('api')->group(f
 
 /*
 |--------------------------------------------------------------------------
+| Configuration API for Frontend
+|--------------------------------------------------------------------------
+*/
+
+// API route for frontend config (no auth required since it's public config)
+Route::get('/api/config', function () {
+    return response()->json([
+        'resume' => [
+            'max_skills_display' => config('resume.ai_enhancement.max_skills_display', 5),
+            'ai_enhancement' => [
+                'max_skills_display' => config('resume.ai_enhancement.max_skills_display', 5),
+                'content_variations' => config('resume.ai_enhancement.content_variations', []),
+                'temperature_range' => config('resume.ai_enhancement.temperature_range', []),
+                'summary_length' => config('resume.ai_enhancement.summary_length', []),
+            ],
+            'templates' => config('resume.templates', []),
+            'uploads' => config('resume.uploads', []),
+        ]
+    ]);
+})->name('api.config');
+
+/*
+|--------------------------------------------------------------------------
 | Authentication Routes
 |--------------------------------------------------------------------------
 */
@@ -179,6 +202,8 @@ Route::middleware(['auth', 'verified', 'throttle:10,1'])->prefix('api')->group(f
 use App\Http\Controllers\AIController;
 
 Route::get('/ask-ai', [AIController::class, 'ask']);
+
+
 
 // AI summary generation (no CSRF)
 Route::withoutMiddleware([
@@ -199,6 +224,8 @@ Route::withoutMiddleware([
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ])->group(function () {
     Route::post('/revise-experience-text', [AIController::class, 'reviseExperienceDescription']);
+    Route::post('/force-regenerate-experience', [AIController::class, 'forceRegenerateExperience']);
+    Route::post('/improve-description', [AIController::class, 'improveDescription']);
 });
 
 require __DIR__ . '/auth.php';

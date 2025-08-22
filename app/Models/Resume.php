@@ -54,17 +54,19 @@ class Resume extends Model
     public const STATUS_PUBLISHED = 'published';
 
     /**
-     * Get all available statuses
+     * Get status constants from config
      */
     public static function getStatuses(): array
     {
-        return [
+        return config('resume.statuses', [
             self::STATUS_DRAFT,
             self::STATUS_IN_PROGRESS,
             self::STATUS_COMPLETED,
             self::STATUS_PUBLISHED,
-        ];
+        ]);
     }
+
+
 
     /**
      * Relationship: Resume belongs to a user
