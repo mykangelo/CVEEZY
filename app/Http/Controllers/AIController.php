@@ -102,6 +102,15 @@ This should be a focused description that enhances the original text without bei
                     0.6 + (mt_rand(0, 100) / 100) * 0.2, // Lower temp for more focused output
             ]);
             $revised = $this->extractRevisedText($result, $request->text);
+            
+            // Quality check: If AI produces poor/generic content, use local variation
+            $isPoorContent = $this->isPoorQualityContent($revised);
+            $isSimilarContent = $variant && !empty($request->text) && $this->isTooSimilar($request->text, $revised);
+            
+            if ($isPoorContent || $isSimilarContent) {
+                \Log::info("AI producing poor or similar content for education, using local variation");
+                $revised = $this->generateLocalEducationVariation($request->text, $request->degree, $request->school);
+            }
         } catch (\Throwable $e) {
             $revised = $this->localTidy($request->text);
         }
@@ -196,6 +205,15 @@ This should be a simple, clear description that enhances the original text witho
                     0.6 + (mt_rand(0, 100) / 100) * 0.2, // Lower temp for more focused output
             ]);
             $revised = $this->extractRevisedText($result, $request->text);
+            
+            // Quality check: If AI produces poor/generic content, use local variation
+            $isPoorContent = $this->isPoorQualityContent($revised);
+            $isSimilarContent = $variant && !empty($request->text) && $this->isTooSimilar($request->text, $revised);
+            
+            if ($isPoorContent || $isSimilarContent) {
+                \Log::info("AI producing poor or similar content for experience, using local variation");
+                $revised = $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company);
+            }
         } catch (\Throwable $e) {
             $revised = $this->localTidy($request->text);
         }
@@ -260,6 +278,12 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
             ]);
             
             $revised = $this->extractRevisedText($result, $request->text);
+            
+            // Force regeneration should always use local variation for diversity
+            if ($this->isTooSimilar($request->text, $revised)) {
+                \Log::info("Force regeneration producing similar content, using local variation");
+                $revised = $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company);
+            }
         } catch (\Throwable $e) {
             $revised = $this->localTidy($request->text);
         }
@@ -373,49 +397,222 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
                 $this->summarizeEducationForPrompt($education);
 
             $revised = '';
-            for ($i = 0; $i < config('resume.ai_enhancement.max_retries', 6); $i++) {
-                $style = $styles[array_rand($styles)];
-                $seed = $variant ? ($variant . '-' . $i) : (string) mt_rand(config('resume.ai_enhancement.random_seed_range.min', 1000), config('resume.ai_enhancement.random_seed_range.max', 9999));
-                $prompt = "Create an exceptional, compelling resume summary for the role: {$jobTitle}.\n" .
-                    "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
-                    "REQUIREMENTS:\n" .
-                    "- Lead with your most impressive achievement or unique value proposition\n" .
-                    "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
-                    "- Highlight technical expertise, leadership, and industry knowledge\n" .
-                    "- Demonstrate problem-solving abilities and strategic thinking\n" .
-                    "- Use powerful, industry-specific language that commands attention\n" .
-                    "- Avoid generic phrases and placeholders like [field]\n" .
-                    "- Make each sentence distinct and memorable\n\n" .
-                    "Use the context below to create a summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
-                    "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
-                    $context;
+            $maxAttempts = config('resume.ai_enhancement.max_retries', 6);
+            $attempts = [];
+            
+            for ($i = 0; $i < $maxAttempts; $i++) {
+                // Force different style for regeneration
+                if ($variant) {
+                    $style = $styles[($i + mt_rand(0, count($styles) - 1)) % count($styles)];
+                    // Add random modifiers for regeneration to force diversity
+                    $styleModifiers = ['with emphasis on', 'focusing on', 'highlighting', 'emphasizing', 'prioritizing', 'specializing in', 'concentrating on'];
+                    $style = $styleModifiers[array_rand($styleModifiers)] . ' ' . $style;
+                } else {
+                    $style = $styles[array_rand($styles)];
+                }
+                
+                // Generate unique seed for each attempt
+                $seed = $variant ? 
+                    ($variant . '-' . $i . '-' . mt_rand(1000, 9999) . '-' . uniqid()) : 
+                    (string) mt_rand(config('resume.ai_enhancement.random_seed_range.min', 1000), config('resume.ai_enhancement.random_seed_range.max', 9999));
+                
+                // Enhanced prompt for regeneration with COMPLETELY different approaches
+                if ($variant) {
+                    // Check if this is a force regeneration
+                    $isForceRegeneration = strpos($variant, 'force-regenerate') !== false;
+                    
+                    if ($isForceRegeneration) {
+                        // Force regeneration with completely different approaches
+                        $forceApproaches = [
+                            "Create a COMPLETELY DIFFERENT resume summary for {$jobTitle} with a LEADERSHIP focus.",
+                            "Generate a NEW resume summary for {$jobTitle} emphasizing TECHNICAL EXPERTISE.",
+                            "Write a FRESH resume summary for {$jobTitle} highlighting BUSINESS IMPACT.",
+                            "Create an ALTERNATIVE resume summary for {$jobTitle} focusing on PROBLEM-SOLVING.",
+                            "Generate a DIFFERENT resume summary for {$jobTitle} emphasizing PROJECT DELIVERY."
+                        ];
+                        
+                        $openingLine = $forceApproaches[array_rand($forceApproaches)];
+                        
+                        // Force completely different content structure
+                        $forceStructures = [
+                            "Start with TECHNICAL SKILLS, then LEADERSHIP, then ACHIEVEMENTS",
+                            "Begin with ACHIEVEMENTS, then SKILLS, then LEADERSHIP",
+                            "Lead with LEADERSHIP, then TECHNICAL EXPERTISE, then BUSINESS IMPACT",
+                            "Start with PROBLEM-SOLVING, then SKILLS, then ACHIEVEMENTS",
+                            "Begin with PROJECT DELIVERY, then LEADERSHIP, then TECHNICAL SKILLS"
+                        ];
+                        
+                        $forceStructure = $forceStructures[array_rand($forceStructures)];
+                        
+                        $prompt = "{$openingLine}\n" .
+                            "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
+                            "FORCE REGENERATION REQUIREMENTS:\n" .
+                            "- This MUST be COMPLETELY DIFFERENT from any previous summary\n" .
+                            "- Use the EXACT structure: {$forceStructure}\n" .
+                            "- Start with a COMPLETELY DIFFERENT opening sentence\n" .
+                            "- Use DIFFERENT examples and achievements\n" .
+                            "- Employ ALTERNATIVE vocabulary and phrasing\n" .
+                            "- Lead with your most impressive achievement or unique value proposition\n" .
+                            "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
+                            "- Highlight technical expertise, leadership, and industry knowledge\n" .
+                            "- Demonstrate problem-solving abilities and strategic thinking\n" .
+                            "- Use powerful, industry-specific language that commands attention\n" .
+                            "- Avoid generic phrases and placeholders like [field]\n" .
+                            "- Make each sentence distinct and memorable\n\n" .
+                            "IMPORTANT: This MUST be completely different from any previous summary. Use the comprehensive context below to create a unique summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
+                            "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
+                            $context;
+                    } else {
+                        // Regular regeneration
+                        $regenerationApproaches = [
+                            "Create a COMPLETELY DIFFERENT resume summary for the role: {$jobTitle}.",
+                            "Generate an alternative resume summary for {$jobTitle} with a different perspective.",
+                            "Write a new resume summary for {$jobTitle} using a completely different approach.",
+                            "Create a fresh resume summary for {$jobTitle} with alternative structure and content.",
+                            "Generate a different resume summary for {$jobTitle} with unique presentation style."
+                        ];
+                        
+                        $openingLine = $regenerationApproaches[array_rand($regenerationApproaches)];
+                        
+                        // Force different content focus for each attempt
+                        $contentFocuses = [
+                            "Focus on LEADERSHIP and TEAM MANAGEMENT achievements",
+                            "Emphasize TECHNICAL SKILLS and TECHNICAL EXPERTISE",
+                            "Highlight BUSINESS IMPACT and METRICS",
+                            "Concentrate on PROBLEM-SOLVING and INNOVATION",
+                            "Prioritize CLIENT RELATIONSHIPS and PROJECT DELIVERY"
+                        ];
+                        
+                        $contentFocus = $contentFocuses[array_rand($contentFocuses)];
+                        
+                        $prompt = "{$openingLine}\n" .
+                            "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
+                            "CRITICAL REQUIREMENTS FOR REGENERATION:\n" .
+                            "- Use a COMPLETELY DIFFERENT approach and structure from any previous summary\n" .
+                            "- Start with a different opening sentence and perspective\n" .
+                            "- Use different examples and achievements\n" .
+                            "- Employ alternative vocabulary and phrasing\n" .
+                            "- Lead with your most impressive achievement or unique value proposition\n" .
+                            "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
+                            "- Highlight technical expertise, leadership, and industry knowledge\n" .
+                            "- Demonstrate problem-solving abilities and strategic thinking\n" .
+                            "- Use powerful, industry-specific language that commands attention\n" .
+                            "- Avoid generic phrases and placeholders like [field]\n" .
+                            "- Make each sentence distinct and memorable\n\n" .
+                            "CONTENT FOCUS: {$contentFocus}\n\n" .
+                            "CONTENT STRUCTURE VARIATION:\n" .
+                            "- If previous summary started with experience, start with skills or achievements\n" .
+                            "- If previous summary focused on technical skills, focus on leadership or business impact\n" .
+                            "- If previous summary was achievement-focused, make this skills-focused\n" .
+                            "- Use different sentence patterns and transitions\n\n" .
+                            "IMPORTANT: This MUST be completely different from any previous summary. Use the comprehensive context below to create a unique summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
+                            "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
+                            $context;
+                    }
+                } else {
+                    $prompt = "Create an exceptional, compelling resume summary for the role: {$jobTitle}.\n" .
+                        "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
+                        "CRITICAL REQUIREMENTS:\n" .
+                        "- Lead with your most impressive achievement or unique value proposition\n" .
+                        "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
+                        "- Highlight technical expertise, leadership, and industry knowledge\n" .
+                        "- Demonstrate problem-solving abilities and strategic thinking\n" .
+                        "- Use powerful, industry-specific language that commands attention\n" .
+                        "- Avoid generic phrases and placeholders like [field]\n" .
+                        "- Make each sentence distinct and memorable\n" .
+                        "- Reference specific skills, experience level, and industry focus from context\n" .
+                        "- Tailor language to match the career progression level\n\n" .
+                        "Use the comprehensive context below to create a summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
+                        "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
+                        $context;
+                }
 
+                // Enhanced temperature and parameter variation for regeneration
+                $baseTemp = $variant ? 
+                    config('resume.ai_enhancement.temperature_range.max', 1.2) : 
+                    config('resume.ai_enhancement.temperature_range.min', 0.8);
+                
+                $tempVariation = $variant ? 
+                    (mt_rand(0, 100) / 100) * 1.0 : // Much higher variation for regeneration
+                    (mt_rand(0, 100) / 100) * 0.3; // Lower variation for initial generation
+                
+                $finalTemp = min($baseTemp + $tempVariation, config('resume.ai_enhancement.temperature_range.max', 1.2));
+                
+                // Force much higher temperature for regeneration to ensure diversity
+                if ($variant) {
+                    $finalTemp = 1.2 + (mt_rand(0, 100) / 100) * 0.5; // Force high temperature for regeneration
+                }
+                
                 $result = $gemini->generateEnhancedContent($prompt, [
                     'response_mime_type' => 'application/json',
                     'maxOutputTokens' => config('resume.ai_enhancement.max_output_tokens.summary_generation', 3072),
-                    'temperature' => $variant ? 
-                        config('resume.ai_enhancement.temperature_range.max', 1.2) + (mt_rand(0, 100) / 100) * 0.4 : // Higher temp for regeneration
-                        min(config('resume.ai_enhancement.temperature_range.min', 0.8) + $i * config('resume.ai_enhancement.temperature_increment', 0.15) + (mt_rand(0, 100) / 100) * 0.3, config('resume.ai_enhancement.temperature_range.max', 1.2)),
+                    'temperature' => $finalTemp,
+                    'topP' => $variant ? 0.9 : 0.8, // Higher topP for regeneration
+                    'topK' => $variant ? 40 : 30, // Higher topK for regeneration
                 ]);
                 if (is_array($result) && !empty($result['candidates'])) {
                     $candidate = $this->extractRevisedText($result, $current ?: $jobTitle);
                     $candidate = $this->sanitizeSummaryText($candidate, $current ?: $jobTitle);
-                    $reject = false;
-                    if (!empty($current) && $this->isTooSimilar($current, $candidate)) {
-                        $reject = true;
-                    }
-                    if (!$reject && !empty($avoid)) {
-                        foreach ($avoid as $prev) {
-                            if ($this->isTooSimilar((string)$prev, $candidate)) { $reject = true; break; }
+                    
+                    // Quality check: If AI produces poor content, use local variation
+                    $isPoorContent = $this->isPoorQualityContent($candidate);
+                    
+                    // Store all attempts for regeneration
+                    if ($variant) {
+                        $attempts[] = $candidate;
+                    } else {
+                        // For initial generation, check quality and use local variation if needed
+                        if ($isPoorContent) {
+                            \Log::info("AI producing poor quality content for initial summary, using local variation");
+                            $revised = $this->generateLocalVariation($current ?: '', $jobTitle, $years, $skills, $industry);
+                            break;
                         }
-                    }
-                    if (!$reject) {
-                        $revised = $candidate;
-                        break;
+                        
+                        $reject = false;
+                        if (!empty($current) && $this->isTooSimilar($current, $candidate)) {
+                            $reject = true;
+                        }
+                        if (!$reject && !empty($avoid)) {
+                            foreach ($avoid as $prev) {
+                                if ($this->isTooSimilar((string)$prev, $candidate)) { $reject = true; break; }
+                            }
+                        }
+                        if (!$reject) {
+                            $revised = $candidate;
+                            break;
+                        }
                     }
                 }
             }
-            if (empty($revised)) {
+            // For regeneration, select the most different summary from all attempts
+            if ($variant && !empty($attempts)) {
+                if (!empty($current)) {
+                    // Find the summary most different from current
+                    $mostDifferent = $attempts[0];
+                    $lowestSimilarity = 100;
+                    
+                    foreach ($attempts as $attempt) {
+                        $similarity = 0;
+                        similar_text($current, $attempt, $similarity);
+                        if ($similarity < $lowestSimilarity) {
+                            $lowestSimilarity = $similarity;
+                            $mostDifferent = $attempt;
+                        }
+                    }
+                    
+                    // If AI is still producing similar content, use local variation
+                    if ($lowestSimilarity > 85) {
+                        \Log::info("AI producing similar content ({$lowestSimilarity}% similar), using local variation");
+                        $revised = $this->generateLocalVariation($current, $jobTitle, $years, $skills, $industry);
+                    } else {
+                        $revised = $mostDifferent;
+                        \Log::info("Selected most different summary with similarity: {$lowestSimilarity}%");
+                    }
+                } else {
+                    // If no current summary, pick random from attempts
+                    $revised = $attempts[array_rand($attempts)];
+                }
+            } elseif (empty($revised)) {
                 $revised = $this->buildLocalSummary($jobTitle, $years, $skills, $industry);
             }
 
@@ -513,7 +710,7 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
             $promptConfig = $improvementPrompts[$type];
             $requirements = implode("\n- ", $promptConfig['requirements']);
 
-            $prompt = "Improve this {$promptConfig['focus']} while maintaining the exact same meaning and context:
+            $prompt = "Transform this {$promptConfig['focus']} into professional, impactful language:
 
 ORIGINAL TEXT:
 {$text}
@@ -521,23 +718,39 @@ ORIGINAL TEXT:
 IMPROVEMENT REQUIREMENTS:
 - {$requirements}
 
-IMPORTANT: 
-- Keep the SAME meaning and context
-- Do NOT add new information not in the original
-- Do NOT change the core message
-- Only improve clarity, grammar, and professional tone
-- Make it more readable and impactful
-- Keep the same length or slightly shorter
+SPECIFIC TRANSFORMATIONS:
+- Replace basic verbs: 'worked' → 'developed', 'did' → 'executed', 'made' → 'delivered'
+- Use industry terminology: 'wrote code' → 'engineered solutions', 'helped' → 'collaborated with'
+- Add quantifiable impact: 'projects' → 'strategic initiatives', 'results' → 'measurable outcomes'
+- Professional language: 'I was responsible for' → 'Managed and executed', 'I used' → 'Leveraged'
+- Technical depth: 'web applications' → 'scalable web applications', 'programming' → 'software development'
 
-Return ONLY JSON: {\"improved_text\": string}";
+OUTPUT REQUIREMENTS:
+- Maximum 2-3 sentences
+- 25-40 words total
+- Professional, confident tone
+- Industry-specific vocabulary
+- Results-oriented language
+- No generic phrases
+- Maintain original meaning
+
+CRITICAL: Return ONLY JSON: {\"improved_text\": string}";
 
             $result = $gemini->generateEnhancedContent($prompt, [
                 'response_mime_type' => 'application/json',
-                'maxOutputTokens' => 512, // Moderate limit for improvement
-                'temperature' => 0.3, // Low temperature for consistent improvement
+                'maxOutputTokens' => 256, // Strict limit for focused improvement
+                'temperature' => 0.5, // Balanced temperature for consistent improvement
             ]);
 
             $improved = $this->extractImprovedText($result, $text);
+            
+            // If AI doesn't improve the text (too similar), use local improvement
+            $similarity = 0;
+            similar_text($text, $improved, $similarity);
+            if ($similarity > 90) {
+                \Log::info("AI polish not improving text (${similarity}% similar), using local polish");
+                $improved = $this->localPolish($text, $type, $context);
+            }
             
             return response()->json([
                 'improved_text' => $improved,
@@ -805,6 +1018,364 @@ Return ONLY JSON: {\"improved_text\": string}";
             $yearsText ? ucfirst($yearsText) : '', $jobTitle, $skillsText);
         $s2 = sprintf('Known for collaboration, adaptability, and continuous improvement, with a focus on driving impact in %s.', $industryText);
         return $this->localTidy($s1 . ' ' . $s2);
+    }
+
+    private function generateLocalVariation($currentSummary, $jobTitle, $years, $skills, $industry) {
+        // Multiple different approaches for local variation
+        $approaches = [
+            // Approach 1: Skills-focused
+            function() use ($jobTitle, $years, $skills, $industry) {
+                $skillList = implode(', ', array_slice($skills, 0, 4));
+                return "Skilled {$jobTitle} with {$years} years of experience in {$industry}. Expertise in {$skillList}. Demonstrated ability to deliver innovative solutions and drive project success.";
+            },
+            // Approach 2: Achievement-focused
+            function() use ($jobTitle, $years, $skills, $industry) {
+                $skillList = implode(', ', array_slice($skills, 0, 3));
+                return "Results-driven {$jobTitle} with {$years} years in {$industry}. Proven track record in {$skillList}. Committed to excellence and continuous professional development.";
+            },
+            // Approach 3: Leadership-focused
+            function() use ($jobTitle, $years, $skills, $industry) {
+                $skillList = implode(', ', array_slice($skills, 0, 4));
+                return "Leadership-oriented {$jobTitle} with {$years} years of {$industry} experience. Strong background in {$skillList}. Focused on team collaboration and strategic project delivery.";
+            },
+            // Approach 4: Technical-focused
+            function() use ($jobTitle, $years, $skills, $industry) {
+                $skillList = implode(', ', array_slice($skills, 0, 5));
+                return "Technical {$jobTitle} with {$years} years specializing in {$industry}. Advanced proficiency in {$skillList}. Dedicated to creating efficient, scalable solutions.";
+            },
+            // Approach 5: Business-impact focused
+            function() use ($jobTitle, $years, $skills, $industry) {
+                $skillList = implode(', ', array_slice($skills, 0, 3));
+                return "Business-focused {$jobTitle} with {$years} years in {$industry}. Core competencies in {$skillList}. Committed to driving measurable business outcomes.";
+            }
+        ];
+        
+        // If this is first generation (no current summary), use a random approach
+        if (empty(trim($currentSummary))) {
+            $selectedApproach = $approaches[array_rand($approaches)];
+            return $selectedApproach();
+        }
+        
+        // For regeneration, select a random approach that's different from current
+        $selectedApproach = $approaches[array_rand($approaches)];
+        $variation = $selectedApproach();
+        
+        // If still too similar, force more variation
+        $similarity = 0;
+        similar_text($currentSummary, $variation, $similarity);
+        
+        if ($similarity > 70) {
+            // Force even more variation by changing structure
+            $variation = "Dynamic {$jobTitle} with {$years} years of {$industry} expertise. Specialized in " . implode(', ', array_slice($skills, 0, 2)) . ". Proven ability to lead complex projects and deliver exceptional results.";
+        }
+        
+        return $variation;
+    }
+
+    private function generateLocalExperienceVariation($currentText, $jobTitle, $company) {
+        // Multiple different approaches for experience variation
+        $approaches = [
+            // Approach 1: Technical focus
+            function() use ($jobTitle, $company) {
+                return "Developed and maintained web applications using modern technologies. Collaborated with cross-functional teams to deliver high-quality software solutions at {$company}.";
+            },
+            // Approach 2: Achievement focus
+            function() use ($jobTitle, $company) {
+                return "Led development initiatives and delivered successful projects on time. Improved system performance and user experience through innovative solutions at {$company}.";
+            },
+            // Approach 3: Leadership focus
+            function() use ($jobTitle, $company) {
+                return "Managed development teams and coordinated project delivery. Implemented best practices and mentored junior developers at {$company}.";
+            },
+            // Approach 4: Problem-solving focus
+            function() use ($jobTitle, $company) {
+                return "Solved complex technical challenges and optimized application performance. Worked closely with stakeholders to understand requirements at {$company}.";
+            },
+            // Approach 5: Innovation focus
+            function() use ($jobTitle, $company) {
+                return "Innovated new features and enhanced existing systems. Contributed to architectural decisions and technology stack improvements at {$company}.";
+            }
+        ];
+        
+        // If this is first generation (no current text), use a random approach
+        if (empty(trim($currentText))) {
+            $selectedApproach = $approaches[array_rand($approaches)];
+            return $selectedApproach();
+        }
+        
+        // For regeneration, select a random approach
+        $selectedApproach = $approaches[array_rand($approaches)];
+        $variation = $selectedApproach();
+        
+        // Check similarity and force variation if needed
+        $similarity = 0;
+        similar_text($currentText, $variation, $similarity);
+        
+        if ($similarity > 70) {
+            // Force different structure
+            $variation = "Specialized in {$jobTitle} role at {$company}, focusing on scalable solutions and efficient development practices. Contributed to team success through technical expertise and collaborative problem-solving.";
+        }
+        
+        return $variation;
+    }
+
+    private function generateLocalEducationVariation($currentText, $degree, $school) {
+        // Multiple different approaches for education variation
+        $approaches = [
+            // Approach 1: Academic focus
+            function() use ($degree, $school) {
+                return "Completed {$degree} at {$school} with focus on core computer science principles. Developed strong foundation in algorithms, data structures, and software engineering.";
+            },
+            // Approach 2: Project focus
+            function() use ($degree, $school) {
+                return "Earned {$degree} from {$school}, completing hands-on projects in software development. Gained practical experience with modern programming languages and development tools.";
+            },
+            // Approach 3: Skills focus
+            function() use ($degree, $school) {
+                return "Graduated with {$degree} from {$school}, acquiring technical skills in programming, database design, and system architecture. Developed analytical and problem-solving abilities.";
+            },
+            // Approach 4: Achievement focus
+            function() use ($degree, $school) {
+                return "Achieved {$degree} at {$school}, demonstrating excellence in computer science coursework. Participated in coding competitions and technical workshops.";
+            },
+            // Approach 5: Innovation focus
+            function() use ($degree, $school) {
+                return "Completed {$degree} program at {$school}, focusing on innovative software solutions and emerging technologies. Developed creative approaches to complex technical challenges.";
+            }
+        ];
+        
+        // If this is first generation (no current text), use a random approach
+        if (empty(trim($currentText))) {
+            $selectedApproach = $approaches[array_rand($approaches)];
+            return $selectedApproach();
+        }
+        
+        // For regeneration, select a random approach
+        $selectedApproach = $approaches[array_rand($approaches)];
+        $variation = $selectedApproach();
+        
+        // Check similarity and force variation if needed
+        $similarity = 0;
+        similar_text($currentText, $variation, $similarity);
+        
+        if ($similarity > 70) {
+            // Force different structure
+            $variation = "Successfully completed {$degree} at {$school}, building expertise in software development methodologies and technical problem-solving. Developed strong analytical skills and technical knowledge.";
+        }
+        
+        return $variation;
+    }
+
+    private function isPoorQualityContent($text) {
+        if (empty($text)) return true;
+        
+        // Check for very short content
+        if (strlen(trim($text)) < 20) return true;
+        
+        // Check for generic phrases that indicate poor quality
+        $genericPhrases = [
+            'sample text', 'lorem ipsum', 'placeholder', 'text here', 'description here',
+            'enter description', 'add description', 'write here', 'type here',
+            'sample description', 'example text', 'test text', 'dummy text',
+            'generate a concise', 'generate a professional', 'emphasize achievements',
+            'emphasize relevant coursework', 'emphasize impact'
+        ];
+        
+        $textLower = strtolower(trim($text));
+        foreach ($genericPhrases as $phrase) {
+            if (strpos($textLower, $phrase) !== false) {
+                return true;
+            }
+        }
+        
+        // Check for repetitive or nonsensical content
+        $words = explode(' ', trim($text));
+        if (count($words) < 5) return true;
+        
+        // Check for excessive repetition
+        $wordCounts = array_count_values($words);
+        foreach ($wordCounts as $word => $count) {
+            if (strlen($word) > 3 && $count > 2) return true; // Word repeated more than 2 times
+        }
+        
+        // Check for content that's too similar to input (indicating AI didn't improve it)
+        if (strlen($text) < 30 && strpos($textLower, 'software developer') !== false && strpos($textLower, 'wrote code') !== false) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    private function localPolish($text, $type, $context) {
+        $text = trim($text);
+        
+        // Basic improvements that can be done locally
+        switch ($type) {
+            case 'experience':
+                return $this->polishExperienceText($text, $context);
+            case 'education':
+                return $this->polishEducationText($text, $context);
+            case 'summary':
+                return $this->polishSummaryText($text, $context);
+            default:
+                return $text;
+        }
+    }
+
+    private function polishExperienceText($text, $context) {
+        // Transform basic phrases to professional ones
+        $improvements = [
+            'i worked as' => 'Developed expertise as',
+            'i was responsible for' => 'Managed and executed',
+            'i used' => 'Leveraged',
+            'i wrote code' => 'Engineered software solutions',
+            'i built' => 'Architected and implemented',
+            'i created' => 'Designed and developed',
+            'i helped' => 'Collaborated with teams to',
+            'i worked with' => 'Partnered with',
+            'i did' => 'Executed',
+            'i made' => 'Delivered',
+            'wrote code for' => 'engineered',
+            'web applications' => 'scalable web applications',
+            'projects' => 'strategic initiatives',
+            'team members' => 'cross-functional teams',
+            'on time' => 'within scheduled timelines',
+            'delivered' => 'successfully delivered',
+            'key projects' => 'critical business initiatives',
+            'delivered results' => 'achieved measurable outcomes',
+            'was responsible for' => 'managed and executed',
+            'responsible for' => 'managed and executed'
+        ];
+        
+        $polished = $text;
+        foreach ($improvements as $basic => $professional) {
+            $polished = str_ireplace($basic, $professional, $polished);
+        }
+        
+        // Ensure proper capitalization
+        $polished = ucfirst(trim($polished));
+        
+        // Add company context if available
+        if (isset($context['company']) && !stripos($polished, $context['company'])) {
+            $polished = rtrim($polished, '.') . " at {$context['company']}.";
+        }
+        
+        // Limit to 2-3 sentences and 25-40 words
+        $sentences = preg_split('/[.!?]+/', $polished);
+        $sentences = array_filter(array_map('trim', $sentences));
+        $sentences = array_slice($sentences, 0, 3); // Max 3 sentences
+        
+        $polished = implode('. ', $sentences) . '.';
+        
+        // Ensure word count is reasonable
+        $words = str_word_count($polished);
+        if ($words > 40) {
+            $words = explode(' ', $polished);
+            $polished = implode(' ', array_slice($words, 0, 40)) . '.';
+        }
+        
+        return $polished;
+    }
+
+    private function polishEducationText($text, $context) {
+        // Transform basic phrases to academic/professional ones
+        $improvements = [
+            'i studied' => 'Completed',
+            'i learned' => 'Acquired expertise in',
+            'i took courses' => 'Completed advanced coursework',
+            'programming' => 'software development',
+            'computer science' => 'Computer Science',
+            'algorithms' => 'algorithms and data structures',
+            'projects' => 'hands-on projects',
+            'coursework' => 'comprehensive coursework',
+            'gained' => 'developed',
+            'experience' => 'practical experience',
+            'relevant subjects' => 'core technical subjects',
+            'practical experience' => 'hands-on technical experience',
+            'completed coursework' => 'mastered advanced coursework',
+            'gained practical experience' => 'developed hands-on technical skills'
+        ];
+        
+        $polished = $text;
+        foreach ($improvements as $basic => $professional) {
+            $polished = str_ireplace($basic, $professional, $polished);
+        }
+        
+        // Ensure proper capitalization
+        $polished = ucfirst(trim($polished));
+        
+        // Add degree context if available
+        if (isset($context['degree']) && isset($context['school'])) {
+            if (!stripos($polished, $context['school'])) {
+                $polished = rtrim($polished, '.') . " during {$context['degree']} program at {$context['school']}.";
+            }
+        }
+        
+        // Limit to 2-3 sentences and 25-40 words
+        $sentences = preg_split('/[.!?]+/', $polished);
+        $sentences = array_filter(array_map('trim', $sentences));
+        $sentences = array_slice($sentences, 0, 3); // Max 3 sentences
+        
+        $polished = implode('. ', $sentences) . '.';
+        
+        // Ensure word count is reasonable
+        $words = str_word_count($polished);
+        if ($words > 40) {
+            $words = explode(' ', $polished);
+            $polished = implode(' ', array_slice($words, 0, 40)) . '.';
+        }
+        
+        return $polished;
+    }
+
+    private function polishSummaryText($text, $context) {
+        // Transform basic phrases to professional summary language
+        $improvements = [
+            'i am' => 'Experienced',
+            'i work with' => 'Specialized in',
+            'i have' => 'Possess',
+            'years of experience' => 'years of professional experience',
+            'software engineer' => 'Software Engineer',
+            'with experience in' => 'with proven expertise in',
+            'i can' => 'Capable of',
+            'i know' => 'Proficient in',
+            'i work' => 'Specialize in',
+            'i use' => 'Leverage',
+            'i develop' => 'Engineer',
+            'i build' => 'Architect and develop',
+            'i create' => 'Design and implement',
+            'i help' => 'Collaborate with teams to',
+            'i collaborate' => 'Partner with cross-functional teams to'
+        ];
+        
+        $polished = $text;
+        foreach ($improvements as $basic => $professional) {
+            $polished = str_ireplace($basic, $professional, $polished);
+        }
+        
+        // Ensure proper capitalization
+        $polished = ucfirst(trim($polished));
+        
+        // Make it more results-oriented
+        if (!stripos($polished, 'deliver') && !stripos($polished, 'achieve')) {
+            $polished = rtrim($polished, '.') . '. Committed to delivering high-quality solutions and driving business impact.';
+        }
+        
+        // Limit to 3-4 sentences and 50-80 words for summary
+        $sentences = preg_split('/[.!?]+/', $polished);
+        $sentences = array_filter(array_map('trim', $sentences));
+        $sentences = array_slice($sentences, 0, 4); // Max 4 sentences
+        
+        $polished = implode('. ', $sentences) . '.';
+        
+        // Ensure word count is reasonable for summary
+        $words = str_word_count($polished);
+        if ($words > 80) {
+            $words = explode(' ', $polished);
+            $polished = implode(' ', array_slice($words, 0, 80)) . '.';
+        }
+        
+        return $polished;
     }
 
     private function estimateYearsFromExperiences(array $experiences): int

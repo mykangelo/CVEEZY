@@ -225,7 +225,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       
       const seed = description && description.trim().length > 0
         ? description
-        : `Generate a concise, results-focused experience description for the role ${exp.jobTitle}${companyName ? ` at ${companyName}` : ''}${startDate ? ` (${startDate} - ${endDate})` : ''}. Emphasize achievements, impact, tools, and collaboration.`;
+        : `I worked as ${exp.jobTitle}${companyName ? ` at ${companyName}` : ''}${startDate ? ` from ${startDate} to ${endDate}` : ''}. I was responsible for key projects and delivered results.`;
       
       const res = await fetch("/revise-experience-text", {
         method: "POST",
@@ -726,7 +726,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       
       const seed = description && description.trim().length > 0
         ? description
-        : `Generate a concise, professional education description for ${edu.degree} at ${edu.school}. Emphasize relevant coursework, projects, tools, and academic achievements in 1-2 sentences.`;
+        : `I studied ${edu.degree} at ${edu.school}. I completed coursework in relevant subjects and gained practical experience through projects.`;
       
       const res = await fetch("/reviseEducationDescription", {
         method: "POST",
@@ -1142,6 +1142,100 @@ interface SummarySectionProps {
 const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors, desiredJobTitle, skills, experiences, educations }) => {
   const [genLoading, setGenLoading] = React.useState(false);
 
+  // Helper functions for enhanced summary context
+  const calculateTotalExperience = (experiences: Experience[]): number => {
+    if (!experiences || experiences.length === 0) return 0;
+    
+    let totalYears = 0;
+    experiences.forEach(exp => {
+      if (exp.startDate && exp.endDate) {
+        const start = new Date(exp.startDate);
+        const end = exp.endDate === 'Present' ? new Date() : new Date(exp.endDate);
+        const years = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+        totalYears += Math.max(0, years);
+      }
+    });
+    
+    return Math.round(totalYears * 10) / 10; // Round to 1 decimal place
+  };
+
+  const inferIndustryFromExperiences = (experiences: Experience[], skills: Skill[]): string => {
+    if (!experiences || experiences.length === 0) return 'Technology';
+    
+    // Analyze job titles and companies for industry patterns
+    const industryKeywords = {
+      'Technology': ['software', 'developer', 'engineer', 'tech', 'it', 'digital', 'web', 'app'],
+      'Finance': ['bank', 'financial', 'investment', 'insurance', 'credit', 'trading'],
+      'Healthcare': ['health', 'medical', 'hospital', 'clinic', 'pharma', 'biotech'],
+      'Education': ['school', 'university', 'college', 'academy', 'learning', 'training'],
+      'Manufacturing': ['manufacturing', 'production', 'factory', 'industrial', 'automation'],
+      'Retail': ['retail', 'ecommerce', 'store', 'shopping', 'customer', 'sales']
+    };
+    
+    let industryScores: { [key: string]: number } = {};
+    
+    experiences.forEach(exp => {
+      const jobTitle = (exp.jobTitle || '').toLowerCase();
+      const company = (exp.company || exp.employer || '').toLowerCase();
+      
+      Object.entries(industryKeywords).forEach(([industry, keywords]) => {
+        keywords.forEach(keyword => {
+          if (jobTitle.includes(keyword) || company.includes(keyword)) {
+            industryScores[industry] = (industryScores[industry] || 0) + 1;
+          }
+        });
+      });
+    });
+    
+    // Return the industry with highest score, or default to Technology
+    const topIndustry = Object.entries(industryScores)
+      .sort(([,a], [,b]) => b - a)[0];
+    
+    return topIndustry ? topIndustry[0] : 'Technology';
+  };
+
+  const getHighestEducationLevel = (educations: Education[]): string => {
+    if (!educations || educations.length === 0) return 'High School';
+    
+    const educationLevels = {
+      'High School': 1,
+      'Associate': 2,
+      'Bachelor': 3,
+      'Master': 4,
+      'Doctorate': 5
+    };
+    
+    let highestLevel = 1;
+    let highestDegree = 'High School';
+    
+    educations.forEach(edu => {
+      const degree = (edu.degree || '').toLowerCase();
+      Object.entries(educationLevels).forEach(([level, value]) => {
+        if (degree.includes(level.toLowerCase()) && value > highestLevel) {
+          highestLevel = value;
+          highestDegree = level;
+        }
+      });
+    });
+    
+    return highestDegree;
+  };
+
+  const analyzeCareerProgression = (experiences: Experience[]): string => {
+    if (!experiences || experiences.length < 2) return 'Entry Level';
+    
+    // Simple analysis based on job titles and progression
+    const titles = experiences.map(exp => exp.jobTitle?.toLowerCase() || '');
+    
+    if (titles.some(t => t.includes('senior') || t.includes('lead') || t.includes('manager'))) {
+      return 'Senior/Leadership';
+    } else if (titles.some(t => t.includes('mid') || t.includes('intermediate'))) {
+      return 'Mid-Level';
+    } else {
+      return 'Entry Level';
+    }
+  };
+
   const handleGenerate = async (variant?: string) => {
     try {
       const jobTitle = (desiredJobTitle || '').trim();
@@ -1161,16 +1255,29 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
           skills: skillNames,
           current_summary: summary,
           variant: variant || null,
+          // Enhanced context for better AI generation
+          years_experience: calculateTotalExperience(experiences),
+          industry: inferIndustryFromExperiences(experiences, skills),
           experiences: (experiences || []).map(e => ({
             jobTitle: e.jobTitle,
             company: e.company || e.employer || '',
             startDate: e.startDate,
-            endDate: e.endDate
+            endDate: e.endDate,
+            description: e.description || ''
           })),
           education: (educations || []).map(ed => ({
             degree: ed.degree,
-            school: ed.school
-          }))
+            school: ed.school,
+            description: ed.description || ''
+          })),
+          // Additional context for better AI understanding
+          resume_context: {
+            total_experience_years: calculateTotalExperience(experiences),
+            primary_skills: skillNames.slice(0, 8), // Top 8 skills
+            industry_focus: inferIndustryFromExperiences(experiences, skills),
+            education_level: getHighestEducationLevel(educations),
+            career_progression: analyzeCareerProgression(experiences)
+          }
         })
       });
       const raw = await res.text();
@@ -1186,6 +1293,53 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setGenLoading(false);
+    }
+  };
+
+  // Polish existing summary description with AI
+  const polishSummaryDescription = async (currentSummary: string) => {
+    try {
+      const jobTitle = (desiredJobTitle || '').trim();
+      const skillNames = (skills || []).map(s => s.name).filter(n => !!n && n.trim().length > 0);
+
+      if (!jobTitle) {
+        alert('Please fill in Desired job title first before polishing the summary.');
+        return;
+      }
+
+      if (currentSummary.trim().length < 20) {
+        alert('Please provide at least 20 characters for AI polishing.');
+        return;
+      }
+
+      setGenLoading(true);
+      const res = await fetch("/improve-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: currentSummary,
+          type: 'summary',
+          context: { 
+            jobTitle: jobTitle,
+            skills: skillNames,
+            experiences: experiences,
+            education: educations
+          }
+        }),
+      });
+      
+      const data = await res.json();
+      if (data.error) {
+        alert(data.message || 'AI polishing failed. Please try again.');
+        return;
+      }
+      
+      setSummary(data.improved_text);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to polish summary. Please try again.');
     } finally {
       setGenLoading(false);
     }
@@ -1209,14 +1363,50 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
 
       {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
 
-      <button
-        onClick={() => handleGenerate(summary ? 'regenerate-' + Date.now() : undefined)}
-        disabled={genLoading}
-        className="px-6 py-3 bg-gradient-to-r from-[#354eab] to-purple-600 text-white rounded-lg hover:from-[#2d3f8f] hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg"
-        title={summary ? "Regenerate with different style" : "Generate Summary with AI"}
-      >
-        {genLoading ? 'Generating…' : summary ? '🔄 Regenerate Summary with AI' : '✨ Generate Summary with AI'}
-      </button>
+      <div className="flex gap-3 mb-4">
+        <button
+          onClick={() => {
+            // Force different regeneration with unique timestamp, random number, and style variation
+            const uniqueVariant = summary ? 
+              'regenerate-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-style' + Math.floor(Math.random() * 5) : 
+              undefined;
+            handleGenerate(uniqueVariant);
+          }}
+          disabled={genLoading}
+          className="px-6 py-3 bg-gradient-to-r from-[#354eab] to-purple-600 text-white rounded-lg hover:from-[#2d3f8f] hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg"
+          title={summary ? "Regenerate with different style" : "Generate Summary with AI"}
+        >
+          {genLoading ? 'Generating…' : summary ? '🔄 Regenerate Summary with AI' : '✨ Generate Summary with AI'}
+        </button>
+
+        {/* Force Regeneration Button - Only show if user has content */}
+        {summary && summary.trim().length > 20 && (
+          <button
+            onClick={() => {
+              // Force completely different regeneration with multiple attempts
+              const forceVariant = 'force-regenerate-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-multiple';
+              handleGenerate(forceVariant);
+            }}
+            disabled={genLoading}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg border-2 border-red-400"
+            title="Force completely different regeneration with multiple AI attempts"
+          >
+            {genLoading ? 'Forcing…' : '🔥 Force Different Summary'}
+          </button>
+        )}
+
+        {/* Polish Button - Only show if user has written content */}
+        {summary && summary.trim().length > 20 && (
+          <button
+            onClick={() => polishSummaryDescription(summary)}
+            disabled={genLoading}
+            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg border-2 border-orange-400"
+            title="Polish and improve your existing summary with AI"
+          >
+            {genLoading ? 'Polishing…' : '✨ Polish with AI'}
+          </button>
+        )}
+      </div>
 
       <div className="bg-gray-50 rounded-lg p-4">
         <div className="font-semibold mb-2">Suggested summary structure</div>
