@@ -51,64 +51,66 @@ export default function UpdatePasswordForm({
     };
 
     return (
-        <section className={className}>
-            <header>
-                <div className="flex items-center gap-3 mb-2">
-                    <svg className="w-6 h-6 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <h2 className="text-lg font-medium text-gray-900">
-                        Update Password
-                    </h2>
-                </div>
-
-                <p className="mt-1 text-sm text-[#64748b]">
-                    Ensure your account is using a long, random password to stay
-                    secure.
-                </p>
-            </header>
-
-            <form onSubmit={updatePassword} className="mt-6 space-y-6">
-                <div>
+        <div className={className}>
+            <div className="space-y-6">
+                {/* Current Password Field */}
+                <div className="space-y-2">
                     <InputLabel
                         htmlFor="current_password"
                         value="Current Password"
+                        className="text-sm font-semibold text-gray-700"
                     />
-
-                    <TextInput
-                        id="current_password"
-                        ref={currentPasswordInput}
-                        value={data.current_password}
-                        onChange={(e) =>
-                            setData('current_password', e.target.value)
-                        }
-                        type="password"
-                        className="mt-1 block w-full"
-                        autoComplete="current-password"
-                    />
-
+                    <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <TextInput
+                            id="current_password"
+                            ref={currentPasswordInput}
+                            value={data.current_password}
+                            onChange={(e) =>
+                                setData('current_password', e.target.value)
+                            }
+                            type="password"
+                            className="pl-10 w-full border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg transition-colors duration-200"
+                            autoComplete="current-password"
+                            placeholder="Enter your current password"
+                        />
+                    </div>
                     <InputError
                         message={errors.current_password}
-                        className="mt-2"
+                        className="mt-1"
                     />
                 </div>
 
-                <div>
-                    <InputLabel htmlFor="password" value="New Password" />
-
+                {/* New Password Field */}
+                <div className="space-y-2">
+                    <InputLabel 
+                        htmlFor="password" 
+                        value="New Password" 
+                        className="text-sm font-semibold text-gray-700"
+                    />
                     <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                        </div>
                         <TextInput
                             id="password"
                             ref={passwordInput}
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             type={showNewPassword ? "text" : "password"}
-                            className="mt-1 block w-full pr-10"
+                            className="pl-10 pr-10 w-full border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg transition-colors duration-200"
                             autoComplete="new-password"
+                            placeholder="Enter your new password"
                         />
                         <button
                             type="button"
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-gray-600 transition-colors duration-200"
                             onClick={() => setShowNewPassword(!showNewPassword)}
                             aria-label={showNewPassword ? 'Hide password' : 'Show password'}
                             aria-pressed={showNewPassword}
@@ -127,17 +129,22 @@ export default function UpdatePasswordForm({
                             )}
                         </button>
                     </div>
-
-                    <InputError message={errors.password} className="mt-2" />
+                    <InputError message={errors.password} className="mt-1" />
                 </div>
 
-                <div>
+                {/* Confirm Password Field */}
+                <div className="space-y-2">
                     <InputLabel
                         htmlFor="password_confirmation"
-                        value="Confirm Password"
+                        value="Confirm New Password"
+                        className="text-sm font-semibold text-gray-700"
                     />
-
                     <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
                         <TextInput
                             id="password_confirmation"
                             value={data.password_confirmation}
@@ -145,12 +152,13 @@ export default function UpdatePasswordForm({
                                 setData('password_confirmation', e.target.value)
                             }
                             type={showConfirmPassword ? "text" : "password"}
-                            className="mt-1 block w-full pr-10"
+                            className="pl-10 pr-10 w-full border-gray-300 focus:border-orange-500 focus:ring-orange-500 rounded-lg transition-colors duration-200"
                             autoComplete="new-password"
+                            placeholder="Confirm your new password"
                         />
                         <button
                             type="button"
-                            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center hover:text-gray-600 transition-colors duration-200"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                             aria-pressed={showConfirmPassword}
@@ -169,15 +177,71 @@ export default function UpdatePasswordForm({
                             )}
                         </button>
                     </div>
-
                     <InputError
                         message={errors.password_confirmation}
-                        className="mt-2"
+                        className="mt-1"
                     />
                 </div>
 
-                <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                {/* Password Requirements */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Password Requirements
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-blue-800">
+                        <div className="flex items-center gap-2">
+                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Minimum 12 characters
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Uppercase & lowercase letters
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Numbers & special characters
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            No common patterns
+                        </div>
+                    </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-4 pt-4">
+                    <PrimaryButton 
+                        disabled={processing}
+                        className="px-8 py-3 text-sm font-medium bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200"
+                    >
+                        {processing ? (
+                            <div className="flex items-center gap-2">
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Updating...
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Update Password
+                            </div>
+                        )}
+                    </PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -186,12 +250,31 @@ export default function UpdatePasswordForm({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
-                        </p>
+                        <div className="flex items-center gap-2 text-sm font-medium text-green-600">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Password updated successfully!
+                        </div>
                     </Transition>
                 </div>
-            </form>
-        </section>
+
+                {/* Security Tips */}
+                <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <h4 className="text-sm font-medium text-gray-900 mb-2 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Security Tips
+                    </h4>
+                    <ul className="text-xs text-gray-600 space-y-1">
+                        <li>• Never share your password with anyone</li>
+                        <li>• Use a unique password for each account</li>
+                        <li>• Consider using a password manager</li>
+                        <li>• Change your password regularly</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     );
 }

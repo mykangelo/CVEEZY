@@ -53,15 +53,17 @@ const Header: React.FC<HeaderProps> = ({ showDropdown = false }) => {
               <Dropdown.Content>
                 <Dropdown.Link
                   href={route('profile.edit')}
+                  className="px-5 py-3.5 hover:bg-gradient-to-r hover:from-[#f8faff] hover:to-[#e8f2ff] transition-all duration-200 group"
                 >
-                  Profile
+                  <span className="font-semibold text-gray-900 group-hover:text-[#354eab] transition-colors duration-200">Profile</span>
                 </Dropdown.Link>
                 <Dropdown.Link
                   href={route('logout')}
                   method="post"
                   as="button"
+                  className="px-5 py-3.5 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 group mx-2 rounded-lg"
                 >
-                  Log Out
+                  <span className="font-semibold text-red-600 group-hover:text-red-700 transition-colors duration-200">Log Out</span>
                 </Dropdown.Link>
               </Dropdown.Content>
             </Dropdown>

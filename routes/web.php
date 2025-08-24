@@ -66,7 +66,7 @@ Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handlePro
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Profile Management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/send-verification-email', [ProfileController::class, 'sendVerificationEmail'])->name('profile.send-verification-email');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // Resume Builder Flow
@@ -119,7 +120,7 @@ Route::middleware(['auth', 'verified', 'check.pending.payments'])->group(functio
 |--------------------------------------------------------------------------
 */
 
-Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+Route::middleware(['auth', 'admin'])->group(function () {
 
     // Admin Dashboard
     Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
@@ -137,7 +138,6 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // ✅ New route for serving files directly from storage/app/public
     Route::get('/admin/payments/{id}/download', [PaymentProofController::class, 'download'])->name('admin.payments.download');
 
-
     // User Management
     Route::get('/admin/users', [AdminController::class, 'users'])->name('admin.users');
     Route::get('/admin/users/{id}', [AdminController::class, 'viewUser'])->name('admin.user.view');
@@ -152,6 +152,12 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
     // Statistics
     Route::get('/admin/statistics', [AdminController::class, 'statistics'])->name('admin.statistics');
+
+    // Audit Logs - Security Monitoring
+    Route::get('/admin/audit-logs', [App\Http\Controllers\Admin\AuditLogController::class, 'index'])->name('admin.audit-logs');
+    Route::get('/admin/audit-logs/{auditLog}', [App\Http\Controllers\Admin\AuditLogController::class, 'show'])->name('admin.audit-logs.show');
+    Route::get('/admin/audit-logs/export', [App\Http\Controllers\Admin\AuditLogController::class, 'export'])->name('admin.audit-logs.export');
+    Route::post('/admin/audit-logs/cleanup', [App\Http\Controllers\Admin\AuditLogController::class, 'cleanup'])->name('admin.audit-logs.cleanup');
 });
 
 /*
@@ -203,13 +209,13 @@ use App\Http\Controllers\AIController;
 
 Route::get('/ask-ai', [AIController::class, 'ask']);
 
-
-
-// AI summary generation (no CSRF)
-Route::withoutMiddleware([
-    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-])->group(function () {
+// AI summary generation - now accessible to all authenticated users
+Route::middleware(['auth'])->group(function () {
     Route::post('/generate-summary', [AIController::class, 'generateSummary']);
+    Route::post('/reviseEducationDescription', [AIController::class, 'reviseEducationDescription']);
+    Route::post('/revise-experience-text', [AIController::class, 'reviseExperienceDescription']);
+    Route::post('/force-regenerate-experience', [AIController::class, 'forceRegenerateExperience']);
+    Route::post('/improve-description', [AIController::class, 'improveDescription']);
 });
 
 //Routing for AI assistance in education page

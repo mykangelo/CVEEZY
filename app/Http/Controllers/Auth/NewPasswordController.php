@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuthenticationAuditService;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,13 @@ use Inertia\Response;
 
 class NewPasswordController extends Controller
 {
+    protected $auditService;
+
+    public function __construct(AuthenticationAuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
+
     /**
      * Display the password reset view.
      */
@@ -37,7 +45,7 @@ class NewPasswordController extends Controller
         $request->validate([
             'token' => 'required',
             'email' => 'required|email',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'password' => ['required', 'confirmed', new \App\Rules\StrongPassword],
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we
@@ -52,6 +60,9 @@ class NewPasswordController extends Controller
                 ])->save();
 
                 event(new PasswordReset($user));
+                
+                // Log the password reset completion
+                $this->auditService->logPasswordResetCompleted($user);
             }
         );
 

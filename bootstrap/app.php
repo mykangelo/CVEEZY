@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'check.pending.payments' => \App\Http\Middleware\CheckPendingPayments::class,
+            'verified' => \App\Http\Middleware\EnsureEmailIsVerified::class,
+            'enhanced.rate.limit' => \App\Http\Middleware\EnhancedRateLimiting::class,
         ]);
     })
 

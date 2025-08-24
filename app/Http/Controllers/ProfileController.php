@@ -18,8 +18,27 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+        
+        // Get user statistics
+        $user->loadCount(['resumes', 'resumes as completed_resumes_count' => function ($query) {
+            $query->where('status', 'completed');
+        }]);
+        
+        // Add computed properties
+        $user->total_resumes_count = $user->resumes_count;
+        $user->completed_resumes_count = $user->completed_resumes_count;
+        $user->has_password = !empty($user->password);
+        $user->is_social_user = !empty($user->provider_id);
+        
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'emailVerificationStatus' => [
+                'verified' => $user->hasVerifiedEmail(),
+                'status' => $user->email_verification_status['status'],
+                'message' => $user->email_verification_status['message'],
+                'recommended' => $user->email_verification_status['recommended'],
+                'userEmail' => $user->email,
+            ],
             'status' => session('status'),
         ]);
     }
@@ -38,6 +57,20 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit');
+    }
+
+    /**
+     * Send email verification notification.
+     */
+    public function sendVerificationEmail(Request $request): RedirectResponse
+    {
+        if ($request->user()->hasVerifiedEmail()) {
+            return Redirect::route('profile.edit')->with('status', 'Email already verified.');
+        }
+
+        $request->user()->sendEmailVerificationNotification();
+
+        return Redirect::route('profile.edit')->with('status', 'Verification link sent!');
     }
 
     /**
@@ -60,5 +93,4 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
-
 }

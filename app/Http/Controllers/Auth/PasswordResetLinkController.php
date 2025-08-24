@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuthenticationAuditService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
@@ -12,6 +13,13 @@ use Inertia\Response;
 
 class PasswordResetLinkController extends Controller
 {
+    protected $auditService;
+
+    public function __construct(AuthenticationAuditService $auditService)
+    {
+        $this->auditService = $auditService;
+    }
+
     /**
      * Display the password reset link request view.
      */
@@ -32,6 +40,9 @@ class PasswordResetLinkController extends Controller
         $request->validate([
             'email' => 'required|email',
         ]);
+
+        // Log the password reset request
+        $this->auditService->logPasswordResetRequest($request->email);
 
         // We will send the password reset link to this user. Once we have attempted
         // to send the link, we will examine the response then see the message we

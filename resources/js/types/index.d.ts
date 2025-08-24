@@ -10,6 +10,18 @@ export interface User {
     provider_name?: string;
     last_login_at?: string;
     is_admin?: boolean;
+    password?: string;
+    total_resumes_count?: number;
+    completed_resumes_count?: number;
+    is_social_user?: boolean;
+    has_password?: boolean;
+}
+
+export interface EmailVerificationStatus {
+    verified: boolean;
+    status: 'verified' | 'unverified' | 'social_user';
+    message: string;
+    recommended: boolean;
 }
 
 export type PageProps<

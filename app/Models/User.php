@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, SoftDeletes;
@@ -88,6 +88,45 @@ class User extends Authenticatable
     public function isUser(): bool
     {
         return $this->role === self::ROLE_USER;
+    }
+
+    /**
+     * Check if email verification is recommended (not required)
+     */
+    public function isEmailVerificationRecommended(): bool
+    {
+        return !$this->hasVerifiedEmail() && !$this->isSocialUser();
+    }
+
+    /**
+     * Get email verification status with recommendation
+     */
+    public function getEmailVerificationStatusAttribute(): array
+    {
+        if ($this->hasVerifiedEmail()) {
+            return [
+                'verified' => true,
+                'status' => 'verified',
+                'message' => 'Email verified',
+                'recommended' => false
+            ];
+        }
+
+        if ($this->isSocialUser()) {
+            return [
+                'verified' => false,
+                'status' => 'social_user',
+                'message' => 'Social login user - email verification not required',
+                'recommended' => false
+            ];
+        }
+
+        return [
+            'verified' => false,
+            'status' => 'unverified',
+            'message' => 'Email not verified - recommended for security',
+            'recommended' => true
+        ];
     }
 
     /**
