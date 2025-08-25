@@ -20,11 +20,11 @@ class ContactController extends Controller
         if ($user) {
             // Check if user has pending payment proofs (only restrict on pending, not rejected)
             $pendingResumes = $user->resumes()
-                ->whereHas('paymentProofs', function($query) {
+                ->whereHas('paymentProofs', function ($query) {
                     $query->where('status', 'pending');
                 })
                 ->count();
-            
+
             $hasPendingPayments = $pendingResumes > 0;
             $pendingResumesCount = $pendingResumes;
         }
@@ -63,15 +63,17 @@ class ContactController extends Controller
 
         // Send email
         try {
+            // 1. Notify admin
             Mail::send('emails.contact', $sanitizedData, function ($message) use ($sanitizedData) {
                 $message->to('cveezyad@gmail.com') // ✅ correct recipient
-                        ->subject('Contact Form: ' . $sanitizedData['name'])
-                        ->replyTo($sanitizedData['email'], $sanitizedData['name']);
+                    ->subject('Contact Form: ' . $sanitizedData['name'])
+                    ->replyTo($sanitizedData['email'], $sanitizedData['name']);
             });
 
+            // 2. Auto-reply to user
             Mail::send('emails.auto_reply', ['name' => $sanitizedData['name']], function ($message) use ($sanitizedData) {
                 $message->to($sanitizedData['email'], $sanitizedData['name'])
-                        ->subject('We received your message');
+                    ->subject('We received your message');
             });
 
             RateLimiter::clear($key);
