@@ -56,16 +56,13 @@ export default function Authenticated({
                                                 className="inline-flex items-center rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium leading-4 text-gray-700 transition-all duration-200 ease-in-out hover:border-[#354eab] hover:bg-[#f8faff] hover:text-[#354eab] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#354eab] focus:ring-offset-2"
                                             >
                                                 <div className="flex items-center space-x-3">
-                                                    {/* User Avatar Placeholder */}
                                                     <div className="w-7 h-7 bg-gradient-to-br from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center">
                                                         <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                                                         </svg>
                                                     </div>
-                                                    
-                                                    <span className="font-semibold">{user.name}</span>
+                                                    <span className="font-semibold truncate max-w-[220px]">{user.name}</span>
                                                 </div>
-
                                                 <svg
                                                     className="ml-3 h-4 w-4 text-gray-500 transition-transform duration-200 group-hover:text-[#354eab]"
                                                     xmlns="http://www.w3.org/2000/svg"
@@ -82,37 +79,19 @@ export default function Authenticated({
                                         </span>
                                     </Dropdown.Trigger>
 
-                                    <Dropdown.Content>
-                                        {/* Dashboard Link */}
+                                    <Dropdown.Content contentClasses="py-2 bg-white">
                                         {user.is_admin ? (
-                                            <Dropdown.Link
-                                                href={route('admin.dashboard')}
-                                                className="flex items-center px-5 py-3.5 hover:bg-gradient-to-r hover:from-[#f8faff] hover:to-[#e8f2ff] transition-all duration-200 group"
-                                            >
-                                                <span className="font-semibold text-gray-900 group-hover:text-[#354eab] transition-colors duration-200">Admin Dashboard</span>
+                                            <Dropdown.Link href={route('admin.dashboard')} className="px-4 py-2">
+                                                Admin Dashboard
                                             </Dropdown.Link>
                                         ) : (
-                                            <Dropdown.Link
-                                                href={route('dashboard')}
-                                                className="flex items-center px-5 py-3.5 hover:bg-gradient-to-r hover:from-[#f8faff] hover:to-[#e8f2ff] transition-all duration-200 group"
-                                            >
-                                                <span className="font-semibold text-gray-900 group-hover:text-[#354eab] transition-colors duration-200">Dashboard</span>
+                                            <Dropdown.Link href={route('dashboard')} className="px-4 py-2">
+                                                Dashboard
                                             </Dropdown.Link>
                                         )}
-
-                                        {/* Enhanced Divider */}
-                                        <div className="mx-5 my-3">
-                                            <div className="h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent"></div>
-                                        </div>
-
-                                        {/* Enhanced Logout Link */}
-                                        <Dropdown.Link
-                                            href={route('logout')}
-                                            method="post"
-                                            as="button"
-                                            className="flex items-center px-5 py-3.5 hover:bg-gradient-to-r hover:from-red-50 hover:to-pink-50 transition-all duration-200 group mx-2 rounded-lg"
-                                        >
-                                            <span className="font-semibold text-red-600 group-hover:text-red-700 transition-colors duration-200">Log Out</span>
+                                        <div className="mx-4 my-2 h-px bg-gray-200"></div>
+                                        <Dropdown.Link href={route('logout')} method="post" as="button" className="px-4 py-2">
+                                            Log Out
                                         </Dropdown.Link>
                                     </Dropdown.Content>
                                 </Dropdown>

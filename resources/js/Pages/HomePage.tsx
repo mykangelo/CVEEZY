@@ -86,37 +86,37 @@ const HomePage: React.FC<HomePageProps> = ({
             icon: "/images/template-icon.png",
             title: "Modern Templates",
             description:
-                "Choose from 6+ professional templates for all jobs and experience levels.",
+                "Pick from 6+ polished designs for any role and experience level.",
         },
         {
             icon: "/images/ats-friendly-icon.png",
             title: "ATS-Friendly Resumes",
             description:
-                "Your resume will pass the software many companies use to screen applicants.",
+                "Formatting that passes ATS scans so recruiters actually see your resume.",
         },
         {
             icon: "/images/pre-written-icon.png",
             title: "Pre-Written Content",
             description:
-                "Use ready-made content to save time and avoid the stress of writing from scratch.",
+                "Ready‑to‑edit examples save time and beat blank‑page stress.",
         },
         {
             icon: "/images/ai-icon.png",
             title: "Easy with AI",
             description:
-                "AI sparks ideas and helps you find the right words to highlight your skills.",
+                "AI suggestions help you say the right things with the right keywords.",
         },
         {
             icon: "/images/beat-competition-icon.png",
             title: "Beat the Competition",
             description:
-                "Stand out with an impressive resume that shows off your strengths.",
+                "Stand out with a clean, professional resume that highlights your strengths.",
         },
         {
             icon: "/images/paid-more-icon.png",
             title: "Get Paid More",
             description:
-                "A strong resume opens doors. BetterCV helps you move toward better job offers.",
+                "A stronger resume leads to better opportunities and higher offers.",
         },
     ];
 
@@ -401,36 +401,48 @@ const HomePage: React.FC<HomePageProps> = ({
 
             {/* Features Section */}
             <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
-                <div className="max-w-7xl mx-auto text-center">
-                    <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-12">
+                <div className="max-w-7xl mx-auto">
+                    <div
+                        className="relative bg-white rounded-[28px] p-6 sm:p-8 md:p-12 ring-1 ring-[#eef5ff] shadow-[0_18px_50px_rgba(31,41,55,0.08)] text-center"
+                    >
+                        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight">
                         Why use <span className="text-[#354eab]">CVeezy's</span>{" "}
                         Resume Builder?
                     </h2>
+                        <div className="mx-auto mb-10 h-1.5 w-24 rounded-full bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8]"></div>
 
                     {/* Features Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
                         {features.map((feature, index) => (
                             <div
                                 key={index}
-                                className="bg-white rounded-2xl border border-[#e3f2fd] p-8 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.03]"
+                                className="group relative rounded-[26px] p-8 bg-[#f7f9fc] ring-1 ring-[#e9f1ff] transition-all duration-300 hover:-translate-y-0.5"
+                                style={{
+                                    boxShadow:
+                                        'inset 0 1px 0 rgba(255,255,255,0.6), 0 24px 50px rgba(31,41,55,0.12), 0 2px 8px rgba(31,41,55,0.06)'
+                                }}
                             >
+                                <div className="mx-auto mb-6 grid place-items-center h-16 w-16 rounded-2xl bg-[#f2f6ff] ring-1 ring-[#e3f2fd] transition-all duration-300 group-hover:scale-105 group-hover:ring-[#bcd6f6]">
                                 <img
                                     src={feature.icon}
                                     alt={`${feature.title} icon`}
-                                    className="w-16 h-16 mb-6 mx-auto"
+                                        className="w-10 h-10 opacity-90"
                                 />
-                                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                                </div>
+                                <h3 className="text-xl md:text-2xl font-extrabold text-gray-800 mb-3">
                                     {feature.title}
                                 </h3>
-                                <p className="text-gray-600 text-base leading-relaxed">
+                                <p className="text-gray-600 text-sm md:text-base leading-relaxed max-w-[36ch] mx-auto">
                                     {feature.description}
                                 </p>
                             </div>
                         ))}
+                        </div>
+                        {/* CTA moved outside container below */}
                     </div>
 
-                    {/* CTA Button */}
-                    <div className="mt-16   mb-10">
+                    {/* CTA Button between sections */}
+                    <div className="mt-10 mb-10 flex justify-center">
                         <Link href="/choose-template">
                             <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
                                 Create My Resume
@@ -445,7 +457,14 @@ const HomePage: React.FC<HomePageProps> = ({
 
             {/* Templates Section - Enhanced with Smooth Animation */}
             <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
-                <div className="bg-gradient-to-b from-slate-800 to-[#f4faff] py-12 px-4 text-center font-sans h-[700px]">
+                <div className="relative py-12 px-4 text-center font-sans h-[700px] bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#f4faff]">
+                    <div
+                        className="pointer-events-none absolute inset-0"
+                        style={{
+                            background:
+                                'radial-gradient(1100px 420px at 50% -200px, rgba(255,255,255,0.18), rgba(255,255,255,0) 60%)'
+                        }}
+                    />
                     <h1 className="text-white text-4xl font-bold mb-4">
                         Choose your{" "}
                         <span className="text-[#354eab]">RESUME TEMPLATES</span>,
@@ -559,27 +578,29 @@ const HomePage: React.FC<HomePageProps> = ({
             </section>
 
             {/* Banner Section */}
-            <div className="relative w-full max-w-[1130px] h-[200px] sm:h-[280px] md:h-[356.6px] bg-[#2E404A] rounded-2xl shadow-lg overflow-hidden mt-[30px]">
+            <div className="relative w-full max-w-[1130px] h-[220px] sm:h-[300px] md:h-[380px] rounded-3xl shadow-xl overflow-hidden mt-[30px] bg-[#243746]">
                 <img
                     src="/images/banner.webp"
                     alt="Banner"
-                    className="absolute inset-0 w-full h-full object-cover z-0"
+                    className="absolute inset-0 w-full h-full object-cover z-0 opacity-20"
                 />
                 <div className="absolute inset-0 z-0">
-                    <div className="absolute top-1/2 left-1/2 w-[150px] h-[75px] sm:w-[200px] sm:h-[100px] md:w-[300px] md:h-[150px] bg-white opacity-20 rounded-full blur-[60px] transform -translate-x-1/2 -translate-y-1/2" />
+                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-[780px] h-[780px] bg-[#ffffff]/10 rounded-full blur-[120px]" />
+                    <div className="absolute bottom-[-120px] left-[10%] w-[360px] h-[360px] bg-[#354eab]/20 rounded-full blur-[100px]" />
+                    <div className="absolute bottom-[-140px] right-[8%] w-[360px] h-[360px] bg-[#4a5fc7]/20 rounded-full blur-[110px]" />
                 </div>
-                <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-8 pt-[40px] sm:pt-[60px] md:pt-[90px]">
-                    <h1 className="text-xl sm:text-2xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-3 leading-tight text-white">
+                <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-8 pt-[46px] sm:pt-[68px] md:pt-[98px]">
+                    <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-3 md:mb-4 leading-tight text-white drop-shadow-md">
                         Get noticed, get hired faster
                     </h1>
-                    <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 max-w-[90%] md:max-w-[700px] text-white">
+                    <p className="text-sm sm:text-base md:text-lg mb-4 md:mb-6 max-w-[90%] md:max-w-[700px] text-blue-100">
                         It's easier with CVeezy. Build a professional,
                         job-winning resume in minutes!
                     </p>
                     <Link href="/choose-template">
                         <button
                             style={{ backgroundColor: "#354eab" }}
-                            className="hover:bg-[#4a5fc7] text-white font-semibold py-2 px-4 md:py-3 md:px-6 rounded-lg shadow-lg transition duration-300 text-sm md:text-base"
+                            className="hover:bg-[#4a5fc7] text-white font-semibold py-2 px-5 md:py-3 md:px-7 rounded-xl shadow-lg shadow-black/30 transition duration-300 text-sm md:text-base"
                         >
                             Land My Dream Job
                         </button>
@@ -596,12 +617,20 @@ const HomePage: React.FC<HomePageProps> = ({
                     <div className="block md:hidden">
                         <div className="text-center mb-6">
                             <div className="flex items-center justify-center mb-4">
-                                <div className="bg-gradient-to-br from-white via-[#f8fbff] to-[#e3f2fd] rounded-2xl p-4 shadow-2xl border-2 border-[#354eab] hover:border-[#4a5fc7] transition-all duration-500 hover:shadow-[#354eab]/30 hover:scale-110 hover:rotate-1 hover:from-[#f0f8ff] hover:via-[#e8f4fd] hover:to-[#d4edff] group relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-[#354eab]/5 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
+                                <div className="bg-gradient-to-br from-[#f0f8ff] via-[#e6f3ff] to-[#d1e7ff] rounded-2xl p-4 shadow-xl ring-1 ring-[#93c5fd]/60 border border-[#3b82f6]/40 hover:border-[#2563eb] transition-all duration-500 hover:shadow-[#3b82f6]/20 hover:scale-110 hover:rotate-1 group relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-[#3b82f6]/10 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
                                     <img
                                         src="/images/cveezyLOGO_C.png"
                                         alt="CVeezy Logo"
-                                        className="w-16 h-16 object-contain transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-lg group-hover:brightness-110"
+                                        className="w-16 h-16 object-contain transition-all duration-500 group-hover:drop-shadow-lg group-hover:brightness-110 group-hover:scale-0 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
                                     />
+                                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] p-3 flex flex-col items-center justify-center text-center [transform:rotateX(-90deg)] origin-bottom transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:[transform:rotateX(0deg)] shadow-2xl overflow-hidden">
+                                        <div className="relative z-10 px-3">
+                                            <h4 className="text-white text-sm font-extrabold tracking-wide mb-0">CVEEZY</h4>
+                                            <p className="text-white/90 text-[9px] tracking-widest mb-2">BY CERTICODE</p>
+                                            <p className="text-white/90 text-[10px] leading-tight">Create ATS‑friendly resumes in minutes with AI guidance and modern templates.</p>
+                                        </div>
+                                    </div>
+                                    <span className="pointer-events-none absolute -inset-16 rotate-[18deg] bg-gradient-to-r from-white/0 via-white/25 to-white/0 opacity-0 -translate-x-[120%] group-hover:opacity-40 group-hover:translate-x-[120%] transition-all duration-700"></span>
                                 </div>
                             </div>
                             <p className="text-gray-300 text-sm leading-relaxed">
@@ -691,12 +720,20 @@ const HomePage: React.FC<HomePageProps> = ({
                         <div className="col-span-1">
                             <div className="flex items-center mb-6">
                                 <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
-                                    <div className="bg-gradient-to-br from-[#93c5fd] via-[#f8fbff] to-[#93c5fd] rounded-2xl p-6 shadow-2xl border-1 border-[#354eab] hover:border-[#4a5fc7] transition-all duration-500 hover:shadow-[#354eab]/30 hover:scale-110 hover:rotate-1 hover:from-[#f0f8ff] hover:via-[#93c5fd] hover:to-[#d4edff] group relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-[#354eab]/5 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
+                                    <div className="bg-gradient-to-br from-[#f0f8ff] via-[#e6f3ff] to-[#d1e7ff] rounded-2xl p-6 shadow-xl ring-1 ring-[#93c5fd]/60 border border-[#3b82f6]/40 hover:border-[#2563eb] transition-all duration-500 hover:shadow-[#3b82f6]/20 hover:scale-110 hover:rotate-1 group relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-br before:from-[#3b82f6]/10 before:via-transparent before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-500">
                                         <Logo
                                             size="xxl"
                                             showText={false}
-                                            className=""
+                                            className="transition-all duration-500 group-hover:scale-0 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]"
                                         />
+                                        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] p-4 flex flex-col items-center justify-center text-center [transform:rotateX(-90deg)] origin-bottom transition-all duration-500 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] group-hover:[transform:rotateX(0deg)] shadow-2xl overflow-hidden">
+                                            <div className="relative z-10 px-4">
+                                                <h4 className="text-white text-xl font-extrabold tracking-wide mb-0">CVEEZY</h4>
+                                                <p className="text-white/90 text-xs tracking-widest mb-3">BY CERTICODE</p>
+                                                <p className="text-white/90 text-sm leading-tight max-w-xs mx-auto">Build polished, ATS‑friendly resumes in minutes with AI guidance and modern templates.</p>
+                                            </div>
+                                        </div>
+                                        <span className="pointer-events-none absolute -inset-24 rotate-[18deg] bg-gradient-to-r from-white/0 via-white/35 to-white/0 opacity-0 -translate-x-[120%] group-hover:opacity-60 group-hover:translate-x-[120%] transition-all duration-700"></span>
                                     </div>
                                 </Link>
                             </div>

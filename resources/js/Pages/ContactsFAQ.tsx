@@ -1,6 +1,7 @@
 // FAQ.tsx
 
 import React, { useState } from 'react';
+import { Transition } from '@headlessui/react';
 
 interface FAQ {
   question: string;
@@ -9,28 +10,28 @@ interface FAQ {
 
 const faqs: FAQ[] = [
   {
-    question: "How can I use CVeezy for free?",
-    answer: "You can start using CVeezy for free by signing up. This allows you to create and edit your resume using our templates. Once your resume is ready, you can download it for free in .txt format. For additional features and the ability to download your resume in PDF or Word format, consider purchasing a subscription."
+    question: "How do I use CVeezy for free?",
+    answer: "Sign up and start building right away. You can edit and download a .txt version for free. PDF/DOCX downloads and pro features are available on a paid plan."
   },
   {
-    question: "Can I customize my resume template?",
-    answer: "Yes, you can fully customize your resume template. Adjust the layout, fonts, colors, and sections to match your personal style and the requirements of the job you're applying for."
+    question: "Can I customize templates?",
+    answer: "Yes. Change layout, sections, fonts, and colors to match your style and the role."
   },
   {
-    question: "How can I download my resume in PDF or Word?",
-    answer: "Once you've completed your resume, simply click on the download button and choose either PDF or Word format. Your resume will be ready to save and send to potential employers."
+    question: "How do I download a PDF or DOCX?",
+    answer: "Click Download and choose PDF or DOCX. Your file will be ready to save and send."
   },
   {
-    question: "How do I cancel or downgrade my account?",
-    answer: "To cancel or downgrade your account, go to your account settings and click on the Subscription tab. From there, you can choose to cancel your current plan or switch to a lower-tier plan."
+    question: "How do I cancel or downgrade?",
+    answer: "Go to Account Settings → Subscription. From there you can cancel or switch plans."
   },
   {
-    question: "Should I make a different CV for every job application?",
-    answer: "Yes, it’s recommended to tailor your CV for each job application. Customize your resume to highlight the skills and experiences most relevant to the specific job, increasing your chances of getting noticed by recruiters."
+    question: "Should I tailor my resume for each job?",
+    answer: "Yes. Emphasize the skills and results most relevant to the posting to boost your chances."
   },
   {
-    question: "What should I include in my resume to make it stand out?",
-    answer: "To make your resume stand out, include clear and concise bullet points, quantify your achievements, use action verbs, and tailor your resume to the job description. A clean, professional design of our templates also helps catch the recruiter's eye."
+    question: "What makes a resume stand out?",
+    answer: "Clear bullets, measurable results, action verbs, role‑specific keywords, and a clean, professional layout."
   },
 ];
 
@@ -42,26 +43,50 @@ const FAQ: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto p-6 text-gray-800">
-      <h2 className="text-3xl font-bold mb-4 text-center">Frequently Asked Questions</h2>
-      {faqs.map((faq, index) => (
-        <div key={index} className="border-b border-gray-300 pb-4 mb-4">
-          <div 
-            className="flex justify-between items-center cursor-pointer" 
-            onClick={() => toggleFAQ(index)}
-          >
-            <h3 className="text-xl font-semibold">
-              {faq.question}
-            </h3>
-            <span className="text-xl">{activeIndex === index ? '-' : '+'}</span>
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 text-gray-800">
+      <h2 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-3 text-center tracking-tight">
+        Frequently Asked Questions
+      </h2>
+      <div className="mx-auto mb-6 h-1.5 w-24 rounded-full bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8]"></div>
+      <p className="text-center text-gray-600 max-w-2xl mx-auto mb-8 text-sm sm:text-base">
+        Quick answers to the most common questions about using CVeezy.
+      </p>
+
+      <div className="divide-y divide-[#e3f2fd]">
+        {faqs.map((faq, index) => (
+          <div key={index} className="group py-2">
+            <button
+              type="button"
+              onClick={() => toggleFAQ(index)}
+              className="w-full flex items-center justify-between gap-4 py-3.5 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#354eab]"
+              aria-expanded={activeIndex === index}
+              aria-controls={`faq-panel-${index}`}
+            >
+              <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 group-hover:text-[#354eab] transition-colors">
+                {faq.question}
+              </h3>
+              <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border transition-all duration-300 ${activeIndex === index ? 'bg-[#354eab] text-white border-[#354eab]' : 'text-gray-500 border-gray-300 group-hover:text-[#354eab] group-hover:border-[#bcd6f6]'}`}>
+                <svg className={`h-4 w-4 transition-transform duration-300 ${activeIndex === index ? 'rotate-45' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+              </span>
+            </button>
+            <Transition
+              show={activeIndex === index}
+              enter="transition-all ease-out duration-300"
+              enterFrom="opacity-0 -translate-y-1 max-h-0"
+              enterTo="opacity-100 translate-y-0 max-h-48"
+              leave="transition-all ease-in duration-200"
+              leaveFrom="opacity-100 translate-y-0 max-h-48"
+              leaveTo="opacity-0 -translate-y-1 max-h-0"
+            >
+              <div id={`faq-panel-${index}`} className="pb-5 pt-0 text-gray-600 leading-relaxed text-base md:text-lg">
+                {faq.answer}
+              </div>
+            </Transition>
           </div>
-          {activeIndex === index && (
-            <p className="text-gray-600 mt-2">
-              {faq.answer}
-            </p>
-          )}
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
