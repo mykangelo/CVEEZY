@@ -8,6 +8,9 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
 
 class AdminController extends Controller
 {
@@ -246,102 +249,120 @@ class AdminController extends Controller
             return response()->json(['message' => 'Error generating PDF: ' . $e->getMessage()], 500);
         }
     }
-
     public function approve($id)
     {
         try {
-            \Log::info('Admin approving payment proof', ['payment_id' => $id]);
-            
+            Log::info('Admin approving payment proof', ['payment_id' => $id]);
+
             $proof = PaymentProof::with('user', 'resume')->findOrFail($id);
-            
-            // Check if payment is already approved
+
+            // Check if already approved
             if ($proof->status === 'approved') {
                 return response()->json(['message' => 'Payment is already approved.'], 400);
             }
-            
-            // Update payment proof status
+
+            // Update status
             $proof->status = 'approved';
             $proof->save();
-            
+
             // Update resume payment status
             if ($proof->resume) {
                 $proof->resume->markAsPaidWithTimestamp();
             }
-            
-            \Log::info('Payment proof approved successfully', [
+
+            // ✅ Send email
+            Mail::send('emails.payment-status', [
+                'status' => $proof->status,
+                'name'   => $proof->user->name,
+            ], function ($message) use ($proof) {
+                $message->to($proof->user->email, $proof->user->name)
+                        ->subject('Payment Status Update: ' . ucfirst($proof->status));
+            });
+
+            Log::info('Payment proof approved successfully', [
                 'payment_id' => $proof->id,
-                'user_id' => $proof->user_id,
-                'resume_id' => $proof->resume_id
+                'user_id'    => $proof->user_id,
+                'resume_id'  => $proof->resume_id
             ]);
-            
+
             return response()->json([
-                'message' => 'Payment approved successfully.',
-                'payment_id' => $proof->id,
-                'user_id' => $proof->user_id,
+                'message'   => 'Payment approved successfully, email sent.',
+                'payment_id'=> $proof->id,
+                'user_id'   => $proof->user_id,
                 'resume_id' => $proof->resume_id
             ]);
-            
+
         } catch (\Exception $e) {
-            \Log::error('Error approving payment proof', [
+            Log::error('Error approving payment proof', [
                 'payment_id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString()
             ]);
-            
+
             return response()->json(['message' => 'Error approving payment: ' . $e->getMessage()], 500);
         }
     }
 
+    /**
+     * Reject payment proof
+     */
     public function reject($id)
     {
         try {
-            \Log::info('Admin rejecting payment proof', ['payment_id' => $id]);
-            
+            Log::info('Admin rejecting payment proof', ['payment_id' => $id]);
+
             $proof = PaymentProof::with('user', 'resume')->findOrFail($id);
-            
-            // Check if payment is already rejected
+
+            // Check if already rejected
             if ($proof->status === 'rejected') {
                 return response()->json(['message' => 'Payment is already rejected.'], 400);
             }
-            
-            // Update payment proof status
+
+            // Update status
             $proof->status = 'rejected';
             $proof->save();
-            
-            // Reset resume payment status if it was previously approved
+
+            // Reset resume payment status if needed
             if ($proof->resume) {
-                // If this was a modified resume payment, set needs_payment back to true
                 if ($proof->resume->wasModifiedAfterPayment()) {
                     $proof->resume->update([
-                        'is_paid' => false,
-                        'needs_payment' => true,
+                        'is_paid'      => false,
+                        'needs_payment'=> true,
                     ]);
                 } else {
-                    // For regular payments, just set is_paid to false
                     $proof->resume->update(['is_paid' => false]);
                 }
             }
-            
-            \Log::info('Payment proof rejected successfully', [
+
+            // ✅ Send email
+            Mail::send('emails.payment-status', [
+                'status' => $proof->status,
+                'name'   => $proof->user->name,
+            ], function ($message) use ($proof) {
+                $message->to($proof->user->email, $proof->user->name)
+                        ->subject('Payment Status Update: ' . ucfirst($proof->status));
+            });
+
+            Log::info('Payment proof rejected successfully', [
                 'payment_id' => $proof->id,
-                'user_id' => $proof->user_id,
-                'resume_id' => $proof->resume_id
+                'user_id'    => $proof->user_id,
+                'resume_id'  => $proof->resume_id
             ]);
-            
+
             return response()->json([
-                'message' => 'Payment rejected successfully.',
-                'payment_id' => $proof->id,
-                'user_id' => $proof->user_id,
+                'message'   => 'Payment rejected successfully, email sent.',
+                'payment_id'=> $proof->id,
+                'user_id'   => $proof->user_id,
                 'resume_id' => $proof->resume_id
             ]);
-            
+
         } catch (\Exception $e) {
-            \Log::error('Error rejecting payment proof', [
+            Log::error('Error rejecting payment proof', [
                 'payment_id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'error'      => $e->getMessage(),
+                'trace'      => $e->getTraceAsString()
             ]);
-            
+
             return response()->json(['message' => 'Error rejecting payment: ' . $e->getMessage()], 500);
         }
     }
