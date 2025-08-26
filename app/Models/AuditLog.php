@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class AuditLog extends Model
 {
+    public $timestamps = false;
+
     protected $fillable = [
         'event_type',
         'user_email',

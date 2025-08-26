@@ -108,6 +108,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/user/payment-proofs', [PaymentProofController::class, 'userPayments'])->name('payment.proofs');
 });
 
+// Admin JSON API for Audit Logs
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/audit-logs/recent.json', [\App\Http\Controllers\Admin\AuditLogController::class, 'recentJson'])
+        ->name('admin.audit-logs.recent');
+});
+
 // Resume maker with pending payment check
 Route::middleware(['auth', 'verified', 'check.pending.payments'])->group(function () {
     Route::get('/choose-resume-maker-auth', [App\Http\Controllers\ChooseResumeMakerController::class, 'index'])

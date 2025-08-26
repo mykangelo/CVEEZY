@@ -242,6 +242,39 @@ class AuditLogController extends Controller
     }
 
     /**
+     * Return recent audit logs as JSON for dashboard polling
+     */
+    public function recentJson(Request $request)
+    {
+        $limit = (int) ($request->input('limit', 25));
+        $limit = max(1, min($limit, 200));
+
+        $logs = AuditLog::with('user')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get()
+            ->map(function ($log) {
+                return [
+                    'id' => $log->id,
+                    'event_type' => $log->event_type,
+                    'formatted_event_type' => $log->formatted_event_type,
+                    'status' => $log->status,
+                    'formatted_status' => $log->formatted_status,
+                    'user_email' => $log->user_email,
+                    'user_id' => $log->user_id,
+                    'ip_address' => $log->ip_address,
+                    'user_agent' => $log->short_user_agent,
+                    'route_name' => $log->route_name,
+                    'context' => $log->context,
+                    'created_at' => $log->created_at?->toIso8601String(),
+                ];
+            });
+
+        return response()->json([
+            'data' => $logs,
+        ]);
+    }
+    /**
      * Clean old audit logs
      */
     public function cleanup(Request $request)
