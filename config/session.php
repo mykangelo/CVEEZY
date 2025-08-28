@@ -18,7 +18,7 @@ return [
     |
     */
 
-    'driver' => env('SESSION_DRIVER', 'database'),
+    'driver' => env('SESSION_DRIVER', 'file'),
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +34,7 @@ return [
 
     'lifetime' => (int) env('SESSION_LIFETIME', 60), // Reduced from 120 to 60 minutes
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true), // Changed to true for better security
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false), // Changed to false to maintain sessions
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +169,7 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE', true), // Changed to true for production security
+    'secure' => env('SESSION_SECURE_COOKIE', false), // Changed to false for local development
 
     /*
     |--------------------------------------------------------------------------
@@ -199,7 +199,7 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE', 'strict'), // Changed from 'lax' to 'strict' for better security
+    'same_site' => env('SESSION_SAME_SITE', 'lax'), // Changed to 'lax' for local development
 
     /*
     |--------------------------------------------------------------------------

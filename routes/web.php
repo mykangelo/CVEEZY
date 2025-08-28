@@ -55,10 +55,21 @@ Route::get('/choose-resume-maker', [App\Http\Controllers\ChooseResumeMakerContro
 |--------------------------------------------------------------------------
 */
 
-Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])
-    ->name('social.redirect');
-Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
-    ->name('social.callback');
+Route::middleware(['web'])->group(function () {
+    Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])
+        ->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
+        ->name('social.callback');
+    
+    // Check auth status before Google redirect
+    Route::get('/auth/check-status', function () {
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+            'has_google_session' => session()->has('google_login_successful'),
+        ]);
+    })->name('auth.check-status');
+});
 
 /*
 |--------------------------------------------------------------------------
