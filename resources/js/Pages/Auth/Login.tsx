@@ -98,7 +98,7 @@ export default function Login({
                     <img
                         src="/images/cveezyLOGO_C.png"
                         alt="CVeezy Logo"
-                        className="w-auto h-64 max-w-full mx-auto object-contain mb-0 -mb-24"
+                        className="w-auto h-64 max-w-full mx-auto object-contain mb-0 -mb-20"
                     />
 
                     {/* Container Card */}

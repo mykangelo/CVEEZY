@@ -1,18 +1,20 @@
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
 import EmailVerificationCard from './Partials/EmailVerificationCard';
-import ProfileOverviewCard from './Partials/ProfileOverviewCard';
 import ProfileNotification from '@/Components/ProfileNotification';
 import TabbedLayout from '@/Components/TabbedLayout';
+import SidebarMenu from '@/Components/SidebarMenu';
+import { usePage } from '@inertiajs/react';
 
 export default function Edit({
     emailVerificationStatus,
     status,
 }: PageProps<{ emailVerificationStatus: any; status?: string }>) {
+    const { auth } = usePage().props as any;
+    const user = auth.user;
     const tabs = [
         {
             id: 'overview',
@@ -24,21 +26,6 @@ export default function Edit({
             ),
             content: (
                 <div className="space-y-6">
-                    {/* Profile Overview Card */}
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                        <div className="bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] px-6 py-4">
-                            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                Account Overview
-                            </h2>
-                        </div>
-                        <div className="p-6">
-                            <ProfileOverviewCard />
-                        </div>
-                    </div>
-
                     {/* Email Verification Card */}
                     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                         <div className="bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] px-6 py-4">
@@ -135,20 +122,27 @@ export default function Edit({
     ];
 
     return (
-        <AuthenticatedLayout header={<span>Profile Settings</span>}>
+        <div className="min-h-screen bg-[#f4faff]">
             <Head title="Profile Settings" />
+
+            {/* Sidebar Menu */}
+            <SidebarMenu 
+                user={user}
+                onResumeReviewClick={() => {}}
+                onInterviewPrepClick={() => {}}
+            />
 
             {/* Status Notification */}
             <ProfileNotification status={status} />
 
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8">
-                <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="ml-72">
+                <div className="max-w-7xl px-8 sm:px-10 lg:px-12 py-12">
                     {/* Enhanced Page Header */}
                     <div className="mb-8">
                         {/* Main Header Card */}
                         <div className="bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] rounded-xl shadow-xl overflow-hidden">
-                            <div className="px-6 py-6 text-center relative">
                                 {/* Background Pattern */}
+                            <div className="px-6 py-6 text-center relative">
                                 <div className="absolute inset-0 opacity-10">
                                     <div className="absolute top-0 left-0 w-20 h-20 bg-white rounded-full -translate-x-10 -translate-y-10"></div>
                                     <div className="absolute top-0 right-0 w-16 h-16 bg-white rounded-full translate-x-8 -translate-y-8"></div>
@@ -222,6 +216,6 @@ export default function Edit({
                     </div>
                 </div>
             </div>
-        </AuthenticatedLayout>
+        </div>
     );
 }

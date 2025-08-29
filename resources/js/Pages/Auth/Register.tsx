@@ -105,7 +105,7 @@ export default function Register() {
                     <img
                         src="/images/cveezyLOGO_C.png"
                         alt="CVeezy Logo"
-                        className="w-auto h-48 max-w-full mx-auto object-contain mb-0 -mb-11"
+                        className="w-auto h-48 max-w-full mx-auto object-contain mb-0 -mb-10"
                     />
 
                     {/* Container Card */}

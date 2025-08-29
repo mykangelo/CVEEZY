@@ -1,16 +1,16 @@
-import { useState } from "react";
+import React from 'react';
 
-interface InterviewPrepPopUpProps {
+interface ResumeReviewModalProps {
     isOpen: boolean;
     onClose: () => void;
 }
 
-export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPopUpProps) {
+const ResumeReviewModal: React.FC<ResumeReviewModalProps> = ({ isOpen, onClose }) => {
     if (!isOpen) return null;
 
-    const handleGetGuide = () => {
-        // Implement your guide purchase/download logic here
-        console.log('Getting interview guide');
+    const handleGetReview = () => {
+        // Implement your resume review purchase logic here
+        console.log('Getting resume review');
         onClose();
     };
 
@@ -43,11 +43,11 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                     <div className="mb-6 text-center relative z-10">
                         <div className="flex items-center justify-center space-x-4">
                             <h2 className="text-3xl font-bold text-[#354eab]">
-                                Interview Preparation Guide
+                                Professional Resume Review
                             </h2>
                             <div className="bg-[#354eab]/10 text-[#354eab] px-4 py-2 rounded-xl border-2 border-[#354eab]/30 shadow-md">
-                                <span className="text-lg font-bold">₱1,000</span>
-                                <span className="text-sm ml-1 opacity-80">/ guide</span>
+                                <span className="text-lg font-bold">₱1,500</span>
+                                <span className="text-sm ml-1 opacity-80">/ review</span>
                             </div>
                         </div>
                     </div>
@@ -55,7 +55,7 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                     {/* Plan Description */}
                     <div className="mb-8 text-center relative z-10">
                         <p className="text-gray-600 text-sm leading-relaxed max-w-2xl mx-auto">
-                            Master your interview skills with our comprehensive guide designed by career experts and HR professionals to help you ace every interview.
+                            Get expert feedback from certified HR professionals to make your resume stand out from the competition and increase your chances of landing interviews.
                         </p>
                     </div>
 
@@ -67,7 +67,7 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <span className="text-gray-700 text-sm font-medium">100+ common interview questions with expert answers</span>
+                            <span className="text-gray-700 text-sm font-medium">Detailed feedback on content, structure, and formatting</span>
                         </div>
                         <div className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] border border-gray-200">
                             <div className="w-7 h-7 bg-[#354eab] rounded-full flex items-center justify-center shadow-md">
@@ -75,7 +75,7 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <span className="text-gray-700 text-sm font-medium">Behavioral interview techniques and STAR method</span>
+                            <span className="text-gray-700 text-sm font-medium">ATS optimization recommendations</span>
                         </div>
                         <div className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] border border-gray-200">
                             <div className="w-7 h-7 bg-[#354eab] rounded-full flex items-center justify-center shadow-md">
@@ -83,7 +83,7 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <span className="text-gray-700 text-sm font-medium">Industry-specific interview strategies</span>
+                            <span className="text-gray-700 text-sm font-medium">Industry-specific suggestions and best practices</span>
                         </div>
                         <div className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] border border-gray-200">
                             <div className="w-7 h-7 bg-[#354eab] rounded-full flex items-center justify-center shadow-md">
@@ -91,7 +91,7 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <span className="text-gray-700 text-sm font-medium">Salary negotiation tips and templates</span>
+                            <span className="text-gray-700 text-sm font-medium">Actionable improvements for better impact</span>
                         </div>
                         <div className="flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 transition-all duration-300 hover:scale-[1.02] border border-gray-200">
                             <div className="w-7 h-7 bg-[#354eab] rounded-full flex items-center justify-center shadow-md">
@@ -99,21 +99,23 @@ export default function InterviewPrepPopUp({ isOpen, onClose }: InterviewPrepPop
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <span className="text-gray-700 text-sm font-medium">Instant digital access after purchase</span>
+                            <span className="text-gray-700 text-sm font-medium">24-48 hour turnaround time</span>
                         </div>
                     </div>
 
                     {/* Call to Action Button */}
                     <div className="text-center relative z-10">
                         <button
-                            onClick={handleGetGuide}
+                            onClick={handleGetReview}
                             className="w-full bg-[#354eab] text-white py-4 px-8 rounded-2xl font-bold text-lg hover:bg-[#2d3f8f] transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-4 focus:ring-[#354eab]/20 shadow-xl hover:shadow-2xl border-2 border-[#354eab]/20"
                         >
-                            Get the Guide
+                            Get Resume Review
                         </button>
                     </div>
                 </div>
             </div>
         </div>
     );
-}
+};
+
+export default ResumeReviewModal;

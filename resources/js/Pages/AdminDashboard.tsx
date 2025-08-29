@@ -519,62 +519,9 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
         }
     };
 
-    const handleOpenStorageFolder = async () => {
-        try {
-            const response = await fetch('/admin/open-storage-folder', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                setNotification({ 
-                    type: 'success', 
-                    message: `Folder opened successfully! Path: ${data.path}` 
-                });
-            } else {
-                setNotification({ 
-                    type: 'error', 
-                    message: data.error || 'Failed to open storage folder' 
-                });
-            }
-        } catch (error) {
-            console.error('Error opening storage folder:', error);
-            setNotification({ 
-                type: 'error', 
-                message: 'An error occurred while trying to open the storage folder' 
-            });
-        }
-    };
 
-    const handleShowStoragePath = async () => {
-        try {
-            const response = await fetch('/admin/payment-storage-path');
-            const data = await response.json();
-            
-            if (response.ok) {
-                setStoragePathModal({
-                    isOpen: true,
-                    data: data
-                });
-            } else {
-                setNotification({ 
-                    type: 'error', 
-                    message: data.error || 'Failed to get storage path information' 
-                });
-            }
-        } catch (error) {
-            console.error('Error getting storage path:', error);
-            setNotification({ 
-                type: 'error', 
-                message: 'An error occurred while fetching storage path information' 
-            });
-        }
-    };
+
+
 
     const openTimeFilterModal = () => {
         setShowTimeFilterModal(true);
@@ -726,28 +673,7 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle>Payment Proof Management</CardTitle>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={handleOpenStorageFolder}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors"
-                                                    title="Open storage folder in file explorer"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1M10 6V5a2 2 0 112 0v1M10 6h4M14 10l2-2m0 0l2-2m-2 2v8" />
-                                                    </svg>
-                                                    Open Folder
-                                                </button>
-                                                <button
-                                                    onClick={handleShowStoragePath}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-[#e3f2fd] text-[#354eab] hover:bg-[#bcd6f6] rounded-lg transition-colors"
-                                                    title="Show storage location info"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    Info
-                                                </button>
-                                            </div>
+
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">

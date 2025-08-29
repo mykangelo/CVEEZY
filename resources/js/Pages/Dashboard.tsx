@@ -4,9 +4,9 @@ import { PageProps } from '@/types';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import PaymentModal from '@/Components/PaymentModal';
 import { Resume } from "@/types/resume";
-import Logo from "@/Components/Logo";
-import Dropdown from "@/Components/Dropdown";
+import SidebarMenu from '@/Components/SidebarMenu';
 import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp"; // Fixed import path
+import ResumeReviewModal from "@/Components/ResumeReviewModal";
 import ToastContainer from '@/Components/ToastContainer';
 import ConfirmationModal from '@/Components/ConfirmationModal';
 import InlineEdit from '@/Components/InlineEdit';
@@ -37,6 +37,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [selectedResumeId, setSelectedResumeId] = useState<number | undefined>(undefined);
     const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+    const [isResumeReviewModalOpen, setIsResumeReviewModalOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     
     // Toast and modal states
@@ -345,205 +346,196 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 </div>
             )}
 
-            {/* Custom Header */}
-            <header className="bg-white border-b border-gray-200 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
-                        {/* Left: Logo */}
-                        <div className="flex items-center">
-                            <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
-                                <Logo 
-                                    size="sm"
-                                    showText={false}
-                                    className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
-                                />
-                            </Link>
-                        </div>
-
-                        {/* Center: Navigation */}
-                        <nav className="hidden md:flex items-center space-x-8">
-                            <Link 
-                                href="/dashboard" 
-                                className="text-gray-700 hover:text-[#354eab] font-medium text-base transition-colors"
-                            >
-                                Resume Review
-                            </Link>
-                            {/* Updated Interview Preparation button to trigger modal */}
-                            <button 
-                                onClick={() => setIsInterviewModalOpen(true)}
-                                className="text-gray-700 hover:text-[#354eab] font-medium text-base transition-colors"
-                            >
-                                Interview Preparation
-                            </button>
-                        </nav>
-
-                        {/* Right: Message Icon + User Menu */}
-                        <div className="flex items-center space-x-4">
-                            {/* Message Icon */}
-                            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                                </svg>
-                            </button>
-
-                            {/* User Dropdown */}
-                            <div className="relative">
-                                <Dropdown>
-                                    <Dropdown.Trigger>
-                                        <span className="inline-flex rounded-xl">
-                                            <button
-                                                type="button"
-                                                className="inline-flex items-center rounded-xl border border-gray-200 bg-white px-5 py-3 text-sm font-medium leading-4 text-gray-700 transition-all duration-200 ease-in-out hover:border-[#354eab] hover:bg-[#f8faff] hover:text-[#354eab] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#354eab] focus:ring-offset-2"
-                                            >
-                                                <div className="flex items-center space-x-3">
-                                                    <div className="w-7 h-7 bg-gradient-to-br from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center">
-                                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                        </svg>
-                                                    </div>
-                                                    <span className="font-semibold truncate max-w-[220px]">{user?.name || user?.email || 'User'}</span>
-                                                </div>
-                                                <svg
-                                                    className="ml-3 h-4 w-4 text-gray-500 transition-transform duration-200 group-hover:text-[#354eab]"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    viewBox="0 0 20 20"
-                                                    fill="currentColor"
-                                                >
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                    />
-                                                </svg>
-                                            </button>
-                                        </span>
-                                    </Dropdown.Trigger>
-                                    
-                                    <Dropdown.Content contentClasses="py-2 bg-white">
-                                        <Dropdown.Link href="/profile" className="px-4 py-2">
-                                            Profile Settings
-                                        </Dropdown.Link>
-                                        <div className="mx-4 my-2 h-px bg-gray-200"></div>
-                                        <Dropdown.Link href="/logout" method="post" as="button" className="px-4 py-2">
-                                            Log out
-                                        </Dropdown.Link>
-                                    </Dropdown.Content>
-                                </Dropdown>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            {/* Sidebar Menu */}
+            <SidebarMenu 
+                user={user}
+                onResumeReviewClick={() => setIsResumeReviewModalOpen(true)}
+                onInterviewPrepClick={() => setIsInterviewModalOpen(true)}
+            />
 
             {/* Welcome Section */}
-            <div className="bg-white border-b border-gray-200">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center py-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-900">
-                                Welcome back, {user?.name || 'User'}!
-                            </h1>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Ready to build your next great resume?
-                            </p>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                            {/* Create New Resume Button */}
-                <div className="mb-6">
-                    {canCreateNewResume() ? (
-                        <button
-                            onClick={() => router.visit('/choose-template')}
-                            className="bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center gap-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            Create a New Resume
-                        </button>
-                    ) : (
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <div className="flex items-center gap-2 mb-2">
-                                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span className="text-yellow-800 font-semibold">Payment Under Review</span>
-                            </div>
-                            <p className="text-yellow-700 text-sm">
-                                You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.
-                            </p>
-                        </div>
-                    )}
+            <div className="bg-gradient-to-br from-[#f8faff] via-white to-[#e8f2ff] border-b border-[#354eab]/20 ml-72 relative overflow-hidden">
+                {/* Decorative background elements */}
+                <div className="absolute inset-0 overflow-hidden">
+                    <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-[#354eab]/5 to-[#4a5fc7]/5 rounded-full blur-3xl"></div>
+                    <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-gradient-to-tr from-[#4a5fc7]/5 to-[#354eab]/5 rounded-full blur-3xl"></div>
                 </div>
+                
+                <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10 relative z-10">
+                    <div className="flex flex-col lg:flex-row justify-between items-center py-6 gap-6">
+                        <div className="flex-1 max-w-xl">
+                            {/* Welcome badge */}
+                            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#354eab]/10 to-[#4a5fc7]/10 border border-[#354eab]/20 rounded-full px-3 py-1.5 mb-4">
+                                <div className="w-1.5 h-1.5 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full animate-pulse"></div>
+                                <span className="text-xs font-medium text-[#354eab]">Welcome back!</span>
+                            </div>
+                            
+                            <h1 className="text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                                Hello, <span className="bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5a6fd7] bg-clip-text text-transparent">{user?.name || 'User'}</span>! 👋
+                            </h1>
+                            
+                            <p className="text-base text-gray-600 leading-relaxed max-w-xl mb-6">
+                                Ready to build your next great resume? Let's create something amazing together.
+                            </p>
+                            
+                            {/* Quick stats or motivational text */}
+                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-3.5 h-3.5 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Professional templates</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-3.5 h-3.5 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>ATS optimized</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <svg className="w-3.5 h-3.5 text-[#354eab]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>AI-powered insights</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex-shrink-0 lg:ml-6 flex flex-col items-center lg:items-end justify-center">
+                            {canCreateNewResume() ? (
+                                <div className="relative group">
+                                    {/* Enhanced glow effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-3xl blur-xl opacity-60 group-hover:opacity-90 transition-all duration-500"></div>
+                                    
+                                    {/* Floating particles effect */}
+                                    <div className="absolute -top-2 -right-2 w-3 h-3 bg-white/30 rounded-full animate-pulse"></div>
+                                    <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-white/20 rounded-full animate-pulse delay-75"></div>
+                                    
+                                    <button
+                                        onClick={() => router.visit('/choose-template')}
+                                        className="relative bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5a6fd7] hover:from-[#4a5fc7] hover:via-[#5a6fd7] hover:to-[#6a7fe7] text-white font-bold py-4 px-8 rounded-3xl transition-all duration-500 flex items-center gap-4 shadow-2xl hover:shadow-[#354eab]/40 transform hover:scale-110 border border-white/30 hover:border-white/50"
+                                    >
+                                        <div className="w-8 h-8 bg-white/25 rounded-full flex items-center justify-center group-hover:bg-white/35 transition-all duration-300">
+                                            <svg className="w-5 h-5 transition-all duration-500 group-hover:rotate-90 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            </svg>
+                                        </div>
+                                        <div className="text-left">
+                                            <span className="text-lg font-bold block leading-tight">Create a New Resume</span>
+                                            <span className="text-xs font-normal opacity-90">Start building now →</span>
+                                        </div>
+                                    </button>
+                                    
+                                    {/* Subtle hint text below button */}
+                                    <p className="text-center text-xs text-gray-400 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        Choose from premium templates
+                                    </p>
+                                </div>
+                            ) : (
+                                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-2xl p-5 shadow-lg max-w-sm relative overflow-hidden">
+                                    {/* Decorative pattern */}
+                                    <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-100/50 rounded-full -translate-y-10 translate-x-10"></div>
+                                    
+                                    <div className="relative z-10">
+                                        <div className="flex items-center gap-3 mb-3">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-xl flex items-center justify-center shadow-md">
+                                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <span className="text-yellow-800 font-bold text-base block">Payment Under Review</span>
+                                                <span className="text-yellow-600 text-xs">Processing your submission</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-yellow-700 text-xs leading-relaxed">
+                                            You have resumes with pending payment reviews. Please wait for admin approval before creating new resumes.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl px-8 sm:px-10 lg:px-12 py-12 ml-72">
                 {/* My Recent Resumes Section */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                                            <div className="flex justify-between items-center">
-                        <h2 className="text-xl font-semibold text-gray-800">My Recent Resumes</h2>
-                        <button
-                            onClick={refreshDashboardData}
-                            disabled={isRefreshing}
-                            className="text-[#354eab] hover:text-[#4a5fc7] text-sm font-medium flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-                        </button>
-                    </div>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-12 overflow-hidden">
+                    <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2">My Recent Resumes</h2>
+                                <p className="text-sm text-gray-600">Manage and track your professional resumes</p>
+                            </div>
+                            <button
+                                onClick={refreshDashboardData}
+                                disabled={isRefreshing}
+                                className="text-[#354eab] hover:text-[#4a5fc7] text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-[#354eab] transition-all duration-200"
+                            >
+                                <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                            </button>
+                        </div>
                     </div>
 
                     {resumeList.length === 0 ? (
-                        <div className="px-6 py-12 text-center">
-                            <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <h3 className="text-lg font-medium text-gray-900 mb-2">No resumes yet</h3>
-                            <p className="text-gray-600 mb-4">Get started by creating your first professional resume.</p>
-                            <Link
-                                href="/choose-template"
-                                className="inline-flex items-center px-4 py-2 bg-[#354eab] hover:bg-[#4a5fc7] text-white font-medium rounded-lg transition-colors duration-200"
-                            >
-                                Create Your First Resume
-                            </Link>
+                        <div className="px-8 py-16 text-center">
+                            <div className="max-w-md mx-auto">
+                                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-3">No resumes yet</h3>
+                                <p className="text-gray-600 mb-6 leading-relaxed">Get started by creating your first professional resume. Choose from our premium templates and build something amazing.</p>
+                                <Link
+                                    href="/choose-template"
+                                    className="inline-flex items-center px-6 py-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                >
+                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Create Your First Resume
+                                </Link>
+                            </div>
                         </div>
                     ) : (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
+                        <div className="overflow-x-auto px-2">
+                            <table className="w-full divide-y divide-gray-200 min-w-full">
                                 <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Name
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-2/5">
+                                            Resume Details
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Creation Date
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
+                                            Created
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
                                             Status
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Payment Status
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/6">
+                                            Payment
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/5">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {resumeList.map((resume) => (
-                                        <tr key={resume.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                        <tr key={resume.id} className="hover:bg-gray-50 transition-colors duration-150">
+                                            <td className="px-6 py-6 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <svg className="w-5 h-5 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                    </svg>
+                                                    <div className="w-8 h-8 bg-gradient-to-br from-[#354eab] to-[#4a5fc7] rounded-lg flex items-center justify-center mr-3">
+                                                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        </svg>
+                                                    </div>
                                                     <div>
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <div className="text-sm font-semibold text-gray-900 mb-1">
                                                             <InlineEdit
                                                                 value={resume.name}
                                                                 onSave={(newName) => handleResumeRename(resume.id, newName)}
@@ -562,17 +554,17 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                                 }}
                                                             />
                                                         </div>
-                                                        <div className="text-sm text-gray-500">
+                                                        <div className="text-xs text-gray-500">
                                                             {resume.template_name ? resume.template_name.charAt(0).toUpperCase() + resume.template_name.slice(1) : 'Classic'} Template
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {resume.creation_date}
+                                            <td className="px-6 py-6 whitespace-nowrap">
+                                                <div className="text-sm text-gray-900 font-medium">{resume.creation_date}</div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                            <td className="px-6 py-6 whitespace-nowrap">
+                                                <span className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full ${
                                                     resume.status === 'published' 
                                                         ? 'bg-purple-100 text-purple-800'
                                                         : resume.status === 'completed' 
@@ -587,195 +579,195 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                                                     }
                                                 </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-6 whitespace-nowrap">
                                                 {getPaymentStatusBadge(resume.id)}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                                {/* Edit functionality - users can edit all resumes, with warning for paid ones */}
-                                                <button
-                                                    onClick={() => {
-                                                        const isPaid = canDownloadResume(resume.id);
-                                                        if (isPaid) {
-                                                            setConfirmationModal({
-                                                                isOpen: true,
-                                                                title: 'Edit Paid Resume',
-                                                                message: 'This resume is already paid for. If you edit it, you will need to pay again to download the updated version. Do you want to continue?',
-                                                                onConfirm: async () => {
-                                                                    try {
-                                                                        // Mark resume as modified immediately
-                                                                        const response = await fetch(`/resumes/${resume.id}/mark-modified`, {
-                                                                            method: 'PATCH',
-                                                                            headers: {
-                                                                                'Content-Type': 'application/json',
-                                                                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                                                                            },
-                                                                        });
-
-                                                                        if (response.ok) {
-                                                                            const data = await response.json();
-                                                                            
-                                                                            // Update the resume in state immediately
-                                                                            setResumeList(prev => prev.map(r => 
-                                                                                r.id === resume.id 
-                                                                                    ? { 
-                                                                                        ...r, 
-                                                                                        is_paid: data.resume.is_paid,
-                                                                                        needs_payment: data.resume.needs_payment,
-                                                                                        is_downloadable: data.resume.is_downloadable,
-                                                                                        payment_status_detailed: data.resume.payment_status_detailed,
-                                                                                        payment_status: data.resume.payment_status_detailed
-                                                                                    }
-                                                                                    : r
-                                                                            ));
-
-                                                                            addToast({
-                                                                                type: 'warning',
-                                                                                title: 'Download Access Restricted',
-                                                                                message: 'Resume download is now restricted. You\'ll need to pay again after editing.',
-                                                                                duration: 5000
+                                            <td className="px-6 py-6 whitespace-nowrap">
+                                                <div className="flex items-center space-x-3">
+                                                    {/* Edit functionality */}
+                                                    <button
+                                                        onClick={() => {
+                                                            const isPaid = canDownloadResume(resume.id);
+                                                            if (isPaid) {
+                                                                setConfirmationModal({
+                                                                    isOpen: true,
+                                                                    title: 'Edit Paid Resume',
+                                                                    message: 'This resume is already paid for. If you edit it, you will need to pay again to download the updated version. Do you want to continue?',
+                                                                    onConfirm: async () => {
+                                                                        try {
+                                                                            // Mark resume as modified immediately
+                                                                            const response = await fetch(`/resumes/${resume.id}/mark-modified`, {
+                                                                                method: 'PATCH',
+                                                                                headers: {
+                                                                                    'Content-Type': 'application/json',
+                                                                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                                                                },
                                                                             });
 
-                                                                            // Navigate to builder
-                                                                            router.visit(`/builder?resume=${resume.id}`);
-                                                                        } else {
+                                                                            if (response.ok) {
+                                                                                const data = await response.json();
+                                                                                
+                                                                                // Update the resume in state immediately
+                                                                                setResumeList(prev => prev.map(r => 
+                                                                                    r.id === resume.id 
+                                                                                        ? { 
+                                                                                            ...r, 
+                                                                                            is_paid: data.resume.is_paid,
+                                                                                            needs_payment: data.resume.needs_payment,
+                                                                                            is_downloadable: data.resume.is_downloadable,
+                                                                                            payment_status_detailed: data.resume.payment_status_detailed,
+                                                                                            payment_status: data.resume.payment_status_detailed
+                                                                                        }
+                                                                                        : r
+                                                                                ));
+
+                                                                                addToast({
+                                                                                    type: 'warning',
+                                                                                    title: 'Download Access Restricted',
+                                                                                    message: 'Resume download is now restricted. You\'ll need to pay again after editing.',
+                                                                                    duration: 5000
+                                                                                });
+
+                                                                                // Navigate to builder
+                                                                                router.visit(`/builder?resume=${resume.id}`);
+                                                                            } else {
+                                                                                addToast({
+                                                                                    type: 'error',
+                                                                                    title: 'Error',
+                                                                                    message: 'Failed to update resume status. Please try again.',
+                                                                                    duration: 5000
+                                                                                });
+                                                                            }
+                                                                        } catch (error) {
                                                                             addToast({
                                                                                 type: 'error',
                                                                                 title: 'Error',
-                                                                                message: 'Failed to update resume status. Please try again.',
+                                                                                message: 'An error occurred. Please try again.',
                                                                                 duration: 5000
                                                                             });
                                                                         }
-                                                                    } catch (error) {
-                                                                        addToast({
-                                                                            type: 'error',
-                                                                            title: 'Error',
-                                                                            message: 'An error occurred. Please try again.',
-                                                                            duration: 5000
-                                                                        });
                                                                     }
-                                                                }
-                                                            });
-                                                        } else {
-                                                            router.visit(`/builder?resume=${resume.id}`);
-                                                        }
-                                                    }}
-                                                    className={`${
-                                                        canDownloadResume(resume.id) 
-                                                            ? 'text-amber-600 hover:text-amber-900' 
-                                                            : 'text-[#354eab] hover:text-[#4a5fc7]'
-                                                    } inline-flex items-center space-x-1 transition-colors duration-200`}
-                                                    title={canDownloadResume(resume.id) ? 'Edit will require new payment' : 'Edit resume'}
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                    </svg>
-                                                    <span>
-                                                        Edit
-                                                    </span>
-                                                </button>
-                                                
-                                                {/* Download PDF functionality */}
-                                                {canDownloadResume(resume.id) ? (
-                                                    <button
-                                                        onClick={() => {
-                                                            // Download PDF functionality
-                                                            window.open(`/resumes/${resume.id}/download`, '_blank');
+                                                                });
+                                                            } else {
+                                                                router.visit(`/builder?resume=${resume.id}`);
+                                                            }
                                                         }}
-                                                        className="text-green-600 hover:text-green-900 inline-flex items-center space-x-1"
+                                                        className={`${
+                                                            canDownloadResume(resume.id) 
+                                                                ? 'text-amber-600 hover:text-amber-900 bg-amber-50 hover:bg-amber-100' 
+                                                                : 'text-[#354eab] hover:text-[#4a5fc7] bg-blue-50 hover:bg-blue-100'
+                                                        } inline-flex items-center space-x-1 px-2 py-1 rounded-lg transition-all duration-200 font-medium text-xs`}
+                                                        title={canDownloadResume(resume.id) ? 'Edit will require new payment' : 'Edit resume'}
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                         </svg>
-                                                        <span>Download PDF</span>
+                                                        <span>Edit</span>
                                                     </button>
-                                                ) : (
-                                                    <span className="text-gray-400 inline-flex items-center space-x-1">
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                        <span>Download PDF</span>
-                                                    </span>
-                                                )}
-                                                
-                                                {/* Payment actions */}
-                                                {(() => {
-                                                    const paymentStatus = getPaymentStatus(resume.id);
                                                     
-                                                    // Don't show payment buttons for approved payments only
-                                                    if (paymentStatus === 'approved') {
+                                                    {/* Download PDF functionality */}
+                                                    {canDownloadResume(resume.id) ? (
+                                                        <button
+                                                            onClick={() => {
+                                                                // Download PDF functionality
+                                                                window.open(`/resumes/${resume.id}/download`, '_blank');
+                                                            }}
+                                                            className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 inline-flex items-center space-x1 px-2 py-1 rounded-lg transition-all duration-200 font-medium text-xs"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                            <span>Download</span>
+                                                        </button>
+                                                    ) : (
+                                                        <span className="text-gray-400 bg-gray-50 inline-flex items-center space-x-1 px-2 py-1 rounded-lg font-medium text-xs">
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                            <span>Download</span>
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Payment actions */}
+                                                    {(() => {
+                                                        const paymentStatus = getPaymentStatus(resume.id);
+                                                        
+                                                        // Don't show payment buttons for approved payments only
+                                                        if (paymentStatus === 'approved') {
+                                                            return null;
+                                                        }
+                                                        
+                                                        // Show appropriate payment button based on status
+                                                        if (paymentStatus === 'needs_payment_modified') {
+                                                            return (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedResumeId(resume.id);
+                                                                        setIsPaymentModalOpen(true);
+                                                                    }}
+                                                                    className="text-orange-600 hover:text-orange-900 bg-orange-50 hover:bg-orange-100 inline-flex items-center space-x-1 px-2 py-1 rounded-lg transition-all duration-200 font-medium text-xs"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                    </svg>
+                                                                    <span>Upload Payment</span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                        
+                                                        if (paymentStatus === 'pending') {
+                                                            return (
+                                                                <button
+                                                                    disabled
+                                                                    title="Payment proof is pending review"
+                                                                    className="text-yellow-600 bg-yellow-50 inline-flex items-center space-x-1 px-2 py-1 rounded-lg opacity-60 cursor-not-allowed font-medium text-xs"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                    <span>Pending</span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                        
+                                                        if (paymentStatus === 'rejected') {
+                                                            return (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedResumeId(resume.id);
+                                                                        setIsPaymentModalOpen(true);
+                                                                    }}
+                                                                    className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 inline-flex items-center space-x-1 px-2 py-1 rounded-lg transition-all duration-200 font-medium text-xs"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                    </svg>
+                                                                    <span>Re-upload</span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                        
+                                                        // Show add payment for resumes without payment proof or needing payment
+                                                        if (paymentStatus === null || paymentStatus === 'needs_payment' || paymentStatus === 'unpaid') {
+                                                            return (
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setSelectedResumeId(resume.id);
+                                                                        setIsPaymentModalOpen(true);
+                                                                    }}
+                                                                    className="text-[#354eab] hover:text-[#4a5fc7] bg-blue-50 hover:bg-blue-100 inline-flex items-center space-x-1 px-2 py-1 rounded-lg transition-all duration-200 font-medium text-xs"
+                                                                >
+                                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                                                    </svg>
+                                                                    <span>Add Payment</span>
+                                                                </button>
+                                                            );
+                                                        }
+                                                        
                                                         return null;
-                                                    }
-                                                    
-                                                    // Show appropriate payment button based on status
-                                                    if (paymentStatus === 'needs_payment_modified') {
-                                                        return (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedResumeId(resume.id);
-                                                                    setIsPaymentModalOpen(true);
-                                                                }}
-                                                                className="text-orange-600 hover:text-orange-900 inline-flex items-center space-x-1"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                                </svg>
-                                                                <span>Upload Payment</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                    
-                                                    if (paymentStatus === 'pending') {
-                                                        return (
-                                                            <button
-                                                                disabled
-                                                                title="Payment proof is pending review"
-                                                                className="text-yellow-600 hover:text-yellow-900 inline-flex items-center space-x-1 opacity-60 cursor-not-allowed"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                                </svg>
-                                                                <span>Payment Pending</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                    
-                                                    if (paymentStatus === 'rejected') {
-                                                        return (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedResumeId(resume.id);
-                                                                    setIsPaymentModalOpen(true);
-                                                                }}
-                                                                className="text-red-600 hover:text-red-900 inline-flex items-center space-x-1"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                                                </svg>
-                                                                <span>Re-upload Payment</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                    
-                                                    // Show add payment for resumes without payment proof or needing payment
-                                                    if (paymentStatus === null || paymentStatus === 'needs_payment' || paymentStatus === 'unpaid') {
-                                                        return (
-                                                            <button
-                                                                onClick={() => {
-                                                                    setSelectedResumeId(resume.id);
-                                                                    setIsPaymentModalOpen(true);
-                                                                }}
-                                                                className="text-[#354eab] hover:text-[#4a5fc7] inline-flex items-center space-x-1"
-                                                            >
-                                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                                                </svg>
-                                                                <span>Add Payment</span>
-                                                            </button>
-                                                        );
-                                                    }
-                                                    
-                                                    return null;
-                                                })()}
+                                                    })()}
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -786,55 +778,55 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 </div>
 
                 {/* Interview Guide Promotion Section */}
-                <div className="bg-gradient-to-r from-[#e3f2fd] to-[#e8f4fd] rounded-xl border border-[#bcd6f6] overflow-hidden">
+                <div className="bg-gradient-to-r from-[#e3f2fd] to-[#e8f4fd] rounded-2xl border border-[#bcd6f6] overflow-hidden shadow-lg">
                     <div className="flex flex-col lg:flex-row items-center">
                         {/* Content */}
                         <div className="flex-1 p-8">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-4">
+                            <h3 className="text-3xl font-bold text-gray-800 mb-4 leading-tight">
                                 Get Ready to Impress: Your <span className="text-[#354eab]">Interview Guide</span> is Here!
                             </h3>
                             
                             <div className="space-y-3 mb-6">
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex-shrink-0 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
-                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="flex items-start space-x-4">
+                                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     </div>
-                                    <p className="text-gray-700">
+                                    <p className="text-gray-700 text-lg">
                                         Receive a guide created by <span className="font-semibold">top recruiters</span>
                                     </p>
                                 </div>
                                 
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex-shrink-0 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
-                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="flex items-start space-x-4">
+                                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     </div>
-                                    <p className="text-gray-700">
+                                    <p className="text-gray-700 text-lg">
                                         Learn to make an impressive <span className="font-semibold">self-introduction</span>
                                     </p>
                                 </div>
                                 
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex-shrink-0 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
-                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="flex items-start space-x-4">
+                                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     </div>
-                                    <p className="text-gray-700">
+                                    <p className="text-gray-700 text-lg">
                                         Master key <span className="font-semibold">interview techniques</span>
                                     </p>
                                 </div>
                                 
-                                <div className="flex items-start space-x-3">
-                                    <div className="flex-shrink-0 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
-                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="flex items-start space-x-4">
+                                    <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
+                                        <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                     </div>
-                                    <p className="text-gray-700">
+                                    <p className="text-gray-700 text-lg">
                                         Gain <span className="font-semibold">the confidence</span> to secure your dream job
                                     </p>
                                 </div>
@@ -842,36 +834,36 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
 
                             <button
                                 onClick={() => setIsInterviewModalOpen(true)}
-                                className="bg-[#354eab] hover:bg-[#4a5fc7] text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200 inline-flex items-center space-x-2"
+                                className="bg-[#354eab] hover:bg-[#4a5fc7] text-white px-8 py-3 rounded-xl font-bold text-lg transition-all duration-200 inline-flex items-center space-x-3 shadow-lg hover:shadow-xl transform hover:scale-105"
                             >
                                 <span>Get it Now</span>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                 </svg>
                             </button>
                         </div>
 
                         {/* Illustration */}
-                        <div className="flex-1 lg:flex-none lg:w-80 p-8">
+                        <div className="flex-1 lg:flex-none lg:w-96 p-8">
                             <div className="relative">
                                 {/* Mock illustration - replace with actual interview guide illustration */}
-                                <div className="bg-white rounded-lg shadow-lg p-6 transform rotate-3">
-                                    <div className="space-y-3">
-                                        <div className="h-4 bg-[#bcd6f6] rounded w-3/4"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-full"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                                        <div className="h-8 bg-[#e3f2fd] rounded"></div>
-                                        <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                                <div className="bg-white rounded-xl shadow-xl p-8 transform rotate-3">
+                                    <div className="space-y-4">
+                                        <div className="h-5 bg-[#bcd6f6] rounded w-3/4"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-full"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                                        <div className="h-10 bg-[#e3f2fd] rounded"></div>
+                                        <div className="h-4 bg-gray-200 rounded w-2/3"></div>
                                     </div>
                                 </div>
-                                <div className="absolute -top-2 -left-2 bg-yellow-300 rounded-lg shadow-lg p-4 transform -rotate-6">
-                                    <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center">
-                                        <span className="text-sm font-bold">💡</span>
+                                <div className="absolute -top-3 -left-3 bg-yellow-300 rounded-xl shadow-xl p-5 transform -rotate-6">
+                                    <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                                        <span className="text-lg font-bold">💡</span>
                                     </div>
                                 </div>
-                                <div className="absolute -bottom-2 -right-2 bg-green-300 rounded-lg shadow-lg p-4 transform rotate-12">
-                                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                                        <span className="text-sm font-bold">✓</span>
+                                <div className="absolute -bottom-3 -right-3 bg-green-300 rounded-xl shadow-xl p-5 transform rotate-12">
+                                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                                        <span className="text-lg font-bold">✓</span>
                                     </div>
                                 </div>
                             </div>
@@ -884,6 +876,12 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
             <InterviewPrepPopUp 
                 isOpen={isInterviewModalOpen} 
                 onClose={() => setIsInterviewModalOpen(false)} 
+            />
+
+            {/* Resume Review Modal */}
+            <ResumeReviewModal 
+                isOpen={isResumeReviewModalOpen} 
+                onClose={() => setIsResumeReviewModalOpen(false)} 
             />
 
             {/* Payment Modal */}
@@ -920,3 +918,4 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         </div>
     );
 }
+
