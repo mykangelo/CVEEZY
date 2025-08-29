@@ -41,6 +41,15 @@ class SocialiteServiceProvider extends ServiceProvider
                 ]);
                 
                 Socialite::driver('google')->setHttpClient($httpClient);
+            } else {
+                // Production environment configuration
+                $httpClient = new Client([
+                    'timeout' => 30,
+                    'connect_timeout' => 10,
+                    'verify' => true, // Enable SSL verification for production
+                ]);
+                
+                Socialite::driver('google')->setHttpClient($httpClient);
             }
 
             // Configure Google driver with additional options
@@ -56,8 +65,11 @@ class SocialiteServiceProvider extends ServiceProvider
                 'prompt' => 'consent'
             ]);
 
+            Log::info('Google Socialite driver configured successfully');
+
         } catch (\Exception $e) {
             Log::error('Failed to configure Google Socialite driver: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             
             // Don't break the application if Socialite configuration fails
             if ($this->app->environment('production')) {

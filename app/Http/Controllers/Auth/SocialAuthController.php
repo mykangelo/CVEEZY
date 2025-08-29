@@ -57,6 +57,15 @@ class SocialAuthController extends Controller
             // Mark that we've attempted Google auth in this session
             session(['google_auth_attempted' => true]);
 
+            // Log the redirect attempt for debugging
+            Log::info('Initiating Google OAuth redirect', [
+                'provider' => $provider,
+                'session_id' => session()->getId(),
+                'user_agent' => $request->userAgent(),
+                'ip' => $request->ip(),
+                'environment' => app()->environment()
+            ]);
+
             // Use 'consent' instead of 'select_account' to avoid forcing account selection
             return Socialite::driver($provider)
                 ->stateless()
@@ -64,6 +73,14 @@ class SocialAuthController extends Controller
                 ->redirect();
         } catch (\Exception $e) {
             Log::error('Social login redirect error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Request details', [
+                'provider' => $provider,
+                'user_agent' => $request->userAgent(),
+                'ip' => $request->ip(),
+                'session_id' => session()->getId()
+            ]);
+            
             return redirect()->route('login')->withErrors([
                 'social_login' => 'Unable to connect to ' . ucfirst($provider) . '. Please try again.'
             ]);
