@@ -568,7 +568,7 @@
                                 <ul class="mt-1">
                                     @foreach ($hobbies as $hobby)
                                         {{-- This handles hobbies as simple strings or as objects with a 'name' key --}}
-                                        <li>{{ $hobby['name'] ?? $hobby }}</li>
+                                        <li>{{ is_array($hobby) ? ($hobby['name'] ?? '') : $hobby }}</li>
                                     @endforeach
                                 </ul>
                             </div>
