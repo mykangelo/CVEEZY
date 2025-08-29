@@ -14,6 +14,8 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
       desiredJobTitle: "",
       address: "",
       city: "",
+      postCode: "",
+      country: "",
       phone: "",
       email: "",
     },
@@ -27,6 +29,7 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
     websites = [],
     hobbies = [],
     customSections = [],
+    showExperienceLevel,
   } = resumeData;
 
   const Divider = () => (
@@ -63,6 +66,10 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
           <span><Placeholder value={contact.address} placeholder="123 Anywhere St" /></span>
           <span>, </span>
           <span><Placeholder value={contact.city} placeholder="Any City" /></span>
+          <span>, </span>
+          <span><Placeholder value={contact.country} placeholder="Country" /></span>
+          <span>, </span>
+          <span><Placeholder value={contact.postCode} placeholder="12345" /></span>
           <span>┃</span>
           <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
           <span>┃</span>
@@ -175,12 +182,24 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
             { id: -4, name: '', level: 'Experienced' },
           ] as any[]).map((skill: any, i: number) => (
             <li key={i} className="flex items-center">
-              <span className="w-32"><Placeholder value={skill.name} placeholder={`Skill ${i + 1}`} /></span>
-              <span className="ml-1">{getSkillDots((skill.level as string) || 'Experienced', !(skill.name && String(skill.name).trim().length > 0))}</span>
+              <span className="w-32">
+                <Placeholder value={skill.name} placeholder={`Skill ${i + 1}`} />
+              </span>
+
+              {/* Only show dots if experience levels are enabled */}
+              {showExperienceLevel && (
+                <span className="ml-1">
+                  {getSkillDots(
+                    (skill.level as string) || 'Experienced',
+                    !(skill.name && String(skill.name).trim().length > 0)
+                  )}
+                </span>
+              )}
             </li>
           ))}
         </ul>
       </div>
+
 
       {/* Additional Information - always show with placeholders */}
       <div>
