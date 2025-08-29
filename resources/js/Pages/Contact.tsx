@@ -7,24 +7,24 @@ import Logo from "@/Components/Logo";
 
 const supportData = [
   {
-    title: "Billing support",
+    title: "Billing Support",
     description:
-      "If you have any questions regarding payment, feel free to contact us:",
+      "Questions about payments or invoices? We’re here to help:",
     phone: "+44 808 502 0312",
     email: "billing@cveezy.com",
   },
   {
-    title: "Customer Help",
+    title: "Help & Support",
     description:
-      "If you have any questions regarding our service, feel free to contact us:",
+      "General questions about CVeezy? Our team replies fast:",
     phone: "+44 808 502 0312",
     email: "help@cveezy.com",
   },
   {
-    title: "Our postal address",
-    name: "TSFF Holdings Limited",
+    title: "Our Postal Address",
+    name: "TSFF Holdings Ltd.",
     address:
-      "Office 51, Agias Zonis, 23, Kotsios Court A, Limassol, 3027, Cyprus",
+      "Office 51, Agias Zonis 23, Kotsios Court A, Limassol 3027, Cyprus",
     email: "help@cveezy.com",
   },
 ];
@@ -41,6 +41,8 @@ const Contact: React.FC<ContactProps> = ({
   const { auth } = usePage().props as any;
   const user = auth.user;
   const [submitted, setSubmitted] = useState(false);
+  const [clientErrors, setClientErrors] = useState<{ name?: string; email?: string; message?: string }>({});
+  const [touched, setTouched] = useState<{ name: boolean; email: boolean; message: boolean }>({ name: false, email: false, message: false });
 
   const { data, setData, post, processing, errors, reset } = useForm({
     name: "",
@@ -48,8 +50,41 @@ const Contact: React.FC<ContactProps> = ({
     message: "",
   });
 
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
+
+  const validateField = (field: "name" | "email" | "message", value: string): string | undefined => {
+    if (field === "name") {
+      if (!value.trim()) return "Please enter your name.";
+      if (value.trim().length < 2) return "Name must be at least 2 characters.";
+    }
+    if (field === "email") {
+      if (!value.trim()) return "Please enter your email address.";
+      if (!emailPattern.test(value.trim())) return "Enter a valid email address.";
+    }
+    if (field === "message") {
+      if (!value.trim()) return "Please enter a message.";
+      if (value.trim().length < 10) return "Message must be at least 10 characters.";
+    }
+    return undefined;
+  };
+
+  const validateAll = (): boolean => {
+    const newErrors: { name?: string; email?: string; message?: string } = {
+      name: validateField("name", data.name || ""),
+      email: validateField("email", data.email || ""),
+      message: validateField("message", data.message || ""),
+    };
+    setClientErrors(newErrors);
+    return !newErrors.name && !newErrors.email && !newErrors.message;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateAll()) {
+      // mark all as touched to show errors
+      setTouched({ name: true, email: true, message: true });
+      return;
+    }
     post("/contact", {
       onSuccess: () => {
         reset();
@@ -114,20 +149,19 @@ const Contact: React.FC<ContactProps> = ({
       </header>
 
       {/* Contact Section */}
-      <section className="bg-[#eaf6ff] flex-1 flex flex-col items-center justify-center p-8 gap-6">
+      <section className="bg-gradient-to-b from-[#f4faff] to-[#eaf6ff] flex-1 flex flex-col items-center justify-center p-8 gap-6">
         {/* Heading */}
         <div className="text-center max-w-2xl">
-          <h2 className="text-4xl font-bold text-gray-800 mb-2">Contact us</h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-3 tracking-tight">Contact us</h2>
+          <div className="mx-auto mb-4 h-1.5 w-20 rounded-full bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8]"></div>
           <p className="text-gray-600 text-base">
-            If you need assistance with our service or have any questions,
-            don't hesitate to get in touch with us.
+            Need help with CVeezy or have a question? Send us a message and we’ll get back to you shortly.
           </p>
         </div>
 
-        {/* Form and Illustration */}
-        <div className="flex flex-col md:flex-row justify-center items-center gap-10 w-full max-w-6xl mt-6">
-          {/* Form */}
-          <div className="bg-white rounded-xl p-8 shadow-lg w-full max-w-xl">
+        {/* Form */}
+        <div className="w-full max-w-3xl mt-6">
+          <div className="bg-white rounded-2xl p-8 shadow-xl ring-1 ring-[#e8f0ff]">
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="w-full">
@@ -136,10 +170,22 @@ const Contact: React.FC<ContactProps> = ({
                     type="text"
                     placeholder="Your name"
                     value={data.name}
-                    onChange={(e) => setData("name", e.target.value)}
-                    className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      setData("name", e.target.value);
+                      if (touched.name) setClientErrors({ ...clientErrors, name: validateField("name", e.target.value) });
+                    }}
+                    onBlur={(e) => {
+                      setTouched((prev) => ({ ...prev, name: true }));
+                      setClientErrors({ ...clientErrors, name: validateField("name", e.target.value) });
+                    }}
+                    className={`w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a5fc7] ${
+                      (touched.name && clientErrors.name) || errors.name ? 'border-red-400' : 'border-gray-300'
+                    }`}
                   />
-                  {errors.name && (
+                  {(touched.name && clientErrors.name) && (
+                    <div className="text-red-500 text-sm mt-1">{clientErrors.name}</div>
+                  )}
+                  {errors.name && !clientErrors.name && (
                     <div className="text-red-500 text-sm mt-1">{errors.name}</div>
                   )}
                 </div>
@@ -152,10 +198,22 @@ const Contact: React.FC<ContactProps> = ({
                     placeholder="you@example.com"
                     required
                     value={data.email}
-                    onChange={(e) => setData("email", e.target.value)}
-                    className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    onChange={(e) => {
+                      setData("email", e.target.value);
+                      if (touched.email) setClientErrors({ ...clientErrors, email: validateField("email", e.target.value) });
+                    }}
+                    onBlur={(e) => {
+                      setTouched((prev) => ({ ...prev, email: true }));
+                      setClientErrors({ ...clientErrors, email: validateField("email", e.target.value) });
+                    }}
+                    className={`w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a5fc7] ${
+                      (touched.email && clientErrors.email) || errors.email ? 'border-red-400' : 'border-gray-300'
+                    }`}
                   />
-                  {errors.email && (
+                  {(touched.email && clientErrors.email) && (
+                    <div className="text-red-500 text-sm mt-1">{clientErrors.email}</div>
+                  )}
+                  {errors.email && !clientErrors.email && (
                     <div className="text-red-500 text-sm mt-1">{errors.email}</div>
                   )}
                 </div>
@@ -165,18 +223,30 @@ const Contact: React.FC<ContactProps> = ({
                 <textarea
                   placeholder="Type your message here..."
                   value={data.message}
-                  onChange={(e) => setData("message", e.target.value)}
+                  onChange={(e) => {
+                    setData("message", e.target.value);
+                    if (touched.message) setClientErrors({ ...clientErrors, message: validateField("message", e.target.value) });
+                  }}
+                  onBlur={(e) => {
+                    setTouched((prev) => ({ ...prev, message: true }));
+                    setClientErrors({ ...clientErrors, message: validateField("message", e.target.value) });
+                  }}
                   rows={5}
-                  className="w-full border border-gray-300 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className={`w-full border p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4a5fc7] resize-none ${
+                    (touched.message && clientErrors.message) || errors.message ? 'border-red-400' : 'border-gray-300'
+                  }`}
                 />
-                {errors.message && (
+                {(touched.message && clientErrors.message) && (
+                  <div className="text-red-500 text-sm mt-1">{clientErrors.message}</div>
+                )}
+                {errors.message && !clientErrors.message && (
                   <div className="text-red-500 text-sm mt-1">{errors.message}</div>
                 )}
               </div>
               <button
                 type="submit"
                 disabled={processing}
-                className="bg-[#354eab] text-white w-full py-3 rounded-md font-semibold hover:bg-[#2d3f8f] transition"
+                className="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] hover:from-[#4a5fc7] hover:to-[#2d3f8f] transition"
               >
                 Submit
               </button>
@@ -187,79 +257,64 @@ const Contact: React.FC<ContactProps> = ({
               )}
             </form>
           </div>
-
-          {/* Illustration */}
-          <div className="hidden md:block w-full max-w-md">
-            <img
-              src="/images/ContactUsImg"
-              alt="Contact Illustration"
-              className="w-full"
-              style={{ minHeight: 200 }}
-            />
-          </div>
         </div>
       </section>
 
-      {/* Support Section */}
-      <section className="bg-[#f8fafc] w-full py-10 px-4 flex justify-center">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-7xl">
-          {supportData.map((item, i) => (
-            <div
-              key={i}
-              className="border border-dashed border-[#354eab] rounded-lg p-6 bg-blue-50 space-y-4"
-            >
-              <div className="w-12 h-12 bg-[#354eab] rounded-full flex items-center justify-center text-white text-xl">
-                {i === 0 ? "📄" : i === 1 ? "⚙️" : "📨"}
-              </div>
-              <h2 className="text-xl font-semibold">{item.title}</h2>
-              {item.description ? (
-                <p className="text-sm text-gray-700">{item.description}</p>
-              ) : (
-                <div className="text-sm text-gray-700 space-y-2">
-                  <div>
-                    <span className="font-medium">Name</span>
-                    <p>{item.name}</p>
-                  </div>
-                  <div>
-                    <span className="font-medium">Address</span>
-                    <p>{item.address}</p>
-                  </div>
+      {/* Support Section - redesigned cards */}
+      <section className="w-full py-14 px-4 flex justify-center bg-gradient-to-b from-white to-[#f4faff]">
+        <div className="max-w-7xl w-full">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl md:text-3xl font-extrabold text-gray-800">How can we help?</h3>
+            <p className="text-gray-600">Choose the best way to reach the right team.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {supportData.map((item, i) => (
+              <div key={i} className="relative rounded-2xl bg-white p-6 shadow-sm ring-1 ring-[#e8f0ff] transition-all duration-300 hover:shadow-lg">
+                <div className="absolute top-0 left-0 h-1.5 w-full bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] rounded-t-2xl"></div>
+                <div className="mt-4" />
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl" style={{backgroundColor:'#f2f6ff',color:'#354eab'}}>
+                  {i === 0 ? '📄' : i === 1 ? '⚙️' : '📨'}
                 </div>
-              )}
-              {item.phone && (
-                <div>
-                  <p className="font-medium">Via phone:</p>
-                  <div className="flex items-center gap-2">
-                    <span role="img" aria-label="phone">📞</span>
-                    <span>{item.phone}</span>
+                <h2 className="text-lg md:text-xl font-semibold mt-4">{item.title}</h2>
+                {item.description ? (
+                  <p className="text-sm text-gray-600 mt-2">{item.description}</p>
+                ) : (
+                  <div className="text-sm text-gray-600 space-y-2 mt-2">
+                    <div>
+                      <span className="font-medium">Company</span>
+                      <p>{item.name}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium">Office address</span>
+                      <p>{item.address}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              <div>
-                <p className="font-medium">Via email:</p>
-                <div className="flex items-center gap-2">
-                  <span role="img" aria-label="email">✉️</span>
-                  <span>{item.email}</span>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-4">
-                {item.phone && (
-                  <a
-                    href={`tel:${item.phone}`}
-                    className="bg-[#354eab] text-white px-4 py-2 rounded hover:bg-[#2d3f8f] transition"
-                  >
-                    Call us
-                  </a>
                 )}
-                <a
-                  href={`mailto:${item.email}`}
-                  className="bg-[#354eab] text-white px-4 py-2 rounded hover:bg-[#2d3f8f] transition"
-                >
-                  Email us
-                </a>
+                {item.phone && (
+                  <div className="mt-3">
+                    <p className="font-medium text-gray-700">Phone number</p>
+                    <div className="flex items-center gap-2 text-gray-700">
+                      <span role="img" aria-label="phone">📞</span>
+                      <span>{item.phone}</span>
+                    </div>
+                  </div>
+                )}
+                <div className="mt-3">
+                  <p className="font-medium text-gray-700">Email address</p>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <span role="img" aria-label="email">✉️</span>
+                    <span>{item.email}</span>
+                  </div>
+                </div>
+                <div className="mt-5 flex gap-3">
+                  {item.phone && (
+                    <a href={`tel:${item.phone}`} className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#f2f6ff] text-[#354eab] hover:bg-[#e8f0ff] transition">Call</a>
+                  )}
+                  <a href={`mailto:${item.email}`} className="px-4 py-2 rounded-lg text-sm font-semibold bg-[#354eab] text-white hover:bg-[#2d3f8f] transition">Email</a>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
       <FAQ />

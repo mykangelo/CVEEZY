@@ -55,10 +55,21 @@ Route::get('/choose-resume-maker', [App\Http\Controllers\ChooseResumeMakerContro
 |--------------------------------------------------------------------------
 */
 
-Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])
-    ->name('social.redirect');
-Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
-    ->name('social.callback');
+Route::middleware(['web'])->group(function () {
+    Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirectToProvider'])
+        ->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'handleProviderCallback'])
+        ->name('social.callback');
+    
+    // Check auth status before Google redirect
+    Route::get('/auth/check-status', function () {
+        return response()->json([
+            'authenticated' => Auth::check(),
+            'user_id' => Auth::id(),
+            'has_google_session' => session()->has('google_login_successful'),
+        ]);
+    })->name('auth.check-status');
+});
 
 /*
 |--------------------------------------------------------------------------
@@ -106,6 +117,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payment-upload', [PaymentUploadController::class, 'index'])->name('payment.upload.page');
     Route::post('/upload-payment-proof', [PaymentProofController::class, 'store'])->name('payment.upload');
     Route::get('/user/payment-proofs', [PaymentProofController::class, 'userPayments'])->name('payment.proofs');
+});
+
+// Admin JSON API for Audit Logs
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/audit-logs/recent.json', [\App\Http\Controllers\Admin\AuditLogController::class, 'recentJson'])
+        ->name('admin.audit-logs.recent');
 });
 
 // Resume maker with pending payment check

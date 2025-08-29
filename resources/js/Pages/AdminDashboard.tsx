@@ -23,7 +23,13 @@ import {
     Mail,
     AlertTriangle,
     Filter,
-    ChevronDown
+    ChevronDown,
+    Shield,
+    LogIn,
+    LogOut,
+    KeyRound,
+    ShieldAlert,
+    BadgeCheck
 } from 'lucide-react';
 
 interface PaymentProof {
@@ -98,6 +104,105 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
         isOpen: false,
         data: null as any
     });
+
+    // Audit logs state
+    interface AuditLogItem {
+        id: number;
+        event_type: string;
+        formatted_event_type: string;
+        status: string;
+        formatted_status: string;
+        user_email: string | null;
+        user_id: number | null;
+        ip_address: string | null;
+        user_agent: string | null;
+        route_name: string | null;
+        created_at: string;
+    }
+    const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
+    const [auditLoading, setAuditLoading] = useState<boolean>(false);
+    const [auditQuery, setAuditQuery] = useState('');
+    const [auditEventType, setAuditEventType] = useState('');
+    const [auditStatus, setAuditStatus] = useState('');
+
+    const fetchAuditLogs = async () => {
+        try {
+            setAuditLoading(true);
+            const res = await fetch('/admin/audit-logs/recent.json?limit=25', { headers: { 'Accept': 'application/json' } });
+            if (res.ok) {
+                const data = await res.json();
+                setAuditLogs(Array.isArray(data.data) ? data.data : []);
+            }
+        } catch (e) {
+            console.error('Failed to fetch audit logs', e);
+        } finally {
+            setAuditLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        // initial load
+        fetchAuditLogs();
+        // poll every 30s
+        const id = setInterval(fetchAuditLogs, 30000);
+        return () => clearInterval(id);
+    }, []);
+
+    const filteredAuditLogs = auditLogs.filter((log) => {
+        const q = auditQuery.trim().toLowerCase();
+        const matchQuery = q === '' ||
+            (log.user_email ?? '').toLowerCase().includes(q) ||
+            (log.ip_address ?? '').toLowerCase().includes(q) ||
+            (log.formatted_event_type ?? '').toLowerCase().includes(q) ||
+            (log.route_name ?? '').toLowerCase().includes(q);
+        const matchEvent = auditEventType === '' || log.event_type === auditEventType;
+        const matchStatus = auditStatus === '' || log.status === auditStatus;
+        return matchQuery && matchEvent && matchStatus;
+    });
+
+    const eventTypeOptions: { value: string; label: string }[] = [
+        { value: 'login_success', label: 'Login Success' },
+        { value: 'login_failed', label: 'Login Failed' },
+        { value: 'logout', label: 'Logout' },
+        { value: 'social_login', label: 'Social Login' },
+        { value: 'password_reset_request', label: 'Password Reset Request' },
+        { value: 'password_reset_completed', label: 'Password Reset Completed' },
+        { value: 'email_verified', label: 'Email Verified' },
+        { value: 'suspicious_activity', label: 'Suspicious Activity' },
+        { value: 'rate_limit_exceeded', label: 'Rate Limit Exceeded' },
+    ];
+
+    const statusOptions: { value: string; label: string }[] = [
+        { value: 'info', label: 'Info' },
+        { value: 'warning', label: 'Warning' },
+        { value: 'alert', label: 'Alert' },
+        { value: 'error', label: 'Error' },
+    ];
+
+    const renderEventIcon = (eventType: string) => {
+        switch (eventType) {
+            case 'login_success':
+                return <LogIn className="h-4 w-4 text-green-600" />;
+            case 'login_failed':
+                return <LogIn className="h-4 w-4 text-yellow-600" />;
+            case 'logout':
+                return <LogOut className="h-4 w-4 text-gray-600" />;
+            case 'social_login':
+                return <User className="h-4 w-4 text-[#354eab]" />;
+            case 'password_reset_request':
+                return <KeyRound className="h-4 w-4 text-orange-600" />;
+            case 'password_reset_completed':
+                return <BadgeCheck className="h-4 w-4 text-green-600" />;
+            case 'email_verified':
+                return <Mail className="h-4 w-4 text-green-600" />;
+            case 'suspicious_activity':
+                return <ShieldAlert className="h-4 w-4 text-red-600" />;
+            case 'rate_limit_exceeded':
+                return <Clock className="h-4 w-4 text-yellow-700" />;
+            default:
+                return <Shield className="h-4 w-4 text-gray-500" />;
+        }
+    };
 
     // Update payment list when props change
     useEffect(() => {
@@ -414,62 +519,9 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
         }
     };
 
-    const handleOpenStorageFolder = async () => {
-        try {
-            const response = await fetch('/admin/open-storage-folder', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                },
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                setNotification({ 
-                    type: 'success', 
-                    message: `Folder opened successfully! Path: ${data.path}` 
-                });
-            } else {
-                setNotification({ 
-                    type: 'error', 
-                    message: data.error || 'Failed to open storage folder' 
-                });
-            }
-        } catch (error) {
-            console.error('Error opening storage folder:', error);
-            setNotification({ 
-                type: 'error', 
-                message: 'An error occurred while trying to open the storage folder' 
-            });
-        }
-    };
 
-    const handleShowStoragePath = async () => {
-        try {
-            const response = await fetch('/admin/payment-storage-path');
-            const data = await response.json();
-            
-            if (response.ok) {
-                setStoragePathModal({
-                    isOpen: true,
-                    data: data
-                });
-            } else {
-                setNotification({ 
-                    type: 'error', 
-                    message: data.error || 'Failed to get storage path information' 
-                });
-            }
-        } catch (error) {
-            console.error('Error getting storage path:', error);
-            setNotification({ 
-                type: 'error', 
-                message: 'An error occurred while fetching storage path information' 
-            });
-        }
-    };
+
+
 
     const openTimeFilterModal = () => {
         setShowTimeFilterModal(true);
@@ -610,38 +662,18 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
 
                             {/* Tabs */}
                             <Tabs defaultValue="payments" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3">
+                                <TabsList className="grid w-full grid-cols-4">
                                     <TabsTrigger value="payments">Payment Proofs</TabsTrigger>
                                     <TabsTrigger value="users">Users</TabsTrigger>
                                     <TabsTrigger value="resumes">Resumes</TabsTrigger>
+                                    <TabsTrigger value="audit-logs">Audit Logs</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="payments" className="space-y-4">
                                     <Card>
                                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                             <CardTitle>Payment Proof Management</CardTitle>
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={handleOpenStorageFolder}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-green-100 text-green-700 hover:bg-green-200 rounded-lg transition-colors"
-                                                    title="Open storage folder in file explorer"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-1M10 6V5a2 2 0 112 0v1M10 6h4M14 10l2-2m0 0l2-2m-2 2v8" />
-                                                    </svg>
-                                                    Open Folder
-                                                </button>
-                                                <button
-                                                    onClick={handleShowStoragePath}
-                                                    className="flex items-center gap-2 px-3 py-2 text-sm bg-[#e3f2fd] text-[#354eab] hover:bg-[#bcd6f6] rounded-lg transition-colors"
-                                                    title="Show storage location info"
-                                                >
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                    </svg>
-                                                    Info
-                                                </button>
-                                            </div>
+
                                         </CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
@@ -879,6 +911,160 @@ export default function AdminDashboard({ stats, users, resumes, paymentProofs }:
                                                         ))}
                                                     </div>
                                                 )}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+
+                                <TabsContent value="audit-logs" className="space-y-4">
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                            <CardTitle>Security Audit Logs</CardTitle>
+                                            <div className="flex items-center gap-2">
+                                                <Button 
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => window.open('/admin/audit-logs/export', '_blank')}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <Download className="h-4 w-4" />
+                                                    Export CSV
+                                                </Button>
+                                                <Button 
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => fetchAuditLogs()}
+                                                    disabled={auditLoading}
+                                                >
+                                                    {auditLoading ? 'Refreshing...' : 'Refresh'}
+                                                </Button>
+                                                <Button 
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => window.open('/admin/audit-logs', '_blank')}
+                                                    className="flex items-center gap-2"
+                                                >
+                                                    <ExternalLink className="h-4 w-4" />
+                                                    View Full Logs
+                                                </Button>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-4">
+                                                {/* Live recent logs table */}
+                                                <div className="border rounded-lg">
+                                                    <div className="px-4 py-3 border-b bg-gray-50 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                                        <div className="font-medium text-gray-900">Recent Events</div>
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Search user, IP, event, route..."
+                                                                value={auditQuery}
+                                                                onChange={(e) => setAuditQuery(e.target.value)}
+                                                                className="w-64 px-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-[#354eab]"
+                                                            />
+                                                            <select
+                                                                value={auditEventType}
+                                                                onChange={(e) => setAuditEventType(e.target.value)}
+                                                                className="px-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-[#354eab]"
+                                                            >
+                                                                <option value="">All Events</option>
+                                                                {eventTypeOptions.map(opt => (
+                                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                ))}
+                                                            </select>
+                                                            <select
+                                                                value={auditStatus}
+                                                                onChange={(e) => setAuditStatus(e.target.value)}
+                                                                className="px-3 py-2 text-sm border rounded focus:outline-none focus:ring-2 focus:ring-[#354eab]"
+                                                            >
+                                                                <option value="">All Statuses</option>
+                                                                {statusOptions.map(opt => (
+                                                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                                                ))}
+                                                            </select>
+                                                            <div className="text-sm text-gray-500 hidden md:block">Auto-refreshes every 30s</div>
+                                                        </div>
+                                                    </div>
+                                                    <div className="overflow-x-auto">
+                                                        <table className="min-w-full divide-y divide-gray-200">
+                                                            <thead className="bg-gray-50">
+                                                                <tr>
+                                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Event</th>
+                                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IP</th>
+                                                                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Route</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="bg-white divide-y divide-gray-200">
+                                                                {auditLoading && auditLogs.length === 0 ? (
+                                                                    <tr>
+                                                                        <td colSpan={6} className="px-4 py-6 text-center text-gray-500">Loading...</td>
+                                                                    </tr>
+                                                                ) : auditLogs.length === 0 ? (
+                                                                    <tr>
+                                                                        <td colSpan={6} className="px-4 py-6 text-center text-gray-500">No audit events yet.</td>
+                                                                    </tr>
+                                                                ) : (
+                                                                    filteredAuditLogs.map((log, idx) => (
+                                                                        <tr key={log.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                                                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{formatDate(log.created_at)}</td>
+                                                                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-900 flex items-center gap-2">
+                                                                                {renderEventIcon(log.event_type)}
+                                                                                {log.formatted_event_type}
+                                                                            </td>
+                                                                            <td className="px-4 py-2 whitespace-nowrap text-sm">
+                                                                                <span className={`px-2 py-1 rounded text-xs ${
+                                                                                    log.status === 'info' ? 'bg-gray-100 text-gray-800' :
+                                                                                    log.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                                                                                    log.status === 'alert' ? 'bg-orange-100 text-orange-800' :
+                                                                                    log.status === 'error' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                                                                                }`}>
+                                                                                    {log.formatted_status}
+                                                                                </span>
+                                                                            </td>
+                                                                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{log.user_email ?? '-'}</td>
+                                                                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{log.ip_address ?? '-'}</td>
+                                                                            <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">{log.route_name ?? '-'}</td>
+                                                                        </tr>
+                                                                    ))
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <AlertTriangle className="h-5 w-5 text-blue-600" />
+                                                        <h4 className="font-medium text-blue-900">Security Monitoring</h4>
+                                                    </div>
+                                                    <p className="text-sm text-blue-700 mb-3">
+                                                        Monitor authentication events, security incidents, and user activity across your system.
+                                                    </p>
+                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                                                        <div className="text-center">
+                                                            <div className="font-semibold text-blue-900">Login Attempts</div>
+                                                            <div className="text-blue-600">Tracked</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="font-semibold text-blue-900">Failed Logins</div>
+                                                            <div className="text-blue-600">Monitored</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="font-semibold text-blue-900">Password Resets</div>
+                                                            <div className="text-blue-600">Logged</div>
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="font-semibold text-blue-900">Suspicious Activity</div>
+                                                            <div className="text-blue-600">Flagged</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Removed CTA block per request */}
                                             </div>
                                         </CardContent>
                                     </Card>

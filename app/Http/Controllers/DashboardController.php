@@ -89,6 +89,7 @@ class DashboardController extends Controller
             ],
             'error' => session('error'),
             'success' => session('success'),
+            'already_authenticated' => session('already_authenticated', false),
         ]);
     }
 

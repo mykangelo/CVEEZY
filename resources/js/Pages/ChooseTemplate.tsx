@@ -3,73 +3,61 @@ import { Link, Head, router, usePage } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 import Logo from "@/Components/Logo";
 
-// Template list with names and descriptions (aligned to new order)
+// Template list with names and descriptions
 const templates = [
   {
     id: 1,
     name: 'professional',
     displayName: 'Professional',
-    description: 'Classic professional layout optimized for ATS systems and traditional industries.',
+    description: '• ATS-optimized design for maximum compatibility\n• Clean, structured layout perfect for corporate roles\n• Clear section separation and professional typography\n• Industry-standard formatting for traditional sectors\n• Ideal for finance, healthcare, and manufacturing',
     category: 'ats'
   },
   {
     id: 2,
     name: 'classic',
     displayName: 'Classic',
-    description: 'Soft neutral tones with refined typography for a sophisticated and professional feel.',
+    description: '• Timeless and sophisticated design approach\n• Refined typography with neutral color scheme\n• Elegant spacing and professional layout\n• Subtle visual elements conveying reliability\n• Perfect for executives and conservative industries',
     category: 'simple'
   },
   {
     id: 3,
     name: 'creative',
     displayName: 'Creative',
-    description: 'Includes a prominent profile image for a personal touch while maintaining professionalism.',
+    description: '• Modern design with personal profile image\n• Creative layout elements and visual hierarchy\n• Engaging presentation showcasing personality\n• Maintains professional standards\n• Excellent for creative industries and marketing',
     category: 'professional'
   },
   {
     id: 4,
     name: 'minimal',
     displayName: 'Minimal',
-    description: 'Clean and minimal design focusing on content with subtle visual elements.',
+    description: '• Clean, content-focused design approach\n• Maximum readability with generous white space\n• Clear typography and streamlined layout\n• Subtle visual elements for modern appeal\n• Perfect for tech roles and minimalist professionals',
     category: 'simple'
   },
   {
     id: 5,
     name: 'elegant',
     displayName: 'Elegant',
-    description: 'Clean and sophisticated design with elegant typography for a polished professional appearance.',
+    description: '• Premium design with sophisticated typography\n• Refined visual elements and elegant spacing\n• Professional color palette and polished layout\n• Conveys sophistication and attention to detail\n• Ideal for executive and consulting positions',
     category: 'professional'
   },
   {
     id: 6,
     name: 'modern',
     displayName: 'Modern',
-    description: 'A visually striking resume template, perfect for illustrating the breadth and depth of your expertise.',
+    description: '• Contemporary design with bold visual impact\n• Innovative layout structure and modern typography\n• Dynamic spacing and creative elements\n• Showcases innovation and forward-thinking\n• Perfect for tech, design, and creative roles',
     category: 'modern'
   },
 ];
 
 // Template image map
 const templateImages: Record<number, string> = {
-
   1: "/images/templates/professional.png",
   2: "/images/templates/classic.png",
   3: "/images/templates/creative.jpg",
   4: "/images/templates/minimal.jpg",
   5: "/images/templates/elegant.jpg",
   6: "/images/templates/modern.jpg",
-
 };
-
-// Filter categories
-const filterCategories = [
-  { id: 'all', name: 'All Templates' },
-  { id: 'favorites', name: 'Favorites' },
-  { id: 'simple', name: 'Simple' },
-  { id: 'modern', name: 'Modern' },
-  { id: 'professional', name: 'Professional' },
-  { id: 'ats', name: 'ATS' },
-];
 
 interface ChooseTemplateProps {
   hasPendingPayments?: boolean;
@@ -82,25 +70,15 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
 }) => {
   const { auth } = usePage().props as any;
   const user = auth.user;
-  const [currentFilter, setCurrentFilter] = useState<string>("all");
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [hoveredTemplate, setHoveredTemplate] = useState<number | null>(null);
 
   // Check if this is an imported resume
   const urlParams = new URLSearchParams(window.location.search || '');
   const resumeId = urlParams.get('resume');
   const isImported = urlParams.get('imported') === 'true';
 
-  const toggleFavorite = (templateId: number) => {
-    setFavorites((prev) =>
-      prev.includes(templateId)
-        ? prev.filter((id) => id !== templateId)
-        : [...prev, templateId]
-    );
-  };
-
   const handleTemplateSelect = async (templateName: string) => {
     if (isImported && resumeId) {
-      // For imported resumes, update the template and redirect to builder
       try {
         const response = await fetch(`/resumes/${resumeId}`, {
           method: 'PATCH',
@@ -116,218 +94,229 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
         if (response.ok) {
           router.visit(`/builder?resume=${resumeId}`);
         } else {
-          console.error('Failed to update template');
-          // Fallback to builder anyway
           router.visit(`/builder?resume=${resumeId}`);
         }
       } catch (error) {
-        console.error('Error updating template:', error);
-        // Fallback to builder anyway
         router.visit(`/builder?resume=${resumeId}`);
       }
     } else {
-      // Normal flow for new resumes
       router.visit(`/choose-resume-maker?template=${templateName}`);
     }
   };
 
-  const filteredTemplates = currentFilter === "all"
-    ? templates
-    : currentFilter === "favorites"
-      ? templates.filter(t => favorites.includes(t.id))
-      : templates.filter(t => t.category === currentFilter);
-
   return (
     <>
-      <div className="min-h-screen flex flex-col bg-gray-50 font-sans">
-        <Head title="CVeezy | Resume Templates" />
+      <div className="min-h-screen bg-gradient-to-br from-[#f0f4ff] via-[#f8faff] to-[#e0eaff] font-sans relative overflow-hidden">
+        {/* Background decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#354eab]/10 to-[#4a5fc7]/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-[#5a6fd7]/10 to-[#354eab]/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
+        </div>
+        <Head title="CVeezy | Templates" />
 
-        {/* Header */}
-        <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center">
-              <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
-                <Logo
-                  size="sm"
-                  showText={false}
-                  className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
-                />
-              </Link>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-                        <Link
-              href="/contact"
-              className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
-            >
-              Contact us
-            </Link>
-            {user ? (
-              <Link
-                href="/dashboard"
-                className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
-              >
-                Login
-            </Link>
-            )}
-          </div>
-        </header>
-        {/* Main Content */}
-        <div className="flex-1 px-8 py-8">
-          {/* Back Link */}
+
+
+        {/* Main Content - Full Screen Gallery */}
+        <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full overflow-hidden">
+          {/* Clean Blue Button Style */}
           <Link
             href={isImported ? "/uploader" : "/dashboard"}
-            className="inline-flex items-center text-gray-600 hover:text-gray-800 transition-colors mb-8"
+            className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 py-3 rounded-full transition-all duration-300 mb-8 text-sm font-bold shadow-md hover:shadow-lg group"
           >
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
-            <span className="text-sm font-medium">
-              {isImported ? 'Back to Upload' : 'Back to Dashboard'}
-            </span>
+            {isImported ? 'Back to Upload' : 'Back to Dashboard'}
           </Link>
 
-          {/* Header Section */}
-          <div className="text-center mb-8">
+          {/* Enhanced Header Section */}
+          <div className="text-center mb-12 sm:mb-16 lg:mb-20 relative z-10">
             {hasPendingPayments && (
-              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg max-w-2xl mx-auto">
-                <p className="text-yellow-800 text-sm">
-                  ⚠️ You have {pendingResumesCount} pending payment(s). Please wait for admin approval before creating a new resume.
+              <div className="mb-8 sm:mb-10 p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl sm:rounded-3xl max-w-lg mx-auto shadow-xl shadow-yellow-200/20 mx-4">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-white text-sm sm:text-lg">⚠️</span>
+                  </div>
+                  <span className="text-yellow-800 font-bold text-base sm:text-lg">Payment Pending</span>
+                </div>
+                <p className="text-yellow-700 text-xs sm:text-sm leading-relaxed text-center">
+                  {pendingResumesCount} resume(s) awaiting payment approval. Please wait for confirmation.
                 </p>
               </div>
             )}
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              {isImported ? 'Choose Your Template' : 'Resume templates'}
-            </h1>
-            <p className="text-lg text-gray-600 mb-4">
-              {isImported
-                ? 'Your resume has been imported! Now choose a template to style your content.'
-                : 'Simple to use and ready in minutes resume templates — give it a try for free now!'
-              }
-            </p>
-            {isImported ? (
-              <button
-                onClick={() => router.visit(`/builder?resume=${resumeId}`)}
-                className="text-[#354eab] underline hover:text-[#4a5fc7] text-sm"
-              >
-                Skip template selection
-              </button>
-            ) : (
-              <Link
-                href="/"
-                className="text-[#354eab] underline hover:text-[#4a5fc7] text-sm"
-              >
-                Choose later
-              </Link>
+            
+            <div className="mb-10">
+              <div className="relative inline-block">
+                <h1 className="text-6xl font-bold text-[#354eab] mb-8 drop-shadow-sm">
+                  {isImported ? 'Choose Template' : 'Resume Templates'}
+                </h1>
+              </div>
+              
+              <p className="text-gray-700 text-xl max-w-4xl mx-auto leading-relaxed font-medium">
+                {isImported
+                  ? 'Select a template to style your imported resume and make it stand out from the crowd.'
+                  : 'Professional templates designed for every industry and career level. Create your perfect resume in minutes with our AI-powered builder.'
+                }
+              </p>
+            </div>
+            
+            {isImported && (
+              <div className="flex justify-center">
+                <button
+                  onClick={() => router.visit(`/builder?resume=${resumeId}`)}
+                  className="inline-flex items-center gap-3 text-[#354eab] hover:text-[#4a5fc7] text-sm px-6 py-3 rounded-xl hover:bg-white/60 hover:shadow-lg transition-all duration-300 font-semibold backdrop-blur-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Skip template selection
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Filter Bar */}
-          <div className="flex justify-center mb-12">
-            <div className="flex space-x-8 bg-white rounded-lg shadow-sm border border-gray-200 p-2">
-              {filterCategories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setCurrentFilter(category.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-md transition-colors ${currentFilter === category.id
-                    ? "bg-[#e3f2fd] text-[#354eab] border-b-2 border-[#354eab]"
-                    : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                    }`}
+          {/* Responsive Card-Style Template Gallery */}
+          <div className="flex justify-center px-4 overflow-x-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 w-full max-w-8xl">
+              {templates.map((template, index) => (
+                <div 
+                  key={template.id} 
+                  className="animate-fade-in flex justify-center"
+                  style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <span className="font-medium text-sm">{category.name}</span>
-                </button>
+                  {/* Individual Card Design */}
+                  <div 
+                    className="relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl aspect-[7/9] bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out hover:border hover:border-[#354eab]"
+                    onMouseEnter={() => setHoveredTemplate(template.id)}
+                    onMouseLeave={() => setHoveredTemplate(null)}
+                  >
+                                         {/* Top Card Section - Template Image */}
+                     <div 
+                       className="bg-white rounded-t-2xl overflow-hidden h-[90%]"
+                     >
+                       <div className="w-full h-full flex items-center justify-center p-1">
+                         <img
+                           src={templateImages[template.id]}
+                           alt={`${template.displayName} Template`}
+                           className="w-full h-full object-contain object-center"
+                         />
+                       </div>
+                     </div>
+                    
+                                         {/* Bottom Card Section - Template Info */}
+                     <div 
+                       className={`bg-gradient-to-br from-[#354eab] via-[#4a5fc7] to-[#5a6fd7] rounded-b-2xl relative transition-all duration-300 ease-in-out shadow-lg ${
+                         hoveredTemplate === template.id ? 'h-[65%] -mt-[70%] shadow-2xl scale-[1.05]' : 'h-[20%] -mt-[10%]'
+                       }`}
+                       style={{ bottom: 0 }}
+                     >
+                       {/* Enhanced curved separator edge */}
+                       <div className={`absolute top-0 left-0 w-full h-10 bg-white transition-all duration-300 ease-in-out ${
+                         hoveredTemplate === template.id ? 'rounded-b-full shadow-md' : 'rounded-b-full transform -translate-y-1/2 shadow-sm'
+                       }`}></div>
+                       
+                       {/* Subtle inner glow effect */}
+                       <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-b-2xl"></div>
+                       
+                       {/* Enhanced hover overlay effect */}
+                       {hoveredTemplate === template.id && (
+                         <div className="absolute inset-0 bg-gradient-to-t from-white/5 via-transparent to-transparent rounded-b-2xl animate-pulse"></div>
+                       )}
+                      
+                      {/* Card Content */}
+                      <div className="pt-2 px-3 sm:px-4 flex flex-col justify-center items-center text-white h-full relative z-10">
+                        <span className={`font-bold text-xl sm:text-2xl lg:text-3xl mb-2 text-center drop-shadow-sm transition-all duration-300 ${
+                          hoveredTemplate === template.id ? 'text-2xl sm:text-3xl lg:text-4xl mb-2' : ''
+                        }`}>
+                          {template.displayName}
+                        </span>
+                        
+                        {/* Description and Button - Only visible on hover */}
+                        <div 
+                          className={`transition-all duration-300 ease-in-out transform ${
+                            hoveredTemplate === template.id 
+                              ? 'opacity-100 translate-y-0 max-h-28 sm:max-h-32 lg:max-h-40' 
+                              : 'opacity-0 translate-y-2 max-h-0 overflow-hidden'
+                          }`}
+                        >
+                          {/* Description */}
+                          <div className="mb-2 sm:mb-3 px-1">
+                            <div className="text-sm sm:text-base text-center opacity-90 leading-tight drop-shadow-sm">
+                              {template.description.split('\n').map((line, index) => (
+                                <div key={index} className="mb-1">
+                                  {line}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {/* Action Button */}
+                          {!hasPendingPayments && (
+                            <div className="flex justify-center w-full">
+                              <button
+                                onClick={() => handleTemplateSelect(template.name)}
+                                className="text-xs sm:text-sm font-medium text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-xl px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 hover:bg-white hover:text-[#354eab] transition-all duration-400 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-2xl hover:border-white/60"
+                              >
+                                {isImported ? 'Apply Template' : 'Use This Template'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* Template Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {filteredTemplates.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-lg text-gray-400">
-                  No templates found for this category.
+          {/* Bottom CTA */}
+          {!hasPendingPayments && (
+            <div className="text-center mt-16">
+              <div className="bg-gradient-to-r from-[#354eab]/5 to-[#4a5fc7]/5 rounded-2xl p-8 border border-[#354eab]/10">
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  Ready to create your resume?
+                </h2>
+                <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+                  Hover over any template above to see details, then click "Use This Template" to get started. Our AI-powered builder will guide you through the process.
                 </p>
+                <Link
+                  href="/"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] text-white px-6 py-3 rounded-xl font-semibold hover:from-[#4a5fc7] hover:to-[#5a6fd7] transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Get Started Now
+                </Link>
               </div>
-            ) : (
-              filteredTemplates.map((template) => (
-                <div key={template.id} className="flex flex-col gap-4">
-                  {/* Image Preview */}
-                  <div
-                    className={`relative rounded-xl overflow-hidden shadow-lg transition-all duration-300 group
-            ${hasPendingPayments
-                        ? 'cursor-not-allowed opacity-50'
-                        : 'cursor-pointer hover:shadow-xl hover:scale-105'
-                      }`}
-                  >
-                    <img
-                      src={templateImages[template.id]}
-                      alt={`${template.displayName} Template`}
-                      className="w-full h-full object-cover"
-                    />
-
-                    {/* Overlay Button */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center transition-all duration-300">
-                      {!hasPendingPayments && (
-                        <button
-                          onClick={() => handleTemplateSelect(template.name)}
-                          className="bg-[#354eab] text-white px-6 py-3 rounded-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-[#4a5fc7]"
-                        >
-                          {isImported ? 'Apply Template' : 'Use This Template'}
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Favorite Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(template.id);
-                      }}
-                      className={`absolute top-3 right-3 p-2 rounded-full bg-white shadow-md transition-colors ${favorites.includes(template.id)
-                          ? "text-red-500"
-                          : "text-gray-400 hover:text-red-500"
-                        }`}
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill={favorites.includes(template.id) ? "currentColor" : "none"}
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-
-                  {/* Details Outside the Image */}
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 mt-2">
-                      {template.displayName} Template
-                    </h3>
-                    <p className="text-gray-600 text-sm">
-                      {template.description}
-                    </p>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <Footer />
       </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .animate-fade-in {
+            animation: fade-in 0.8s ease-out forwards;
+            opacity: 0;
+          }
+        `
+      }} />
     </>
   );
 };

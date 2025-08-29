@@ -164,8 +164,14 @@ const Uploader: React.FC<UploaderProps> = ({
   };
 
   return (
-            <div className="min-h-screen flex flex-col bg-white font-sans">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#f0f4ff] via-[#f8faff] to-[#e0eaff] font-sans relative overflow-hidden">
       <Head title="CVeezy | Improve Your Resume" />
+      
+      {/* Decorative Background Elements */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
+      </div>
 
       {isUploading && (
         <div className="fixed inset-0 z-[10000] bg-white/80 backdrop-blur-sm flex items-center justify-center">
@@ -176,82 +182,69 @@ const Uploader: React.FC<UploaderProps> = ({
           </div>
         </div>
       )}
-      {/* Header */}
-      <header className="w-full bg-white flex items-center justify-between h-16 px-6 shadow-sm">
-        <div className="flex items-center">
-          <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
-            <Logo 
-              size="sm"
-              showText={false}
-              className="text-2xl font-bold text-[#222] font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 rounded transition"
-            />
-          </Link>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/contact"
-            className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
-          >
-            Contact us
-          </Link>
-          {user ? (
-            <Link
-              href="/dashboard"
-              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
-            >
-              Dashboard
-            </Link>
-          ) : (
-            <Link
-              href="/login"
-              className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
-            >
-              Login
-            </Link>
-          )}
-        </div>
-      </header>
+
 
       <main className="flex-grow">
-        {/* Go Back Link */}
-        <button
-          className="flex items-center text-[#354eab] cursor-pointer hover:underline w-fit mt-5 ml-5 text-md font-semibold gap-1"
-          onClick={() => router.visit("/")}
-        >
-          <svg className="w-6 h-6 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
-          Go Back
-        </button>
+        {/* Clean Blue Button Style */}
+        <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <Link
+            href="/choose-resume-maker"
+            className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 py-3 rounded-full transition-all duration-300 mb-8 text-sm font-bold shadow-md hover:shadow-lg group"
+          >
+            <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Choose Option
+          </Link>
+        </div>
 
         {/* Warning for pending payments */}
         {user && hasPendingPayments && (
-          <div className="mx-auto max-w-3xl mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-yellow-800 font-semibold">Payment Under Review</span>
+          <div className="mx-auto max-w-3xl mb-8 p-6 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl shadow-xl shadow-yellow-200/20">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg">⚠️</span>
+              </div>
+              <span className="text-yellow-800 font-bold text-lg">Payment Pending</span>
             </div>
-            <p className="text-yellow-700 text-sm">
-              You have {pendingResumesCount} resume(s) with pending payment reviews. Please wait for admin approval before creating new resumes.
+            <p className="text-yellow-700 text-sm leading-relaxed text-center">
+              {pendingResumesCount} resume(s) awaiting payment approval. Please wait for confirmation.
             </p>
           </div>
         )}
 
+        {/* Enhanced Title Section */}
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16 relative z-10">
+          <div className="relative inline-block">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#354eab] mb-6 drop-shadow-sm">
+              Improve Your Resume
+            </h1>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
+              Upload your existing resume and let AI enhance it
+            </h2>
+            <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
+              Our AI-powered system will analyze your resume, extract key information, and help you create a professional, optimized version that stands out to employers.
+            </p>
+          </div>
+        </div>
+
         {/* Upload Section */}
-        <div className="flex items-center justify-center pt-20 pb-24">
-          <div className="w-full max-w-3xl">
+        <div className="flex items-center justify-center pb-16">
+          <div className="w-full max-w-4xl px-4">
             {uploadError && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="text-red-800 font-semibold">Upload Error</span>
+              <div className="mb-8 p-6 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl shadow-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-red-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-red-800 font-bold text-lg">Upload Error</span>
                 </div>
-                <p className="text-red-700 text-sm mt-1">{uploadError}</p>
+                <p className="text-red-700 text-sm leading-relaxed text-center mb-4">{uploadError}</p>
                 <button 
                   onClick={resetUpload}
-                  className="mt-2 text-red-600 underline text-sm hover:text-red-800"
+                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300"
                 >
                   Try again
                 </button>
@@ -259,10 +252,10 @@ const Uploader: React.FC<UploaderProps> = ({
             )}
 
             <div
-              className={`border-2 border-dashed p-8 rounded-3xl bg-white shadow-md text-center transition-all duration-300 ${
+              className={`border-2 border-dashed p-12 rounded-3xl bg-white/95 backdrop-blur-sm shadow-lg text-center transition-all duration-300 ${
                 isUploading 
-                  ? 'border-blue-400 bg-blue-50' 
-                  : 'border-slate-400/80 hover:shadow-xl hover:cursor-pointer'
+                  ? 'border-[#354eab] bg-blue-50/50' 
+                  : 'border-[#bcd6f6] hover:shadow-2xl hover:cursor-pointer hover:border-[#9bc4f0] hover:bg-white/98'
               }`}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -287,7 +280,7 @@ const Uploader: React.FC<UploaderProps> = ({
                   <p className="text-gray-400 mb-1">or</p>
                   <button
                     type="button"
-                    className="bg-[#354eab] text-white px-6 py-2 rounded-md hover:bg-[#2d3f8f] transition duration-200 disabled:opacity-50"
+                    className="bg-[#354eab] hover:bg-[#4a5fc7] text-white px-8 py-3 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
                     onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
                     disabled={isUploading}
                   >
