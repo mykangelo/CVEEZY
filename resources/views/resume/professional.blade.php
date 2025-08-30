@@ -7,158 +7,64 @@
   /* DOMPDF safe defaults */
   @page { margin: 18mm 16mm; }
   body {
-    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-    color: #1f2937;     
-    font-size: 14px;    
+    font-family: 'Inter', DejaVu Sans, Arial, sans-serif;
+    color: #111827;
+    font-size: 14px;       /* match text-sm in React */
     line-height: 1.5;
     margin: 0;
-    padding: 16px;      
+    padding: 0;
   }
-  .container { 
-    max-width: 768px;  
-    margin: 0 auto;     
-    color: #1f2937;        
-  }
+  .container { width: 100%; }
 
   /* Header */
-  h1 { 
-    font-size: 30px;    
-    font-weight: 400;    
-    line-height: 1.25;     
-    margin: 0;
-  }
-  .role { 
-    font-size: 18px;     
-    margin: 0;
-  }
-  .contact { 
-    font-size: 14px;     
-    color: #4b5563;       
-    margin-top: 4px;      
-  }
-
-  /* Section spacing */
-  .section {
-    margin-top: 16px; 
-  }
+  h1 { font-size: 30px; font-weight: 800; margin: 0; }   /* text-3xl */
+  .role { font-size: 18px; margin-top: 2px; }            /* text-lg */
+  .contact { font-size: 10px; color: #374151; margin-top: 6px; }
 
   /* Divider */
-  .divider { 
-    height: 1px;        
-    background-color: #c2410c; 
-    opacity: 0.7;        
-    width: 100%;          
-    margin-bottom: 4px;  
-  }
+  .divider { border-top: 1px solid #c2410c; margin: 10px 0; }
 
   /* Section Titles */
   .section-title {
-    font-size: 18px;    
-    font-weight: 600;   
+    font-size: 16px;       /* text-lg */
+    font-weight: 600;
+    font-family: 'Inter', DejaVu Sans, Arial, sans-serif;
     text-transform: uppercase;
-    margin: 0;
+    margin: 6px 0 4px 0;
     page-break-after: avoid;
   }
 
-  /* Experience/Education items */
-  .item {
-    margin-top: 8px;      
-  }
-
   /* Tables for left/right alignment */
-  .row-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-  }
-  .row-table td { 
-    vertical-align: top; 
-  }
-  .cell-left { 
-    font-size: 14px;    
-    font-weight: 600;   
-  }
-  .cell-right { 
-    text-align: right; 
-    font-size: 14px;     
-    font-weight: 600;   
-  }
-
-  /* Employer/Location text */
-  .employer-text {
-    font-size: 12px;      
-    color: #4b5563;        
-    font-style: italic;
-    margin-top: 2px;       
-    margin-bottom: 0;
-  }
+  .row-table { width: 100%; border-collapse: collapse; }
+  .row-table td { vertical-align: top; }
+  .cell-left { width: 70%; font-size: 14px; font-weight: 600; }
+  .cell-right { width: 30%; text-align: right; font-size: 14px; font-weight: 600; }
 
   /* Lists */
-  ul { 
-    list-style-type: disc;
-    padding-left: 16px;   
-    margin: 4px 0 0 0;   
-    font-size: 14px;      
-  }
-  li { 
-    margin-bottom: 2px;   
-  }
+  ul { margin: 4px 0 8px 18px; padding: 0; font-size: 14px; }
+  li { margin-bottom: 2px; }
 
   /* Skills */
-  .skills-table { 
-    width: 100%; 
-    border-collapse: collapse; 
-    font-size: 14px; 
-  }
-  .skills-table td { 
-    width: 50%; 
-    vertical-align: top; 
-    padding: 2px 32px 2px 0; 
-  }
-  .skill-line { 
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;   
-  }
-  .skill-name { 
-    width: 128px;        
-    display: inline-block;
-  }
+  .skills-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .skills-table td { width: 50%; vertical-align: top; padding: 2px 12px 2px 0; }
+  .skill-line { white-space: nowrap; }
+  .skill-name { font-weight: 600; }
+  /* Force DejaVu Sans for dots so they don't break */
   .skill-dots { 
-    margin-left: 4px;     
-    color: #374151;       
-    letter-spacing: 0.1em; 
     font-family: DejaVu Sans, sans-serif;
+    letter-spacing: 2px;
+    color: #374151;
+    font-size: 14px;
   }
-  .skill-dots.muted {
-    color: #d1d5db;    
-  }
-
-  /* Summary paragraph */
-  .summary-text {
-    font-size: 14px;      
-    margin-top: 4px;      
-    line-height: 1.625;    
-    margin-bottom: 0;
-  }
-
-  /* Additional Information */
-  .additional-info p {
-    font-size: 14px;      
-    margin-top: 4px;      
-    margin-bottom: 0;
-  }
-  .additional-info strong {
-    font-weight: 700;     
-  }
+  .skill-level { font-size: 12px; color: #6b7280; font-style: italic; margin-left: 6px; }
 
   /* Muted placeholders */
-  .muted { 
-    color: #9ca3af;       
-    font-style: italic; 
-  }
+  .muted { color: #9ca3af; font-style: italic; }
 
+  /* Keep blocks together */
   .keep { page-break-inside: avoid; }
 
+  /* Prevent text overflow */
   p, li, .contact { word-wrap: break-word; overflow-wrap: break-word; }
 </style>
 </head>
@@ -211,7 +117,7 @@
 
     $levels = ['Novice','Beginner','Skillful','Experienced','Expert'];
 
-    // Contact line - matching Professional.tsx format
+    // Contact line
     $contactParts = [];
     $addrCity = trim(($contact['address'] ?? '').( (!empty($contact['address']) && !empty($contact['city'])) ? ', ' : '' ).($contact['city'] ?? ''));
     if ($addrCity !== '') { $contactParts[] = $addrCity; }
@@ -241,85 +147,73 @@
     $skillRows = array_chunk($skills, 2);
   @endphp
 
-  {{-- Header - exact Professional.tsx layout --}}
-  <div>
-    <h1>{{ trim(($contact['firstName'] ?? '').' '.($contact['lastName'] ?? '')) ?: 'YOUR NAME' }}</h1>
-    <div class="role">{{ ($contact['desiredJobTitle'] ?? '') ?: 'JOB TITLE' }}</div>
-    <div class="contact">
-      {{ !empty($contactParts) ? implode(' | ', $contactParts) : '123 Anywhere St, Any City | (123) 456-7890 | email@example.com' }}
-    </div>
-  </div>
+  {{-- Header --}}
+  @if (!empty($contact['firstName']) || !empty($contact['lastName']) || !empty($contact['desiredJobTitle']) || !empty($contactParts))
+    <h1>{{ trim(($contact['firstName'] ?? '').' '.($contact['lastName'] ?? '')) }}</h1>
+    @if (!empty($contact['desiredJobTitle']))
+      <div class="role">{{ $contact['desiredJobTitle'] }}</div>
+    @endif
+    @if (!empty($contactParts))
+      <div class="contact">{{ implode(' ┃ ', $contactParts) }}</div>
+    @endif
+  @endif
 
   {{-- Summary --}}
-  <div class="section">
+  @if (!empty(trim($summary)))
     <div class="divider"></div>
     <div class="section-title">Summary</div>
-    <p class="summary-text">
-      {{ trim($summary) !== '' ? $summary
-        : 'Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills.' }}
-    </p>
-  </div>
+    <p>{{ $summary }}</p>
+  @endif
 
   {{-- Experience --}}
-  <div class="section">
+  @if (!empty($experiences) && collect($experiences)->filter(fn($e)=>
+      !empty($e['jobTitle']) || !empty($e['company']) || !empty($e['description'])
+  )->isNotEmpty())
     <div class="divider"></div>
     <div class="section-title">Professional Experience</div>
     @foreach ($experiences as $exp)
-      <div class="item keep">
+      <div class="keep">
         <table class="row-table">
           <tr>
             <td class="cell-left">
-              {{ !empty($exp['jobTitle']) || !empty($exp['company'])
-                  ? trim(($exp['jobTitle'] ?? '').( (!empty($exp['jobTitle']) && !empty($exp['company'])) ? ', ' : '' ).($exp['company'] ?? ''))
-                  : 'Job Title, Company' }}
+              {{ trim(($exp['jobTitle'] ?? '').((!empty($exp['jobTitle']) && !empty($exp['company'])) ? ', ' : '').($exp['company'] ?? '')) }}
             </td>
             <td class="cell-right">
-              {{ (!empty($exp['startDate']) || !empty($exp['endDate']))
-                  ? trim(($exp['startDate'] ?? '').' - '.($exp['endDate'] ?? ''))
-                  : '2017 — 2020' }}
+              {{ trim(($exp['startDate'] ?? '').' - '.($exp['endDate'] ?? '')) }}
             </td>
           </tr>
         </table>
-
         @if (!empty($exp['location']))
-          <p class="employer-text">{{ $exp['location'] }}</p>
-        @else
-          <p class="employer-text muted">Employer</p>
+          <div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:2px;">{{ $exp['location'] }}</div>
         @endif
-
-        @php
-          $desc = $exp['description'] ?? '';
-          $points = (trim((string)$desc) !== '') ? explode("\n", (string)$desc) : ['Sample Text'];
-          $isPlaceholder = (trim((string)$desc) === '');
-        @endphp
-        <ul>
-          @foreach ($points as $p)
-            @if (trim($p) !== '')
-              <li class="{{ $isPlaceholder ? 'muted' : '' }}">{{ $p }}</li>
-            @endif
-          @endforeach
-        </ul>
+        @if (!empty($exp['description']))
+          @php $points = array_filter(array_map('trim', explode("\n", (string)$exp['description']))); @endphp
+          @if (!empty($points))
+            <ul>
+              @foreach ($points as $p)
+                <li>{{ $p }}</li>
+              @endforeach
+            </ul>
+          @endif
+        @endif
       </div>
     @endforeach
-  </div>
+  @endif
 
   {{-- Projects --}}
   @if (!empty($customSections))
-    <div class="section">
-      <div class="divider"></div>
-      <div class="section-title">Projects</div>
-      @foreach ($customSections as $section)
-        <div class="item keep">
+    <div class="divider"></div>
+    <div class="section-title">Projects</div>
+    @foreach ($customSections as $section)
+      @if (!empty($section['title']) || !empty($section['content']))
+        <div class="keep">
           <table class="row-table">
             <tr>
               <td class="cell-left">{{ $section['title'] ?? '' }}</td>
               <td class="cell-right">{{ $section['date'] ?? '' }}</td>
             </tr>
           </table>
-          @php
-            $content = (string)($section['content'] ?? '');
-            $points = array_filter(array_map('trim', explode("\n", $content)));
-          @endphp
+          @php $points = array_filter(array_map('trim', explode("\n", (string)($section['content'] ?? '')))); @endphp
           @if (!empty($points))
             <ul>
               @foreach ($points as $p)
@@ -328,67 +222,68 @@
             </ul>
           @endif
         </div>
-      @endforeach
-    </div>
+      @endif
+    @endforeach
   @endif
 
   {{-- Education --}}
-  <div class="section">
+  @if (!empty($education) && collect($education)->filter(fn($e)=>
+      !empty($e['degree']) || !empty($e['school'])
+  )->isNotEmpty())
     <div class="divider"></div>
     <div class="section-title">Education</div>
     @foreach ($education as $edu)
-      <div class="item keep">
+      <div class="keep">
         <table class="row-table">
           <tr>
-            <td class="cell-left">
-              {{ (!empty($edu['degree']) || !empty($edu['school']))
-                  ? trim(($edu['degree'] ?? '').( (!empty($edu['degree']) && !empty($edu['school'])) ? ', ' : '' ).($edu['school'] ?? ''))
-                  : 'Degree in Field of study, School Name' }}
-            </td>
-            <td class="cell-right">
-              {{ (!empty($edu['startDate']) || !empty($edu['endDate']))
-                  ? trim(($edu['startDate'] ?? '').' - '.($edu['endDate'] ?? ''))
-                  : '2013 — 2017' }}
-            </td>
+            <td class="cell-left">{{ trim(($edu['degree'] ?? '').((!empty($edu['degree']) && !empty($edu['school'])) ? ', ' : '' ).($edu['school'] ?? '')) }}</td>
+            <td class="cell-right">{{ trim(($edu['startDate'] ?? '').' - '.($edu['endDate'] ?? '')) }}</td>
           </tr>
         </table>
         @if (!empty($edu['location']))
-          <p class="employer-text">{{ $edu['location'] }}</p>
+          <div style="font-size:12px;color:#6b7280;margin:2px 0;">{{ $edu['location'] }}</div>
         @endif
         @if (!empty($edu['description']))
-          <p class="summary-text">{{ $edu['description'] }}</p>
+          <p>{{ $edu['description'] }}</p>
         @endif
       </div>
     @endforeach
-  </div>
+  @endif
 
   {{-- Skills --}}
-  <div class="section">
+  @php
+    $showExperienceLevel = $resume['showExperienceLevel'] ?? true; // default true if not provided
+  @endphp
+
+  @if (!empty($skills) && collect($skills)->filter(fn($s)=>!empty($s['name']))->isNotEmpty())
     <div class="divider"></div>
     <div class="section-title">Skills</div>
     <table class="skills-table">
       @foreach ($skillRows as $row)
         <tr class="keep">
           @for ($i = 0; $i < 2; $i++)
-            @php
-              $skill = $row[$i] ?? null;
-            @endphp
+            @php $skill = $row[$i] ?? null; @endphp
             <td>
-              @if ($skill)
+              @if ($skill && !empty($skill['name']))
                 @php
-                  $name = trim((string)($skill['name'] ?? ''));
-                  $level = (string)($skill['level'] ?? '');
-                  $idx = array_search($level, $levels, true);
-                  if ($idx === false) { $idx = 3; }
-                  $active = $idx + 1;
-                  if ($active < 1) $active = 1;
-                  if ($active > 5) $active = 5;
-                  $dots = str_repeat('●', $active) . str_repeat('○', 5 - $active);
-                  $muted = ($name === '');
+                  $name  = trim((string)($skill['name'] ?? ''));
+                  $level = trim((string)($skill['level'] ?? ''));
                 @endphp
+
                 <div class="skill-line">
-                  <span class="skill-name{{ $muted ? ' muted' : '' }}">{{ $name !== '' ? $name : 'Skill '.($i + 1 + array_search($row, $skillRows) * 2) }}</span>
-                  <span class="skill-dots{{ $muted ? ' muted' : '' }}">{{ $dots }}</span>
+                  <span class="skill-name">{{ $name }}</span>
+
+                  {{-- Show dots + level only if flag is true AND level is provided --}}
+                  @if ($showExperienceLevel && $level !== '')
+                    @php
+                      $idx = array_search($level, $levels, true);
+                      if ($idx === false) { $idx = 3; } // fallback if invalid
+                      $active = max(1, min($idx + 1, 5));
+                      $dots = str_repeat('●', $active) . str_repeat('○', 5 - $active);
+                    @endphp
+                    <span class="skill-dots">{{ $dots }}</span>
+                    <span class="skill-level">{{ $levels[$idx] }}</span>
+                  @endif
                 </div>
               @endif
             </td>
@@ -396,40 +291,139 @@
         </tr>
       @endforeach
     </table>
-  </div>
+  @endif
 
   {{-- Additional Info --}}
-  <div class="section">
+  @php
+    // safe checks for whether any additional info exists
+    $hasLanguages = false;
+    $hasCerts = false;
+    $hasAwards = false;
+    $hasWebsites = false;
+    $hasHobbies = false;
+
+    if (!empty($languages) && is_array($languages)) {
+      foreach ($languages as $l) {
+        if (!empty(trim((string)($l['name'] ?? ''))) || !empty(trim((string)($l['proficiency'] ?? '')))) { $hasLanguages = true; break; }
+      }
+    }
+
+    if (!empty($certifications) && is_array($certifications)) {
+      foreach ($certifications as $c) {
+        if (!empty(trim((string)($c['title'] ?? '')))) { $hasCerts = true; break; }
+      }
+    }
+
+    if (!empty($awards) && is_array($awards)) {
+      foreach ($awards as $a) {
+        if (!empty(trim((string)($a['title'] ?? '')))) { $hasAwards = true; break; }
+      }
+    }
+
+    if (!empty($websites) && is_array($websites)) {
+      foreach ($websites as $w) {
+        if (!empty(trim((string)($w['url'] ?? ''))) || !empty(trim((string)($w['label'] ?? '')))) { $hasWebsites = true; break; }
+      }
+    }
+
+    if (!empty($hobbies) && is_array($hobbies)) {
+      foreach ($hobbies as $h) {
+        if (!empty(trim((string)($h['name'] ?? '')))) { $hasHobbies = true; break; }
+      }
+    }
+
+    $showAdditional = $hasLanguages || $hasCerts || $hasAwards || $hasWebsites || $hasHobbies;
+
+    // build lines (only when relevant)
+    $languagesLine = '';
+    if ($hasLanguages) {
+      $parts = [];
+      foreach ($languages as $l) {
+        $name = trim((string)($l['name'] ?? ''));
+        $prof = trim((string)($l['proficiency'] ?? ''));
+        if ($name !== '') $parts[] = $name . ($prof !== '' ? " ({$prof})" : '');
+      }
+      $languagesLine = implode(', ', $parts);
+    }
+
+    $certsLine = '';
+    if ($hasCerts) {
+      $parts = [];
+      foreach ($certifications as $c) {
+        $title = trim((string)($c['title'] ?? ''));
+        if ($title !== '') $parts[] = $title;
+      }
+      $certsLine = implode(', ', $parts);
+    }
+
+    $awardsLine = '';
+    if ($hasAwards) {
+      $parts = [];
+      foreach ($awards as $a) {
+        $title = trim((string)($a['title'] ?? ''));
+        if ($title !== '') $parts[] = $title;
+      }
+      $awardsLine = implode(', ', $parts);
+    }
+
+    $sitesLine = '';
+    if ($hasWebsites) {
+      $parts = [];
+      foreach ($websites as $w) {
+        $label = trim((string)($w['label'] ?? 'Website'));
+        $url = trim((string)($w['url'] ?? ''));
+        if ($url !== '') $parts[] = ($label !== '' ? $label.': '.$url : $url);
+        else if ($label !== '') $parts[] = $label;
+      }
+      $sitesLine = implode(', ', $parts);
+    }
+
+    $hobbiesLine = '';
+    if ($hasHobbies) {
+      $parts = [];
+      foreach ($hobbies as $h) {
+        $name = trim((string)($h['name'] ?? ''));
+        if ($name !== '') $parts[] = $name;
+      }
+      $hobbiesLine = implode(', ', $parts);
+    }
+  @endphp
+
+  {{-- Additional Info --}}
+  @if (!empty($languages) || !empty($certifications) || !empty($awards) || !empty($websites) || !empty($hobbies))
     <div class="divider"></div>
     <div class="section-title">Additional Information</div>
-    <div class="additional-info keep">
-      <p><strong>Languages:</strong> {{ $languagesLine }}</p>
-      <p><strong>Certifications:</strong> {{ $certsLine }}</p>
-      <p><strong>Awards/Activities:</strong> {{ $awardsLine }}</p>
-
+    <div class="keep">
+      @if (!empty($languages))
+        @php $languagesLine = implode(', ', array_map(fn($l)=> trim(($l['name'] ?? '').(($l['proficiency'] ?? '') ? " ({$l['proficiency']})" : '')), $languages)); @endphp
+        <p><strong>Languages:</strong> {{ $languagesLine }}</p>
+      @endif
+      @if (!empty($certifications))
+        @php $certsLine = implode(', ', array_map(fn($c)=>$c['title'] ?? '', $certifications)); @endphp
+        <p><strong>Certifications:</strong> {{ $certsLine }}</p>
+      @endif
+      @if (!empty($awards))
+        @php $awardsLine = implode(', ', array_map(fn($a)=>$a['title'] ?? '', $awards)); @endphp
+        <p><strong>Awards/Activities:</strong> {{ $awardsLine }}</p>
+      @endif
       @if (!empty($websites))
-        @php
-          $sitesLine = implode(', ', array_map(fn($w)=> trim(($w['label'] ?? 'Website').': '.($w['url'] ?? '')), $websites));
-        @endphp
+        @php $sitesLine = implode(', ', array_map(fn($w)=> trim(($w['label'] ?? 'Website').': '.($w['url'] ?? '')), $websites)); @endphp
         <p><strong>Websites:</strong> {{ $sitesLine }}</p>
       @endif
-
       @if (!empty($hobbies))
-        @php
-          $hobbiesLine = implode(', ', array_map(fn($h)=>$h['name'] ?? '', $hobbies));
-        @endphp
+        @php $lobbiesLine = implode(', ', array_map(fn($h)=>$h['name'] ?? '', $hobbies)); @endphp
         <p><strong>Hobbies:</strong> {{ $hobbiesLine }}</p>
       @endif
     </div>
-  </div>
+  @endif
 
   {{-- References --}}
   @if (!empty($references))
-    <div class="section">
-      <div class="divider"></div>
-      <div class="section-title">References</div>
-      @foreach ($references as $ref)
-        <div class="item keep">
+    <div class="divider"></div>
+    <div class="section-title">References</div>
+    @foreach ($references as $ref)
+      @if (!empty($ref['name']) || !empty($ref['relationship']) || !empty($ref['contactInfo']))
+        <div class="keep">
           <table class="row-table">
             <tr>
               <td class="cell-left">{{ $ref['name'] ?? '' }}</td>
@@ -437,11 +431,11 @@
             </tr>
           </table>
           @if (!empty($ref['contactInfo']))
-            <p class="employer-text">{{ $ref['contactInfo'] }}</p>
+            <div style="font-size:12px;color:#374151;">{{ $ref['contactInfo'] }}</div>
           @endif
         </div>
-      @endforeach
-    </div>
+      @endif
+    @endforeach
   @endif
 
 </div>
