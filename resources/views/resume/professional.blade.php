@@ -165,6 +165,7 @@
     <p>{{ $summary }}</p>
   @endif
 
+  
   {{-- Experience --}}
   @if (!empty($experiences) && collect($experiences)->filter(fn($e)=>
       !empty($e['jobTitle']) || !empty($e['company']) || !empty($e['description'])
@@ -236,7 +237,9 @@
       <div class="keep">
         <table class="row-table">
           <tr>
-            <td class="cell-left">{{ trim(($edu['degree'] ?? '').((!empty($edu['degree']) && !empty($edu['school'])) ? ', ' : '' ).($edu['school'] ?? '')) }}</td>
+
+            <td class="cell-left">{{ trim(($edu['degree'] ?? '').((!empty($edu['degree']) && !empty($edu['school'])) ? ', ' : '').($edu['school'] ?? '')) }}</td>
+
             <td class="cell-right">{{ trim(($edu['startDate'] ?? '').' - '.($edu['endDate'] ?? '')) }}</td>
           </tr>
         </table>
@@ -293,101 +296,102 @@
     </table>
   @endif
 
-  {{-- Additional Info --}}
-  @php
-    // safe checks for whether any additional info exists
-    $hasLanguages = false;
-    $hasCerts = false;
-    $hasAwards = false;
-    $hasWebsites = false;
-    $hasHobbies = false;
 
-    if (!empty($languages) && is_array($languages)) {
-      foreach ($languages as $l) {
-        if (!empty(trim((string)($l['name'] ?? ''))) || !empty(trim((string)($l['proficiency'] ?? '')))) { $hasLanguages = true; break; }
-      }
+{{-- Additional Info --}}
+@php
+  // safe checks for whether any additional info exists
+  $hasLanguages = false;
+  $hasCerts = false;
+  $hasAwards = false;
+  $hasWebsites = false;
+  $hasHobbies = false;
+
+  if (!empty($languages) && is_array($languages)) {
+    foreach ($languages as $l) {
+      if (!empty(trim((string)($l['name'] ?? ''))) || !empty(trim((string)($l['proficiency'] ?? '')))) { $hasLanguages = true; break; }
     }
+  }
 
-    if (!empty($certifications) && is_array($certifications)) {
-      foreach ($certifications as $c) {
-        if (!empty(trim((string)($c['title'] ?? '')))) { $hasCerts = true; break; }
-      }
+  if (!empty($certifications) && is_array($certifications)) {
+    foreach ($certifications as $c) {
+      if (!empty(trim((string)($c['title'] ?? '')))) { $hasCerts = true; break; }
     }
+  }
 
-    if (!empty($awards) && is_array($awards)) {
-      foreach ($awards as $a) {
-        if (!empty(trim((string)($a['title'] ?? '')))) { $hasAwards = true; break; }
-      }
+  if (!empty($awards) && is_array($awards)) {
+    foreach ($awards as $a) {
+      if (!empty(trim((string)($a['title'] ?? '')))) { $hasAwards = true; break; }
     }
+  }
 
-    if (!empty($websites) && is_array($websites)) {
-      foreach ($websites as $w) {
-        if (!empty(trim((string)($w['url'] ?? ''))) || !empty(trim((string)($w['label'] ?? '')))) { $hasWebsites = true; break; }
-      }
+  if (!empty($websites) && is_array($websites)) {
+    foreach ($websites as $w) {
+      if (!empty(trim((string)($w['url'] ?? ''))) || !empty(trim((string)($w['label'] ?? '')))) { $hasWebsites = true; break; }
     }
+  }
 
-    if (!empty($hobbies) && is_array($hobbies)) {
-      foreach ($hobbies as $h) {
-        if (!empty(trim((string)($h['name'] ?? '')))) { $hasHobbies = true; break; }
-      }
+  if (!empty($hobbies) && is_array($hobbies)) {
+    foreach ($hobbies as $h) {
+      if (!empty(trim((string)($h['name'] ?? '')))) { $hasHobbies = true; break; }
     }
+  }
 
-    $showAdditional = $hasLanguages || $hasCerts || $hasAwards || $hasWebsites || $hasHobbies;
+  $showAdditional = $hasLanguages || $hasCerts || $hasAwards || $hasWebsites || $hasHobbies;
 
-    // build lines (only when relevant)
-    $languagesLine = '';
-    if ($hasLanguages) {
-      $parts = [];
-      foreach ($languages as $l) {
-        $name = trim((string)($l['name'] ?? ''));
-        $prof = trim((string)($l['proficiency'] ?? ''));
-        if ($name !== '') $parts[] = $name . ($prof !== '' ? " ({$prof})" : '');
-      }
-      $languagesLine = implode(', ', $parts);
+  // build lines (only when relevant)
+  $languagesLine = '';
+  if ($hasLanguages) {
+    $parts = [];
+    foreach ($languages as $l) {
+      $name = trim((string)($l['name'] ?? ''));
+      $prof = trim((string)($l['proficiency'] ?? ''));
+      if ($name !== '') $parts[] = $name . ($prof !== '' ? " ({$prof})" : '');
     }
+    $languagesLine = implode(', ', $parts);
+  }
 
-    $certsLine = '';
-    if ($hasCerts) {
-      $parts = [];
-      foreach ($certifications as $c) {
-        $title = trim((string)($c['title'] ?? ''));
-        if ($title !== '') $parts[] = $title;
-      }
-      $certsLine = implode(', ', $parts);
+  $certsLine = '';
+  if ($hasCerts) {
+    $parts = [];
+    foreach ($certifications as $c) {
+      $title = trim((string)($c['title'] ?? ''));
+      if ($title !== '') $parts[] = $title;
     }
+    $certsLine = implode(', ', $parts);
+  }
 
-    $awardsLine = '';
-    if ($hasAwards) {
-      $parts = [];
-      foreach ($awards as $a) {
-        $title = trim((string)($a['title'] ?? ''));
-        if ($title !== '') $parts[] = $title;
-      }
-      $awardsLine = implode(', ', $parts);
+  $awardsLine = '';
+  if ($hasAwards) {
+    $parts = [];
+    foreach ($awards as $a) {
+      $title = trim((string)($a['title'] ?? ''));
+      if ($title !== '') $parts[] = $title;
     }
+    $awardsLine = implode(', ', $parts);
+  }
 
-    $sitesLine = '';
-    if ($hasWebsites) {
-      $parts = [];
-      foreach ($websites as $w) {
-        $label = trim((string)($w['label'] ?? 'Website'));
-        $url = trim((string)($w['url'] ?? ''));
-        if ($url !== '') $parts[] = ($label !== '' ? $label.': '.$url : $url);
-        else if ($label !== '') $parts[] = $label;
-      }
-      $sitesLine = implode(', ', $parts);
+  $sitesLine = '';
+  if ($hasWebsites) {
+    $parts = [];
+    foreach ($websites as $w) {
+      $label = trim((string)($w['label'] ?? 'Website'));
+      $url = trim((string)($w['url'] ?? ''));
+      if ($url !== '') $parts[] = ($label !== '' ? $label.': '.$url : $url);
+      else if ($label !== '') $parts[] = $label;
     }
+    $sitesLine = implode(', ', $parts);
+  }
 
-    $hobbiesLine = '';
-    if ($hasHobbies) {
-      $parts = [];
-      foreach ($hobbies as $h) {
-        $name = trim((string)($h['name'] ?? ''));
-        if ($name !== '') $parts[] = $name;
-      }
-      $hobbiesLine = implode(', ', $parts);
+  $hobbiesLine = '';
+  if ($hasHobbies) {
+    $parts = [];
+    foreach ($hobbies as $h) {
+      $name = trim((string)($h['name'] ?? ''));
+      if ($name !== '') $parts[] = $name;
     }
-  @endphp
+    $hobbiesLine = implode(', ', $parts);
+  }
+@endphp
 
   {{-- Additional Info --}}
   @if (!empty($languages) || !empty($certifications) || !empty($awards) || !empty($websites) || !empty($hobbies))
@@ -411,12 +415,15 @@
         <p><strong>Websites:</strong> {{ $sitesLine }}</p>
       @endif
       @if (!empty($hobbies))
-        @php $lobbiesLine = implode(', ', array_map(fn($h)=>$h['name'] ?? '', $hobbies)); @endphp
+        @php $hobbiesLine = implode(', ', array_map(fn($h)=>$h['name'] ?? '', $hobbies)); @endphp
         <p><strong>Hobbies:</strong> {{ $hobbiesLine }}</p>
       @endif
     </div>
   @endif
 
+
+
+ 
   {{-- References --}}
   @if (!empty($references))
     <div class="divider"></div>
@@ -437,6 +444,7 @@
       @endif
     @endforeach
   @endif
+
 
 </div>
 </body>
