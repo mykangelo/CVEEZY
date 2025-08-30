@@ -49,7 +49,7 @@
   .skills-table td { width: 50%; vertical-align: top; padding: 2px 12px 2px 0; }
   .skill-line { white-space: nowrap; }
   .skill-name { font-weight: 600; }
-  /* Force DejaVu Sans for dots so they don’t break */
+  /* Force DejaVu Sans for dots so they don't break */
   .skill-dots { 
     font-family: DejaVu Sans, sans-serif;
     letter-spacing: 2px;
@@ -158,7 +158,6 @@
     @endif
   @endif
 
-
   {{-- Summary --}}
   @if (!empty(trim($summary)))
     <div class="divider"></div>
@@ -202,7 +201,6 @@
     @endforeach
   @endif
 
-
   {{-- Projects --}}
   @if (!empty($customSections))
     <div class="divider"></div>
@@ -239,7 +237,9 @@
       <div class="keep">
         <table class="row-table">
           <tr>
+
             <td class="cell-left">{{ trim(($edu['degree'] ?? '').((!empty($edu['degree']) && !empty($edu['school'])) ? ', ' : '').($edu['school'] ?? '')) }}</td>
+
             <td class="cell-right">{{ trim(($edu['startDate'] ?? '').' - '.($edu['endDate'] ?? '')) }}</td>
           </tr>
         </table>
@@ -422,6 +422,8 @@
   @endif
 
 
+
+ 
   {{-- References --}}
   @if (!empty($references))
     <div class="divider"></div>

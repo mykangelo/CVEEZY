@@ -63,8 +63,7 @@ const Professional: React.FC<Props> = ({ resumeData }) => {
         </h1>
         <p className="text-lg"><Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" /></p>
         <div className="text-sm text-gray-600 mt-1 flex flex-wrap gap-1">
-          <span><Placeholder value={contact.address} placeholder="123 Anywhere St" /></span>
-          <span>, </span>
+          <span><Placeholder value={contact.address} placeholder="123 Anywhere St" />, </span>
           <span><Placeholder value={contact.city} placeholder="Any City" /></span>
           <span>, </span>
           <span><Placeholder value={contact.country} placeholder="Country" /></span>
