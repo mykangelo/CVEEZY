@@ -25,8 +25,7 @@ class ResumeParsingService
         $this->sectionMappings = config('resumeparser.section_mappings', []);
         $this->fieldMappings = config('resumeparser.field_mappings', []);
         $this->knownSectionHeadings = config('resumeparser.known_section_headings', []);
-        
-        // Debug logging to see what's being loaded
+            // Debug logging to see what's being loaded
         Log::info('ResumeParsingService configuration loaded', [
             'sectionMappings_count' => count($this->sectionMappings),
             'fieldMappings_count' => count($this->fieldMappings),
@@ -112,9 +111,11 @@ class ResumeParsingService
 
             // Fallback to traditional text extraction if Gemini parsing fails or is unavailable
             if (empty($parsedData)) {
+                Log::info('AI parsing failed or unavailable, using basic text extraction fallback');
                 $rawText = $this->extractTextFromFile($filePath, $file->getClientOriginalExtension());
                 $rawText = $this->sanitizeUtf8($rawText);
                 $parsedData = $this->parseTextToStructuredData($rawText);
+                Log::info('Basic text extraction completed', ['sections_found' => array_keys($parsedData)]);
             }
 
                     // A single, unified post-processing and cleanup stage
@@ -1361,7 +1362,8 @@ class ResumeParsingService
         $contactSectionStart = -1;
         for ($i = 0; $i < count($lines); $i++) {
             $line = trim($lines[$i]);
-            if (preg_match('/^(?:contact|personal|header)/i', $line)) {
+            // More specific pattern to avoid false matches like "Contact Education"
+            if (preg_match('/^(?:contact|personal|header)(?:\s+information)?$/i', $line)) {
                 $contactSectionStart = $i;
                 break;
             }
@@ -1397,6 +1399,15 @@ class ResumeParsingService
         // Skip if line contains email or phone
         if (preg_match('/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/', $line)) return null;
         if (preg_match('/\+?[\d\s\(\)\.\-]{7,15}/', $line)) return null;
+        
+        // Skip if line looks like a section header (contains common section keywords)
+        $sectionKeywords = ['contact', 'education', 'experience', 'skills', 'summary', 'objective', 'profile', 'employment', 'work', 'academic', 'qualifications', 'certifications', 'awards', 'references', 'languages', 'hobbies', 'interests'];
+        $lineLower = strtolower($line);
+        foreach ($sectionKeywords as $keyword) {
+            if (strpos($lineLower, $keyword) !== false) {
+                return null;
+            }
+        }
         
         // Use configuration for name patterns
         $namePatterns = config('resumeparser.regex_patterns.name_patterns', []);
@@ -2142,22 +2153,185 @@ class ResumeParsingService
      */
     private function extractSectionByContent(string $text, array $sectionNames): ?string
     {
-        // Look for content patterns that indicate section boundaries
-        $contentPatterns = [
-            // Look for email patterns (contact section)
-            '/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/',
-            // Look for phone patterns (contact section)
-            '/\+?[\d\s\(\)\.\-]{7,15}/',
-            // Look for date patterns (experience/education sections)
-            '/\b(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{4}\b/i',
-            // Look for skill patterns
-            '/\b(?:PHP|Laravel|React|JavaScript|Python|Java|HTML|CSS|SQL|Git|Docker|AWS)\b/i',
-        ];
+        $lines = explode("\n", $text);
+        $sectionLines = [];
+        $inSection = false;
         
-        // For now, return null as this is a fallback method
-        // The main extraction should use the heading-based approach
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Determine which section this line belongs to based on content
+            $detectedSection = $this->detectSectionFromContent($line, $sectionNames);
+            
+            if ($detectedSection) {
+                $inSection = true;
+                $sectionLines[] = $line;
+            } elseif ($inSection) {
+                // Continue collecting lines until we hit another section indicator
+                if ($this->isSectionBoundary($line)) {
+                    break;
+                }
+                $sectionLines[] = $line;
+            }
+        }
+        
+        // If no content-based extraction worked, try aggressive pattern matching
+        if (empty($sectionLines)) {
+            return $this->extractSectionByAggressivePatterns($text, $sectionNames);
+        }
+        
+        return !empty($sectionLines) ? implode("\n", $sectionLines) : null;
+    }
+    
+    /**
+     * Aggressive section extraction when standard methods fail
+     */
+    private function extractSectionByAggressivePatterns(string $text, array $sectionNames): ?string
+    {
+        $lines = explode("\n", $text);
+        $sectionLines = [];
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Look for any content that might belong to the target section
+            foreach ($sectionNames as $sectionName) {
+                $sectionLower = strtolower($sectionName);
+                
+                switch ($sectionLower) {
+                    case 'contact':
+                    case 'personal':
+                        // Look for contact-related content anywhere
+                        if ($this->isContactInfo($line) || $this->looksLikeName($line)) {
+                            $sectionLines[] = $line;
+                        }
+                        break;
+                        
+                    case 'experience':
+                    case 'work experience':
+                    case 'employment':
+                        // Look for job-related content anywhere
+                        if ($this->isJobOrCompanyTerm($line) || $this->containsDatePatterns($line)) {
+                            $sectionLines[] = $line;
+                        }
+                        break;
+                        
+                    case 'education':
+                    case 'academic':
+                        // Look for education-related content anywhere
+                        if ($this->isEducationTerm($line) || $this->containsDatePatterns($line)) {
+                            $sectionLines[] = $line;
+                        }
+                        break;
+                        
+                    case 'skills':
+                    case 'technical skills':
+                        // Look for skill-related content anywhere
+                        if ($this->isSkillContent($line)) {
+                            $sectionLines[] = $line;
+                        }
+                        break;
+                        
+                    case 'summary':
+                    case 'profile':
+                    case 'objective':
+                        // Look for summary-like content anywhere
+                        if ($this->isSummaryContent($line)) {
+                            $sectionLines[] = $line;
+                        }
+                        break;
+                }
+            }
+        }
+        
+        return !empty($sectionLines) ? implode("\n", $sectionLines) : null;
+    }
+    
+
+    
+    /**
+     * Detect which section a line belongs to based on content patterns
+     */
+    private function detectSectionFromContent(string $line, array $sectionNames): ?string
+    {
+        $lineLower = strtolower($line);
+        
+        foreach ($sectionNames as $sectionName) {
+            $sectionLower = strtolower($sectionName);
+            
+            switch ($sectionLower) {
+                case 'contact':
+                case 'personal':
+                case 'personal information':
+                    if ($this->isContactInfo($line)) {
+                        return $sectionName;
+                    }
+                    break;
+                    
+                case 'experience':
+                case 'work experience':
+                case 'employment':
+                    if ($this->isJobOrCompanyTerm($line)) {
+                        return $sectionName;
+                    }
+                    break;
+                    
+                case 'education':
+                case 'academic':
+                case 'qualifications':
+                    if ($this->isEducationTerm($line)) {
+                        return $sectionName;
+                    }
+                    break;
+                    
+                case 'skills':
+                case 'technical skills':
+                case 'competencies':
+                    if ($this->isSkillContent($line)) {
+                        return $sectionName;
+                    }
+                    break;
+                    
+                case 'summary':
+                case 'profile':
+                case 'objective':
+                    if ($this->isSummaryContent($line)) {
+                        return $sectionName;
+                    }
+                    break;
+            }
+        }
+        
         return null;
     }
+    
+    /**
+     * Check if a line indicates a section boundary
+     */
+    private function isSectionBoundary(string $line): bool
+    {
+        $lineLower = strtolower($line);
+        
+        // Look for common section boundary indicators
+        $boundaryPatterns = [
+            '/^[A-Z][A-Z\s&\/\-]{2,30}$/', // ALL CAPS sections
+            '/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/', // Title Case sections
+            '/^\d+[\.\)]\s+[A-Z][a-z\s]+$/', // Numbered sections
+            '/^[A-Z][a-z\s]+:$/', // Sections with colons
+        ];
+        
+        foreach ($boundaryPatterns as $pattern) {
+            if (preg_match($pattern, $line)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+
     
     /**
      * Extract experience section by looking for job-related content patterns
