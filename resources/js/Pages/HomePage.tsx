@@ -125,34 +125,34 @@ const HomePage: React.FC<HomePageProps> = ({
             <Head title="CVeezy | Build Your Job-Winning Resume" />
 
             {/* Header */}
-            <header className="w-full bg-white flex items-center justify-between h-20 px-6 shadow-sm">
+            <header className="w-full bg-white flex items-center justify-between h-16 sm:h-20 lg:h-24 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 shadow-sm">
                 <div className="flex items-center">
                     <Link href={route('home')} aria-label="Go to homepage" className="inline-flex items-center">
                         <Logo
                             size="xxl"
                             showText={false}
-                            className="text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg  focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
+                            className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-800 font-sans hover:scale-105 hover:drop-shadow-lg focus:outline-none focus:ring-2 focus:ring-[#354eab] rounded transition"
                         />
                     </Link>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
                     <Link
                         href="/contact"
-                        className="border border-[#354eab] text-[#354eab] font-semibold px-5 py-2 rounded-lg hover:bg-[#e3f2fd] transition"
+                        className="border border-[#354eab] text-[#354eab] font-semibold px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-3 rounded-lg hover:bg-[#e3f2fd] transition text-sm sm:text-base"
                     >
                         Contact us
                     </Link>
                     {user ? (
                         <Link
                             href="/dashboard"
-                            className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
+                            className="bg-[#354eab] text-white font-semibold px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-3 rounded-lg hover:bg-[#2d3f8f] transition text-sm sm:text-base"
                         >
                             Dashboard
                         </Link>
                     ) : (
                         <Link
                             href="/login"
-                            className="bg-[#354eab] text-white font-semibold px-5 py-2 rounded-lg hover:bg-[#2d3f8f] transition"
+                            className="bg-[#354eab] text-white font-semibold px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-3 rounded-lg hover:bg-[#2d3f8f] transition text-sm sm:text-base"
                         >
                             Login
                         </Link>
@@ -161,33 +161,33 @@ const HomePage: React.FC<HomePageProps> = ({
             </header>
 
             {/* Hero Section */}
-            <section className="w-full flex items-center justify-center px-4 py-16 md:py-24 bg-[#eaf6fe]">
-                <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-7xl mx-auto">
+            <section className="w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-[#eaf6fe]">
+                <div className="flex flex-col md:flex-row items-center justify-center w-full max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl mx-auto">
                     {/* Left Side */}
-                    <div className="flex-1 max-w-2xl">
-                        <p className="text-[#354eab] font-semibold mb-2 flex items-center text-lg">
-                            <span className="inline-block w-3 h-3 bg-[#354eab] rounded-full mr-2 align-middle live-indicator"></span>
+                    <div className="flex-1 max-w-xl sm:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
+                        <p className="text-[#354eab] font-semibold mb-2 flex items-center text-sm sm:text-base lg:text-lg xl:text-xl">
+                            <span className="inline-block w-2 h-2 sm:w-3 sm:h-3 bg-[#354eab] rounded-full mr-2 align-middle live-indicator"></span>
                             <span className="font-bold">50,435 Resumes
                             Created Today</span>
 
                         </p>
-                        <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight text-gray-800">
+                        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-bold mb-4 sm:mb-6 lg:mb-8 leading-tight text-gray-800">
                             Create your{" "}
                             <span className="text-[#354eab]">
                                 job-winning resume
                             </span>{" "}
                             in minutes
                         </h1>
-                        <p className="text-gray-600 text-xl mb-8">
+                        <p className="text-gray-600 text-base sm:text-lg lg:text-xl xl:text-2xl mb-6 sm:mb-8 lg:mb-10">
                             The first step to a better job? A better resume. Get
                             yours in just a few clicks.
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8 lg:mb-10">
                             {user && hasPendingPayments ? (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 lg:p-6 mb-3 sm:mb-4">
                                     <div className="flex items-center gap-2 mb-2">
                                         <svg
-                                            className="w-5 h-5 text-yellow-600"
+                                            className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600"
                                             fill="none"
                                             stroke="currentColor"
                                             viewBox="0 0 24 24"
@@ -199,11 +199,11 @@ const HomePage: React.FC<HomePageProps> = ({
                                                 d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                             />
                                         </svg>
-                                        <span className="text-yellow-800 font-semibold">
+                                        <span className="text-yellow-800 font-semibold text-sm sm:text-base">
                                             Payment Under Review
                                         </span>
                                     </div>
-                                    <p className="text-yellow-700 text-sm">
+                                    <p className="text-yellow-700 text-xs sm:text-sm lg:text-base">
                                         You have resumes with pending payment
                                         reviews. Please wait for admin approval
                                         before creating new resumes.
@@ -212,43 +212,43 @@ const HomePage: React.FC<HomePageProps> = ({
                             ) : (
                                 <>
                                     <Link href="/choose-template">
-                                        <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-3 px-8 rounded-lg shadow transition text-lg">
+                                        <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-2 sm:py-3 lg:py-4 px-6 sm:px-8 lg:px-10 rounded-lg shadow transition text-sm sm:text-base lg:text-lg">
                                             Create New Resume
                                         </button>
                                     </Link>
                                     <Link href="/uploader">
-                                        <button className="bg-white border border-[#354eab] text-[#354eab] font-semibold py-3 px-8 rounded-lg shadow hover:bg-[#e3f2fd] transition text-lg">
+                                        <button className="bg-white border border-[#354eab] text-[#354eab] font-semibold py-2 sm:py-3 lg:py-4 px-6 sm:px-8 lg:px-10 rounded-lg shadow hover:bg-[#e3f2fd] transition text-sm sm:text-base lg:text-lg">
                                             Improve My Resume
                                         </button>
                                     </Link>
                                 </>
                             )}
                         </div>
-                        <div className="flex gap-12 mt-2 items-center">
+                        <div className="flex gap-6 sm:gap-8 lg:gap-12 mt-2 items-center">
                             <div className="flex flex-col items-center">
-                                <span className="text-[#43d19e] text-3xl font-bold">
+                                <span className="text-[#43d19e] text-2xl sm:text-3xl lg:text-4xl font-bold">
                                     48%
                                 </span>
-                                <span className="block text-[#43d19e] text-lg">
+                                <span className="block text-[#43d19e] text-sm sm:text-base lg:text-lg text-center">
                                     more likely to get hired
                                 </span>
                             </div>
-                            <div className="border-l border-[#dbeafe] h-8 mx-4"></div>
+                            <div className="border-l border-[#dbeafe] h-6 sm:h-8 lg:h-10 mx-2 sm:mx-4"></div>
                             <div className="flex flex-col items-center">
-                                <span className="text-[#ffc107] text-3xl font-bold">
+                                <span className="text-[#ffc107] text-2xl sm:text-3xl lg:text-4xl font-bold">
                                     12%
                                 </span>
-                                <span className="block text-[#ffc107] text-lg">
+                                <span className="block text-[#ffc107] text-sm sm:text-base lg:text-lg text-center">
                                     better pay with your next job
                                 </span>
                             </div>
                         </div>
                     </div>
                     {/* Right Side */}
-                    <div className="flex-1 flex justify-center items-center mt-10 md:mt-0">
-                        <div className="relative w-[400px] h-[480px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center group">
+                    <div className="flex-1 flex justify-center items-center mt-8 sm:mt-10 md:mt-0">
+                        <div className="relative w-[280px] h-[340px] sm:w-[320px] sm:h-[380px] md:w-[360px] md:h-[420px] lg:w-[400px] lg:h-[480px] xl:w-[450px] xl:h-[540px] 2xl:w-[500px] 2xl:h-[600px] bg-white rounded-2xl shadow-xl overflow-visible flex items-center justify-center group">
                             {/* Resume Template Content */}
-                            <div className="w-[340px] h-[440px] bg-white rounded-xl shadow-lg p-6 relative">
+                            <div className="w-[240px] h-[300px] sm:w-[280px] sm:h-[340px] md:w-[320px] md:h-[380px] lg:w-[340px] lg:h-[440px] xl:w-[380px] xl:h-[480px] 2xl:w-[420px] 2xl:h-[540px] bg-white rounded-xl shadow-lg p-3 sm:p-4 md:p-5 lg:p-6 relative">
                                 {/* Header Section */}
                                 <div className="flex items-start gap-4 mb-6">
                                     {/* Profile Photo */}
@@ -400,39 +400,39 @@ const HomePage: React.FC<HomePageProps> = ({
             </section>
 
             {/* Features Section */}
-            <section className="w-full bg-[#f4faff] py-20 px-6 md:px-12 font-sans">
-                <div className="max-w-7xl mx-auto">
+            <section className="w-full bg-[#f4faff] py-12 sm:py-16 lg:py-20 xl:py-24 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 font-sans">
+                <div className="max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl mx-auto">
                     <div
-                        className="relative bg-white rounded-[28px] p-6 sm:p-8 md:p-12 ring-1 ring-[#eef5ff] shadow-[0_18px_50px_rgba(31,41,55,0.08)] text-center"
+                        className="relative bg-white rounded-[20px] sm:rounded-[24px] lg:rounded-[28px] p-4 sm:p-6 lg:p-8 xl:p-12 ring-1 ring-[#eef5ff] shadow-[0_18px_50px_rgba(31,41,55,0.08)] text-center"
                     >
-                        <h2 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight">
+                        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-gray-800 mb-3 sm:mb-4 lg:mb-6 tracking-tight">
                         Why use <span className="text-[#354eab]">CVeezy's</span>{" "}
                         Resume Builder?
                     </h2>
-                        <div className="mx-auto mb-10 h-1.5 w-24 rounded-full bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8]"></div>
+                        <div className="mx-auto mb-6 sm:mb-8 lg:mb-10 h-1 sm:h-1.5 w-16 sm:w-20 lg:w-24 rounded-full bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8]"></div>
 
                     {/* Features Grid */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 xl:gap-10">
                         {features.map((feature, index) => (
                             <div
                                 key={index}
-                                className="group relative rounded-[26px] p-8 bg-[#f7f9fc] ring-1 ring-[#e9f1ff] transition-all duration-300 hover:-translate-y-0.5"
+                                className="group relative rounded-[20px] sm:rounded-[24px] lg:rounded-[26px] p-4 sm:p-6 lg:p-8 bg-[#f7f9fc] ring-1 ring-[#e9f1ff] transition-all duration-300 hover:-translate-y-0.5"
                                 style={{
                                     boxShadow:
                                         'inset 0 1px 0 rgba(255,255,255,0.6), 0 24px 50px rgba(31,41,55,0.12), 0 2px 8px rgba(31,41,55,0.06)'
                                 }}
                             >
-                                <div className="mx-auto mb-6 grid place-items-center h-16 w-16 rounded-2xl bg-[#f2f6ff] ring-1 ring-[#e3f2fd] transition-all duration-300 group-hover:scale-105 group-hover:ring-[#bcd6f6]">
+                                <div className="mx-auto mb-4 sm:mb-6 grid place-items-center h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 rounded-2xl bg-[#f2f6ff] ring-1 ring-[#e3f2fd] transition-all duration-300 group-hover:scale-105 group-hover:ring-[#bcd6f6]">
                                 <img
                                     src={feature.icon}
                                     alt={`${feature.title} icon`}
-                                        className="w-10 h-10 opacity-90"
+                                        className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 opacity-90"
                                 />
                                 </div>
-                                <h3 className="text-xl md:text-2xl font-extrabold text-gray-800 mb-3">
+                                <h3 className="text-lg sm:text-xl lg:text-2xl font-extrabold text-gray-800 mb-2 sm:mb-3">
                                     {feature.title}
                                 </h3>
-                                <p className="text-gray-600 text-sm md:text-base leading-relaxed max-w-[36ch] mx-auto">
+                                <p className="text-gray-600 text-xs sm:text-sm lg:text-base leading-relaxed max-w-[36ch] mx-auto">
                                     {feature.description}
                                 </p>
                             </div>
@@ -442,9 +442,9 @@ const HomePage: React.FC<HomePageProps> = ({
                     </div>
 
                     {/* CTA Button between sections */}
-                    <div className="mt-10 mb-10 flex justify-center">
+                    <div className="mt-6 sm:mt-8 lg:mt-10 mb-6 sm:mb-8 lg:mb-10 flex justify-center">
                         <Link href="/choose-template">
-                            <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-4 px-10 text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
+                            <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-3 sm:py-4 lg:py-5 px-8 sm:px-10 lg:px-12 text-sm sm:text-base lg:text-lg rounded-xl shadow-lg transition-transform duration-300 hover:scale-105 active:scale-95">
                                 Create My Resume
                             </button>
                         </Link>
@@ -456,8 +456,8 @@ const HomePage: React.FC<HomePageProps> = ({
             </section>
 
             {/* Templates Section - Enhanced with Smooth Animation */}
-            <section className="w-full bg-[#f4faff] py-20 mb-10 font-sans overflow-hidden">
-                <div className="relative py-12 px-4 text-center font-sans h-[700px] bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#f4faff]">
+            <section className="w-full bg-[#f4faff] py-12 sm:py-16 lg:py-20 xl:py-24 mb-6 sm:mb-8 lg:mb-10 font-sans overflow-hidden">
+                <div className="relative py-8 sm:py-10 lg:py-12 xl:py-16 px-4 sm:px-6 lg:px-8 text-center font-sans h-[500px] sm:h-[600px] lg:h-[700px] xl:h-[800px] bg-gradient-to-b from-[#0f172a] via-[#1e293b] to-[#f4faff]">
                     <div
                         className="pointer-events-none absolute inset-0"
                         style={{
@@ -465,18 +465,18 @@ const HomePage: React.FC<HomePageProps> = ({
                                 'radial-gradient(1100px 420px at 50% -200px, rgba(255,255,255,0.18), rgba(255,255,255,0) 60%)'
                         }}
                     />
-                    <h1 className="text-white text-4xl font-bold mb-4">
+                    <h1 className="text-white text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 lg:mb-6">
                         Choose your{" "}
                         <span className="text-[#354eab]">RESUME TEMPLATES</span>,
                         AI will do the rest
                     </h1>
-                    <p className="text-white text-sm max-w-2xl mx-auto mb-6">
+                    <p className="text-white text-xs sm:text-sm lg:text-base max-w-xl sm:max-w-2xl lg:max-w-3xl mx-auto mb-4 sm:mb-6 lg:mb-8 px-4">
                         With CVeezy's AI resume generator, you'll get a
                         professional, typo-free, and ATS-friendly resume ready
                         in no time. Explore 40+ modern templates.
                     </p>
                     <Link href="/choose-template">
-                        <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-2 px-6 rounded-full shadow-md transition-colors duration-300 mb-8">
+                        <button className="bg-[#354eab] hover:bg-[#2d3f8f] text-white font-semibold py-2 sm:py-3 px-4 sm:px-6 lg:px-8 rounded-full shadow-md transition-colors duration-300 mb-6 sm:mb-8 text-sm sm:text-base">
                             View All Templates
                         </button>
                     </Link>

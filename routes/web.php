@@ -229,26 +229,24 @@ Route::get('/ask-ai', [AIController::class, 'ask']);
 // AI summary generation - now accessible to all authenticated users
 Route::middleware(['auth'])->group(function () {
     Route::post('/generate-summary', [AIController::class, 'generateSummary']);
-    Route::post('/reviseEducationDescription', [AIController::class, 'reviseEducationDescription']);
-    Route::post('/revise-experience-text', [AIController::class, 'reviseExperienceDescription']);
-    Route::post('/force-regenerate-experience', [AIController::class, 'forceRegenerateExperience']);
-    Route::post('/improve-description', [AIController::class, 'improveDescription']);
 });
 
-//Routing for AI assistance in education page
+// All AI endpoints - CSRF exempt for frontend integration
 Route::withoutMiddleware([
     \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
 ])->group(function () {
+    // Education endpoints
     Route::post('/reviseEducationDescription', [AIController::class, 'reviseEducationDescription']);
-});
-
-//Routing for AI assistance in experience page
-Route::withoutMiddleware([
-    \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-])->group(function () {
+    
+    // Experience endpoints
     Route::post('/revise-experience-text', [AIController::class, 'reviseExperienceDescription']);
     Route::post('/force-regenerate-experience', [AIController::class, 'forceRegenerateExperience']);
     Route::post('/improve-description', [AIController::class, 'improveDescription']);
+    
+    // New suggestion endpoints
+    Route::post('/generate-experience-suggestions', [AIController::class, 'generateExperienceSuggestions']);
+    Route::post('/generate-education-suggestions', [AIController::class, 'generateEducationSuggestions']);
+    Route::post('/generate-summary-suggestions', [AIController::class, 'generateSummarySuggestions']);
 });
 
 require __DIR__ . '/auth.php';

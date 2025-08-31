@@ -109,36 +109,36 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
       <div className="min-h-screen bg-gradient-to-br from-[#f0f4ff] via-[#f8faff] to-[#e0eaff] font-sans relative overflow-hidden">
         {/* Background decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#354eab]/10 to-[#4a5fc7]/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-[#5a6fd7]/10 to-[#354eab]/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
+          <div className="absolute -top-20 sm:-top-40 -right-20 sm:-right-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-gradient-to-br from-[#354eab]/10 to-[#4a5fc7]/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-20 sm:-bottom-40 -left-20 sm:-left-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-gradient-to-tr from-[#5a6fd7]/10 to-[#354eab]/10 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-72 sm:h-72 lg:w-96 lg:h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
         </div>
         <Head title="CVeezy | Templates" />
 
 
 
         {/* Main Content - Full Screen Gallery */}
-        <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 w-full overflow-hidden">
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-6 lg:py-8 xl:py-10 w-full overflow-hidden">
           {/* Clean Blue Button Style */}
           <Link
             href={isImported ? "/uploader" : "/dashboard"}
-            className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 py-3 rounded-full transition-all duration-300 mb-8 text-sm font-bold shadow-md hover:shadow-lg group"
+            className="inline-flex items-center gap-2 sm:gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-full transition-all duration-300 mb-6 sm:mb-8 lg:mb-10 text-xs sm:text-sm lg:text-base font-bold shadow-md hover:shadow-lg group"
           >
-            <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
             {isImported ? 'Back to Upload' : 'Back to Dashboard'}
           </Link>
 
           {/* Enhanced Header Section */}
-          <div className="text-center mb-12 sm:mb-16 lg:mb-20 relative z-10">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16 xl:mb-20 relative z-10">
             {hasPendingPayments && (
-              <div className="mb-8 sm:mb-10 p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl sm:rounded-3xl max-w-lg mx-auto shadow-xl shadow-yellow-200/20 mx-4">
+              <div className="mb-6 sm:mb-8 lg:mb-10 p-3 sm:p-4 lg:p-6 xl:p-8 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-xl sm:rounded-2xl lg:rounded-3xl max-w-sm sm:max-w-lg mx-auto shadow-xl shadow-yellow-200/20 mx-4">
                 <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
-                    <span className="text-white text-sm sm:text-lg">⚠️</span>
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                    <span className="text-white text-xs sm:text-sm lg:text-lg">⚠️</span>
                   </div>
-                  <span className="text-yellow-800 font-bold text-base sm:text-lg">Payment Pending</span>
+                  <span className="text-yellow-800 font-bold text-sm sm:text-base lg:text-lg">Payment Pending</span>
                 </div>
                 <p className="text-yellow-700 text-xs sm:text-sm leading-relaxed text-center">
                   {pendingResumesCount} resume(s) awaiting payment approval. Please wait for confirmation.
@@ -146,14 +146,14 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
               </div>
             )}
             
-            <div className="mb-10">
+            <div className="mb-6 sm:mb-8 lg:mb-10">
               <div className="relative inline-block">
-                <h1 className="text-6xl font-bold text-[#354eab] mb-8 drop-shadow-sm">
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-[#354eab] mb-4 sm:mb-6 lg:mb-8 drop-shadow-sm">
                   {isImported ? 'Choose Template' : 'Resume Templates'}
                 </h1>
               </div>
               
-              <p className="text-gray-700 text-xl max-w-4xl mx-auto leading-relaxed font-medium">
+              <p className="text-gray-700 text-sm sm:text-base lg:text-xl xl:text-2xl max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto leading-relaxed font-medium px-4">
                 {isImported
                   ? 'Select a template to style your imported resume and make it stand out from the crowd.'
                   : 'Professional templates designed for every industry and career level. Create your perfect resume in minutes with our AI-powered builder.'
@@ -187,13 +187,13 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                 >
                   {/* Individual Card Design */}
                   <div 
-                    className="relative w-full max-w-lg sm:max-w-xl lg:max-w-2xl aspect-[7/9] bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out hover:border hover:border-[#354eab]"
+                    className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl aspect-[7/9] bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out hover:border hover:border-[#354eab]"
                     onMouseEnter={() => setHoveredTemplate(template.id)}
                     onMouseLeave={() => setHoveredTemplate(null)}
                   >
                                          {/* Top Card Section - Template Image */}
                      <div 
-                       className="bg-white rounded-t-2xl overflow-hidden h-[90%]"
+                       className="bg-white rounded-t-xl sm:rounded-t-2xl overflow-hidden h-[90%]"
                      >
                        <div className="w-full h-full flex items-center justify-center p-1">
                          <img

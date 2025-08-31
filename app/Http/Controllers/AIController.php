@@ -9,6 +9,57 @@ use Illuminate\Support\Facades\Auth;
 
 class AIController extends Controller
 {
+    /**
+     * Get regeneration parameters based on content type and user preferences
+     */
+    private function getRegenerationParameters($contentType = 'summary', $preset = null, $userParams = [])
+    {
+        $config = config('ai_enhancement.regeneration_parameters');
+        
+        // Get default preset for content type
+        $defaultPreset = $config['content_type_adjustments'][$contentType]['default_preset'] ?? 'balanced';
+        $presetToUse = $preset ?: $defaultPreset;
+        
+        // Get base parameters from preset
+        $baseParams = $config['presets'][$presetToUse] ?? $config['presets']['balanced'];
+        
+        // Apply content type adjustments
+        $contentAdjustments = $config['content_type_adjustments'][$contentType] ?? [];
+        $adjustedParams = [
+            'temperature' => $baseParams['temperature'] + ($contentAdjustments['temperature_boost'] ?? 0),
+            'topP' => $baseParams['topP'],
+            'topK' => $baseParams['topK'],
+            'max_tokens' => $baseParams['max_tokens'] + ($contentAdjustments['max_tokens_boost'] ?? 0)
+        ];
+        
+        // Apply user parameter overrides if allowed
+        if (config('ai_enhancement.user_preferences.allow_parameter_override', true)) {
+            foreach ($userParams as $param => $value) {
+                if (isset($adjustedParams[$param])) {
+                    $adjustedParams[$param] = $value;
+                }
+            }
+        }
+        
+        // Apply constraints
+        $constraints = config('ai_enhancement.user_preferences.parameter_constraints', []);
+        foreach ($constraints as $param => $constraint) {
+            if (isset($adjustedParams[$param])) {
+                $adjustedParams[$param] = max($constraint['min'], min($constraint['max'], $adjustedParams[$param]));
+            }
+        }
+        
+        \Log::info('Regeneration parameters calculated', [
+            'content_type' => $contentType,
+            'preset' => $presetToUse,
+            'base_params' => $baseParams,
+            'adjusted_params' => $adjustedParams,
+            'user_params' => $userParams
+        ]);
+        
+        return $adjustedParams;
+    }
+
     public function ask(GeminiService $gemini)
     {
         $prompt = "Can you give the full 'Lorem Ipsum?'";
@@ -83,17 +134,12 @@ class AIController extends Controller
                 $additionalRandom = 0;
             }
             
-            $prompt = "Create a focused, professional education description (25-40 words) that {$randomApproach}. 
-
-CRITICAL REQUIREMENTS:
-- Write 2-3 concise, focused sentences
-- Focus ONLY on the specific degree, school, and relevant achievements
-- Include ONLY technical skills and tools that are directly relevant
-- Use professional language that matches the original context
-- Keep it concise and to the point
-- Do NOT add generic achievements or skills not mentioned in the original
-
-This should be a focused description that enhances the original text without being overly verbose. Seed: {$randomSeed}. Return ONLY JSON: {\\\"revised_text\\\": string}.\\n\\nTEXT:\\n" . $request->text;
+            $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('education', [
+                'count' => 1,
+                'approach_requirements' => "1. First variation that {$randomApproach}",
+                'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote($variant),
+                'text' => $request->text
+            ]);
             $result = $gemini->generateEnhancedContent($prompt, [
                 'response_mime_type' => 'application/json',
                 'maxOutputTokens' => 256, // Reduced for more focused output
@@ -117,6 +163,86 @@ This should be a focused description that enhances the original text without bei
 
         return response()->json([
             'revised_text' => $revised
+        ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
+    }
+
+    /**
+     * Generate multiple AI suggestions for education descriptions
+     */
+    public function generateEducationSuggestions(Request $request, GeminiService $gemini)
+    {
+        $request->validate([
+            'text' => 'required|string',
+            'degree' => 'required|string|min:2',
+            'school' => 'required|string|min:2'
+        ]);
+
+        // Check if required fields have meaningful content
+        if (empty(trim($request->degree)) || empty(trim($request->school))) {
+            return response()->json([
+                'error' => 'Missing required fields',
+                'message' => 'Degree and School are required for AI generation. Please fill in these fields first.',
+                'required_fields' => ['degree', 'school']
+            ], 400);
+        }
+
+        // Check if the text is too short
+        $minLength = \App\Services\AIConfigService::config('validation.min_text_length.education');
+        if (strlen(trim($request->text)) < $minLength) {
+            return response()->json([
+                'error' => 'Insufficient content',
+                'message' => "Please provide more details about your education before using AI generation (minimum {$minLength} characters).",
+                'min_length' => $minLength
+            ], 400);
+        }
+
+        try {
+            $approaches = \App\Services\AIConfigService::getContentVariations('education');
+            $suggestions = [];
+            
+            foreach ($approaches as $approach) {
+                $randomSeed = \App\Services\AIConfigService::generateRandomSeed();
+                
+                $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('education', [
+                    'count' => 3,
+                    'approach_requirements' => \App\Services\AIConfigService::generateEducationApproachRequirements(3),
+                    'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(false),
+                    'text' => $request->text
+                ]);
+                
+                $result = $gemini->generateEnhancedContent($prompt, array_merge([
+                    'response_mime_type' => 'application/json',
+                ], \App\Services\AIConfigService::getModelParameters('suggestions')));
+                
+                $suggestion = $this->extractRevisedText($result, $request->text);
+                
+                // Quality check and fallback
+                if ($this->isPoorQualityContent($suggestion)) {
+                    $suggestion = $this->generateLocalEducationVariation($request->text, $request->degree, $request->school);
+                }
+                
+                $suggestions[] = $suggestion;
+            }
+            
+            // Ensure we have exactly 3 unique suggestions
+            $suggestions = array_unique($suggestions);
+            while (count($suggestions) < 3) {
+                $suggestions[] = $this->generateLocalEducationVariation($request->text, $request->degree, $request->school);
+            }
+            $suggestions = array_slice($suggestions, 0, 3);
+            
+        } catch (\Throwable $e) {
+            \Log::error('Error generating education suggestions: ' . $e->getMessage());
+            // Fallback to local variations
+            $suggestions = [
+                $this->generateLocalEducationVariation($request->text, $request->degree, $request->school),
+                $this->generateLocalEducationVariation($request->text, $request->degree, $request->school),
+                $this->generateLocalEducationVariation($request->text, $request->degree, $request->school)
+            ];
+        }
+
+        return response()->json([
+            'suggestions' => $suggestions
         ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
     }
 
@@ -184,19 +310,12 @@ This should be a focused description that enhances the original text without bei
                 $additionalRandom = 0;
             }
             
-            $prompt = "Create a concise, professional experience description (25-35 words) that {$randomFocus}. 
-
-CRITICAL REQUIREMENTS:
-- Write 2-3 short, focused sentences
-- Focus ONLY on the specific role and key responsibilities
-- Use simple, clear language that is easy to read
-- Keep it concise and to the point
-- Do NOT add generic achievements or skills not mentioned in the original
-- Do NOT invent specific metrics or numbers
-- Do NOT use overly complex or powerful language
-- Make it readable and contextually appropriate
-
-This should be a simple, clear description that enhances the original text without being verbose or overly complex. Seed: {$randomSeed}. Return ONLY JSON: {\\\"revised_text\\\": string}.\\n\\nTEXT:\\n" . $request->text;
+            $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('experience', [
+                'count' => 1,
+                'focus_requirements' => "1. First variation that {$randomFocus}",
+                'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote($variant),
+                'text' => $request->text
+            ]);
             $result = $gemini->generateEnhancedContent($prompt, [
                 'response_mime_type' => 'application/json',
                 'maxOutputTokens' => 256, // Further reduced for concise output
@@ -255,21 +374,12 @@ This should be a simple, clear description that enhances the original text witho
             $randomFocus = $focuses[array_rand($focuses)];
             $forceSeed = 'FORCE-REGEN-' . mt_rand(10000, 99999) . '-' . time();
             
-            $prompt = "Create a COMPLETELY DIFFERENT, concise experience description (25-35 words) that {$randomFocus}. 
-
-CRITICAL REQUIREMENTS:
-- Write a COMPLETELY DIFFERENT approach from the original text
-- Write 2-3 short, focused sentences
-- Focus ONLY on the specific role and key responsibilities
-- Use simple, clear language that is easy to read
-- Keep it concise and to the point
-- Do NOT add generic achievements or skills not mentioned in the original
-- Do NOT invent specific metrics or numbers
-- Do NOT use overly complex or powerful language
-- Make it readable and contextually appropriate
-- This MUST be completely different from any previous generation
-
-Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": string}.\\n\\nTEXT:\\n" . $request->text;
+            $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('experience', [
+                'count' => 1,
+                'focus_requirements' => "1. First variation that {$randomFocus}",
+                'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(true),
+                'text' => $request->text
+            ]);
             
             $result = $gemini->generateEnhancedContent($prompt, [
                 'response_mime_type' => 'application/json',
@@ -290,6 +400,86 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
 
         return response()->json([
             'revised_text' => $revised
+        ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
+    }
+
+    /**
+     * Generate multiple AI suggestions for experience descriptions
+     */
+    public function generateExperienceSuggestions(Request $request, GeminiService $gemini)
+    {
+        $request->validate([
+            'text' => 'required|string',
+            'jobTitle' => 'required|string|min:2',
+            'company' => 'required|string|min:2'
+        ]);
+
+        // Check if required fields have meaningful content
+        if (empty(trim($request->jobTitle)) || empty(trim($request->company))) {
+            return response()->json([
+                'error' => 'Missing required fields',
+                'message' => 'Job Title and Company are required for AI generation. Please fill in these fields first.',
+                'required_fields' => ['jobTitle', 'company']
+            ], 400);
+        }
+
+        // Check if the text is too short
+        $minLength = \App\Services\AIConfigService::config('validation.min_text_length.experience');
+        if (strlen(trim($request->text)) < $minLength) {
+            return response()->json([
+                'error' => 'Insufficient content',
+                'message' => "Please provide more details about your experience before using AI generation (minimum {$minLength} characters).",
+                'min_length' => $minLength
+            ], 400);
+        }
+
+        try {
+            $focuses = \App\Services\AIConfigService::getContentVariations('experience');
+            $suggestions = [];
+            
+            foreach ($focuses as $focus) {
+                $randomSeed = \App\Services\AIConfigService::generateRandomSeed();
+                
+                $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('experience', [
+                    'count' => 3,
+                    'focus_requirements' => \App\Services\AIConfigService::generateExperienceFocusRequirements(3),
+                    'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(false),
+                    'text' => $request->text
+                ]);
+                
+                $result = $gemini->generateEnhancedContent($prompt, array_merge([
+                    'response_mime_type' => 'application/json',
+                ], \App\Services\AIConfigService::getModelParameters('suggestions')));
+                
+                $suggestion = $this->extractRevisedText($result, $request->text);
+                
+                // Quality check and fallback
+                if ($this->isPoorQualityContent($suggestion)) {
+                    $suggestion = $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company);
+                }
+                
+                $suggestions[] = $suggestion;
+            }
+            
+            // Ensure we have exactly 3 unique suggestions
+            $suggestions = array_unique($suggestions);
+            while (count($suggestions) < 3) {
+                $suggestions[] = $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company);
+            }
+            $suggestions = array_slice($suggestions, 0, 3);
+            
+        } catch (\Throwable $e) {
+            \Log::error('Error generating experience suggestions: ' . $e->getMessage());
+            // Fallback to local variations
+            $suggestions = [
+                $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company),
+                $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company),
+                $this->generateLocalExperienceVariation($request->text, $request->jobTitle, $request->company)
+            ];
+        }
+
+        return response()->json([
+            'suggestions' => $suggestions
         ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
     }
 
@@ -444,24 +634,15 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
                         
                         $forceStructure = $forceStructures[array_rand($forceStructures)];
                         
-                        $prompt = "{$openingLine}\n" .
-                            "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
-                            "FORCE REGENERATION REQUIREMENTS:\n" .
-                            "- This MUST be COMPLETELY DIFFERENT from any previous summary\n" .
-                            "- Use the EXACT structure: {$forceStructure}\n" .
-                            "- Start with a COMPLETELY DIFFERENT opening sentence\n" .
-                            "- Use DIFFERENT examples and achievements\n" .
-                            "- Employ ALTERNATIVE vocabulary and phrasing\n" .
-                            "- Lead with your most impressive achievement or unique value proposition\n" .
-                            "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
-                            "- Highlight technical expertise, leadership, and industry knowledge\n" .
-                            "- Demonstrate problem-solving abilities and strategic thinking\n" .
-                            "- Use powerful, industry-specific language that commands attention\n" .
-                            "- Avoid generic phrases and placeholders like [field]\n" .
-                            "- Make each sentence distinct and memorable\n\n" .
-                            "IMPORTANT: This MUST be completely different from any previous summary. Use the comprehensive context below to create a unique summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
-                            "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
-                            $context;
+                        $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('summary', [
+                            'count' => 1,
+                            'style_requirements' => "1. First summary that is {$style}",
+                            'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(true),
+                            'min_words' => config('resume.ai_enhancement.summary_length.min_words', 60),
+                            'max_words' => config('resume.ai_enhancement.summary_length.max_words', 90),
+                            'seed' => $seed,
+                            'context' => $context
+                        ]);
                     } else {
                         // Regular regeneration
                         $regenerationApproaches = [
@@ -485,46 +666,26 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
                         
                         $contentFocus = $contentFocuses[array_rand($contentFocuses)];
                         
-                        $prompt = "{$openingLine}\n" .
-                            "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
-                            "CRITICAL REQUIREMENTS FOR REGENERATION:\n" .
-                            "- Use a COMPLETELY DIFFERENT approach and structure from any previous summary\n" .
-                            "- Start with a different opening sentence and perspective\n" .
-                            "- Use different examples and achievements\n" .
-                            "- Employ alternative vocabulary and phrasing\n" .
-                            "- Lead with your most impressive achievement or unique value proposition\n" .
-                            "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
-                            "- Highlight technical expertise, leadership, and industry knowledge\n" .
-                            "- Demonstrate problem-solving abilities and strategic thinking\n" .
-                            "- Use powerful, industry-specific language that commands attention\n" .
-                            "- Avoid generic phrases and placeholders like [field]\n" .
-                            "- Make each sentence distinct and memorable\n\n" .
-                            "CONTENT FOCUS: {$contentFocus}\n\n" .
-                            "CONTENT STRUCTURE VARIATION:\n" .
-                            "- If previous summary started with experience, start with skills or achievements\n" .
-                            "- If previous summary focused on technical skills, focus on leadership or business impact\n" .
-                            "- If previous summary was achievement-focused, make this skills-focused\n" .
-                            "- Use different sentence patterns and transitions\n\n" .
-                            "IMPORTANT: This MUST be completely different from any previous summary. Use the comprehensive context below to create a unique summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
-                            "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
-                            $context;
+                        $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('summary', [
+                            'count' => 1,
+                            'style_requirements' => "1. First summary that is {$style}",
+                            'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(true),
+                            'min_words' => config('resume.ai_enhancement.summary_length.min_words', 60),
+                            'max_words' => config('resume.ai_enhancement.summary_length.max_words', 90),
+                            'seed' => $seed,
+                            'context' => $context
+                        ]);
                     }
                 } else {
-                    $prompt = "Create an exceptional, compelling resume summary for the role: {$jobTitle}.\n" .
-                        "Write 3–5 powerful, impactful sentences (" . config('resume.ai_enhancement.summary_length.min_words', 60) . "–" . config('resume.ai_enhancement.summary_length.max_words', 90) . " words) that are {$style}.\n\n" .
-                        "CRITICAL REQUIREMENTS:\n" .
-                        "- Lead with your most impressive achievement or unique value proposition\n" .
-                        "- Quantify impact with specific metrics, percentages, and business outcomes\n" .
-                        "- Highlight technical expertise, leadership, and industry knowledge\n" .
-                        "- Demonstrate problem-solving abilities and strategic thinking\n" .
-                        "- Use powerful, industry-specific language that commands attention\n" .
-                        "- Avoid generic phrases and placeholders like [field]\n" .
-                        "- Make each sentence distinct and memorable\n" .
-                        "- Reference specific skills, experience level, and industry focus from context\n" .
-                        "- Tailor language to match the career progression level\n\n" .
-                        "Use the comprehensive context below to create a summary that makes hiring managers want to interview you immediately. Seed: {$seed}.\n" .
-                        "Return ONLY JSON: {\\n  \\\"revised_text\\\": string\\n}.\n\n" .
-                        $context;
+                    $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('summary', [
+                        'count' => 1,
+                        'style_requirements' => "1. First summary that is {$style}",
+                        'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote($variant),
+                        'min_words' => config('resume.ai_enhancement.summary_length.min_words', 60),
+                        'max_words' => config('resume.ai_enhancement.summary_length.max_words', 90),
+                        'seed' => $seed,
+                        'context' => $context
+                    ]);
                 }
 
                 // Enhanced temperature and parameter variation for regeneration
@@ -613,7 +774,7 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
                     $revised = $attempts[array_rand($attempts)];
                 }
             } elseif (empty($revised)) {
-                $revised = $this->buildLocalSummary($jobTitle, $years, $skills, $industry);
+                $revised = $this->buildLocalSummary($jobTitle, $skills, $experiences, $education);
             }
 
             // Ensure it references the job title in some way
@@ -625,7 +786,7 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
             // If result is too short or looks like just the job title, build locally
             $bareJobTitle = $this->localTidy($jobTitle);
             if (mb_strlen($revised) < config('resume.ai_enhancement.summary_length.min_words', 40) || $this->isTooSimilar($revised, $bareJobTitle)) {
-                $revised = $this->buildLocalSummary($jobTitle, $years, $skills, $industry);
+                $revised = $this->buildLocalSummary($jobTitle, $skills, $experiences, $education);
             }
 
             return response()->json([
@@ -636,13 +797,274 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
             $prefix = $years ? "{$years}+ years" : "Proven";
             $skillsPhrase = !empty($skills) ? (' in ' . implode(', ', array_slice($skills, 0, config('resume.ai_enhancement.max_skills_display', 5)))) : '';
             $industryText = $industry ? $industry : 'fast-paced environments';
-            $fallback = "$prefix of experience as a {$jobTitle}, delivering measurable outcomes through strong execution{$skillsPhrase}. " .
-                "Committed to driving impact, collaborating across teams, and advancing business goals in {$industryText}.";
-            $fallback = $this->sanitizeSummaryText($fallback, $current ?: $jobTitle);
+            
+            if ($jobTitle) {
+                $fallback = "$prefix of experience as a {$jobTitle}, delivering measurable outcomes through strong execution{$skillsPhrase}. " .
+                    "Committed to driving impact, collaborating across teams, and advancing business goals in {$industryText}.";
+            } else {
+                $professionalFocus = $this->determineProfessionalFocus($jobTitle, $skills, $experiences, $education);
+                $fallback = "$prefix of experience in {$professionalFocus}, delivering measurable outcomes through strong execution{$skillsPhrase}. " .
+                    "Committed to driving impact, collaborating across teams, and advancing business goals in {$industryText}.";
+            }
+            
+            $fallback = $this->sanitizeSummaryText($fallback, $current ?: ($jobTitle ?: 'professional'));
             return response()->json([
                 'revised_text' => $fallback
             ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
         }
+    }
+
+    /**
+     * Generate multiple AI suggestions for summary
+     */
+    public function generateSummarySuggestions(Request $request, GeminiService $gemini)
+    {
+        try {
+            $validated = $request->validate([
+                'job_title' => 'nullable|string',
+                'skills' => 'nullable|array',
+                'skills.*' => 'nullable|string',
+                'current_summary' => 'nullable|string',
+                'experiences' => 'nullable|array',
+                'experiences.*.jobTitle' => 'nullable|string',
+                'experiences.*.company' => 'nullable|string',
+                'experiences.*.description' => 'nullable|string',
+                'education' => 'nullable|array',
+                'education.*.degree' => 'nullable|string',
+                'education.*.school' => 'nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Summary suggestions validation failed: ' . json_encode($e->errors()));
+            return response()->json([
+                'error' => true,
+                'message' => 'Validation failed: ' . json_encode($e->errors()),
+                'debug' => [
+                    'received_data' => $request->all(),
+                    'validation_errors' => $e->errors()
+                ]
+            ], 422);
+        }
+
+        $jobTitle = trim($validated['job_title'] ?? '');
+        $skills = $validated['skills'] ?? [];
+        $current = $validated['current_summary'] ?? '';
+        $experiences = $validated['experiences'] ?? [];
+        $education = $validated['education'] ?? [];
+        
+        // Sanitize arrays to ensure they contain valid data
+        $skills = array_filter($skills, function($skill) {
+            return is_string($skill) && trim($skill) !== '';
+        });
+        
+        $experiences = array_filter($experiences, function($exp) {
+            return is_array($exp) && (
+                !empty($exp['jobTitle']) && 
+                !empty($exp['company']) && 
+                !empty($exp['description'])
+            );
+        });
+        
+        $education = array_filter($education, function($edu) {
+            return is_array($edu) && (
+                !empty($edu['degree']) && 
+                !empty($edu['school'])
+            );
+        });
+
+        // Check if we have enough data to generate meaningful summaries
+        $hasSkills = !empty($skills);
+        $hasExperiences = !empty($experiences);
+        $hasEducation = !empty($education);
+        
+        // Make all data dependencies nullable - only require some meaningful data
+        if (!$hasSkills && !$hasExperiences && !$hasEducation) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Please provide at least some skills, experience, or education information to generate a meaningful summary.'
+            ], 400);
+        }
+
+        $skillsList = '';
+        if (!empty($skills)) {
+            $skillsList = "Skills: " . implode(', ', array_map('trim', $skills)) . "\n";
+        }
+
+        $currentLine = $current ? "ExistingSummary: {$current}\n" : '';
+        $jobTitleLine = $jobTitle ? "JobTitle: {$jobTitle}\n" : '';
+        
+        // If no job title, infer from available data
+        if (empty($jobTitle)) {
+            if (!empty($experiences)) {
+                $jobTitle = $experiences[0]['jobTitle'] ?? 'Professional';
+            } elseif (!empty($skills)) {
+                $jobTitle = 'Skilled Professional';
+            } elseif (!empty($education)) {
+                $jobTitle = 'Educated Professional';
+            } else {
+                $jobTitle = 'Professional';
+            }
+        }
+
+        try {
+            \Log::info('Starting summary suggestions generation', [
+                'jobTitle' => $jobTitle,
+                'hasSkills' => $hasSkills,
+                'hasExperiences' => $hasExperiences,
+                'hasEducation' => $hasEducation,
+                'skills' => $skills,
+                'experiences' => $experiences,
+                'education' => $education
+            ]);
+            
+            // Check if AIConfigService exists and is working
+            if (!class_exists('\App\Services\AIConfigService')) {
+                \Log::error('AIConfigService class not found');
+                throw new \Exception('AIConfigService not available');
+            }
+            
+            $styles = \App\Services\AIConfigService::getContentVariations('summary');
+            if (empty($styles)) {
+                // Fallback styles if config is missing
+                $styles = ['achievement-focused', 'skills-forward', 'leadership-oriented'];
+            }
+            \Log::info('Using styles for generation', ['styles' => $styles]);
+            
+            $suggestions = [];
+            
+            foreach ($styles as $style) {
+                try {
+                    $seed = \App\Services\AIConfigService::generateRandomSeed();
+                    $context = "Context\n" .
+                        $jobTitleLine .
+                        $skillsList .
+                        $currentLine .
+                        "Experiences: " . json_encode($experiences) . "\n" .
+                        "Education: " . json_encode($education) . "\n" .
+                        "Note: Generate summaries that are completely different from each other in structure, vocabulary, and approach.";
+
+                    $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('summary', [
+                        'count' => 3,
+                        'style_requirements' => \App\Services\AIConfigService::generateSummaryStyleRequirements(3),
+                        'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(false),
+                        'seed' => $seed,
+                        'context' => $context,
+                        'job_title' => $jobTitle ?: 'Professional'
+                    ]);
+
+                    $result = $gemini->generateEnhancedContent($prompt, array_merge([
+                        'response_mime_type' => 'application/json',
+                    ], \App\Services\AIConfigService::getModelParameters('suggestions')));
+
+                    if (is_array($result) && !empty($result['candidates'])) {
+                        $candidate = $this->extractRevisedText($result, $current ?: ($jobTitle ?: 'professional'));
+                        $candidate = $this->sanitizeSummaryText($candidate, $current ?: ($jobTitle ?: 'professional'));
+                        
+                        // Quality check
+                        if (!$this->isPoorQualityContent($candidate)) {
+                            $suggestions[] = $candidate;
+                        }
+                    }
+                } catch (\Throwable $styleError) {
+                    \Log::warning('Failed to generate suggestion for style: ' . $style . ' - ' . $styleError->getMessage());
+                    continue; // Continue with next style
+                }
+            }
+            
+            // Ensure we have exactly 3 suggestions, retry AI generation if needed
+            $retryCount = 0;
+            while (count($suggestions) < 3 && $retryCount < 3) {
+                $retryCount++;
+                try {
+                    // Generate additional suggestions with different seeds
+                    $seed = \App\Services\AIConfigService::generateRandomSeed();
+                    $context = "Context\n" .
+                        $jobTitleLine .
+                        $skillsList .
+                        $currentLine .
+                        "Experiences: " . json_encode($experiences) . "\n" .
+                        "Education: " . json_encode($education) . "\n" .
+                        "Note: Generate summaries that are completely different from each other in structure, vocabulary, and approach.";
+
+                    $prompt = \App\Services\AIConfigService::getConsolidatedPrompt('summary', [
+                        'count' => 1,
+                        'style_requirements' => \App\Services\AIConfigService::generateSummaryStyleRequirements(1),
+                        'regeneration_note' => \App\Services\AIConfigService::generateRegenerationNote(true),
+                        'seed' => $seed,
+                        'context' => $context,
+                        'job_title' => $jobTitle ?: 'Professional'
+                    ]);
+
+                    \Log::info('Generated prompt for style: ' . $style, ['prompt' => $prompt]);
+                    
+                    $result = $gemini->generateEnhancedContent($prompt, array_merge([
+                        'response_mime_type' => 'application/json',
+                    ], \App\Services\AIConfigService::getModelParameters('suggestions')));
+
+                    \Log::info('AI response received', ['result' => $result]);
+
+                    if (is_array($result) && !empty($result['candidates'])) {
+                        $candidate = $this->extractRevisedText($result, $current ?: ($jobTitle ?: 'professional'));
+                        $candidate = $this->sanitizeSummaryText($candidate, $current ?: ($jobTitle ?: 'professional'));
+                        
+                        \Log::info('Extracted candidate', ['candidate' => $candidate]);
+                        
+                        // Quality check and diversity check
+                        if (!$this->isPoorQualityContent($candidate) && !$this->isTooSimilarToExisting($candidate, $suggestions)) {
+                            $suggestions[] = $candidate;
+                            \Log::info('Added candidate to suggestions', ['total' => count($suggestions)]);
+                        } else {
+                            \Log::info('Candidate rejected', [
+                                'poor_quality' => $this->isPoorQualityContent($candidate),
+                                'too_similar' => $this->isTooSimilarToExisting($candidate, $suggestions)
+                            ]);
+                        }
+                    } else {
+                        \Log::warning('No candidates in AI response', ['result' => $result]);
+                    }
+                } catch (\Throwable $retryError) {
+                    \Log::warning('Retry attempt ' . $retryCount . ' failed: ' . $retryError->getMessage());
+                    continue;
+                }
+            }
+            
+            // If we still don't have 3 suggestions, create diverse variations
+            while (count($suggestions) < 3) {
+                $variation = $this->createDiverseVariation($jobTitle, $skills, $experiences, $education, $suggestions);
+                if ($variation) {
+                    $suggestions[] = $variation;
+                } else {
+                    break;
+                }
+            }
+            
+            \Log::info('Final suggestions count', ['count' => count($suggestions), 'suggestions' => $suggestions]);
+            
+        } catch (\Throwable $e) {
+            \Log::error('Error generating summary suggestions: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            // Create diverse variations instead of identical local summaries
+            $suggestions = [
+                $this->createDiverseVariation($jobTitle, $skills, $experiences, $education, []),
+                $this->createDiverseVariation($jobTitle, $skills, $experiences, $education, [])
+            ];
+            
+            \Log::info('Fallback suggestions created', ['count' => count($suggestions), 'suggestions' => $suggestions]);
+        }
+        
+        // Ensure we always have at least one suggestion
+        if (empty($suggestions)) {
+            \Log::warning('No suggestions generated, creating basic fallback');
+            $skillsText = !empty($skills) ? implode(', ', array_slice($skills, 0, 3)) : 'professional development';
+            $suggestions = [
+                "Professional with expertise in {$skillsText}. Committed to delivering high-quality results and continuous improvement.",
+                "Experienced professional focused on achieving measurable outcomes. Strong problem-solving skills and collaborative approach to project delivery.",
+                "Results-driven professional with a passion for excellence. Skilled in {$skillsText} and committed to continuous growth."
+            ];
+        }
+
+        return response()->json([
+            'suggestions' => $suggestions
+        ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
     }
 
     /**
@@ -661,7 +1083,7 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
         $context = $request->context;
 
         // Check if the text is too short
-        $minLength = config("resume.ai_enhancement.validation.min_text_length.{$type}", 10);
+        $minLength = \App\Services\AIConfigService::config("validation.min_text_length.{$type}");
         if (strlen($text) < $minLength) {
             return response()->json([
                 'error' => 'Text too short',
@@ -671,83 +1093,21 @@ Force regeneration seed: {$forceSeed}. Return ONLY JSON: {\\\"revised_text\\\": 
         }
 
         try {
-            $improvementPrompts = [
-                'experience' => [
-                    'focus' => 'professional experience description',
-                    'requirements' => [
-                        'Improve clarity and readability',
-                        'Enhance professional tone',
-                        'Fix grammar and punctuation',
-                        'Make it more concise and impactful',
-                        'Keep the same meaning and context',
-                        'Use active voice where appropriate'
-                    ]
-                ],
-                'education' => [
-                    'focus' => 'education description',
-                    'requirements' => [
-                        'Improve clarity and readability',
-                        'Enhance academic tone',
-                        'Fix grammar and punctuation',
-                        'Make it more concise and impactful',
-                        'Keep the same meaning and context',
-                        'Highlight relevant skills and achievements'
-                    ]
-                ],
-                'summary' => [
-                    'focus' => 'professional summary',
-                    'requirements' => [
-                        'Improve clarity and readability',
-                        'Enhance professional tone',
-                        'Fix grammar and punctuation',
-                        'Make it more concise and impactful',
-                        'Keep the same meaning and context',
-                        'Strengthen key value propositions'
-                    ]
-                ]
-            ];
-
-            $promptConfig = $improvementPrompts[$type];
-            $requirements = implode("\n- ", $promptConfig['requirements']);
-
-            $prompt = "Transform this {$promptConfig['focus']} into professional, impactful language:
-
-ORIGINAL TEXT:
-{$text}
-
-IMPROVEMENT REQUIREMENTS:
-- {$requirements}
-
-SPECIFIC TRANSFORMATIONS:
-- Replace basic verbs: 'worked' → 'developed', 'did' → 'executed', 'made' → 'delivered'
-- Use industry terminology: 'wrote code' → 'engineered solutions', 'helped' → 'collaborated with'
-- Add quantifiable impact: 'projects' → 'strategic initiatives', 'results' → 'measurable outcomes'
-- Professional language: 'I was responsible for' → 'Managed and executed', 'I used' → 'Leveraged'
-- Technical depth: 'web applications' → 'scalable web applications', 'programming' → 'software development'
-
-OUTPUT REQUIREMENTS:
-- Maximum 2-3 sentences
-- 25-40 words total
-- Professional, confident tone
-- Industry-specific vocabulary
-- Results-oriented language
-- No generic phrases
-- Maintain original meaning
-
-CRITICAL: Return ONLY JSON: {\"improved_text\": string}";
-
-            $result = $gemini->generateEnhancedContent($prompt, [
-                'response_mime_type' => 'application/json',
-                'maxOutputTokens' => 256, // Strict limit for focused improvement
-                'temperature' => 0.5, // Balanced temperature for consistent improvement
+            $prompt = \App\Services\AIConfigService::getPrompt('improvement', $type, [
+                'text' => $text
             ]);
+
+            $result = $gemini->generateEnhancedContent($prompt, array_merge([
+                'response_mime_type' => 'application/json',
+            ], \App\Services\AIConfigService::getModelParameters('polish')));
 
             $improved = $this->extractImprovedText($result, $text);
             
             // If AI doesn't improve the text (too similar), use local improvement
             $similarity = 0;
             similar_text($text, $improved, $similarity);
-            if ($similarity > 90) {
+            $threshold = \App\Services\AIConfigService::config('quality_control.similarity_thresholds.text_similarity');
+            if ($similarity > $threshold) {
                 \Log::info("AI polish not improving text (${similarity}% similar), using local polish");
                 $improved = $this->localPolish($text, $type, $context);
             }
@@ -1007,17 +1367,120 @@ CRITICAL: Return ONLY JSON: {\"improved_text\": string}";
         return trim($final);
     }
 
-    private function buildLocalSummary(string $jobTitle, ?int $years, array $skills, ?string $industry): string
+    private function buildLocalSummary(?string $jobTitle, array $skills, array $experiences = [], array $education = []): string
     {
-        $yearsText = $years !== null ? $years . "+ years " : '';
-        $industryText = $industry ? $industry : 'fast-paced environments';
-        $topSkills = array_slice(array_values(array_filter(array_map('trim', $skills))), 0, config('resume.ai_enhancement.max_skills_display', 5));
+        $topSkills = array_slice(array_values(array_filter(array_map('trim', $skills))), 0, config('resume.ai_enhancement.summary_generation_limits.context.max_skills_display', 4));
         $skillsText = !empty($topSkills) ? (' in ' . implode(', ', $topSkills)) : '';
-
-        $s1 = sprintf('%sprofessional specializing as a %s, delivering measurable outcomes through strong execution%s.',
-            $yearsText ? ucfirst($yearsText) : '', $jobTitle, $skillsText);
-        $s2 = sprintf('Known for collaboration, adaptability, and continuous improvement, with a focus on driving impact in %s.', $industryText);
+        
+        // Determine professional focus based on available data
+        $professionalFocus = $this->determineProfessionalFocus($jobTitle, $skills, $experiences, $education);
+        
+        if ($jobTitle) {
+            $s1 = sprintf('Professional specializing as a %s, delivering measurable outcomes through strong execution%s.', $jobTitle, $skillsText);
+        } else {
+            $s1 = sprintf('Professional with expertise in %s, delivering measurable outcomes through strong execution.', $professionalFocus);
+        }
+        
+        $s2 = 'Known for collaboration, adaptability, and continuous improvement, with a focus on driving impact in fast-paced environments.';
         return $this->localTidy($s1 . ' ' . $s2);
+    }
+    
+    private function determineProfessionalFocus(?string $jobTitle, array $skills, array $experiences, array $education): string
+    {
+        // If we have a job title, use it
+        if ($jobTitle) {
+            return $jobTitle;
+        }
+        
+        // If we have skills, use the most relevant ones
+        if (!empty($skills)) {
+            $topSkills = array_slice(array_values(array_filter(array_map('trim', $skills))), 0, 3);
+            return implode(', ', $topSkills);
+        }
+        
+        // If we have experiences, infer from job titles
+        if (!empty($experiences)) {
+            $jobTitles = array_filter(array_column($experiences, 'jobTitle'));
+            if (!empty($jobTitles)) {
+                return implode(', ', array_unique($jobTitles));
+            }
+        }
+        
+        // If we have education, use degree information
+        if (!empty($education)) {
+            $degrees = array_filter(array_column($education, 'degree'));
+            if (!empty($degrees)) {
+                return implode(', ', array_unique($degrees));
+            }
+        }
+        
+        // Default fallback
+        return 'professional development and project delivery';
+    }
+
+    private function isTooSimilarToExisting(string $candidate, array $existingSuggestions): bool
+    {
+        foreach ($existingSuggestions as $existing) {
+            $similarity = 0;
+            similar_text($candidate, $existing, $similarity);
+            if ($similarity > config('resume.ai_enhancement.quality_control.similarity_thresholds.text_similarity', 70)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function createDiverseVariation(?string $jobTitle, array $skills, array $experiences, array $education, array $existingSuggestions): ?string
+    {
+        // If no job title, infer from available data
+        if (empty($jobTitle)) {
+            if (!empty($experiences)) {
+                $jobTitle = $experiences[0]['jobTitle'] ?? 'Professional';
+            } elseif (!empty($skills)) {
+                $jobTitle = 'Skilled Professional';
+            } elseif (!empty($education)) {
+                $jobTitle = 'Educated Professional';
+            } else {
+                $jobTitle = 'Professional';
+            }
+        }
+        
+        $variations = [
+            // Technical focus variation
+            function() use ($jobTitle, $skills) {
+                $topSkills = array_slice(array_values(array_filter(array_map('trim', $skills))), 0, 4);
+                $skillsText = !empty($topSkills) ? (' specializing in ' . implode(', ', $topSkills)) : '';
+                return "Experienced {$jobTitle}{$skillsText} with a proven track record of delivering high-quality solutions. Demonstrated expertise in problem-solving and technical implementation. Committed to continuous learning and staying current with industry best practices.";
+            },
+            // Achievement focus variation
+            function() use ($jobTitle, $skills) {
+                $topSkills = array_slice(array_values(array_filter(array_map('trim', $skills))), 0, 3);
+                $skillsText = !empty($topSkills) ? (' with strong capabilities in ' . implode(', ', $topSkills)) : '';
+                return "Results-driven {$jobTitle}{$skillsText} focused on achieving measurable outcomes and exceeding expectations. Proven ability to work effectively in dynamic environments and deliver projects on time. Strong analytical skills and attention to detail.";
+            },
+            // Leadership focus variation
+            function() use ($jobTitle, $skills) {
+                $topSkills = array_slice(array_values(array_filter(array_map('trim', $skills))), 0, 3);
+                $skillsText = !empty($topSkills) ? (' with expertise in ' . implode(', ', $topSkills)) : '';
+                return "Leadership-oriented {$jobTitle}{$skillsText} with a collaborative approach to project delivery and team development. Skilled in coordinating cross-functional efforts and driving strategic initiatives. Passionate about mentoring and knowledge sharing.";
+            }
+        ];
+
+        // Try each variation until we find one that's different enough
+        foreach ($variations as $variation) {
+            $candidate = $variation();
+            if (!$this->isTooSimilarToExisting($candidate, $existingSuggestions)) {
+                return $this->localTidy($candidate);
+            }
+        }
+
+        // If all variations are too similar, create a completely different one
+        $uniqueSeed = uniqid();
+        $uniqueVariation = "Dynamic {$jobTitle} with a unique approach to problem-solving and project delivery. " . 
+                          "Combines technical expertise with creative thinking to develop innovative solutions. " . 
+                          "Committed to excellence and continuous improvement in all professional endeavors.";
+        
+        return $this->localTidy($uniqueVariation);
     }
 
     private function generateLocalVariation($currentSummary, $jobTitle, $years, $skills, $industry) {

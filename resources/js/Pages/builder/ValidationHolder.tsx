@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
+import "../../../css/app.css";
+import "flag-icons/css/flag-icons.min.css";
 
 // ValidationHolder component
 interface ValidationHolderProps {
@@ -69,6 +71,19 @@ function toPlaceholder(mask: string): string {
 const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContacts, errors, onClearError }) => {
   const [showAdditionalInfo, setShowAdditionalInfo] = useState(false);
   const [phoneCountry, setPhoneCountry] = useState<PhoneCountry>('US');
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showCountryDropdown && !(event.target as Element).closest('.country-selector')) {
+        setShowCountryDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showCountryDropdown]);
 
   // Detect country by existing phone value (simple heuristic)
   useEffect(() => {
@@ -164,22 +179,49 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label className="block text-gray-700 mb-1">Phone number</label>
+          
+
 
                       <div className="flex mt-1">
-              <div className="flex-shrink-0">
-                                  <select
-                    className="appearance-none bg-white border border-r-0 border-slate-300 rounded-l-lg px-2 py-2 pr-6 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white cursor-pointer hover:bg-gray-50 transition-all duration-150 ease-in-out w-24 h-[42px]"
-                    value={phoneCountry}
-                    onChange={(e) => {
-                      const newCountry = e.target.value as PhoneCountry;
-                      setPhoneCountry(newCountry);
-                    }}
+              <div className="flex-shrink-0 relative">
+                {/* Custom Country Selector */}
+                <div className="relative country-selector">
+                  <button
+                    type="button"
+                    onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                    className="flex items-center justify-between w-24 h-[42px] px-2 py-2 bg-white border border-r-0 border-slate-300 rounded-l-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white cursor-pointer hover:bg-gray-50 transition-all duration-150 ease-in-out"
                   >
-                  <option value="US">🇺🇸 US</option>
-                  <option value="PH">🇵🇭 PH</option>
-                  <option value="UK">🇬🇧 UK</option>
-                </select>
-
+                    <span className={`fi fi-${phoneCountry === 'US' ? 'us' : phoneCountry === 'PH' ? 'ph' : 'gb'} text-lg`}></span>
+                    <span className="text-xs text-gray-600 ml-1">
+                      {phoneCountry === 'US' ? 'US' : phoneCountry === 'PH' ? 'PH' : 'UK'}
+                    </span>
+                    <svg className="w-4 h-4 ml-1 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {/* Dropdown Menu */}
+                  {showCountryDropdown && (
+                    <div className="absolute top-full left-0 mt-1 w-24 bg-white border border-slate-300 rounded-lg shadow-lg z-10">
+                      <div className="py-1">
+                        {(['US', 'PH', 'UK'] as PhoneCountry[]).map((country) => (
+                          <button
+                            key={country}
+                            type="button"
+                            onClick={() => {
+                              setPhoneCountry(country);
+                              setShowCountryDropdown(false);
+                            }}
+                            className="w-full px-2 py-1.5 text-left text-sm hover:bg-gray-100 flex items-center justify-center gap-1"
+                          >
+                            <span className={`fi fi-${country === 'US' ? 'us' : country === 'PH' ? 'ph' : 'gb'} text-base`}></span>
+                            <span className="text-xs text-gray-600">{country}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               <input 
                 type="tel"

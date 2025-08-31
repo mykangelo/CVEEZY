@@ -459,21 +459,21 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 </div>
             </div>
 
-            <div className="max-w-7xl px-8 sm:px-10 lg:px-12 py-12 ml-72">
+            <div className="max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 sm:py-10 lg:py-12 xl:py-16 ml-0 sm:ml-0 lg:ml-72">
                 {/* My Recent Resumes Section */}
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 mb-12 overflow-hidden">
-                    <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
-                        <div className="flex justify-between items-center">
+                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 mb-8 sm:mb-10 lg:mb-12 overflow-hidden">
+                    <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
                             <div>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">My Recent Resumes</h2>
-                                <p className="text-sm text-gray-600">Manage and track your professional resumes</p>
+                                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-2">My Recent Resumes</h2>
+                                <p className="text-xs sm:text-sm lg:text-base text-gray-600">Manage and track your professional resumes</p>
                             </div>
                             <button
                                 onClick={refreshDashboardData}
                                 disabled={isRefreshing}
-                                className="text-[#354eab] hover:text-[#4a5fc7] text-sm font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white px-4 py-2 rounded-lg border border-gray-200 hover:border-[#354eab] transition-all duration-200"
+                                className="text-[#354eab] hover:text-[#4a5fc7] text-xs sm:text-sm lg:text-base font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed bg-white px-3 sm:px-4 lg:px-6 py-2 lg:py-3 rounded-lg border border-gray-200 hover:border-[#354eab] transition-all duration-200"
                             >
-                                <svg className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className={`w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
                                 {isRefreshing ? 'Refreshing...' : 'Refresh'}
@@ -482,20 +482,20 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                     </div>
 
                     {resumeList.length === 0 ? (
-                        <div className="px-8 py-16 text-center">
-                            <div className="max-w-md mx-auto">
-                                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 text-center">
+                            <div className="max-w-sm sm:max-w-md lg:max-w-lg mx-auto">
+                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                                    <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                 </div>
-                                <h3 className="text-xl font-semibold text-gray-900 mb-3">No resumes yet</h3>
-                                <p className="text-gray-600 mb-6 leading-relaxed">Get started by creating your first professional resume. Choose from our premium templates and build something amazing.</p>
+                                <h3 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-2 sm:mb-3">No resumes yet</h3>
+                                <p className="text-gray-600 mb-4 sm:mb-6 leading-relaxed text-sm sm:text-base">Get started by creating your first professional resume. Choose from our premium templates and build something amazing.</p>
                                 <Link
                                     href="/choose-template"
-                                    className="inline-flex items-center px-6 py-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                                    className="inline-flex items-center px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 bg-[#354eab] hover:bg-[#4a5fc7] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base lg:text-lg"
                                 >
-                                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
                                     Create Your First Resume

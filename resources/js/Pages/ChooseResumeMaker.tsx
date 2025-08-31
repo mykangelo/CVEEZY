@@ -22,9 +22,9 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
   const templateName = urlParams.get('template') || 'classic';
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f0f4ff] via-[#f8faff] to-[#e0eaff] font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#f0f4ff] via-[#f8faff] to-[#e0eaff] font-sans relative overflow-hidden flex flex-col">
       {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-[#354eab]/10 to-[#4a5fc7]/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-[#5a6fd7]/10 to-[#354eab]/10 rounded-full blur-3xl"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
@@ -33,9 +33,8 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
       {isLoading && <LoadingSpinner text="Processing..." />}
       
 
-
       {/* Main Content */}
-      <main className="px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 relative z-10">
+      <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 relative z-10">
         {/* Clean Blue Button Style */}
         <Link
           href="/choose-template"

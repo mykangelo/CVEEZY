@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Head, Link, usePage } from "@inertiajs/react";
 import ValidationHolder from "./builder/ValidationHolder";
+import SuggestionModal from "@/Components/SuggestionModal";
+import AIButton from "@/Components/AIButton";
 import { Trash2, Plus, GripVertical, Flame, Star, CheckCircle, AlertCircle, ZoomIn, ZoomOut, RotateCcw, Maximize2, Minimize2, Square, Camera, User, Briefcase, GraduationCap, Code, FileText, Flag } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 
@@ -172,6 +174,10 @@ interface ExperienceSectionProps {
 }
 const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setExperiences, errors }) => {
   const [loadingId, setLoadingId] = React.useState<number | null>(null);
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [currentExpId, setCurrentExpId] = useState<number | null>(null);
 
   const addExperience = () => {
     setExperiences([
@@ -253,9 +259,8 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
   };
 
   // Validation helper functions
-  const validateExperienceForAI = (exp: Experience): { isValid: boolean; errors: string[]; warnings: string[] } => {
+  const validateExperienceForAI = (exp: Experience): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const warnings: string[] = [];
 
     // Required field validation
     if (!exp.jobTitle || !exp.jobTitle.trim()) {
@@ -265,26 +270,9 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       errors.push('Company/Employer is required');
     }
 
-    // Content validation
-    if (!exp.description || exp.description.trim().length < 10) {
-      warnings.push('Description should be at least 10 characters for better AI results');
-    }
-
-    // Generic content check
-    const genericPhrases = ['Software Developer', 'Web Developer', 'Developer'];
-    const description = exp.description || '';
-    const hasGenericContent = genericPhrases.some(phrase => 
-      description.toLowerCase().includes(phrase.toLowerCase())
-    );
-    
-    if (hasGenericContent && description.length < 40) {
-      warnings.push('Consider adding more specific details for better AI enhancement');
-    }
-
     return {
       isValid: errors.length === 0,
-      errors,
-      warnings
+      errors
     };
   };
 
@@ -364,6 +352,64 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
       alert('Failed to improve description. Please try again.');
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  // Generate multiple AI suggestions for experience descriptions
+  const generateExperienceSuggestions = async (id: number, description: string, exp: Experience) => {
+    setCurrentExpId(id);
+    setSuggestionLoading(true);
+    setShowSuggestionModal(true);
+    
+    try {
+      // Check if we have the required data
+      if (!exp.jobTitle || !exp.jobTitle.trim()) {
+        alert('Please fill in the Job Title first before generating suggestions.');
+        return;
+      }
+      
+      const companyName = (exp.company || exp.employer || '').trim();
+      if (!companyName) {
+        alert('Please fill in the Company/Employer first before generating suggestions.');
+        return;
+      }
+      
+      const seed = description && description.trim().length > 0
+        ? description
+        : `I worked as ${exp.jobTitle} at ${companyName}. I was responsible for key projects and delivered results.`;
+      
+      const res = await fetch("/generate-experience-suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text: seed,
+          jobTitle: exp.jobTitle,
+          company: companyName
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI generation failed. Please check your input and try again.');
+        setShowSuggestionModal(false);
+        return;
+      }
+      
+      setSuggestions(data.suggestions || []);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate suggestions. Please try again.');
+      setShowSuggestionModal(false);
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: string) => {
+    if (currentExpId !== null) {
+      updateExperience(currentExpId, "description", suggestion);
     }
   };
 
@@ -489,7 +535,6 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                 {(() => {
                   const validation = validateExperienceForAI(exp);
                   const hasErrors = validation.errors.length > 0;
-                  const hasWarnings = validation.warnings.length > 0;
                   
                   return (
                     <div className="mt-3">
@@ -511,65 +556,22 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
                         </div>
                       )}
                       
-                      {!hasErrors && hasWarnings && (
-                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <div className="flex items-center mb-2">
-                            <span className="text-yellow-600 mr-2">💡</span>
-                            <span className="text-yellow-800 font-medium">Suggestions for better AI results:</span>
-                          </div>
-                          <ul className="text-yellow-700 text-sm space-y-1">
-                            {validation.warnings.map((warning, index) => (
-                              <li key={index} className="flex items-center">
-                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                                {warning}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {/* AI Buttons */}
-                      <div className="flex gap-2">
-                        {/* Polish Button - Only show if user has written content */}
-                        {exp.description && exp.description.trim().length > 10 && (
-                          <button
-                            onClick={() => polishExperienceDescription(exp.id, exp.description, exp)}
-                            disabled={hasErrors || loadingId === exp.id}
-                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium border-2 border-orange-400"
-                            title="Polish and improve your existing description with AI"
-                          >
-                            {loadingId === exp.id ? "Polishing…" : "✨ Polish with AI"}
-                          </button>
-                        )}
-                        
-                        {/* Generate/Regenerate Button */}
-                        <button
-                          onClick={() => {
-                            if (exp.description) {
-                              forceRegenerateExperience(exp.id, exp.description, exp);
-                            } else {
-                              reviseExperienceDescription(exp.id, exp.description, exp);
-                            }
-                          }}
-                          disabled={hasErrors}
-                          className={`px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium ${
-                            hasErrors 
-                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
-                          }`}
-                          title={hasErrors ? "Please fill in required fields first" : (exp.description ? "Regenerate with different style" : "Generate Description with AI")}
-                        >
-                          {loadingId === exp.id ? "Generating…" : exp.description ? "🔄 Regenerate with AI" : "✨ Generate with AI"}
-                        </button>
-                      </div>
-                      
-                      {/* AI Status Indicator */}
-                      {!hasErrors && !hasWarnings && (
-                        <div className="mt-2 text-green-600 text-sm flex items-center">
-                          <span className="mr-1">✅</span>
-                          Ready for AI generation
-                        </div>
-                      )}
+                      {/* AI Button */}
+                      <AIButton
+                        onClick={() => generateExperienceSuggestions(exp.id, exp.description, exp)}
+                        disabled={hasErrors}
+                        loading={suggestionLoading && currentExpId === exp.id}
+                        title={hasErrors ? "Please fill in required fields first" : "Generate 3 AI suggestions to choose from"}
+                        suggestions={[
+                          "Fill in Job Title and Company for better context",
+                          "Add specific details about your role and achievements",
+                          "Include relevant technologies and tools used",
+                          "Describe measurable outcomes and impact"
+                        ]}
+                        autoShow={true}
+                      >
+                        Generate with AI
+                      </AIButton>
                     </div>
                   );
                 })()}
@@ -579,6 +581,18 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({ experiences, setE
         </div>
       ))}
       <button onClick={addExperience} className="text-blue-600 hover:underline text-sm mt-2">+ Add Experience</button>
+      
+      {/* Suggestion Modal */}
+      <SuggestionModal
+        isOpen={showSuggestionModal}
+        onClose={() => setShowSuggestionModal(false)}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSuggestionSelect}
+        title="Experience Description Suggestions"
+        loading={suggestionLoading}
+        onRegenerate={() => generateExperienceSuggestions(currentExpId!, experiences.find(e => e.id === currentExpId!)?.description || '', experiences.find(e => e.id === currentExpId!)!)}
+        showRegenerateButton={true}
+      />
     </div>
   );
 };
@@ -593,6 +607,10 @@ interface EducationSectionProps {
 
 const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEducations, errors }) => {
   const [loadingId, setLoadingId] = React.useState<number | null>(null);
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
+  const [currentEduId, setCurrentEduId] = useState<number | null>(null);
 
   // Validation helper function for education
   const validateEducationForAI = (edu: Education): { isValid: boolean; errors: string[]; warnings: string[] } => {
@@ -706,6 +724,63 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
       alert('Failed to improve description. Please try again.');
     } finally {
       setLoadingId(null);
+    }
+  };
+
+  // Generate multiple AI suggestions for education descriptions
+  const generateEducationSuggestions = async (id: number, description: string, edu: Education) => {
+    setCurrentEduId(id);
+    setSuggestionLoading(true);
+    setShowSuggestionModal(true);
+    
+    try {
+      // Check if we have the required data
+      if (!edu.degree || !edu.degree.trim()) {
+        alert('Please fill in the Degree first before generating suggestions.');
+        return;
+      }
+      
+      if (!edu.school || !edu.school.trim()) {
+        alert('Please fill in the School Name first before generating suggestions.');
+        return;
+      }
+      
+      const seed = description && description.trim().length > 0
+        ? description
+        : `I studied ${edu.degree} at ${edu.school}. I completed coursework in relevant subjects and gained practical experience through projects.`;
+      
+      const res = await fetch("/generate-education-suggestions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          text: seed,
+          degree: edu.degree,
+          school: edu.school
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI generation failed. Please check your input and try again.');
+        setShowSuggestionModal(false);
+        return;
+      }
+      
+      setSuggestions(data.suggestions || []);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate suggestions. Please try again.');
+      setShowSuggestionModal(false);
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: string) => {
+    if (currentEduId !== null) {
+      updateEducation(currentEduId, "description", suggestion);
     }
   };
 
@@ -843,7 +918,6 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                 {(() => {
                   const validation = validateEducationForAI(edu);
                   const hasErrors = validation.errors.length > 0;
-                  const hasWarnings = validation.warnings.length > 0;
                   
                   return (
                     <div className="mt-3">
@@ -865,59 +939,22 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
                         </div>
                       )}
                       
-                      {!hasErrors && hasWarnings && (
-                        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                          <div className="flex items-center mb-2">
-                            <span className="text-yellow-600 mr-2">💡</span>
-                            <span className="text-yellow-800 font-medium">Suggestions for better AI results:</span>
-                          </div>
-                          <ul className="text-yellow-700 text-sm space-y-1">
-                            {validation.warnings.map((warning, index) => (
-                              <li key={index} className="flex items-center">
-                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></span>
-                                {warning}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {/* AI Buttons */}
-                      <div className="flex gap-2">
-                        {/* Polish Button - Only show if user has written content */}
-                        {edu.description && edu.description.trim().length > 10 && (
-                          <button
-                            onClick={() => polishEducationDescription(edu.id, edu.description, edu)}
-                            disabled={loadingId === edu.id || hasErrors}
-                            className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium border-2 border-orange-400"
-                            title="Polish and improve your existing description with AI"
-                          >
-                            {loadingId === edu.id ? "Polishing…" : "✨ Polish with AI"}
-                          </button>
-                        )}
-                        
-                        {/* Generate/Regenerate Button */}
-                        <button
-                          onClick={() => reviseDescription(edu.id, edu.description, edu, edu.description ? 'regenerate-' + Date.now() : undefined)}
-                          disabled={loadingId === edu.id || hasErrors}
-                          className={`px-4 py-2 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg font-medium ${
-                            loadingId === edu.id || hasErrors
-                              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                              : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
-                          }`}
-                          title={hasErrors ? "Please fill in required fields first" : (edu.description ? "Regenerate with different style" : "Generate Description with AI")}
-                        >
-                          {loadingId === edu.id ? "Generating…" : edu.description ? "🔄 Regenerate with AI" : "✨ Generate with AI"}
-                        </button>
-                      </div>
-                      
-                      {/* AI Status Indicator */}
-                      {!hasErrors && !hasWarnings && (
-                        <div className="mt-2 text-green-600 text-sm flex items-center">
-                          <span className="mr-1">✅</span>
-                          Ready for AI generation
-                        </div>
-                      )}
+                      {/* AI Button */}
+                      <AIButton
+                        onClick={() => generateEducationSuggestions(edu.id, edu.description, edu)}
+                        disabled={hasErrors}
+                        loading={suggestionLoading && currentEduId === edu.id}
+                        title={hasErrors ? "Please fill in required fields first" : "Generate 3 AI suggestions to choose from"}
+                        suggestions={[
+                          "Fill in Degree and School for better context",
+                          "Add specific coursework and projects completed",
+                          "Include relevant skills and tools learned",
+                          "Describe academic achievements and honors"
+                        ]}
+                        autoShow={true}
+                      >
+                        Generate with AI
+                      </AIButton>
                     </div>
                   );
                 })()}
@@ -927,6 +964,18 @@ const EducationSection: React.FC<EducationSectionProps> = ({ educations, setEduc
         </div>
       ))}
       <button onClick={addEducation} className="text-blue-600 hover:underline text-sm mt-2">+ Add Education</button>
+      
+      {/* Suggestion Modal */}
+      <SuggestionModal
+        isOpen={showSuggestionModal}
+        onClose={() => setShowSuggestionModal(false)}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSuggestionSelect}
+        title="Education Description Suggestions"
+        loading={suggestionLoading}
+        onRegenerate={() => generateEducationSuggestions(currentEduId!, educations.find(e => e.id === currentEduId!)?.description || '', educations.find(e => e.id === currentEduId!)!)}
+        showRegenerateButton={true}
+      />
     </div>
   );
 };
@@ -1141,6 +1190,9 @@ interface SummarySectionProps {
 }
 const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, errors, desiredJobTitle, skills, experiences, educations }) => {
   const [genLoading, setGenLoading] = React.useState(false);
+  const [showSuggestionModal, setShowSuggestionModal] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestionLoading, setSuggestionLoading] = useState(false);
 
   // Helper functions for enhanced summary context
   const calculateTotalExperience = (experiences: Experience[]): number => {
@@ -1241,8 +1293,17 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
       const jobTitle = (desiredJobTitle || '').trim();
       const skillNames = (skills || []).map(s => s.name).filter(n => !!n && n.trim().length > 0);
 
-      if (!jobTitle) {
-        alert('Please fill in Desired job title first.');
+      // Make all data dependencies nullable - only require some meaningful data
+      const hasValidSkills = skillNames.some(skill => skill.trim().length > 0);
+      const hasValidExperiences = experiences && experiences.some(exp => 
+        exp.jobTitle?.trim() && exp.company?.trim() && exp.description?.trim()
+      );
+      const hasValidEducation = educations && educations.some(edu => 
+        edu.degree?.trim() && edu.school?.trim()
+      );
+      
+      if (!hasValidSkills && !hasValidExperiences && !hasValidEducation) {
+        alert('Please add meaningful skills, experience, or education information first. The AI needs actual content to generate accurate summaries.');
         return;
       }
 
@@ -1251,33 +1312,25 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: JSON.stringify({
-          job_title: jobTitle,
-          skills: skillNames,
+          job_title: jobTitle || null,
+          skills: skillNames.filter(skill => skill.trim().length > 0),
           current_summary: summary,
           variant: variant || null,
-          // Enhanced context for better AI generation
-          years_experience: calculateTotalExperience(experiences),
-          industry: inferIndustryFromExperiences(experiences, skills),
-          experiences: (experiences || []).map(e => ({
-            jobTitle: e.jobTitle,
-            company: e.company || e.employer || '',
-            startDate: e.startDate,
-            endDate: e.endDate,
-            description: e.description || ''
-          })),
-          education: (educations || []).map(ed => ({
-            degree: ed.degree,
-            school: ed.school,
-            description: ed.description || ''
-          })),
-          // Additional context for better AI understanding
-          resume_context: {
-            total_experience_years: calculateTotalExperience(experiences),
-            primary_skills: skillNames.slice(0, 8), // Top 8 skills
-            industry_focus: inferIndustryFromExperiences(experiences, skills),
-            education_level: getHighestEducationLevel(educations),
-            career_progression: analyzeCareerProgression(experiences)
-          }
+          // Only include experiences with meaningful data
+          experiences: (experiences || [])
+            .filter(exp => exp.jobTitle?.trim() && exp.company?.trim() && exp.description?.trim())
+            .map(e => ({
+              jobTitle: e.jobTitle.trim(),
+              company: e.company || e.employer || '',
+              description: e.description.trim()
+            })),
+          // Only include education with meaningful data
+          education: (educations || [])
+            .filter(edu => edu.degree?.trim() && edu.school?.trim())
+            .map(ed => ({
+              degree: ed.degree.trim(),
+              school: ed.school.trim()
+            }))
         })
       });
       const raw = await res.text();
@@ -1298,16 +1351,89 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
     }
   };
 
+  // Generate multiple AI suggestions for summary
+  const generateSummarySuggestions = async () => {
+    console.log('🔄 Regenerating summary suggestions...');
+    try {
+      const jobTitle = (desiredJobTitle || '').trim();
+      const skillNames = (skills || []).map(s => s.name).filter(n => !!n && n.trim().length > 0);
+      
+      // Make all data dependencies nullable - only require some meaningful data
+      const hasValidSkills = skillNames.some(skill => skill.trim().length > 0);
+      const hasValidExperiences = experiences && experiences.some(exp => 
+        exp.jobTitle?.trim() && exp.company?.trim() && exp.description?.trim()
+      );
+      const hasValidEducation = educations && educations.some(edu => 
+        edu.degree?.trim() && edu.school?.trim()
+      );
+      
+      if (!hasValidSkills && !hasValidExperiences && !hasValidEducation) {
+        alert('Please add meaningful skills, experience, or education information first. The AI needs actual content to generate accurate summaries.');
+        return;
+      }
+
+      setSuggestionLoading(true);
+      setShowSuggestionModal(true);
+      
+      // Only send meaningful, validated data to avoid AI fabrication
+      const requestData = {
+        job_title: jobTitle || null,
+        skills: skillNames.filter(skill => skill.trim().length > 0), // Only non-empty skills
+        current_summary: summary,
+        // Only include experiences with meaningful data
+        experiences: (experiences || [])
+          .filter(exp => exp.jobTitle?.trim() && exp.company?.trim() && exp.description?.trim())
+          .map(e => ({
+            jobTitle: e.jobTitle.trim(),
+            company: e.company || e.employer || '',
+            description: e.description.trim()
+          })),
+        // Only include education with meaningful data
+        education: (educations || [])
+          .filter(edu => edu.degree?.trim() && edu.school?.trim())
+          .map(ed => ({
+            degree: ed.degree.trim(),
+            school: ed.school.trim()
+          }))
+      };
+      
+      console.log('Sending summary generation request:', requestData);
+      
+      const res = await fetch('/generate-summary-suggestions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(requestData)
+      });
+      
+      const data = await res.json();
+      
+      if (data.error) {
+        alert(data.message || 'AI generation failed. Please try again.');
+        setShowSuggestionModal(false);
+        return;
+      }
+      
+      console.log('✅ Received AI suggestions:', data.suggestions);
+      setSuggestions(data.suggestions || []);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate suggestions. Please try again.');
+      setShowSuggestionModal(false);
+    } finally {
+      setSuggestionLoading(false);
+    }
+  };
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = (suggestion: string) => {
+    setSummary(suggestion);
+  };
+
   // Polish existing summary description with AI
   const polishSummaryDescription = async (currentSummary: string) => {
     try {
       const jobTitle = (desiredJobTitle || '').trim();
       const skillNames = (skills || []).map(s => s.name).filter(n => !!n && n.trim().length > 0);
-
-      if (!jobTitle) {
-        alert('Please fill in Desired job title first before polishing the summary.');
-        return;
-      }
 
       if (currentSummary.trim().length < 20) {
         alert('Please provide at least 20 characters for AI polishing.');
@@ -1363,49 +1489,25 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
 
       {errors.summary && <p className="text-red-500 text-xs mt-1">{errors.summary}</p>}
 
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => {
-            // Force different regeneration with unique timestamp, random number, and style variation
-            const uniqueVariant = summary ? 
-              'regenerate-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-style' + Math.floor(Math.random() * 5) : 
-              undefined;
-            handleGenerate(uniqueVariant);
-          }}
+      <div className="mb-4">
+        <AIButton
+          onClick={generateSummarySuggestions}
           disabled={genLoading}
-          className="px-6 py-3 bg-gradient-to-r from-[#354eab] to-purple-600 text-white rounded-lg hover:from-[#2d3f8f] hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg"
-          title={summary ? "Regenerate with different style" : "Generate Summary with AI"}
+          loading={genLoading}
+          title="Generate 3 AI suggestions to choose from"
+          suggestions={[
+            "Add relevant skills to highlight your expertise",
+            "Include work experience for better context",
+            "Add education details for comprehensive coverage",
+            "The more data you provide, the better the AI suggestions"
+          ]}
+          className="px-6 py-3 text-lg"
+          autoShow={true}
         >
-          {genLoading ? 'Generating…' : summary ? '🔄 Regenerate Summary with AI' : '✨ Generate Summary with AI'}
-        </button>
+          Generate Summary with AI
+        </AIButton>
+        
 
-        {/* Force Regeneration Button - Only show if user has content */}
-        {summary && summary.trim().length > 20 && (
-          <button
-            onClick={() => {
-              // Force completely different regeneration with multiple attempts
-              const forceVariant = 'force-regenerate-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-multiple';
-              handleGenerate(forceVariant);
-            }}
-            disabled={genLoading}
-            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-lg hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg border-2 border-red-400"
-            title="Force completely different regeneration with multiple AI attempts"
-          >
-            {genLoading ? 'Forcing…' : '🔥 Force Different Summary'}
-          </button>
-        )}
-
-        {/* Polish Button - Only show if user has written content */}
-        {summary && summary.trim().length > 20 && (
-          <button
-            onClick={() => polishSummaryDescription(summary)}
-            disabled={genLoading}
-            className="px-6 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-lg border-2 border-orange-400"
-            title="Polish and improve your existing summary with AI"
-          >
-            {genLoading ? 'Polishing…' : '✨ Polish with AI'}
-          </button>
-        )}
       </div>
 
       <div className="bg-gray-50 rounded-lg p-4">
@@ -1422,6 +1524,18 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
           ))}
         </div>
       </div>
+      
+      {/* Suggestion Modal */}
+      <SuggestionModal
+        isOpen={showSuggestionModal}
+        onClose={() => setShowSuggestionModal(false)}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSuggestionSelect}
+        title="Summary Suggestions"
+        loading={suggestionLoading}
+        onRegenerate={generateSummarySuggestions}
+        showRegenerateButton={true}
+      />
     </div>
   );
 };
@@ -2696,8 +2810,6 @@ const Builder: React.FC<BuilderProps> = ({
     });
   };
 
-
-
   const handleNext = () => {
     // Get validation result and error count directly
     const newErrors: Record<string, string> = {};
@@ -2720,7 +2832,7 @@ const Builder: React.FC<BuilderProps> = ({
           if (!exp.description || !exp.description.trim()) newErrors[`exp_${exp.id}_description`] = "Description is required";
         });
         break;
-      case 2: // Education
+        case 2: // Education
         educations.forEach((edu) => {
           if (!edu.school || !edu.school.trim()) newErrors[`edu_${edu.id}_school`] = "School name is required";
           if (!edu.location || !edu.location.trim()) newErrors[`edu_${edu.id}_location`] = "Location is required";

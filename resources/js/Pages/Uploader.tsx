@@ -83,6 +83,7 @@ const Uploader: React.FC<UploaderProps> = ({
   const [qualityAssessment, setQualityAssessment] = useState<QualityAssessment | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [templateName, setTemplateName] = useState<string>('classic');
+  const [activeTab, setActiveTab] = useState<string>('overview');
   
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -146,6 +147,7 @@ const Uploader: React.FC<UploaderProps> = ({
         setParsedData(result.preview_data);
         setQualityAssessment(result.quality_assessment);
         setShowPreview(true);
+        setActiveTab('overview');
       } else {
         setUploadError(result.error || 'Failed to parse resume');
       }
@@ -197,8 +199,254 @@ const Uploader: React.FC<UploaderProps> = ({
     setQualityAssessment(null);
     setShowPreview(false);
     setUploadError(null);
+    setActiveTab('overview');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            {/* AI Status Banner */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-amber-800 text-sm">AI Processing Notice</h4>
+                  <p className="text-amber-700 text-xs">Processed using Google Gemini AI. Daily quota limits apply. Process during off-peak hours for optimal results.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                    qualityAssessment?.confidence === 'high' 
+                      ? 'bg-green-100 text-green-800 border border-green-300' 
+                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}>
+                    {qualityAssessment?.confidence === 'high' ? '✅ Available' : '⚠️ Fallback'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quality Score & Sections */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Overall Score */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+                <div className="w-16 h-16 mx-auto mb-3 relative">
+                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
+                    <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray={`${qualityAssessment?.overall_score || 0}, 100`} strokeDashoffset="25"/>
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xl font-bold text-blue-700">{qualityAssessment?.overall_score || 0}%</span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-blue-800 text-sm">Overall Score</h4>
+              </div>
+
+              {/* Sections Found */}
+              <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-green-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-green-800 text-sm">Found ({qualityAssessment?.sections_found.length || 0})</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {qualityAssessment?.sections_found.map((section, index) => (
+                    <span key={section} className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-lg border border-green-200">
+                      {section}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Missing Sections */}
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 bg-amber-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-amber-800 text-sm">Missing ({qualityAssessment?.missing_sections.length || 0})</h4>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {qualityAssessment?.missing_sections.map((section, index) => (
+                    <span key={section} className="px-2 py-1 bg-amber-100 text-amber-800 text-xs font-medium rounded-lg border border-amber-200">
+                      {section}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'contact':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Name</h4>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  {parsedData?.contact?.firstName || parsedData?.contact?.lastName 
+                    ? `${parsedData.contact?.firstName || ''} ${parsedData.contact?.lastName || ''}`.trim()
+                    : 'Not found'
+                  }
+                </p>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Email</h4>
+                </div>
+                <p className="text-gray-700 font-medium break-all">
+                  {parsedData?.contact?.email || 'Not found'}
+                </p>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-xl p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Phone</h4>
+                </div>
+                <p className="text-gray-700 font-medium">
+                  {parsedData?.contact?.phone || 'Not found'}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'experience':
+        return (
+          <div className="space-y-4">
+            {parsedData?.experiences && parsedData.experiences.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4">
+                {parsedData.experiences.map((exp, index) => (
+                  <div key={index} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 text-lg mb-1">{exp.jobTitle || 'Job Title'}</h4>
+                        <p className="text-blue-600 font-medium mb-2">{exp.company || 'Company'}</p>
+                        {exp.description && (
+                          <p className="text-gray-600 text-sm leading-relaxed">{exp.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-lg">No experience information found</p>
+                <p className="text-gray-400 text-sm">The AI couldn't extract work experience from your resume</p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'skills':
+        return (
+          <div className="space-y-4">
+            {parsedData?.skills && parsedData.skills.length > 0 ? (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Skills ({parsedData.skills.length})</h4>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {parsedData.skills.map((skill, index) => (
+                    <span key={index} className="px-4 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 text-sm font-medium rounded-xl border border-blue-200 hover:from-blue-100 hover:to-indigo-100 hover:scale-105 transition-all duration-200">
+                      {skill.name || skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-lg">No skills information found</p>
+                <p className="text-gray-400 text-sm">The AI couldn't extract skills from your resume</p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'summary':
+        return (
+          <div className="space-y-4">
+            {parsedData?.summary ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                    </svg>
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Professional Summary</h4>
+                </div>
+                <p className="text-gray-700 leading-relaxed">{parsedData.summary}</p>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 text-lg">No summary found</p>
+                <p className="text-gray-400 text-sm">The AI couldn't extract a professional summary from your resume</p>
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -208,8 +456,8 @@ const Uploader: React.FC<UploaderProps> = ({
       
       {/* Decorative Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 right-1/4 w-80 h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] 2xl:w-[32rem] 2xl:h-[32rem] bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 lg:w-96 lg:h-96 xl:w-[28rem] xl:h-[28rem] 2xl:w-[32rem] 2xl:h-[32rem] bg-gradient-to-r from-[#4a5fc7]/5 to-[#5a6fd7]/5 rounded-full blur-3xl"></div>
       </div>
 
       {isUploading && (
@@ -225,12 +473,12 @@ const Uploader: React.FC<UploaderProps> = ({
 
       <main className="flex-grow">
         {/* Clean Blue Button Style */}
-        <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 lg:py-10 xl:py-12">
           <Link
             href="/choose-resume-maker"
-            className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 py-3 rounded-full transition-all duration-300 mb-8 text-sm font-bold shadow-md hover:shadow-lg group"
+            className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-full transition-all duration-300 mb-6 sm:mb-8 lg:mb-10 text-xs sm:text-sm lg:text-base font-bold shadow-md hover:shadow-lg group"
           >
-            <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
             Back to Choose Option
@@ -239,51 +487,51 @@ const Uploader: React.FC<UploaderProps> = ({
 
         {/* Warning for pending payments */}
         {user && hasPendingPayments && (
-          <div className="mx-auto max-w-3xl mb-8 p-6 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl shadow-xl shadow-yellow-200/20">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg">⚠️</span>
+          <div className="mx-auto max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mb-6 sm:mb-8 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl shadow-xl shadow-yellow-200/20">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
+                <span className="text-white text-sm sm:text-lg">⚠️</span>
               </div>
-              <span className="text-yellow-800 font-bold text-lg">Payment Pending</span>
+              <span className="text-yellow-800 font-bold text-base sm:text-lg">Payment Pending</span>
             </div>
-            <p className="text-yellow-700 text-sm leading-relaxed text-center">
+            <p className="text-yellow-700 text-xs sm:text-sm leading-relaxed text-center">
               {pendingResumesCount} resume(s) awaiting payment approval. Please wait for confirmation.
             </p>
           </div>
         )}
 
         {/* Enhanced Title Section */}
-        <div className="text-center mb-8 sm:mb-12 lg:mb-16 relative z-10">
+        <div className="text-center mb-6 sm:mb-8 lg:mb-12 xl:mb-16 relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="relative inline-block">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#354eab] mb-6 drop-shadow-sm">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-[#354eab] mb-4 sm:mb-6 lg:mb-8 drop-shadow-sm">
               Improve Your Resume
             </h1>
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-700 mb-4">
+            <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-700 mb-3 sm:mb-4 lg:mb-6">
               Upload your existing resume and let AI enhance it
             </h2>
-            <p className="text-base text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto leading-relaxed">
               Our AI-powered system will analyze your resume, extract key information, and help you create a professional, optimized version that stands out to employers.
             </p>
           </div>
         </div>
 
         {/* Upload Section */}
-        <div className="flex items-center justify-center pb-16">
-          <div className="w-full max-w-4xl px-4">
+        <div className="flex items-center justify-center pb-8 sm:pb-12 lg:pb-16 xl:pb-20">
+          <div className="w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
             {uploadError && (
-              <div className="mb-8 p-6 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl shadow-lg">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-gradient-to-r from-red-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mb-6 sm:mb-8 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl shadow-lg">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-red-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <span className="text-red-800 font-bold text-lg">Upload Error</span>
+                  <span className="text-red-800 font-bold text-base sm:text-lg">Upload Error</span>
                 </div>
-                <p className="text-red-700 text-sm leading-relaxed text-center mb-4">{uploadError}</p>
+                <p className="text-red-700 text-xs sm:text-sm leading-relaxed text-center mb-3 sm:mb-4">{uploadError}</p>
                 <button 
                   onClick={resetUpload}
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 text-xs sm:text-sm"
                 >
                   Try again
                 </button>
@@ -291,7 +539,7 @@ const Uploader: React.FC<UploaderProps> = ({
             )}
 
             <div
-              className={`border-2 border-dashed p-12 rounded-3xl bg-white/95 backdrop-blur-sm shadow-lg text-center transition-all duration-300 ${
+              className={`border-2 border-dashed p-6 sm:p-8 lg:p-10 xl:p-12 rounded-2xl sm:rounded-3xl bg-white/95 backdrop-blur-sm shadow-lg text-center transition-all duration-300 ${
                 isUploading 
                   ? 'border-[#354eab] bg-blue-50/50' 
                   : 'border-[#bcd6f6] hover:shadow-2xl hover:cursor-pointer hover:border-[#9bc4f0] hover:bg-white/98'
@@ -304,22 +552,22 @@ const Uploader: React.FC<UploaderProps> = ({
             >
               {isUploading ? (
                 <div className="flex flex-col items-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                  <h2 className="text-xl font-semibold mb-2">Processing your resume...</h2>
-                  <p className="text-gray-600">Please wait while we extract your information</p>
+                  <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-b-2 border-blue-600 mb-3 sm:mb-4"></div>
+                  <h2 className="text-lg sm:text-xl font-semibold mb-2">Processing your resume...</h2>
+                  <p className="text-gray-600 text-sm sm:text-base">Please wait while we extract your information</p>
                 </div>
               ) : (
                 <>
-                  <svg className="mx-auto text-slate-400/70 mb-4" width="56" height="56" fill="none" viewBox="0 0 56 56">
-                    <rect width="56" height="56" rx="12" fill="#f4faff"/>
-                    <path d="M28 38V18M28 18l-7 7m7-7l7 7" stroke="#354eab" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    <rect x="16" y="38" width="24" height="2" rx="1" fill="#354eab"/>
+                  <svg className="mx-auto text-slate-400/70 mb-3 sm:mb-4 w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16" fill="none" viewBox="0 0 48 48">
+                    <rect width="48" height="48" rx="12" fill="#f4faff"/>
+                    <path d="M24 32V16M24 16l-6 6m6-6l6 6" stroke="#354eab" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <rect x="14" y="32" width="20" height="2" rx="1" fill="#354eab"/>
                   </svg>
-                  <h2 className="text-2xl font-semibold mb-1">Drag and drop your resume here</h2>
-                  <p className="text-gray-400 mb-1">or</p>
+                  <h2 className="text-xl sm:text-2xl font-semibold mb-1">Drag and drop your resume here</h2>
+                  <p className="text-gray-400 mb-1 text-sm sm:text-base">or</p>
                   <button
                     type="button"
-                    className="bg-[#354eab] hover:bg-[#4a5fc7] text-white px-8 py-3 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                    className="bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 sm:px-8 py-2 sm:py-3 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-50 text-sm sm:text-base"
                     onClick={e => { e.stopPropagation(); fileInputRef.current?.click(); }}
                     disabled={isUploading}
                   >
@@ -333,403 +581,261 @@ const Uploader: React.FC<UploaderProps> = ({
                     onChange={handleFileChange}
                     disabled={isUploading}
                   />
-                  <p className="text-gray-400 my-3">Files we can read: PDF, DOC, DOCX, HTML, TXT</p>
+                  <p className="text-gray-400 my-2 sm:my-3 text-xs sm:text-sm">Files we can read: PDF, DOC, DOCX, HTML, TXT</p>
                 </>
               )}
             </div>
           </div>
         </div>
 
-        {/* Preview Modal - Animated Landscape Design */}
-        <Modal show={showPreview} onClose={() => setShowPreview(false)} maxWidth="2xl">
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-500 ease-out">
-            {/* Minimal Header - Clean Design */}
-            <div className="bg-white border-b border-gray-200 px-6 py-4">
+        {/* Compact Preview Modal - Landscape Layout without Tabs */}
+        <Modal show={showPreview} onClose={() => setShowPreview(false)} maxWidth="lg">
+          <div className="bg-gray-100 rounded-2xl shadow-2xl transform transition-all duration-500 ease-out animate-fade-in border-4 border-[#354eab]">
+            {/* Compact Header */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 px-4 py-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-[#354eab] rounded-lg flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center gap-3">
+                  <div className="w-6 h-6 bg-[#354eab] rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">Resume Preview</h2>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${
-                        qualityAssessment?.confidence === 'high' 
-                          ? 'bg-green-100 text-green-700 border border-green-200' 
-                          : 'bg-amber-100 text-amber-700 border border-amber-200'
-                      }`}>
-                        {qualityAssessment?.confidence === 'high' ? '🤖 AI Powered' : '📝 Enhanced Text'}
-                      </span>
-                      <span className="text-gray-500 text-xs font-medium">
-                        {qualityAssessment?.confidence === 'high' ? 'High Quality' : 'Fallback Mode'}
-                      </span>
-                    </div>
+                    <h2 className="text-base font-semibold text-gray-900">Resume Preview</h2>
+                    <p className="text-gray-600 text-xs">Review extracted information before creating your resume</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setShowPreview(false)}
-                  className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors duration-200"
+                  className="w-7 h-7 bg-white/80 hover:bg-white rounded-lg flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all duration-200 shadow-sm"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            {/* Compact Landscape Layout - Reduced Height */}
-            <div className="p-6">
-              {/* Top Row: AI Notice + File Info - Compact Landscape */}
-              <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 mb-6">
-                {/* AI Quota Disclaimer - Compact */}
-                <div className="xl:col-span-3">
-                  <div className="bg-gradient-to-r from-amber-50 via-orange-50 to-yellow-50 border border-amber-200 rounded-xl p-4 h-full shadow-lg transform hover:scale-[1.01] transition-all duration-300">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-amber-800 mb-2 text-sm">AI Processing Notice</h4>
-                        <p className="text-amber-700 text-xs leading-relaxed mb-3">
-                          Processed using Google Gemini AI. Daily quota limits apply. 
-                          <span className="font-semibold"> Process during off-peak hours for optimal results.</span>
-                        </p>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-white/90 rounded-lg p-2 border border-amber-200/60 shadow-sm">
-                            <span className="font-semibold text-amber-800 text-xs">Status:</span>
-                            <span className={`ml-2 px-2 py-1 rounded-full text-xs font-bold ${
-                              qualityAssessment?.confidence === 'high' 
-                                ? 'bg-green-100 text-green-800 border border-green-300' 
-                                : 'bg-amber-100 text-amber-800 border border-amber-300'
-                            }`}>
-                              {qualityAssessment?.confidence === 'high' ? '✅ Available' : '⚠️ Fallback'}
-                            </span>
-                          </div>
-                          <div className="bg-white/90 rounded-lg p-2 border border-amber-200/60 shadow-sm">
-                            <span className="font-semibold text-amber-800 text-xs">Method:</span>
-                            <span className="ml-2 text-amber-700 font-medium text-xs">
-                              {qualityAssessment?.confidence === 'high' ? 'AI (High Quality)' : 'Enhanced Text'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+            {/* Compact File Info */}
+            {selectedFile && (
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-1">
+                <div className="flex items-center gap-2 text-xs text-gray-600">
+                  <div className="w-3 h-3 bg-[#354eab] rounded flex items-center justify-center">
+                    <svg className="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
                   </div>
+                  <span className="font-medium text-gray-700">{selectedFile.name}</span>
+                  <span>•</span>
+                  <span>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                  <span>•</span>
+                  <span>{selectedFile.type}</span>
                 </div>
+              </div>
+            )}
 
-                {/* File Information - Compact */}
-                {selectedFile && (
-                  <div className="xl:col-span-1">
-                    <div className="bg-gradient-to-r from-gray-50 via-blue-50 to-indigo-50 border border-gray-200 rounded-xl p-4 h-full shadow-lg transform hover:scale-[1.01] transition-all duration-300">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-lg flex items-center justify-center shadow-lg">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-bold text-gray-900 text-sm truncate">{selectedFile.name}</h3>
-                          <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                            <span className="bg-white/90 px-2 py-1 rounded-md border border-gray-200/60 shadow-sm">
-                              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                            </span>
-                            <span className="bg-white/90 px-2 py-1 rounded-md border border-gray-200/60 truncate shadow-sm">
-                              {selectedFile.type}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+            {/* Main Content - Compact Landscape Layout */}
+            <div className="p-2">
+              {/* AI Status Banner - Compact */}
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-1.5 mb-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
                   </div>
-                )}
+                  <div className="flex-1">
+                    <p className="text-amber-700 text-xs">Processed using Google Gemini AI. Daily quota limits apply.</p>
+                  </div>
+                  <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${
+                    qualityAssessment?.confidence === 'high' 
+                      ? 'bg-green-100 text-green-800 border border-green-300' 
+                      : 'bg-amber-100 text-amber-800 border border-amber-300'
+                  }`}>
+                    {qualityAssessment?.confidence === 'high' ? '✅ Available' : '⚠️ Fallback'}
+                  </span>
+                </div>
               </div>
 
-              {/* Main Content: True Landscape Layout - Reduced Height */}
-              <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
-                {/* Left Column: Quality Assessment - Compact */}
-                <div className="xl:col-span-2 space-y-4">
-                  {/* Quality Assessment - Compact */}
-                  <div className="bg-gradient-to-br from-white via-gray-50 to-blue-50 border border-gray-200 rounded-xl p-4 shadow-lg">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-lg flex items-center justify-center shadow-lg">
-                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 text-base">Parsing Quality Assessment</h3>
-                        <p className="text-gray-600 text-xs">Analysis of extracted information</p>
-                      </div>
+              {/* Quality Assessment Row */}
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                {/* Overall Score */}
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-2 text-center hover:scale-105 hover:shadow-lg transition-all duration-300 animate-scale-in">
+                  <div className="w-14 h-14 mx-auto mb-1 relative">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e5e7eb" strokeWidth="2"/>
+                      <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#3b82f6" strokeWidth="2" strokeDasharray={`${qualityAssessment?.overall_score || 0}, 100`} strokeDashoffset="25" className="animate-dash"/>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-bold text-blue-700 animate-fade-in">{qualityAssessment?.overall_score || 0}%</span>
                     </div>
-
-                    {/* Compact Metrics - Reduced Height */}
-                    {qualityAssessment && (
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50 rounded-lg p-3 border border-gray-200 shadow-md">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className={`w-3 h-3 rounded-full ${
-                              qualityAssessment.confidence === 'high' ? 'bg-green-500' :
-                              qualityAssessment.confidence === 'medium' ? 'bg-yellow-500' : 'bg-red-500'
-                            } shadow-sm`}></div>
-                            <span className="text-sm font-bold capitalize text-gray-900">
-                              {qualityAssessment.confidence} Confidence
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                            <div className={`h-2 rounded-full transition-all duration-1000 ease-out ${
-                              qualityAssessment.confidence === 'high' ? 'bg-gradient-to-r from-green-500 to-green-600' :
-                              qualityAssessment.confidence === 'medium' ? 'bg-gradient-to-r from-yellow-500 to-yellow-600' : 'bg-gradient-to-r from-red-500 to-red-600'
-                            }`} style={{ width: '0%' }} 
-                            onAnimationStart={(e) => {
-                              setTimeout(() => {
-                                e.currentTarget.style.width = `${qualityAssessment.confidence === 'high' ? 90 : qualityAssessment.confidence === 'medium' ? 60 : 30}%`;
-                              }, 300);
-                            }}></div>
-                          </div>
-                        </div>
-                        <div className="bg-gradient-to-br from-[#354eab]/10 via-[#4a5fc7]/10 to-[#5a6fd7]/10 rounded-lg p-3 border border-[#354eab]/20 shadow-md">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-3 h-3 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full shadow-sm"></div>
-                            <span className="text-sm font-bold text-gray-900">Overall Score</span>
-                          </div>
-                          <div className="text-xl font-bold text-[#354eab]">{qualityAssessment.overall_score}%</div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Animated Sections Overview with Enhanced Visual Hierarchy */}
-                    {qualityAssessment && (
-                      <div className="space-y-4">
-                        {qualityAssessment.sections_found.length > 0 && (
-                          <div className="bg-gradient-to-br from-green-50/60 via-green-50/40 to-emerald-50/60 rounded-2xl p-4 border border-green-200/60 shadow-lg transform hover:scale-[1.02] transition-all duration-300">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-5 h-5 bg-green-500 rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-12 transition-all duration-300">
-                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              </div>
-                              <h4 className="text-base font-bold text-green-700">Sections Found</h4>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {qualityAssessment.sections_found.map((section, index) => (
-                                <span key={section} className="px-3 py-1.5 bg-green-100 text-green-800 text-sm font-semibold rounded-xl border border-green-200 shadow-md transform hover:scale-105 transition-all duration-200 animate-fade-in" 
-                                style={{ animationDelay: `${index * 100}ms` }}>
-                                  {section}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {qualityAssessment.missing_sections.length > 0 && (
-                          <div className="bg-gradient-to-br from-amber-50/60 via-amber-50/40 to-orange-50/60 rounded-2xl p-4 border border-amber-200/60 shadow-lg transform hover:scale-[1.02] transition-all duration-300">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-5 h-5 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-12 transition-all duration-300">
-                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                              </div>
-                              <h4 className="text-base font-bold text-amber-700">Missing Sections</h4>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {qualityAssessment.missing_sections.map((section, index) => (
-                                <span key={section} className="px-3 py-1.5 bg-amber-100 text-amber-800 text-sm font-semibold rounded-xl border border-amber-200 shadow-md transform hover:scale-105 transition-all duration-200 animate-fade-in" 
-                                style={{ animationDelay: `${index * 100}ms` }}>
-                                  {section}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
-
-                  {/* Compact Suggestions Section */}
-                  {qualityAssessment?.suggestions && qualityAssessment.suggestions.length > 0 && (
-                    <div className="bg-gradient-to-br from-[#354eab]/10 via-[#4a5fc7]/10 to-[#5a6fd7]/10 border border-[#354eab]/20 rounded-lg p-3 shadow-md">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-5 h-5 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-lg flex items-center justify-center shadow-sm">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <h4 className="text-sm font-semibold text-[#354eab]">Suggestions</h4>
-                      </div>
-                      <ul className="text-gray-700 space-y-2 text-xs">
-                        {qualityAssessment.suggestions.slice(0, 2).map((suggestion, index) => (
-                          <li key={index} className="flex items-start gap-3">
-                            <div className="w-1.5 h-1.5 bg-[#354eab] rounded-full mt-1.5 flex-shrink-0 shadow-sm"></div>
-                            <span className="leading-relaxed">{suggestion}</span>
-                          </li>
-                        ))}
-                        {qualityAssessment.suggestions.length > 2 && (
-                          <li className="text-xs text-[#354eab] text-center pt-2 font-semibold">
-                            +{qualityAssessment.suggestions.length - 2} more suggestions
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+                  <h4 className="font-semibold text-blue-800 text-xs">Overall Score</h4>
                 </div>
 
-                {/* Right Column: Extracted Information - Compact Landscape Layout */}
-                {parsedData && (
-                  <div className="xl:col-span-3 space-y-4">
-                    <div className="bg-gradient-to-br from-white via-gray-50 to-blue-50 border border-gray-200 rounded-xl p-4 shadow-lg">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-lg flex items-center justify-center shadow-lg">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900 text-base">Extracted Information</h3>
-                          <p className="text-gray-600 text-xs">Successfully parsed data</p>
-                        </div>
+                {/* Sections Found */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-lg p-2 hover:scale-105 hover:shadow-lg transition-all duration-300 animate-slide-in-left">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-4 h-4 bg-green-500 rounded-lg flex items-center justify-center hover:rotate-12 transition-transform duration-300">
+                      <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <h4 className="font-semibold text-green-800 text-xs">Found ({qualityAssessment?.sections_found.length || 0})</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {qualityAssessment?.sections_found.map((section, index) => (
+                      <span key={section} className="px-1.5 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-md border border-green-200 hover:scale-110 hover:bg-green-200 transition-all duration-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                        {section}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Missing Sections */}
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-2 hover:scale-105 hover:shadow-lg transition-all duration-300 animate-slide-in-right">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-4 h-4 bg-amber-500 rounded-lg flex items-center justify-center hover:rotate-12 transition-transform duration-300">
+                      <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-semibold text-amber-800 text-xs">Missing ({qualityAssessment?.missing_sections.length || 0})</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {qualityAssessment?.missing_sections.map((section, index) => (
+                      <span key={section} className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-xs font-medium rounded-md border border-amber-200 hover:scale-110 hover:bg-amber-200 transition-all duration-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                        {section}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Extracted Information - Compact Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Contact Information */}
+                                                    <div className="bg-white border border-gray-200 rounded-lg p-1.5 hover:shadow-md hover:scale-[1.02] transition-all duration-300 animate-fade-in">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-4 h-4 bg-blue-100 rounded-lg flex items-center justify-center hover:rotate-12 transition-transform duration-300">
+                        <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
                       </div>
-
-                      {/* Compact Information Grid - Reduced Height */}
-                      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                        {/* Contact Information - Compact */}
-                        <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50 rounded-lg p-3 border border-gray-200 shadow-md">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-5 h-5 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-lg flex items-center justify-center shadow-sm">
-                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                              </svg>
-                            </div>
-                            <h4 className="text-sm font-semibold text-gray-900">Contact</h4>
-                          </div>
-                          <div className="space-y-2 text-xs">
-                            <div className="flex justify-between items-center bg-white/90 rounded-lg p-2 border border-gray-200/60 shadow-sm">
-                              <span className="text-gray-600 font-semibold">Name:</span>
-                              <span className="font-bold text-gray-900 max-w-[140px] text-right">
-                                {parsedData.contact?.firstName || parsedData.contact?.lastName 
-                                  ? `${parsedData.contact?.firstName || ''} ${parsedData.contact?.lastName || ''}`.trim()
-                                  : 'Not found'
-                                }
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center bg-white/90 rounded-lg p-2 border border-gray-200/60 shadow-sm">
-                              <span className="text-gray-600 font-semibold">Email:</span>
-                              <span className="font-bold text-gray-900 max-w-[140px] text-right break-all">
-                                {parsedData.contact?.email || 'Not found'}
-                              </span>
-                            </div>
-                            <div className="flex justify-between items-center bg-white/90 rounded-lg p-2 border border-gray-200/60 shadow-sm">
-                              <span className="text-gray-600 font-semibold">Phone:</span>
-                              <span className="font-bold text-gray-900 max-w-[140px] text-right">
-                                {parsedData.contact?.phone || 'Not found'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Summary - Animated */}
-                        <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50 rounded-2xl p-4 border border-gray-200 shadow-lg transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-12 transition-all duration-300">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
-                              </svg>
-                            </div>
-                            <h4 className="text-base font-semibold text-gray-900">Summary</h4>
-                          </div>
-                          <div className="bg-white/90 rounded-xl p-3 border border-gray-200/60 shadow-md transform hover:scale-105 transition-all duration-200">
-                            <p className="text-gray-700 text-sm leading-relaxed">
-                              {parsedData.summary || 'No summary found'}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Experience - Animated */}
-                        <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50 rounded-2xl p-4 border border-gray-200 shadow-lg transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-12 transition-all duration-300">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
-                              </svg>
-                            </div>
-                            <h4 className="text-base font-semibold text-gray-900">Experience ({parsedData.experiences?.length || 0})</h4>
-                          </div>
-                          <div className="space-y-3">
-                            {parsedData.experiences?.slice(0, 2).map((exp, index) => (
-                              <div key={index} className="bg-white/90 rounded-xl p-3 border border-gray-200/60 shadow-md transform hover:scale-105 transition-all duration-200 animate-fade-in" 
-                              style={{ animationDelay: `${index * 150}ms` }}>
-                                <p className="font-bold text-gray-900 text-sm mb-1">{exp.jobTitle || 'Job Title'}</p>
-                                <p className="text-gray-600 text-sm">{exp.company || 'Company'}</p>
-                              </div>
-                            )) || <div className="text-center text-gray-500 text-sm py-3 bg-white/70 rounded-xl border border-gray-200/50 shadow-md">No experience found</div>}
-                            {(parsedData.experiences?.length || 0) > 2 && (
-                              <div className="text-center">
-                                <span className="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-600 text-sm rounded-xl font-semibold shadow-md transform hover:scale-105 transition-all duration-200">
-                                  +{(parsedData.experiences?.length || 0) - 2} more
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Skills - Animated */}
-                        <div className="bg-gradient-to-br from-gray-50 via-white to-blue-50 rounded-2xl p-4 border border-gray-200 shadow-lg transform hover:scale-[1.02] transition-all duration-300 hover:shadow-xl">
-                          <div className="flex items-center gap-4 mb-4">
-                            <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-xl flex items-center justify-center shadow-lg transform hover:rotate-12 transition-all duration-300">
-                              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                              </svg>
-                            </div>
-                            <h4 className="text-base font-semibold text-gray-900">Skills ({parsedData.skills?.length || 0})</h4>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {parsedData.skills?.slice(0, 3).map((skill, index) => (
-                              <span key={index} className="px-3 py-1.5 bg-gradient-to-r from-[#354eab]/15 via-[#4a5fc7]/15 to-[#5a6fd7]/15 text-[#354eab] text-sm font-bold rounded-xl border border-[#354eab]/30 shadow-md transform hover:scale-110 transition-all duration-200 animate-fade-in" 
-                              style={{ animationDelay: `${index * 100}ms` }}>
-                                {skill.name || skill}
-                              </span>
-                            )) || <p className="text-gray-500 text-center text-sm py-3 bg-white/70 rounded-xl border border-gray-200/50 shadow-md">No skills found</p>}
-                            {(parsedData.skills?.length || 0) > 3 && (
-                              <span className="px-3 py-1.5 bg-gray-200 text-gray-600 text-sm rounded-xl font-semibold shadow-md transform hover:scale-105 transition-all duration-200">
-                                +{(parsedData.skills?.length || 0) - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      <h4 className="font-semibold text-gray-900 text-sm">Contact</h4>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Name:</span>
+                      <span className="font-medium text-gray-900">
+                        {parsedData?.contact?.firstName || parsedData?.contact?.lastName 
+                          ? `${parsedData.contact?.firstName || ''} ${parsedData.contact?.lastName || ''}`.trim()
+                          : 'Not found'
+                        }
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Email:</span>
+                      <span className="font-medium text-gray-900 max-w-[120px] text-right break-all">
+                        {parsedData?.contact?.email || 'Not found'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Phone:</span>
+                      <span className="font-medium text-gray-900">
+                        {parsedData?.contact?.phone || 'Not found'}
+                      </span>
                     </div>
                   </div>
-                )}
+                </div>
+
+                {/* Summary */}
+                <div className="bg-white border border-gray-200 rounded-lg p-1.5 hover:shadow-md hover:scale-[1.02] transition-all duration-300 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-4 h-4 bg-blue-100 rounded-lg flex items-center justify-center hover:rotate-12 transition-transform duration-300">
+                      <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                      </svg>
+                    </div>
+                    <h4 className="font-semibold text-gray-900 text-sm">Summary</h4>
+                  </div>
+                  <p className="text-gray-700 text-xs leading-relaxed">
+                    {parsedData?.summary || 'No summary found'}
+                  </p>
+                </div>
+
+                {/* Experience */}
+                <div className="bg-white border border-gray-200 rounded-lg p-1.5 hover:shadow-md hover:scale-[1.02] transition-all duration-300 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-4 h-4 bg-blue-100 rounded-lg flex items-center justify-center hover:rotate-12 transition-transform duration-300">
+                      <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6" />
+                      </svg>
+                    </div>
+                    <h4 className="font-semibold text-gray-900 text-sm">Experience ({parsedData?.experiences?.length || 0})</h4>
+                  </div>
+                  <div className="space-y-1.5">
+                                         {parsedData?.experiences?.slice(0, 2).map((exp, index) => (
+                       <div key={index} className="text-xs">
+                         <p className="font-semibold text-gray-900">{exp.jobTitle || 'Job Title'}</p>
+                         <p className="text-blue-600">{exp.company || 'Company'}</p>
+                       </div>
+                     )) || <p className="text-gray-500 text-xs">No experience found</p>}
+                     {(parsedData?.experiences && parsedData.experiences.length > 2) && (
+                       <p className="text-xs text-blue-600 font-medium">+{(parsedData.experiences.length - 2)} more</p>
+                     )}
+                  </div>
+                </div>
+
+                                {/* Skills */}
+                <div className="bg-white border border-gray-200 rounded-lg p-1.5 hover:shadow-md hover:scale-[1.02] transition-all duration-300 animate-fade-in">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <div className="w-4 h-4 bg-blue-100 rounded-lg flex items-center justify-center hover:rotate-12 transition-transform duration-300">
+                      <svg className="w-2 h-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                      </svg>
+                    </div>
+                    <h4 className="font-semibold text-gray-900 text-sm">Skills ({parsedData?.skills?.length || 0})</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {parsedData?.skills?.slice(0, 4).map((skill, index) => (
+                      <span key={index} className="px-1.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-medium rounded-md border border-blue-200 hover:scale-110 hover:bg-blue-100 transition-all duration-200 animate-fade-in" style={{ animationDelay: `${index * 100}ms` }}>
+                        {skill.name || skill}
+                      </span>
+                    )) || <p className="text-gray-500 text-xs">No skills found</p>}
+                    {(parsedData?.skills && parsedData.skills.length > 4) && (
+                      <span className="px-1.5 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-md hover:scale-105 transition-all duration-200">
+                        +{(parsedData.skills.length - 4)} more
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Minimal Action Footer */}
-            <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-              <div className="flex items-center gap-4 text-xs text-gray-600">
-                <span>You can edit all information after creating the resume</span>
+            {/* Compact Action Footer */}
+            <div className="bg-gray-50 border-t border-gray-200 px-4 py-2 flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div className="flex items-center gap-3 text-xs text-gray-600">
+                <span>💡 You can edit all information after creating the resume</span>
                 <span>•</span>
-                <span>💡 AI quota resets daily at midnight UTC</span>
+                <span>🔄 AI quota resets daily at midnight UTC</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={resetUpload}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 font-medium text-sm"
+                  className="px-3 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:scale-105 hover:shadow-md transition-all duration-200 font-medium text-sm"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmUpload}
                   disabled={isUploading}
-                  className="px-6 py-2 bg-[#354eab] text-white rounded-lg hover:bg-[#2d3f8f] transition-colors duration-200 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                  className="px-4 py-2 bg-[#354eab] text-white rounded-lg hover:bg-[#2d3f8f] hover:scale-105 hover:shadow-lg transition-all duration-200 font-medium flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
                 >
                   {isUploading && (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                   )}
-                  {isUploading ? 'Creating Resume...' : 'Create Resume'}
+                  {isUploading ? 'Creating...' : 'Create Resume'}
                 </button>
               </div>
             </div>
