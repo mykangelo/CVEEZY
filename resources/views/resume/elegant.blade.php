@@ -4,20 +4,7 @@
     <meta charset="UTF-8">
     <title>Resume</title>
     <style>
-        @font-face {
-            font-family: 'Elegant Grotesk';
-            src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskRegular.ttf') format('truetype');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Elegant Grotesk';
-            src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskBold.ttf') format('truetype');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
+        /* Using system fonts for better PDF compatibility */
         
         @page {
             margin: 0.4in 0.3in 0.3in 0.3in;
