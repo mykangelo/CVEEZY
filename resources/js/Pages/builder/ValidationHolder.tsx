@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import "../../../css/app.css";
-import "flag-icons/css/flag-icons.min.css";
 
 // ValidationHolder component
 interface ValidationHolderProps {

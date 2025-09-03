@@ -274,41 +274,47 @@
             $resume['contact']['postCode'] ?? null
         ])->filter()->implode(', ');
 
-        // check if ANY info is present
         $hasContactInfo = $firstName || $lastName || $jobTitle || $email || $phone || $locationInfo;
+        $hasContactDetails = $locationInfo || $email || $phone;
+        $hasNameOrJob = $firstName || $lastName || $jobTitle;
     @endphp
 
     @if($hasContactInfo)
         <div>
-            @if($firstName || $lastName)
-                <h2 class="contact-name">
-                    {{ $firstName }} {{ $lastName }}
-                </h2>
-            @endif
+            {{-- Name + Job Title Group --}}
+            @if($hasNameOrJob)
+                <div class="name-jobgroup">
+                    @if($firstName || $lastName)
+                        <h2 class="contact-name">
+                            {{ $firstName }} {{ $lastName }}
+                        </h2>
+                    @endif
 
-            @if($jobTitle)
-                <div class="contact-jobtitle">
-                    {{ $jobTitle }}
+                    {{-- Job title (padding even if empty) --}}
+                    <div class="contact-jobtitle" style="padding: 4px 0;">
+                        {{ $jobTitle ?: '' }}
+                    </div>
                 </div>
+                <hr class="section-divider-thin" />
             @endif
 
-            <hr class="section-divider-thin" />
-
-            <div class="contact-details">
-                @if($locationInfo)
-                    {{ $locationInfo }}
-                @endif
-                @if($locationInfo && $email) | @endif
-                @if($email)
-                    {{ $email }}
-                @endif
-                @if(($locationInfo || $email) && $phone) | @endif
-                @if($phone)
-                    {{ $phone }}
-                @endif
-            </div>
-
-            <hr class="section-divider-thin" />
+            {{-- Contact details --}}
+            @if($hasContactDetails)
+                <div class="contact-details">
+                    @if($locationInfo)
+                        {{ $locationInfo }}
+                    @endif
+                    @if($locationInfo && $email) | @endif
+                    @if($email)
+                        {{ $email }}
+                    @endif
+                    @if(($locationInfo || $email) && $phone) | @endif
+                    @if($phone)
+                        {{ $phone }}
+                    @endif
+                </div>
+                <hr class="section-divider-thin" />
+            @endif
         </div>
     @endif
 
