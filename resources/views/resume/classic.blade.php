@@ -1,3 +1,6 @@
+@php
+use App\Helpers\BulletProcessor;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,7 +17,7 @@
             color: #111827;
             font-size: 12px;
             line-height: 1.8;
-            margin: 0 16px 16px 16px;
+            margin: 0 8px 8px 8px;
         }
 
         /* Headings */
@@ -24,9 +27,9 @@
             color: inherit;
             margin: 0;
         }
-        h1 { font-size: 28px; text-align: center; }
-        h2 { font-size: 20px; text-align: center; }
-        h3, .section-title, .skills-title { font-size: 16px; margin: 10px 0 4px 16px; }
+        h1 { font-size: 28px; text-align: center; word-wrap: break-word; overflow-wrap: break-word; }
+        h2 { font-size: 20px; text-align: center; word-wrap: break-word; overflow-wrap: break-word; }
+        h3, .section-title, .skills-title { font-size: 16px; margin: 10px 0 4px 16px; word-wrap: break-word; overflow-wrap: break-word; }
 
         /* Dividers */
         .section-divider {
@@ -45,6 +48,8 @@
             text-align: center;
             margin-top: 0;
             margin-bottom: -16px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .contact-jobtitle {
             font-size: 18px;
@@ -52,12 +57,16 @@
             text-align: center;
             margin-top: 0;
             margin-bottom: 6px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .contact-details {
             font-size: 12px;
             text-align: center;
             color: #111827;
             margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         /* Summary */
@@ -65,6 +74,8 @@
             font-size: 12px;
             line-height: 1.6;
             color: #111827;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         /* Skills */
@@ -81,6 +92,8 @@
             font-size: 12px;
             margin-top: -10px; /* removed top/bottom margin */
             color: #111827;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         /* Experience */
@@ -110,10 +123,13 @@
             font-size: 12px;
             margin: -10px 0 2px 0px;
             color: #111827;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .experience-description-list {
             margin: 0;
             padding-left: 16px;
+            list-style-type: disc;
         }
         .experience-description {
             font-size: 11px;
@@ -148,10 +164,13 @@
             font-size: 12px;
             margin: -10px 0 0 0px;
             color: #111827;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         .education-description-list {
             margin: 1px 0 0 16px;
             padding: 0;
+            list-style-type: disc;
         }
         .education-description {
             font-size: 11px;
@@ -228,16 +247,29 @@
         /* prevent headings from detaching from content */
         .section-title, .skills-title { page-break-after: avoid; }
 
-        /* Enhanced page break and overflow prevention */
-        .experience-item, .education-item, .hobbies-table, .websites-table, .references-table {
+        /* Smart page break handling for multi-page content */
+        .experience-item, .education-item {
             page-break-inside: avoid;
             break-inside: avoid;
+        }
+        
+        .hobbies-table, .websites-table, .references-table {
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         /* Ensure proper page breaks for all elements */
         h1, h2, h3, .section-title, .skills-title {
             page-break-after: avoid;
             break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        /* Ensure clean page breaks for multi-page content */
+        .space-y-4 {
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         /* Prevent text overflow and ensure proper wrapping */
@@ -251,6 +283,55 @@
         .section:last-child {
             page-break-inside: auto;
         }
+        
+        /* Print-specific overrides for compact layout */
+        @media print {
+            body {
+                margin: 0 4px 4px 4px !important;
+            }
+            
+            /* Ensure clean page breaks for multi-page content */
+            .experience-item, .education-item {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            .hobbies-table, .websites-table, .references-table, .space-y-4 {
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+            }
+            
+            h1, h2, h3, .section-title, .skills-title {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
+    </style>
+    @php
+        $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+        $sec = $design['sectionSpacing'] ?? null;
+        $para = $design['paragraphSpacing'] ?? null;
+        $lp = $design['lineSpacing'] ?? null;
+        $lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+        $fontStyle = $design['fontStyle'] ?? null;
+    @endphp
+    <style>
+        @if(!is_null($sec))
+        .section-divider, .education-section, .skills-title, .section-title { margin-bottom: {{ (int)$sec }}px !important; }
+        @endif
+        @if(!is_null($para))
+        .summary-text, .experience-description, .education-description, .website-item, .reference-item, .additional-info-list li { margin-bottom: {{ (int)$para }}px !important; }
+        @endif
+        @if(!is_null($lh))
+        body, .summary-text, .experience-description, .education-description, li { line-height: {{ $lh }} !important; }
+        @endif
+        @if($fontStyle==='small')
+        body { font-size: 11px !important; }
+        @elseif($fontStyle==='large')
+        body { font-size: 15px !important; }
+        @endif
     </style>
 </head>
 <body>
@@ -410,9 +491,28 @@
                         @if(!empty($exp['location'])) — {{ $exp['location'] }} @endif
                     </div>
                     @if(!empty($exp['description']))
-                        <ul class="experience-description-list">
-                            <li class="experience-description">{{ $exp['description'] }}</li>
-                        </ul>
+                        @php 
+                            $rawDesc = (string)($exp['description'] ?? '');
+                            // Normalize HTML to plain text with bullet markers/newlines for processor
+                            $norm = preg_replace('/<li[^>]*>\s*/i', '* ', $rawDesc);
+                            $norm = preg_replace('/<\/li>/i', "\n", $norm);
+                            $norm = preg_replace('/<br\s*\/?>(\s*)/i', "\n", $norm);
+                            $norm = strip_tags($norm);
+                            $processedBullets = BulletProcessor::processBulletedDescription($norm);
+                            $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                        @endphp
+                        @if ($hasBullets)
+                            <ul class="experience-description-list">
+                                @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                                    <li class="experience-description">{{ $text }}</li>
+                                @endforeach
+                            </ul>
+                        @else
+                            @php $desc = trim($norm); @endphp
+                            @if($desc !== '')
+                                <p class="experience-description">{{ $desc }}</p>
+                            @endif
+                        @endif
                     @endif
                 </div>
             @endforeach
@@ -454,9 +554,27 @@
                             @if(!empty($edu['location'])) — {{ $edu['location'] }} @endif
                         </div>
                         @if(!empty($edu['description']))
-                            <ul class="education-description-list">
-                                <li class="education-description">{{ $edu['description'] }}</li>
-                            </ul>
+                            @php 
+                                $rawDesc = (string)($edu['description'] ?? '');
+                                $norm = preg_replace('/<li[^>]*>\s*/i', '* ', $rawDesc);
+                                $norm = preg_replace('/<\/li>/i', "\n", $norm);
+                                $norm = preg_replace('/<br\s*\/?>(\s*)/i', "\n", $norm);
+                                $norm = strip_tags($norm);
+                                $processedBullets = BulletProcessor::processBulletedDescription($norm);
+                                $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                            @endphp
+                            @if ($hasBullets)
+                                <ul class="education-description-list">
+                                    @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                                        <li class="education-description">{{ $text }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                @php $desc = trim($norm); @endphp
+                                @if($desc !== '')
+                                    <p class="education-description">{{ $desc }}</p>
+                                @endif
+                            @endif
                         @endif
                     </div>
                 @endforeach
@@ -538,12 +656,59 @@
                     </li>
                 @endif
                 @if(!empty($resume['certifications']))
-                    <li>
-                        <span class="additional-label">Certification:</span>
-                        @foreach($resume['certifications'] as $index => $cert)
-                            {{ $cert['title'] }}@if($index < count($resume['certifications']) - 1), @endif
-                        @endforeach
-                    </li>
+                    @php 
+                        $allCertTexts = array_map(fn($c)=>$c['title'] ?? '', $resume['certifications']);
+                        $processedBullets = array_map(function($title) {
+                            return BulletProcessor::processBulletedDescription($title);
+                        }, $allCertTexts);
+                        $hasAnyBullets = false;
+                        foreach ($processedBullets as $bullets) {
+                            if (BulletProcessor::hasBullets($bullets)) {
+                                $hasAnyBullets = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!$hasAnyBullets) {
+                            $certsLine = implode(', ', $allCertTexts);
+                            // If no bullets detected, try to split long certification strings by commas
+                            if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
+                                $certItems = array_map('trim', explode(',', $certsLine));
+                                $certItems = array_filter($certItems, function($item) { return !empty($item); });
+                                $hasLongCertList = true;
+                            } else {
+                                $hasLongCertList = false;
+                            }
+                        }
+                    @endphp
+                    @if ($hasAnyBullets)
+                        <li>
+                            <span class="additional-label">Certification:</span>
+                            <ul class="additional-info-list" style="margin-left: 16px;">
+                                @foreach ($processedBullets as $bullets)
+                                    @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
+                                        <li style="margin-bottom: 2px;">{{ $text }}</li>
+                                    @endforeach
+                                @endforeach
+                            </ul>
+                        </li>
+                    @elseif ($hasLongCertList)
+                        <li>
+                            <span class="additional-label">Certification:</span>
+                            <ul class="additional-info-list" style="margin-left: 16px;">
+                                @foreach ($certItems as $cert)
+                                    <li style="margin-bottom: 2px;">{{ $cert }}</li>
+                                @endforeach
+                            </ul>
+                        </li>
+                    @else
+                        <li>
+                            <span class="additional-label">Certification:</span>
+                            @foreach($resume['certifications'] as $index => $cert)
+                                {{ $cert['title'] }}@if($index < count($resume['certifications']) - 1), @endif
+                            @endforeach
+                        </li>
+                    @endif
                 @endif
                 @if(!empty($resume['awards']))
                     <li>

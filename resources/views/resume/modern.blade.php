@@ -1,3 +1,6 @@
+@php
+use App\Helpers\BulletProcessor;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -42,7 +45,7 @@ html, body {
 .left-column {
   display: table-cell;
   width: 60%;
-  padding: 25px 30px 25px 30px;
+  padding: 20px;
   vertical-align: top;
   background: #fff;
   box-sizing: border-box;
@@ -51,21 +54,29 @@ html, body {
 .right-column {
   display: table-cell;
   width: 40%;
-  padding: 25px 20px 25px 20px;
+  padding: 20px;
   vertical-align: top;
   background: #fff;
   box-sizing: border-box;
 }
 
-/* Prevent section splits */
-.section,
+/* Smart page break handling for multi-page content */
+.section {
+  page-break-inside: auto;
+  break-inside: auto;
+}
+
 .timeline-item,
-.skill-item,
-.reference-item,
-.contact-item,
-.hobby-item {
+.contact-item {
   page-break-inside: avoid;
   break-inside: avoid;
+}
+
+.skill-item,
+.reference-item,
+.hobby-item {
+  page-break-inside: auto;
+  break-inside: auto;
 }
 
 /* Header */
@@ -74,6 +85,8 @@ html, body {
   font-size: 42px;
   font-weight: normal;
   color: #1f2937;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   margin: 0;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -86,6 +99,8 @@ html, body {
   font-size: 24px;
   font-weight: 400;
   color: #6b7280;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   margin: 8px 0 0 0;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -98,6 +113,8 @@ html, body {
   font-weight: 600;
   color: #1f2937;
   margin: 0 0 12px 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding-bottom: 6px;
@@ -127,6 +144,8 @@ html, body {
   font-weight: 400; 
   color: #1f2937; 
   line-height: 1.5; 
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   text-align: justify; 
   margin: 0;
 }
@@ -171,7 +190,9 @@ html, body {
   font-size: 15px; 
   font-weight: 500; 
   color: #1f2937; 
-  margin: 0 0 4px; 
+  margin: 0 0 4px;
+  word-wrap: break-word;
+  overflow-wrap: break-word; 
 }
 .timeline-description { 
   font-family: sans-serif !important;
@@ -179,6 +200,8 @@ html, body {
   font-weight: 500; 
   color: #1f2937; 
   line-height: 1.4; 
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .timeline-location { 
@@ -493,6 +516,58 @@ html, body {
   }
 }
 
+/* Print-specific overrides for compact layout */
+@media print {
+  .paper {
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  
+  .left-column, .right-column {
+    padding: 12px !important;
+  }
+  
+  /* Ensure clean page breaks for multi-page content */
+  .section {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+  
+  .timeline-item, .contact-item {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  
+  .skill-item, .reference-item, .hobby-item {
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+}
+
+</style>
+@php
+$design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+$sec = $design['sectionSpacing'] ?? null;
+$para = $design['paragraphSpacing'] ?? null;
+$lp = $design['lineSpacing'] ?? null;
+$lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+$fontStyle = $design['fontStyle'] ?? null;
+@endphp
+<style>
+@if(!is_null($sec))
+.section { margin-bottom: {{ (int)$sec }}px !important; }
+@endif
+@if(!is_null($para))
+.profile-text, .timeline-description div, .list-item, .bullet-point, .education-item, .reference-item, .hobby-item, .language-item, .timeline-item { margin-bottom: {{ (int)$para }}px !important; }
+@endif
+@if(!is_null($lh))
+body, .profile-text, .timeline-description, .list-item, .bullet-point, .contact-item, .language-item, .timeline-title, .timeline-description, .timeline-location { line-height: {{ $lh }} !important; }
+@endif
+@if($fontStyle==='small')
+body { font-size: 14px !important; }
+@elseif($fontStyle==='large')
+body { font-size: 18px !important; }
+@endif
 </style>
 </head>
 <body>
@@ -543,17 +618,20 @@ html, body {
 
             @if (!empty($exp['description']))
               <div class="timeline-description">
-                @php $lines = preg_split('/\r\n|\r|\n/', $exp['description']); @endphp
-                @foreach ($lines as $line)
-                  @php $t = trim($line); @endphp
-                  @if ($t !== '')
-                    @if (preg_match('/^([•\-–\*])\s*/u', $t))
-                      <div class="bullet-point">{{ preg_replace('/^([•\-–\*])\s*/u', '', $t) }}</div>
-                    @else
-                      <div style="margin-bottom:3px">{{ $t }}</div>
-                    @endif
+                @php 
+                  $processedBullets = BulletProcessor::processBulletedDescription($exp['description']);
+                  $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                @endphp
+                @if ($hasBullets)
+                  @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                    <div class="bullet-point">{{ $text }}</div>
+                  @endforeach
+                @else
+                  @php $desc = trim($exp['description']); @endphp
+                  @if($desc !== '')
+                    <div style="margin-bottom:3px">{{ $desc }}</div>
                   @endif
-                @endforeach
+                @endif
               </div>
             @endif
           </div>
@@ -567,9 +645,46 @@ html, body {
       @if (!empty($resume['certifications']))
         <div class="section">
           <h3 class="section-title">Certifications</h3>
-          @foreach ($resume['certifications'] as $cert)
-            @if (!empty($cert['title'])) <div class="list-item">{{ $cert['title'] }}</div> @endif
-          @endforeach
+          @php 
+            $allCertTexts = array_map(fn($c)=>$c['title'] ?? '', $resume['certifications']);
+            $processedBullets = array_map(function($title) {
+              return BulletProcessor::processBulletedDescription($title);
+            }, $allCertTexts);
+            $hasAnyBullets = false;
+            foreach ($processedBullets as $bullets) {
+              if (BulletProcessor::hasBullets($bullets)) {
+                $hasAnyBullets = true;
+                break;
+              }
+            }
+            
+            if (!$hasAnyBullets) {
+              $certsLine = implode(', ', $allCertTexts);
+              // If no bullets detected, try to split long certification strings by commas
+              if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
+                $certItems = array_map('trim', explode(',', $certsLine));
+                $certItems = array_filter($certItems, function($item) { return !empty($item); });
+                $hasLongCertList = true;
+              } else {
+                $hasLongCertList = false;
+              }
+            }
+          @endphp
+          @if ($hasAnyBullets)
+            @foreach ($processedBullets as $bullets)
+              @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
+                <div class="list-item">{{ $text }}</div>
+              @endforeach
+            @endforeach
+          @elseif ($hasLongCertList)
+            @foreach ($certItems as $cert)
+              <div class="list-item">{{ $cert }}</div>
+            @endforeach
+          @else
+            @foreach ($resume['certifications'] as $cert)
+              @if (!empty($cert['title'])) <div class="list-item">{{ $cert['title'] }}</div> @endif
+            @endforeach
+          @endif
         </div>
       @endif
 
@@ -648,17 +763,17 @@ html, body {
 
                 @if (!empty($edu['description']))
                   <div class="timeline-description">
-                    @php $lines = preg_split('/\r\n|\r|\n/', $edu['description']); @endphp
-                    @foreach ($lines as $line)
-                      @php $t = trim($line); @endphp
-                      @if ($t !== '')
-                        @if (preg_match('/^([•\-–\*])\s*/u', $t))
-                          <div class="bullet-point">{{ preg_replace('/^([•\-–\*])\s*/u', '', $t) }}</div>
-                        @else
-                          <div style="margin-bottom:3px">{{ $t }}</div>
-                        @endif
-                      @endif
-                    @endforeach
+                    @php 
+                      $processedBullets = BulletProcessor::processBulletedDescription($edu['description']);
+                      $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                    @endphp
+                    @if ($hasBullets)
+                      @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                        <div class="bullet-point">{{ $text }}</div>
+                      @endforeach
+                    @else
+                      <div style="margin-bottom:3px">{{ $edu['description'] }}</div>
+                    @endif
                   </div>
                 @endif
               </div>

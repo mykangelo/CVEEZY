@@ -2,6 +2,7 @@ import React from "react";
 import { ResumeData } from "@/types/resume";
 import { Mail } from "lucide-react";
 import Placeholder from "./Placeholder";
+import { processBulletedDescription, getBulletTexts } from "@/utils/bulletProcessor";
 
 type Props = {
     resumeData: ResumeData;
@@ -91,15 +92,48 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
             case "certifications":
                 return (
                     <ul className="space-y-1">
-                        {section.content.map((cert: any) => (
-                            <li
-                                key={cert.id}
-                                className="flex items-start text-xs"
-                            >
-                                <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
-                                {cert.title}
-                            </li>
-                        ))}
+                        {section.content.map((cert: any) => {
+                            const processedBullets = processBulletedDescription(cert.title || '');
+                            const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                            
+                            if (hasBullets) {
+                                return getBulletTexts(processedBullets).map((text, index) => (
+                                    <li
+                                        key={`${cert.id}-${index}`}
+                                        className="flex items-start text-xs"
+                                    >
+                                        <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                        {text}
+                                    </li>
+                                ));
+                            } else {
+                                // If no bullets detected, try to split long certification strings by commas
+                                const certTitle = cert.title || '';
+                                if (certTitle.length > 100 && certTitle.includes(',')) {
+                                    // Split by commas and treat each as a bullet
+                                    const certItems = certTitle.split(',').map((item: string) => item.trim()).filter((item: string) => item.length > 0);
+                                    return certItems.map((item: string, index: number) => (
+                                        <li
+                                            key={`${cert.id}-${index}`}
+                                            className="flex items-start text-xs"
+                                        >
+                                            <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            {item}
+                                        </li>
+                                    ));
+                                } else {
+                                    return (
+                                        <li
+                                            key={cert.id}
+                                            className="flex items-start text-xs"
+                                        >
+                                            <span className="w-1 h-1 bg-black rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                                            {cert.title}
+                                        </li>
+                                    );
+                                }
+                            }
+                        })}
                     </ul>
                 );
 
@@ -187,13 +221,13 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                 {/* Left Column */}
                 <div className="w-[60%] flex items-start">
                     <div className="bg-black text-white px-8 py-8">
-                        <h1 className="text-3xl font-bold uppercase tracking-wide mb-2">
+                        <h1 className="text-3xl font-bold uppercase tracking-wide mb-2 break-words">
                             <Placeholder
                                 value={`${contact.firstName} ${contact.lastName}`.trim()}
                                 placeholder="YOUR NAME"
                             />
                         </h1>
-                        <p className="text-lg uppercase tracking-wider text-gray-300">
+                        <p className="text-lg uppercase tracking-wider text-gray-300 break-words">
                             <Placeholder
                                 value={contact.desiredJobTitle}
                                 placeholder="JOB TITLE"
@@ -262,7 +296,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
             <div className="border-t border-black py-6">
                 <div className="flex">
                     <div className="w-1/4">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                        <h2 className="text-sm font-bold uppercase tracking-wider break-words">
                             ABOUT ME
                         </h2>
                     </div>
@@ -283,7 +317,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
             <div className="border-t border-black py-6">
                 <div className="flex">
                     <div className="w-1/4">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                        <h2 className="text-sm font-bold uppercase tracking-wider break-words">
                             EXPERIENCE
                         </h2>
                     </div>
@@ -331,10 +365,47 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                                         </p>
                                     )}
                                 </div>
-                                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
-                                    {exp.description ||
-                                        "• Responsibilities\n• Responsibilities"}
-                                </p>
+                                {(() => {
+                                    const isPlaceholder = !(exp.description && String(exp.description).trim().length > 0);
+                                    
+                                    if (isPlaceholder) {
+                                        return (
+                                            <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line text-gray-400 italic">
+                                                • Responsibilities<br />• Responsibilities
+                                            </p>
+                                        );
+                                    }
+
+                                    const processedBullets = processBulletedDescription(exp.description || '');
+                                    
+                                    if (processedBullets.length === 0) {
+                                        return (
+                                            <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
+                                                • Responsibilities<br />• Responsibilities
+                                            </p>
+                                        );
+                                    }
+
+                                    // Check if we have bullets or just regular text
+                                    const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                                    
+                                    if (hasBullets) {
+                                        return (
+                                            <ul className="text-gray-800 text-sm leading-relaxed list-disc list-inside space-y-1">
+                                                {getBulletTexts(processedBullets).map((text, index) => (
+                                                    <li key={index}>{text}</li>
+                                                ))}
+                                            </ul>
+                                        );
+                                    } else {
+                                        // Single paragraph or non-bulleted content
+                                        return (
+                                            <p className="text-gray-800 text-sm leading-relaxed">
+                                                {processedBullets[0]?.text || 'Responsibilities'}
+                                            </p>
+                                        );
+                                    }
+                                })()}
                             </div>
                         ))}
                     </div>
@@ -345,7 +416,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
             <div className="border-t border-black py-6">
                 <div className="flex">
                     <div className="w-1/4">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                        <h2 className="text-sm font-bold uppercase tracking-wider break-words">
                             EDUCATION
                         </h2>
                     </div>
@@ -393,11 +464,38 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
 
                                 {/* Description Column */}
                                 <div className="w-1/2 -ml-3">
-                                    {edu.description && (
-                                        <p className="text-xs text-gray-800 leading-relaxed">
-                                            {edu.description}
-                                        </p>
-                                    )}
+                                    {(() => {
+                                        const isPlaceholder = !(edu.description && String(edu.description).trim().length > 0);
+                                        
+                                        if (isPlaceholder) {
+                                            return null;
+                                        }
+
+                                        const processedBullets = processBulletedDescription(edu.description || '');
+                                        
+                                        if (processedBullets.length === 0) {
+                                            return null;
+                                        }
+
+                                        // Check if we have bullets or just regular text
+                                        const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                                        
+                                        if (hasBullets) {
+                                            return (
+                                                <ul className="text-xs text-gray-800 leading-relaxed list-disc list-inside space-y-1">
+                                                    {getBulletTexts(processedBullets).map((text, index) => (
+                                                        <li key={index}>{text}</li>
+                                                    ))}
+                                                </ul>
+                                            );
+                                        } else {
+                                            return (
+                                                <p className="text-xs text-gray-800 leading-relaxed">
+                                                    {processedBullets[0]?.text}
+                                                </p>
+                                            );
+                                        }
+                                    })()}
                                 </div>
                             </div>
                         ))}
@@ -409,7 +507,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
             <div className="border-t border-black py-6">
                 <div className="flex">
                     <div className="w-1/4">
-                        <h2 className="text-sm font-bold uppercase tracking-wider">
+                        <h2 className="text-sm font-bold uppercase tracking-wider break-words">
                             SKILLS
                         </h2>
                     </div>
@@ -616,7 +714,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                         >
                             <div className="flex">
                                 <div className="w-1/4">
-                                    <h2 className="text-sm font-bold uppercase tracking-wider">
+                                    <h2 className="text-sm font-bold uppercase tracking-wider break-words">
                                         {custom.title}
                                     </h2>
                                 </div>

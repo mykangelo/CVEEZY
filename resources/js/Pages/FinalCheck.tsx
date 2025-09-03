@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Head } from "@inertiajs/react";
-import Logo from "@/Components/Logo";
 import Classic from "@/Components/Builder/Classic";
 import Modern from "@/Components/Builder/Modern";
 import Creative from "@/Components/Builder/Creative";
@@ -73,6 +73,7 @@ interface DesignSettings {
   sectionSpacing: number;
   paragraphSpacing: number;
   lineSpacing: number;
+  scope?: 'all' | 'summary' | 'experience' | 'education' | 'skills' | 'contact';
 }
 
 interface FinalCheckProps {
@@ -133,12 +134,43 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       fontFamily: defaultFont,
       sectionSpacing: 50,
       paragraphSpacing: 30,
-      lineSpacing: 60
+      lineSpacing: 60,
+      scope: 'all'
     };
   });
 
   // Track if any design settings have been changed from their defaults
   const [hasDesignChanges, setHasDesignChanges] = useState(false);
+  const [isFontMenuOpen, setIsFontMenuOpen] = useState(false);
+  const segmentContainerRef = useRef<HTMLDivElement | null>(null);
+  const designBtnRef = useRef<HTMLButtonElement | null>(null);
+  const spellBtnRef = useRef<HTMLButtonElement | null>(null);
+  const [segmentIndicator, setSegmentIndicator] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+  
+
+  const INDICATOR_INSET = 2; // px
+
+  const updateSegmentIndicator = () => {
+    const container = segmentContainerRef.current;
+    const target = (currentSection === 'design' ? designBtnRef.current : spellBtnRef.current);
+    if (!container || !target) return;
+    const left = target.offsetLeft;
+    const width = target.offsetWidth;
+    setSegmentIndicator({ left, width });
+  };
+
+  useEffect(() => {
+    updateSegmentIndicator();
+    // also after initial paint
+    const t = setTimeout(updateSegmentIndicator, 0);
+    return () => clearTimeout(t);
+  }, [currentSection]);
+
+  useEffect(() => {
+    const onResize = () => updateSegmentIndicator();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   // Check if any design settings differ from defaults
   useEffect(() => {
@@ -189,7 +221,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     }
   }, [hasDesignChanges, designSettings, propTemplateName]);
   
-  // Debug: Log the resumeId and other props
+  // Debug: Log the resumeId and other props (dev only)
+  if (process.env.NODE_ENV === 'development') {
   console.log('FinalCheck - Props received:', {
     resumeId,
     propContact,
@@ -200,18 +233,17 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
     propTemplateName,
     spellcheckCount: spellcheck.length
   });
+  }
   
-  // Debug: Log URL parameters
+  // Debug: Log URL parameters (dev only)
   useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
     const urlParams = new URLSearchParams(window.location.search);
     const urlResumeId = urlParams.get('resume');
     console.log('FinalCheck - URL parameters:', {
       resume: urlResumeId,
       fullUrl: window.location.href
     });
-    
-    // Show debug info in development
-    if (process.env.NODE_ENV === 'development') {
       console.log('FinalCheck - Debug Info:', {
         resumeId,
         hasPropsData: !!(propContact && propExperiences && propEducations && propSkills && propSummary),
@@ -219,7 +251,6 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         urlResumeId,
         spellcheckIssues: spellcheck.length
       });
-    }
   }, [resumeId, propContact, propExperiences, propEducations, propSkills, propSummary, spellcheck]);
   
   // Get data from sessionStorage or use props
@@ -569,10 +600,24 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
       styles['--font-size'] = getFontSize();
     }
 
+    // Build a scope selector to narrow where styles apply
+    const scopeClass = (() => {
+      const scope = designSettings.scope || 'all';
+      switch (scope) {
+        case 'summary': return 'scope-summary';
+        case 'experience': return 'scope-experience';
+        case 'education': return 'scope-education';
+        case 'skills': return 'scope-skills';
+        case 'contact': return 'scope-contact';
+        case 'all':
+        default: return 'scope-all';
+      }
+    })();
+
     return (
       <div
         style={styles}
-        className="styled-resume"
+        className={`styled-resume ${scopeClass}`}
         data-font-family={designSettings.fontFamily}
         data-font-size={getFontSize()}
         data-line-height={getLineHeight()}
@@ -586,19 +631,29 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
   };
 
   return (
-    <div className="flex min-h-screen bg-[#f4f6fb]">
+    <motion.div
+      className="flex min-h-screen bg-[#f4f6fb]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.25 }}
+    >
       <Head title="CVeezy | Final Check" />
       
       {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <motion.div
+        className="hidden"
+        initial={{ x: -20, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
         {/* Navigation */}
         <div className="p-6 border-b border-gray-200">
-          <div className="space-y-4">
+          <div className="space-y-2">
             <button
               onClick={() => setCurrentSection("design")}
-              className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${
+              className={`group flex items-center gap-3 w-full p-3 rounded-xl transition-all ${
                 currentSection === "design" 
-                  ? "bg-blue-50 text-blue-600" 
+                  ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm" 
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -610,9 +665,9 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
             
             <button
               onClick={() => setCurrentSection("spellcheck")}
-              className={`flex items-center gap-3 w-full p-3 rounded-lg transition-colors ${
+              className={`group flex items-center gap-3 w-full p-3 rounded-xl transition-all ${
                 currentSection === "spellcheck" 
-                  ? "bg-blue-50 text-blue-600" 
+                  ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 shadow-sm" 
                   : "text-gray-600 hover:bg-gray-50"
               }`}
             >
@@ -624,8 +679,15 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
 
         {/* Content Area */}
         <div className="flex-1 p-6 overflow-auto">
+          <AnimatePresence mode="wait">
           {currentSection === "design" && (
-            <div>
+            <motion.div
+              key="design-section"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
               <h2 className="text-2xl font-bold mb-6">Design & Formatting</h2>
               <p className="text-gray-600 mb-6">Customize your resume's appearance and layout.</p>
               
@@ -934,11 +996,17 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
           )}
 
           {currentSection === "spellcheck" && (
-            <div>
+            <motion.div
+              key="spellcheck-section"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
               <h2 className="text-2xl font-bold mb-6">Spell Check</h2>
               <p className="text-gray-600">Review and correct any spelling or grammar errors.</p>
               {(() => {
@@ -948,8 +1016,9 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
                 <div className="mt-6 space-y-4">
                   {issues.map((issue: SpellCheckMatch, index) => {
                     const severityIcon = getSpellCheckSeverityIcon(issue.rule.category.name);
+                    const keyId = `${issue.rule?.id || 'rule'}-${issue.offset || 0}-${issue.length || 0}-${index}`;
                     return (
-                      <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                      <div key={keyId} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-lg">{severityIcon}</span>
                           <span className={`font-semibold ${getSpellCheckSeverityColor(issue.rule.category.name)}`}>
@@ -982,7 +1051,7 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
                             <span className="font-medium">Suggested replacements:</span>
                             <div className="mt-1 space-x-2">
                               {issue.replacements.map((rep, repIndex) => (
-                                <span key={repIndex} className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                                <span key={`${rep.value}-${repIndex}`} className="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
                                   {rep.value}
                                 </span>
                               ))}
@@ -1010,72 +1079,216 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
                 </div>
                 );
               })()}
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
-      </div>
+      </motion.div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Logo size="xl" showText={false} />
+        <motion.div 
+          className="bg-white/90 backdrop-blur border-b border-gray-200 px-4 md:px-6 py-3.5 md:py-5 flex items-center justify-between sticky top-0 z-20 shadow-sm"
+          initial={{ y: -10, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.25 }}
+        >
+          {/* Left: Title + merged controls (with section selector) */}
+          <div className="flex items-stretch gap-3 md:gap-4 min-w-0">
+            <div className="flex items-center gap-3.5">
+              <div className="flex flex-col -space-y-0.5 leading-tight">
+                <div className="text-lg md:text-2xl font-semibold text-gray-900 tracking-tight">Final Check</div>
+                <div className="text-[12px] md:text-sm text-gray-500">Design & Spellcheck</div>
             </div>
-            <div className="text-sm text-gray-600">
-              Template: <span className="font-medium capitalize">{propTemplateName || 'classic'}</span>
+              <span className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span className="capitalize">{propTemplateName || 'classic'}</span>
+            </span>
+            </div>
+            {/* Combined selector + controls */}
+            <div className="hidden lg:flex items-center gap-2.5 bg-white/90 border border-gray-200 rounded-2xl px-3.5 py-2 shadow-sm">
+              {/* Segmented selector */}
+              <div ref={segmentContainerRef} className="relative flex items-center bg-gray-100 rounded-2xl p-1.5">
+              <button
+                  ref={designBtnRef}
+                onClick={() => setCurrentSection('design')}
+                  className={`relative z-10 px-3.5 py-1.5 text-[12px] rounded-lg transition-colors ${currentSection==='design' ? 'text-white' : 'text-gray-700 hover:text-gray-900'}`}
+              >Design</button>
+              <button
+                  ref={spellBtnRef}
+                onClick={() => setCurrentSection('spellcheck')}
+                  className={`relative z-10 px-3.5 py-1.5 text-[12px] rounded-lg transition-colors ${currentSection==='spellcheck' ? 'text-white' : 'text-gray-700 hover:text-gray-900'}`}
+                >Spellcheck</button>
+                <motion.span
+                  layout
+                  className="absolute top-0 bottom-0 rounded-2xl bg-blue-600 shadow"
+                  style={{ width: Math.max(0, segmentIndicator.width - INDICATOR_INSET * 2) }}
+                  animate={{ left: Math.max(0, segmentIndicator.left + INDICATOR_INSET) }}
+                  transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+                />
+          </div>
+
+              {/* Divider */}
+              <span className="w-px h-5 bg-gray-200" />
+
+              <AnimatePresence mode="wait">
+            {currentSection === 'design' && (
+                <motion.div
+                  key="hdr-design-controls"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2"
+                >
+                  <span className="inline-flex items-center gap-1.5 text-[12px] text-gray-600">
+                    <span className="font-semibold">Aa</span>
+                    Font
+                  </span>
+                  <div className="relative">
+                    <button
+                      onClick={()=>setIsFontMenuOpen(v=>!v)}
+                      className="text-[12px] px-2.5 py-1.5 border rounded-md text-gray-700 bg-white hover:bg-gray-50 inline-flex items-center gap-1"
+                    >
+                      {designSettings.fontStyle === 'small' ? 'Small' : designSettings.fontStyle === 'large' ? 'Large' : 'Default'}
+                      <span className="text-xs">▾</span>
+                    </button>
+                    <AnimatePresence>
+                      {isFontMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute z-30 mt-1 w-44 bg-white border border-gray-200 rounded-md shadow-lg overflow-hidden"
+                        >
+                          {[
+                            { value: 'small', label: 'Small', size: '14px' },
+                            { value: 'normal', label: 'Default', size: '16px' },
+                            { value: 'large', label: 'Large', size: '18px' },
+                          ].map(opt => (
+                            <button
+                              key={opt.value}
+                              onClick={()=>{ setDesignSettings(prev=>({...prev, fontStyle: opt.value as any })); setIsFontMenuOpen(false); }}
+                              className={`w-full text-left px-3.5 py-2.5 text-[12px] hover:bg-gray-50 flex items-center justify-between ${designSettings.fontStyle===opt.value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}
+                            >
+                              <span>{opt.label}</span>
+                              <span className="font-medium" style={{ fontSize: opt.size }}>Aa</span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+              </div>
+                  <span className="text-[12px] text-gray-600">Section</span>
+                  <input type="range" min="20" max="100" value={designSettings.sectionSpacing} onChange={(e)=>setDesignSettings(p=>({...p, sectionSpacing: parseInt(e.target.value)}))} className="w-20" />
+                  <span className="text-[12px] text-gray-600">Paragraph</span>
+                  <input type="range" min="15" max="60" value={designSettings.paragraphSpacing} onChange={(e)=>setDesignSettings(p=>({...p, paragraphSpacing: parseInt(e.target.value)}))} className="w-20" />
+                  <span className="text-[12px] text-gray-600">Line</span>
+                  <input type="range" min="100" max="200" value={designSettings.lineSpacing} onChange={(e)=>setDesignSettings(p=>({...p, lineSpacing: parseInt(e.target.value)}))} className="w-20" />
+                  <button onClick={saveDesignSettings} disabled={!hasDesignChanges || isSavingSettings} className={`text-[12px] px-3 py-1.5 rounded-md transition-colors inline-flex items-center gap-1 ${hasDesignChanges && !isSavingSettings ? 'bg-[#354eab] text-white hover:bg-[#4a5fc7]' : 'bg-gray-200 text-gray-500'}`}>
+                    {isSavingSettings ? 'Saving…' : 'Save'}
+                  </button>
+                  {settingsSaved && (
+                    <span className="text-[12px] text-emerald-600 font-medium">Saved</span>
+                  )}
+                </motion.div>
+            )}
+            {currentSection === 'spellcheck' && (
+                <motion.div
+                  key="hdr-spell-controls"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2"
+                >
+                  <span className="text-[12px] text-gray-600">Issues</span>
+                  <span className="text-[12px] font-semibold text-red-600">{(spellcheck?.length||0) || clientSpellcheck.length}</span>
+                <button
+                  onClick={()=>{
+                    const text = buildTextToCheck();
+                    if (!text) return;
+                    setIsClientChecking(true);
+                    const language = (navigator.language || 'en-US').replace('_','-');
+                    fetch('https://api.languagetool.org/v2/check', { method:'POST', headers:{ 'Content-Type':'application/x-www-form-urlencoded' }, body: new URLSearchParams({ text, language }).toString() })
+                      .then(r=>r.json()).then(data=> setClientSpellcheck((data?.matches||[]) as any)).finally(()=>setIsClientChecking(false));
+                  }}
+                    className="text-[12px] px-3 py-1.5 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >Check</button>
+                </motion.div>
+              )}
+              </AnimatePresence>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* Right: quick nav + actions */}
+          <div className="flex items-center gap-1.5 md:gap-2">
             <button
               onClick={() => {
-                // Go back to builder with the current resume ID
                 if (resumeId) {
                   window.location.href = `/builder?resume=${resumeId}`;
                 } else {
                   window.location.href = '/builder';
                 }
               }}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-800 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="group flex items-center gap-2 text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-xl border border-gray-200 bg-white/70 hover:bg-white shadow-sm hover:shadow transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4a5fc7]/40"
             >
               <span className="text-lg">←</span>
-              <span className="font-medium">Back to Builder</span>
+              <span className="text-sm font-medium">Builder</span>
             </button>
 
-            <div className="flex items-center gap-2 text-green-600">
-              <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs">✓</span>
+            <motion.div 
+              className="hidden sm:flex items-center gap-1.5 text-green-600"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div className="w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center animate-pulse">
+                <span className="text-white text-[9px]">✓</span>
               </div>
-              <span className="text-sm font-medium">Saved</span>
-            </div>
+              <span className="text-[12px] font-medium">Saved</span>
+            </motion.div>
 
             <button
               onClick={handleDownloadButtonClick}
-                                          className="bg-[#354eab] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#4a5fc7] transition-colors"
+              aria-label="Download PDF"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-[#354eab] to-[#4a5fc7] hover:from-[#3e55b7] hover:to-[#5a6fd7] shadow-md hover:shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-[#4a5fc7]/50 active:scale-[0.99]"
             >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
               Download PDF
             </button>
 
-            <button className="text-gray-600 hover:text-gray-800 p-2 rounded-lg hover:bg-gray-100 transition-colors">
+            <button aria-label="More" className="text-gray-500 hover:text-gray-900 p-2.5 rounded-xl border border-gray-200 bg-white/70 hover:bg-white shadow-sm hover:shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#4a5fc7]/40 transition-colors">
               <span className="text-xl">⋯</span>
             </button>
           </div>
-        </div>
+        </motion.div>
+        {/* Decorative gradient underline */}
+        <div className="h-1 w-full bg-gradient-to-r from-blue-100 via-indigo-100 to-transparent" />
 
 
         {/* Resume Preview */}
         <div className="flex-1 p-6 overflow-auto">
           {/* Match Builder: center a fixed A4-sized document without stretching */}
+          <div className="relative">
+            <div className="pointer-events-none absolute inset-0">
+              <div className="absolute -top-32 -left-20 w-72 h-72 bg-gradient-to-br from-[#354eab]/10 to-[#4a5fc7]/10 rounded-full blur-3xl" />
+              <div className="absolute -bottom-24 -right-16 w-80 h-80 bg-gradient-to-tr from-[#5a6fd7]/10 to-[#354eab]/10 rounded-full blur-3xl" />
+            </div>
           <div className="flex justify-center pb-24">
-            <div
+              <motion.div
               className="bg-white shadow-2xl border border-gray-100 relative rounded-lg overflow-hidden"
               style={{ width: `${210 * 3.78}px`, minHeight: `${297 * 3.78}px`, padding: '40px' }}
+                initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
             >
+                <div className="absolute top-3 right-3 text-[11px] text-gray-400">A4</div>
               <StyledResumeWrapper>
                 <SelectedTemplate resumeData={normalizedResumeData} />
               </StyledResumeWrapper>
+              </motion.div>
             </div>
           </div>
         </div>
@@ -1204,73 +1417,36 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
           height: 16px;
         }
         
-        /* Firefox specific slider colors */
-        .section-slider::-moz-range-track {
-          background: linear-gradient(to right, #dbeafe 0%, #93c5fd 50%, #3b82f6 100%);
-          border-radius: 12px;
-          height: 16px;
-        }
-        
-        .paragraph-slider::-moz-range-track {
-          background: linear-gradient(to right, #d1fae5 0%, #6ee7b7 50%, #10b981 100%);
-          border-radius: 12px;
-          height: 16px;
-        }
-        
+        /* Firefox specific slider colors - unified to brand blue */
+        .section-slider::-moz-range-track,
+        .paragraph-slider::-moz-range-track,
         .line-slider::-moz-range-track {
-          background: linear-gradient(to right, #e9d5ff 0%, #c4b5fd 50%, #8b5cf6 100%);
+          background: linear-gradient(to right, #dbeafe 0%, #93c5fd 50%, #3b82f6 100%);
           border-radius: 12px;
           height: 16px;
         }
         
         /* Specific slider colors */
-        .section-slider::-webkit-slider-thumb {
+        .section-slider::-webkit-slider-thumb,
+        .paragraph-slider::-webkit-slider-thumb,
+        .line-slider::-webkit-slider-thumb {
           border-color: #3b82f6;
           box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
-        .section-slider::-webkit-slider-thumb:hover {
+        .section-slider::-webkit-slider-thumb:hover,
+        .paragraph-slider::-webkit-slider-thumb:hover,
+        .line-slider::-webkit-slider-thumb:hover {
           box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15);
           border-color: #2563eb;
         }
-        
-        .section-slider::-webkit-slider-runnable-track {
+        .section-slider::-webkit-slider-runnable-track,
+        .paragraph-slider::-webkit-slider-runnable-track,
+        .line-slider::-webkit-slider-runnable-track {
           background: linear-gradient(to right, #dbeafe 0%, #93c5fd 50%, #3b82f6 100%);
           border-radius: 12px;
           height: 16px;
         }
         
-        .paragraph-slider::-webkit-slider-thumb {
-          border-color: #10b981;
-          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .paragraph-slider::-webkit-slider-thumb:hover {
-          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15);
-          border-color: #059669;
-        }
-        
-        .paragraph-slider::-webkit-slider-runnable-track {
-          background: linear-gradient(to right, #d1fae5 0%, #6ee7b7 50%, #10b981 100%);
-          border-radius: 12px;
-          height: 16px;
-        }
-        
-        .line-slider::-webkit-slider-thumb {
-          border-color: #8b5cf6;
-          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3), 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .line-slider::-webkit-slider-thumb:hover {
-          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4), 0 4px 8px rgba(0, 0, 0, 0.15);
-          border-color: #7c3aed;
-        }
-        
-        .line-slider::-webkit-slider-runnable-track {
-          background: linear-gradient(to right, #e9d5ff 0%, #c4b5fd 50%, #8b5cf6 100%);
-          border-radius: 12px;
-          height: 16px;
-        }
         
         /* IMPORTANT: Only apply styles when user has made design changes */
         .styled-resume[data-has-changes="true"] {
@@ -1294,52 +1470,52 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
           font-size: var(--font-size) !important;
         }
 
+        /* LINE SPACING: apply to core text blocks only (avoid generic divs) */
         .styled-resume[data-has-changes="true"] p,
         .styled-resume[data-has-changes="true"] li,
-        .styled-resume[data-has-changes="true"] span:not(.font-bold):not(.font-semibold),
-        .styled-resume[data-has-changes="true"] div:not(.font-bold):not(.font-semibold):not(.text-center):not(.text-lg):not(.text-3xl) {
+        .styled-resume[data-has-changes="true"] .text,
+        .styled-resume[data-has-changes="true"] [class*="description" i],
+        .styled-resume[data-has-changes="true"] [class*="summary" i] p {
           line-height: var(--line-height) !important;
         }
 
         /* Apply section spacing to all major resume sections ONLY when user has made changes */
-        .styled-resume[data-has-changes="true"] > div > div,
-        .styled-resume[data-has-changes="true"] > div > section,
-        .styled-resume[data-has-changes="true"] > div > div[class*="section"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="Section"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="experience"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="education"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="skills"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="contact"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="summary"],
-        .styled-resume[data-has-changes="true"] > div > div[class*="Summary"] {
+        /* SECTION SPACING: affect section wrappers anywhere in the resume tree (avoid "item" blocks) */
+        .styled-resume[data-has-changes="true"] section,
+        .styled-resume[data-has-changes="true"] div[class*="experience" i]:not([class*="item" i]),
+        .styled-resume[data-has-changes="true"] div[class*="education" i]:not([class*="item" i]),
+        .styled-resume[data-has-changes="true"] div[class*="skills" i]:not([class*="item" i]),
+        .styled-resume[data-has-changes="true"] div[class*="contact" i]:not([class*="item" i]),
+        .styled-resume[data-has-changes="true"] div[class*="summary" i]:not([class*="item" i]),
+        /* Fallbacks using :has to grab typical section blocks with headings */
+        .styled-resume[data-has-changes="true"] div:has(> h1),
+        .styled-resume[data-has-changes="true"] div:has(> h2),
+        .styled-resume[data-has-changes="true"] div:has(> h3),
+        .styled-resume[data-has-changes="true"] section:has(> h1),
+        .styled-resume[data-has-changes="true"] section:has(> h2),
+        .styled-resume[data-has-changes="true"] section:has(> h3) {
           margin-bottom: var(--section-spacing) !important;
         }
 
-        /* Apply paragraph spacing to all text elements ONLY when user has made changes */
+        /* PARAGRAPH SPACING: affect paragraphs and descriptive lines only */
         .styled-resume[data-has-changes="true"] p,
-        .styled-resume[data-has-changes="true"] div,
-        .styled-resume[data-has-changes="true"] span,
-        .styled-resume[data-has-changes="true"] li,
-        .styled-resume[data-has-changes="true"] td,
-        .styled-resume[data-has-changes="true"] th {
-          margin-bottom: var(--paragraph-spacing) !important;
-          line-height: var(--line-spacing) !important;
-        }
+        .styled-resume[data-has-changes="true"] div[class*="description" i],
+        .styled-resume[data-has-changes="true"] div[class*="summary" i] p,
+        .styled-resume[data-has-changes="true"] li { margin-bottom: var(--paragraph-spacing) !important; }
 
-        /* Specific spacing for different resume components ONLY when user has made changes */
-        .styled-resume[data-has-changes="true"] div[class*="Experience"],
-        .styled-resume[data-has-changes="true"] div[class*="Education"],
-        .styled-resume[data-has-changes="true"] div[class*="Skills"],
-        .styled-resume[data-has-changes="true"] div[class*="Contact"],
-        .styled-resume[data-has-changes="true"] div[class*="Summary"] {
-          margin-bottom: var(--section-spacing) !important;
-        }
+        /* Paragraph fallback: any block that has continuous text content without child blocks */
+        .styled-resume[data-has-changes="true"] div:has(> p) { margin-bottom: var(--paragraph-spacing) !important; }
 
-        .styled-resume[data-has-changes="true"] div[class*="experience-item"],
-        .styled-resume[data-has-changes="true"] div[class*="education-item"],
-        .styled-resume[data-has-changes="true"] div[class*="skill-item"] {
-          margin-bottom: var(--paragraph-spacing) !important;
-        }
+        /* Also space typical item containers by paragraph spacing (not sections) */
+        .styled-resume[data-has-changes="true"] div[class*="experience-item" i],
+        .styled-resume[data-has-changes="true"] div[class*="education-item" i],
+        .styled-resume[data-has-changes="true"] div[class*="skill-item" i] { margin-bottom: var(--paragraph-spacing) !important; }
+
+        /* Ensure headers don't get extra paragraph spacing */
+        .styled-resume[data-has-changes="true"] h1,
+        .styled-resume[data-has-changes="true"] h2,
+        .styled-resume[data-has-changes="true"] h3,
+        .styled-resume[data-has-changes="true"] h4 { margin-bottom: revert; }
 
         /* Smooth transitions for all design changes */
         .styled-resume * {
@@ -1355,7 +1531,8 @@ const FinalCheck: React.FC<FinalCheckProps> = ({
         }
 
       `}</style>
-    </div>
+      
+    </motion.div>
   );
 };
 

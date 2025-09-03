@@ -1,6 +1,7 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
 import Placeholder from "./Placeholder";
+import { processBulletedDescription, getBulletTexts } from "@/utils/bulletProcessor";
 
 // Add DejaVu Sans font (using system fallback)
 // DejaVu Sans is available as a system font on most systems
@@ -161,13 +162,13 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
             <div className="w-3/5 p-8" style={{ padding: '25px 30px 25px 30px', width: '60%', borderRight: '1px solid #e5e7eb' }}>
                 {/* Header */}
                 <div className="mb-8" style={{ marginBottom: '2px', paddingBottom: '2px' }}>
-                    <h1 className="font-semibold text-gray-800 mb-2 tracking-wider" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: '600', color: '#1f2937', margin: '0' }}>
+                    <h1 className="font-semibold text-gray-800 mb-2 tracking-wider break-words" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase', fontWeight: '600', color: '#1f2937', margin: '0' }}>
                         <Placeholder value={`${contact.firstName || ''}`.toUpperCase()} placeholder="YOUR" />
                     </h1>
-                    <h1 className="font-semibold text-gray-800 mb-4 tracking-wider" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase', display: 'block', fontWeight: '600', color: '#1f2937', margin: '0' }}>
+                    <h1 className="font-semibold text-gray-800 mb-4 tracking-wider break-words" style={{ fontSize: '42px', lineHeight: '0.9', letterSpacing: '.2em', textTransform: 'uppercase', display: 'block', fontWeight: '600', color: '#1f2937', margin: '0' }}>
                         <Placeholder value={`${contact.lastName || ''}`.toUpperCase()} placeholder="NAME" />
                     </h1>
-                    <h2 className="font-normal text-gray-500 tracking-widest uppercase mb-8" style={{ fontSize: '24px', letterSpacing: '0.1em', marginTop: '8px', fontWeight: '400', color: '#6b7280', textTransform: 'uppercase' }}>
+                    <h2 className="font-normal text-gray-500 tracking-widest uppercase mb-8 break-words" style={{ fontSize: '24px', letterSpacing: '0.1em', marginTop: '8px', fontWeight: '400', color: '#6b7280', textTransform: 'uppercase' }}>
                         <Placeholder value={contact.desiredJobTitle} placeholder="Job Title" />
                     </h2>
                 </div>
@@ -177,7 +178,7 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                     <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '16px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
                         Profile
                     </h3>
-                    <p className="text-gray-500 leading-relaxed" style={{ fontSize: '15px', lineHeight: '1.5', textAlign: 'justify', color: '#1f2937', fontWeight: '400', margin: '0' }}>
+                    <p className="text-gray-500 leading-relaxed break-words" style={{ fontSize: '15px', lineHeight: '1.5', textAlign: 'justify', color: '#1f2937', fontWeight: '400', margin: '0' }}>
                         <Placeholder
                             value={summary}
                             placeholder={"Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."}
@@ -188,7 +189,7 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
 
                 {/*Work Experience -Timeline */}
                 <div className="mb-8" style={{ marginBottom: '20px' }}>
-                    <h3 className="font-semibold text-gray-800 mb-6 tracking-widest uppercase" style={{ fontSize: '16px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
+                    <h3 className="font-semibold text-gray-800 mb-6 tracking-widest uppercase break-words" style={{ fontSize: '16px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 12px 0', textTransform: 'uppercase' }}>
                         Work Experience
                     </h3>
                     <div className="relative" style={{ marginLeft: '0', borderLeft: '2px solid #2f3846ff', paddingLeft: '20px' }}>
@@ -234,20 +235,54 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                                     )}
 
                                     <div className="text-gray-500 leading-relaxed" style={{ fontSize: '14px', lineHeight: '1.4', fontWeight: '500', color: '#1f2937' }}>
-                                        {(exp.description || '• Responsibilities\n• Responsibilities')
-                                            .split("\n")
-                                            .map((line: string, index: number) => (
-                                                <div key={index} className="mb-1" style={{ marginBottom: '4px' }}>
-                                                    {(line.trim().startsWith("•") || line.trim().startsWith("-")) ? (
+                                        {(() => {
+                                            const isPlaceholder = !(exp.description && String(exp.description).trim().length > 0);
+                                            
+                                            if (isPlaceholder) {
+                                                return (
+                                                    <div className="mb-1" style={{ marginBottom: '4px' }}>
                                                         <div className="flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', color: '#1f2937' }}>
                                                             <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
-                                                            <span>{line.replace(/^[•-]\s*/, "")}</span>
+                                                            <span className="text-gray-400 italic">Responsibilities</span>
                                                         </div>
-                                                    ) : line.trim() ? (
-                                                        <div style={{ marginBottom: '3px' }}>{line}</div>
-                                                    ) : null}
-                                                </div>
-                                            ))}
+                                                    </div>
+                                                );
+                                            }
+
+                                            const processedBullets = processBulletedDescription(exp.description || '');
+                                            
+                                            if (processedBullets.length === 0) {
+                                                return (
+                                                    <div className="mb-1" style={{ marginBottom: '4px' }}>
+                                                        <div className="flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', color: '#1f2937' }}>
+                                                            <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
+                                                            <span>Responsibilities</span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            }
+
+                                            // Check if we have bullets or just regular text
+                                            const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                                            
+                                            if (hasBullets) {
+                                                return getBulletTexts(processedBullets).map((text, index) => (
+                                                    <div key={index} className="mb-1" style={{ marginBottom: '4px' }}>
+                                                        <div className="flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', color: '#1f2937' }}>
+                                                            <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
+                                                            <span>{text}</span>
+                                                        </div>
+                                                    </div>
+                                                ));
+                                            } else {
+                                                // Single paragraph or non-bulleted content
+                                                return (
+                                                    <div style={{ marginBottom: '3px' }}>
+                                                        {processedBullets[0]?.text || 'Responsibilities'}
+                                                    </div>
+                                                );
+                                            }
+                                        })()}
                                     </div>
                                 </div>
                             </div>
@@ -262,15 +297,48 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                             Certifications
                         </h3>
                         <div className="space-y-2">
-                            {certifications.map((cert) => (
-                                <div
-                                    key={cert.id}
-                                    className="text-gray-500 flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', margin: '0 0 4px', color: '#1f2937', fontSize: '14px' }}
-                                >
-                                    <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
-                                    <span>{cert.title}</span>
-                                </div>
-                            ))}
+                            {certifications.map((cert) => {
+                                const processedBullets = processBulletedDescription(cert.title || '');
+                                const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                                
+                                if (hasBullets) {
+                                    return getBulletTexts(processedBullets).map((text, index) => (
+                                        <div
+                                            key={`${cert.id}-${index}`}
+                                            className="text-gray-500 flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', margin: '0 0 4px', color: '#1f2937', fontSize: '14px' }}
+                                        >
+                                            <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
+                                            <span>{text}</span>
+                                        </div>
+                                    ));
+                                } else {
+                                    // If no bullets detected, try to split long certification strings by commas
+                                    const certTitle = cert.title || '';
+                                    if (certTitle.length > 100 && certTitle.includes(',')) {
+                                        // Split by commas and treat each as a bullet
+                                        const certItems = certTitle.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                                        return certItems.map((item, index) => (
+                                            <div
+                                                key={`${cert.id}-${index}`}
+                                                className="text-gray-500 flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', margin: '0 0 4px', color: '#1f2937', fontSize: '14px' }}
+                                            >
+                                                <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
+                                                <span>{item}</span>
+                                            </div>
+                                        ));
+                                    } else {
+                                        return (
+                                            <div
+                                                key={cert.id}
+                                                className="text-gray-500 flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', margin: '0 0 4px', color: '#1f2937', fontSize: '14px' }}
+                                            >
+                                                <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
+                                                <span>{cert.title}</span>
+                                            </div>
+                                        );
+                                    }
+                                }
+                            })}
                         </div>
                     </div>
                 )}
@@ -358,7 +426,7 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
 
                 {/* Education */}
                 <div className="mb-8" style={{ marginBottom: '20px' }}>
-                    <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '14px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
+                    <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase break-words" style={{ fontSize: '14px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
                         Education
                     </h3>
                     <div className="space-y-4">
@@ -397,43 +465,41 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
                                         <Placeholder value={edu.degree} placeholder="Degree in Field of study" />
                                     </h4>
 
-                                    {edu.description && (
-                                        <div className="text-gray-500 leading-relaxed" style={{ fontSize: '13px', fontWeight: '400', lineHeight: '1.35', color: '#4b5563' }}>
-                                            {edu.description
-                                                .split("\n")
-                                                .map((line: string, index: number) => (
-                                                    <div
-                                                        key={index}
-                                                        className="mb-1"
-                                                    >
-                                                        {line
-                                                            .trim()
-                                                            .startsWith(
-                                                                "•"
-                                                            ) ||
-                                                        line
-                                                            .trim()
-                                                            .startsWith(
-                                                                "-"
-                                                            ) ? (
-                                                            <div className="flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', margin: '0 0 4px', color: '#4b5563' }}>
-                                                                <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '4px', height: '4px', borderRadius: '50%', background: '#6b7280' }}></div>
-                                                                <span>
-                                                                    {line.replace(
-                                                                        /^[•-]\s*/,
-                                                                        ""
-                                                                    )}
-                                                                </span>
+                                    {(() => {
+                                        const isPlaceholder = !(edu.description && String(edu.description).trim().length > 0);
+                                        
+                                        if (isPlaceholder) {
+                                            return null;
+                                        }
+
+                                        const processedBullets = processBulletedDescription(edu.description || '');
+                                        
+                                        if (processedBullets.length === 0) {
+                                            return null;
+                                        }
+
+                                        // Check if we have bullets or just regular text
+                                        const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                                        
+                                        return (
+                                            <div className="text-gray-500 leading-relaxed" style={{ fontSize: '13px', fontWeight: '400', lineHeight: '1.35', color: '#4b5563' }}>
+                                                {hasBullets ? (
+                                                    getBulletTexts(processedBullets).map((text, index) => (
+                                                        <div key={index} className="mb-1">
+                                                            <div className="flex items-start pl-3 relative" style={{ position: 'relative', paddingLeft: '12px', color: '#4b5563' }}>
+                                                                <div className="absolute rounded-full" style={{ position: 'absolute', left: '0', top: '.5em', width: '3px', height: '3px', borderRadius: '50%', background: '#6b7280' }}></div>
+                                                                <span>{text}</span>
                                                             </div>
-                                                        ) : line.trim() ? (
-                                                            <div style={{ marginBottom: '3px' }}>
-                                                                {line}
-                                                            </div>
-                                                        ) : null}
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div style={{ marginBottom: '3px' }}>
+                                                        {processedBullets[0]?.text}
                                                     </div>
-                                                ))}
-                                        </div>
-                                    )}
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         ))}
@@ -442,14 +508,14 @@ const Modern: React.FC<Props> = ({ resumeData }) => {
 
                 {/* Skills */}
                 <div className="mb-8" style={{ marginBottom: '20px' }}>
-                    <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase" style={{ fontSize: '14px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
+                    <h3 className="font-semibold text-gray-800 mb-4 tracking-widest uppercase break-words" style={{ fontSize: '14px', letterSpacing: '0.05em', paddingBottom: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#1f2937', margin: '0 0 10px 0', textTransform: 'uppercase' }}>
                         Skills
                     </h3>
                     <div style={{ fontSize: '0' }}>
                         {(skills && skills.length > 0 ? skills : [{ id: -1, name: 'Skill 1' } as any, { id: -2, name: 'Skill 2' } as any, { id: -3, name: 'Skill 3' } as any, { id: -4, name: 'Skill 4' } as any]).map((skill: any, index: number) => (
                             <div key={index} style={{ display: 'inline-block', width: '48%', verticalAlign: 'top', marginBottom: '8px', fontSize: '14px', boxSizing: 'border-box' }}>
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className="text-gray-500" style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: '0 0 3px' }}>
+                                    <span className="text-gray-500 break-words" style={{ fontSize: '14px', fontWeight: '500', color: '#1f2937', margin: '0 0 3px' }}>
                                         <Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} />
                                     </span>
                                 </div>

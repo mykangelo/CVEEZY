@@ -52,6 +52,30 @@
             padding-left: 20px;
         }
     </style>
+    @php
+        $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+        $sec = $design['sectionSpacing'] ?? null;
+        $para = $design['paragraphSpacing'] ?? null;
+        $lp = $design['lineSpacing'] ?? null;
+        $lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+        $fontStyle = $design['fontStyle'] ?? null;
+    @endphp
+    <style>
+        @if(!is_null($sec))
+        .section, h2 { margin-bottom: {{ (int)$sec }}px !important; }
+        @endif
+        @if(!is_null($para))
+        p, li, .small-text { margin-bottom: {{ (int)$para }}px !important; }
+        @endif
+        @if(!is_null($lh))
+        body, p, li, .small-text { line-height: {{ $lh }} !important; }
+        @endif
+        @if($fontStyle==='small')
+        body { font-size: 12px !important; }
+        @elseif($fontStyle==='large')
+        body { font-size: 16px !important; }
+        @endif
+    </style>
 </head>
 <body>
 

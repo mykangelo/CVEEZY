@@ -1,3 +1,6 @@
+@php
+use App\Helpers\BulletProcessor;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,6 +31,8 @@
             font-weight: bold;
             color: #383741;
             margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             letter-spacing: 0.025em;
             text-transform: uppercase;
         }
@@ -36,6 +41,8 @@
             font-size: 14px;
             font-weight: bold;
             color: #000;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             margin-bottom: 6px;
             text-transform: uppercase;
         }
@@ -90,6 +97,8 @@
             color: #383741;
             margin: 0;
             line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             word-break: break-word;
             overflow-wrap: anywhere;
             text-align: justify;
@@ -138,12 +147,16 @@
             font-size: 12px;
             color: #6b7280;
             margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .description {
             font-size: 12px;
             color: #1f2937;
             margin-top: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .bullet-point {
@@ -179,6 +192,8 @@
         .info-content {
             font-size: 12px;
             color: #1f2937;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
         
         .references-item {
@@ -294,16 +309,29 @@
             }
         }
         
-        /* Enhanced page break and overflow prevention */
-        .info-item, .references-item, .custom-section, .skill-row {
+        /* Smart page break handling for multi-page content */
+        .info-item, .references-item {
             page-break-inside: avoid;
             break-inside: avoid;
+        }
+        
+        .custom-section, .skill-row {
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         /* Ensure proper page breaks for all elements */
         h1, h2, .section-title, .section-header {
             page-break-after: avoid;
             break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        
+        /* Ensure clean page breaks for multi-page content */
+        .container {
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         /* Prevent text overflow and ensure proper wrapping */
@@ -317,6 +345,30 @@
         .section:last-child {
             page-break-inside: auto;
         }
+    </style>
+    @php
+        $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+        $sec = $design['sectionSpacing'] ?? null;
+        $para = $design['paragraphSpacing'] ?? null;
+        $lp = $design['lineSpacing'] ?? null;
+        $lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+        $fontStyle = $design['fontStyle'] ?? null;
+    @endphp
+    <style>
+        @if(!is_null($sec))
+        .section, .custom-section { margin-bottom: {{ (int)$sec }}px !important; }
+        @endif
+        @if(!is_null($para))
+        .summary-text, .description, .bullet-point, .info-item span, .custom-section-content { margin-bottom: {{ (int)$para }}px !important; }
+        @endif
+        @if(!is_null($lh))
+        body, .summary-text, .description, .bullet-text, .info-item span, .custom-section-content { line-height: {{ $lh }} !important; }
+        @endif
+        @if($fontStyle==='small')
+        body { font-size: 11px !important; }
+        @elseif($fontStyle==='large')
+        body { font-size: 15px !important; }
+        @endif
     </style>
 </head>
 <body>
@@ -434,11 +486,24 @@
                             @endif
                             @if(!empty($exp['description']))
                                 <div class="description">
-                                    @if(trim($exp['description']) !== '')
-                                        <div class="bullet-point">
-                                            <span class="bullet">•</span>
-                                            <span class="bullet-text">{{ trim($exp['description']) }}</span>
-                                        </div>
+                                    @php 
+                                        $processedBullets = BulletProcessor::processBulletedDescription($exp['description']);
+                                        $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                                    @endphp
+                                    @if ($hasBullets)
+                                        @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                                            <div class="bullet-point">
+                                                <span class="bullet">•</span>
+                                                <span class="bullet-text">{{ $text }}</span>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        @if(trim($exp['description']) !== '')
+                                            <div class="bullet-point">
+                                                <span class="bullet">•</span>
+                                                <span class="bullet-text">{{ trim($exp['description']) }}</span>
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                             @endif
@@ -468,11 +533,24 @@
                             @endif
                             @if(!empty($edu['description']))
                                 <div class="description">
-                                    @if(trim($edu['description']) !== '')
-                                        <div class="bullet-point">
-                                            <span class="bullet">•</span>
-                                            <span class="bullet-text">{{ trim($edu['description']) }}</span>
-                                        </div>
+                                    @php 
+                                        $processedBullets = BulletProcessor::processBulletedDescription($edu['description']);
+                                        $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                                    @endphp
+                                    @if ($hasBullets)
+                                        @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                                            <div class="bullet-point">
+                                                <span class="bullet">•</span>
+                                                <span class="bullet-text">{{ $text }}</span>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                        @if(trim($edu['description']) !== '')
+                                            <div class="bullet-point">
+                                                <span class="bullet">•</span>
+                                                <span class="bullet-text">{{ trim($edu['description']) }}</span>
+                                            </div>
+                                        @endif
                                     @endif
                                 </div>
                             @endif
@@ -501,11 +579,58 @@
                     @endif
 
                     @if(!empty($resume['certifications']) && is_array($resume['certifications']) && count($resume['certifications']) > 0)
+                        @php 
+                            $allCertTexts = array_map(fn($c)=>$c['title'] ?? '', $resume['certifications']);
+                            $processedBullets = array_map(function($title) {
+                                return BulletProcessor::processBulletedDescription($title);
+                            }, $allCertTexts);
+                            $hasAnyBullets = false;
+                            foreach ($processedBullets as $bullets) {
+                                if (BulletProcessor::hasBullets($bullets)) {
+                                    $hasAnyBullets = true;
+                                    break;
+                                }
+                            }
+                            
+                            if (!$hasAnyBullets) {
+                                $certsLine = implode(', ', $allCertTexts);
+                                // If no bullets detected, try to split long certification strings by commas
+                                if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
+                                    $certItems = array_map('trim', explode(',', $certsLine));
+                                    $certItems = array_filter($certItems, function($item) { return !empty($item); });
+                                    $hasLongCertList = true;
+                                } else {
+                                    $hasLongCertList = false;
+                                }
+                            }
+                        @endphp
                         <div class="info-item">
-                            <span class="info-content">
-                                • <span style="font-weight: bold;">Certifications:</span> 
-                                {{ collect($resume['certifications'])->pluck('title')->implode(', ') }}
-                            </span>
+                            @if ($hasAnyBullets)
+                                <div class="info-content">
+                                    <span style="font-weight: bold;">Certifications:</span>
+                                    <ul style="margin: 4px 0; padding-left: 16px;">
+                                        @foreach ($processedBullets as $bullets)
+                                            @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
+                                                <li style="margin-bottom: 2px;">{{ $text }}</li>
+                                            @endforeach
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @elseif ($hasLongCertList)
+                                <div class="info-content">
+                                    <span style="font-weight: bold;">Certifications:</span>
+                                    <ul style="margin: 4px 0; padding-left: 16px;">
+                                        @foreach ($certItems as $cert)
+                                            <li style="margin-bottom: 2px;">{{ $cert }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @else
+                                <span class="info-content">
+                                    • <span style="font-weight: bold;">Certifications:</span> 
+                                    {{ collect($resume['certifications'])->pluck('title')->implode(', ') }}
+                                </span>
+                            @endif
                         </div>
                     @endif
 

@@ -819,6 +819,8 @@ class AIController extends Controller
      */
     public function generateSummarySuggestions(Request $request, GeminiService $gemini)
     {
+        // Allow more time for AI calls which can exceed default 30s
+        try { @set_time_limit(180); } catch (\Throwable $___) { /* ignore if disabled */ }
         try {
             $validated = $request->validate([
                 'job_title' => 'nullable|string',
@@ -856,13 +858,42 @@ class AIController extends Controller
             return is_string($skill) && trim($skill) !== '';
         });
         
-        $experiences = array_filter($experiences, function($exp) {
-            return is_array($exp) && (
-                !empty($exp['jobTitle']) && 
-                !empty($exp['company']) && 
-                !empty($exp['description'])
-            );
-        });
+        $experiences = array_values(array_filter(array_map(function($exp) {
+            if (!is_array($exp)) {
+                return null;
+            }
+            $jobTitle = trim((string)($exp['jobTitle'] ?? ''));
+            $company = trim((string)($exp['company'] ?? ''));
+            $description = trim((string)($exp['description'] ?? ''));
+
+            // Normalize description: strip bullets/symbols and collapse whitespace
+            if ($description !== '') {
+                // Remove leading bullet markers and numbering
+                $lines = preg_split('/\r\n|\r|\n/', $description) ?: [$description];
+                $cleanLines = [];
+                foreach ($lines as $line) {
+                    $l = trim($line);
+                    if ($l === '') { continue; }
+                    $l = preg_replace('/^([•\-*]|\d+\.|[a-zA-Z][\.)]|[ivx]+\))\s+/u', '', $l);
+                    $l = preg_replace('/\s+/', ' ', $l);
+                    $cleanLines[] = $l;
+                }
+                $description = trim(implode('. ', $cleanLines));
+                // Ensure terminal period
+                if ($description !== '' && !preg_match('/[.!?]$/', $description)) {
+                    $description .= '.';
+                }
+            }
+
+            if ($jobTitle && $company && $description) {
+                return [
+                    'jobTitle' => $jobTitle,
+                    'company' => $company,
+                    'description' => $description,
+                ];
+            }
+            return null;
+        }, $experiences)));
         
         $education = array_filter($education, function($edu) {
             return is_array($edu) && (
@@ -1173,9 +1204,21 @@ class AIController extends Controller
             $clean = preg_replace('/^```(?:json)?/i', '', $clean);
             $clean = preg_replace('/```$/', '', $clean);
             $decoded = json_decode($clean, true);
+
+            // Case 1: Single object with revised_text
             if (is_array($decoded) && isset($decoded['revised_text'])) {
                 return (string) $decoded['revised_text'];
             }
+
+            // Case 2: Object with suggestions array [{ revised_text }...]
+            if (is_array($decoded) && isset($decoded['suggestions']) && is_array($decoded['suggestions'])) {
+                foreach ($decoded['suggestions'] as $s) {
+                    if (is_array($s) && isset($s['revised_text']) && is_string($s['revised_text']) && trim($s['revised_text']) !== '') {
+                        return $this->localTidy((string) $s['revised_text']);
+                    }
+                }
+            }
+
             // Fallback: use first paragraph, strip bullets/options
             $firstPara = preg_split('/\n\n+/', $clean)[0] ?? $clean;
             $firstPara = preg_replace('/^\s*([\-*•+]|\d+\.)\s*/m', '', $firstPara);

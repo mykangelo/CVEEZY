@@ -188,7 +188,7 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
                   <button
                     type="button"
                     onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="flex items-center justify-between w-24 h-[42px] px-2 py-2 bg-white border border-r-0 border-slate-300 rounded-l-lg text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white cursor-pointer hover:bg-gray-50 transition-all duration-150 ease-in-out"
+                    className="flex items-center justify-between w-20 h-[49px] px-2 bg-white border border-r-0 border-slate-300 rounded-l-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white cursor-pointer hover:bg-gray-50 transition-all duration-150 ease-in-out"
                   >
                     <span className={`fi fi-${phoneCountry === 'US' ? 'us' : phoneCountry === 'PH' ? 'ph' : 'gb'} text-lg`}></span>
                     <span className="text-xs text-gray-600 ml-1">
@@ -225,7 +225,8 @@ const ValidationHolder: React.FC<ValidationHolderProps> = ({ contacts, setContac
               <input 
                 type="tel"
                 autoComplete="tel"
-                className={`flex-1 border border-l-0 border-slate-300 rounded-r-lg px-3 py-2 appearance-none bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors.phone ? 'border-red-500' : ''} placeholder-gray-400 focus:placeholder-transparent text-gray-900`}
+                className={`flex-1 md:max-w-[175px] border border-l-0 border-slate-300 rounded-r-md px-3 py-2 h-[49px] appearance-none bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white transition-all duration-150 ease-in-out ${errors.phone ? 'border-red-500' : ''} placeholder-gray-400 focus:placeholder-transparent text-gray-900`}
+                maxLength={COUNTRY_FORMATS[phoneCountry].dialCode.length + 1 + COUNTRY_FORMATS[phoneCountry].maxLength}
                 placeholder={COUNTRY_PLACEHOLDERS[phoneCountry]}
                 value={contacts.phone}
               onChange={e => {

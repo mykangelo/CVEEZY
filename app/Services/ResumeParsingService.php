@@ -38,7 +38,21 @@ class ResumeParsingService
             Log::warning('ResumeParsingService: knownSectionHeadings is empty, using fallback values');
             $this->knownSectionHeadings = [
                 'contact' => ['contact', 'personal', 'personal information', 'details', 'info', 'profile', 'header'],
-                'summary' => ['summary', 'profile', 'objective', 'overview', 'about', 'introduction', 'executive summary'],
+                'summary' => [
+                    'summary', 'profile', 'objective', 'overview', 'about', 'introduction', 'executive summary',
+                    'profile summary', 'resume summary', 'professional summary', 'career summary', 'personal summary',
+                    'career objective', 'professional objective', 'personal objective', 'job objective',
+                    'career profile', 'professional profile', 'personal profile', 'candidate profile',
+                    'career overview', 'professional overview', 'personal overview', 'candidate overview',
+                    'about me', 'about myself', 'personal statement', 'professional statement',
+                    'career statement', 'mission statement', 'value proposition', 'elevator pitch',
+                    'bio', 'biography', 'professional bio', 'personal bio', 'career bio',
+                    'background', 'professional background', 'career background', 'personal background',
+                    'experience summary', 'work summary', 'employment summary', 'career highlights',
+                    'key qualifications', 'core competencies', 'professional highlights', 'career achievements',
+                    'summary of qualifications', 'qualifications summary', 'professional qualifications',
+                    'career focus', 'professional focus', 'areas of expertise', 'expertise summary'
+                ],
                 'experience' => ['experience', 'work experience', 'employment', 'professional experience', 'career', 'work history', 'positions'],
                 'education' => ['education', 'academic', 'academics', 'qualifications', 'degrees', 'schooling', 'academic background'],
                 'skills' => ['skills', 'technical skills', 'competencies', 'expertise', 'capabilities', 'proficiencies'],
@@ -56,7 +70,24 @@ class ResumeParsingService
             Log::warning('ResumeParsingService: sectionMappings is empty, using fallback values');
             $this->sectionMappings = [
                 'contact' => ['aliases' => ['contact', 'personal', 'details'], 'priority' => 1],
-                'summary' => ['aliases' => ['summary', 'profile', 'objective'], 'priority' => 2],
+                'summary' => [
+                    'aliases' => [
+                        'summary', 'profile', 'objective', 'overview', 'about', 'introduction', 'executive summary',
+                        'profile summary', 'resume summary', 'professional summary', 'career summary', 'personal summary',
+                        'career objective', 'professional objective', 'personal objective', 'job objective',
+                        'career profile', 'professional profile', 'personal profile', 'candidate profile',
+                        'career overview', 'professional overview', 'personal overview', 'candidate overview',
+                        'about me', 'about myself', 'personal statement', 'professional statement',
+                        'career statement', 'mission statement', 'value proposition', 'elevator pitch',
+                        'bio', 'biography', 'professional bio', 'personal bio', 'career bio',
+                        'background', 'professional background', 'career background', 'personal background',
+                        'experience summary', 'work summary', 'employment summary', 'career highlights',
+                        'key qualifications', 'core competencies', 'professional highlights', 'career achievements',
+                        'summary of qualifications', 'qualifications summary', 'professional qualifications',
+                        'career focus', 'professional focus', 'areas of expertise', 'expertise summary'
+                    ], 
+                    'priority' => 2
+                ],
                 'experiences' => ['aliases' => ['experience', 'work experience'], 'priority' => 3],
                 'education' => ['aliases' => ['education', 'academic'], 'priority' => 4],
                 'skills' => ['aliases' => ['skills', 'competencies'], 'priority' => 5]
@@ -94,28 +125,82 @@ class ResumeParsingService
     public function parseResume(UploadedFile $file): array
     {
         try {
+            // Increase execution time limit for multi-page resume processing
+            $timeout = config('resume.parsing.ai_parsing.timeout', 120);
+            set_time_limit($timeout + 30); // Add 30 seconds buffer
+            
             $filePath = $this->storeTemporaryFile($file);
             $parsedData = [];
             $rawText = '';
             $source = 'heuristic'; // Default source
             
-            // Use Gemini's multimodal capabilities for direct file processing
-            if ($this->gemini) {
+            // Check file size and use appropriate strategy
+            $fileSize = $file->getSize();
+            $isLargeFile = $fileSize > 500000; // 500KB threshold
+            
+            // For PDF files, check if it's multi-page
+            $isMultiPage = false;
+            if (strtolower($file->getClientOriginalExtension()) === 'pdf') {
+                try {
+                    $parser = new PdfParser();
+                    $pdf = $parser->parseFile(Storage::disk('local')->path($filePath));
+                    $details = $pdf->getDetails();
+                    $pageCount = $details['Pages'] ?? 1;
+                    $isMultiPage = $pageCount > 1;
+                    
+                    Log::info('PDF page count detection', [
+                        'page_count' => $pageCount,
+                        'is_multi_page' => $isMultiPage
+                    ]);
+                } catch (\Exception $e) {
+                    Log::warning('Could not detect PDF page count', ['error' => $e->getMessage()]);
+                }
+            }
+            
+            // Use appropriate strategy based on file characteristics
+            if ($this->gemini && !$isLargeFile && !$isMultiPage) {
+                Log::info('Starting AI parsing with extended timeout', [
+                    'timeout' => $timeout,
+                    'file_size' => $fileSize,
+                    'file_name' => $file->getClientOriginalName()
+                ]);
+                
                 $geminiResult = $this->parseWithGeminiMultimodal($file, $filePath);
                 if ($geminiResult['success']) {
                     $parsedData = $geminiResult['data'];
                     $rawText = $geminiResult['raw_text'] ?? '';
                     $source = 'gemini';
+                    Log::info('AI parsing completed successfully', [
+                        'sections_found' => array_keys($parsedData)
+                    ]);
+                } else {
+                    Log::warning('AI parsing failed, falling back to text extraction', [
+                        'error' => $geminiResult['error'] ?? 'Unknown error'
+                    ]);
                 }
+            } elseif ($isLargeFile || $isMultiPage) {
+                Log::info('Large multi-page document detected, using text extraction first strategy', [
+                    'file_size' => $fileSize,
+                    'is_large_file' => $isLargeFile,
+                    'is_multi_page' => $isMultiPage
+                ]);
             }
 
             // Fallback to traditional text extraction if Gemini parsing fails or is unavailable
             if (empty($parsedData)) {
                 Log::info('AI parsing failed or unavailable, using basic text extraction fallback');
-                $rawText = $this->extractTextFromFile($filePath, $file->getClientOriginalExtension());
-                $rawText = $this->sanitizeUtf8($rawText);
-                $parsedData = $this->parseTextToStructuredData($rawText);
-                Log::info('Basic text extraction completed', ['sections_found' => array_keys($parsedData)]);
+                try {
+                    $rawText = $this->extractTextFromFile($filePath, $file->getClientOriginalExtension());
+                    $rawText = $this->sanitizeUtf8($rawText);
+                    $parsedData = $this->parseTextToStructuredData($rawText);
+                    Log::info('Basic text extraction completed', ['sections_found' => array_keys($parsedData)]);
+                } catch (\Exception $e) {
+                    Log::error('Text extraction failed: ' . $e->getMessage(), [
+                        'file_path' => $filePath,
+                        'extension' => $file->getClientOriginalExtension()
+                    ]);
+                    throw $e; // Re-throw to be caught by outer try-catch
+                }
             }
 
                     // A single, unified post-processing and cleanup stage
@@ -141,21 +226,40 @@ class ResumeParsingService
             ];
             
         } catch (\Exception $e) {
+            // Check if it's a timeout error
+            $isTimeoutError = strpos($e->getMessage(), 'Maximum execution time') !== false || 
+                             strpos($e->getMessage(), 'timeout') !== false ||
+                             strpos($e->getMessage(), 'Connection timed out') !== false;
+            
             Log::error('Resume parsing failed: ' . $e->getMessage(), [
                 'file_name' => $file->getClientOriginalName(),
                 'file_size' => $file->getSize(),
+                'is_timeout_error' => $isTimeoutError,
                 'trace' => $e->getTraceAsString()
             ]);
             
+            $errorMessage = $e->getMessage();
+            $suggestions = ['Resume parsing failed. Please check the file format and try again.'];
+            
+            if ($isTimeoutError) {
+                $errorMessage = 'Resume parsing timed out. The file may be too large or complex. Please try with a smaller file or contact support.';
+                $suggestions = [
+                    'Try uploading a smaller resume file',
+                    'Ensure the resume is not password protected',
+                    'Try converting to PDF format if using Word documents',
+                    'Contact support if the issue persists'
+                ];
+            }
+            
             return [
                 'success' => false,
-                'error' => $e->getMessage(),
+                'error' => $errorMessage,
                 'data' => [],
                 'confidence' => [
                     'overall_score' => 0,
                     'sections_found' => [],
                     'missing_sections' => ['Contact', 'Experiences', 'Education', 'Skills', 'Summary'],
-                    'suggestions' => ['Resume parsing failed. Please check the file format and try again.'],
+                    'suggestions' => $suggestions,
                     'quality_metrics' => [
                         'completeness' => 0,
                         'accuracy' => 0,
@@ -232,46 +336,147 @@ class ResumeParsingService
     }
     
     /**
-     * Extract text from PDF file
+     * Extract text from PDF file with enhanced multi-page support
      */
     private function extractFromPdf(string $filePath): string
     {
         try {
             $parser = new PdfParser();
             $pdf = $parser->parseFile($filePath);
-            return $pdf->getText();
+            
+            // Get detailed information about the PDF
+            $details = $pdf->getDetails();
+            $pageCount = $details['Pages'] ?? 1;
+            
+            Log::info('PDF extraction started', [
+                'file_path' => $filePath,
+                'page_count' => $pageCount,
+                'title' => $details['Title'] ?? 'Unknown',
+                'author' => $details['Author'] ?? 'Unknown'
+            ]);
+            
+            // Extract text with page awareness
+            $fullText = $pdf->getText();
+            
+            // If we have multiple pages, try to get page-by-page text for better organization
+            if ($pageCount > 1) {
+                $pages = $pdf->getPages();
+                $pageTexts = [];
+                
+                foreach ($pages as $pageIndex => $page) {
+                    $pageText = $page->getText();
+                    if (!empty(trim($pageText))) {
+                        $pageTexts[] = "=== PAGE " . ($pageIndex + 1) . " ===\n" . $pageText;
+                    }
+                }
+                
+                if (!empty($pageTexts)) {
+                    $fullText = implode("\n\n", $pageTexts);
+                    Log::info('Multi-page PDF extracted with page separation', [
+                        'total_pages' => count($pageTexts),
+                        'total_text_length' => strlen($fullText)
+                    ]);
+                }
+            }
+            
+            // Clean up the extracted text
+            $fullText = $this->cleanExtractedText($fullText);
+            
+            Log::info('PDF extraction completed', [
+                'text_length' => strlen($fullText),
+                'page_count' => $pageCount
+            ]);
+            
+            return $fullText;
+            
         } catch (\Exception $e) {
-            Log::error('PDF parsing failed: ' . $e->getMessage());
+            Log::error('PDF parsing failed: ' . $e->getMessage(), [
+                'file_path' => $filePath,
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new \Exception('Failed to parse PDF file: ' . $e->getMessage());
         }
     }
     
     /**
-     * Extract text from DOCX file
+     * Clean and normalize extracted text for better parsing
+     */
+    private function cleanExtractedText(string $text): string
+    {
+        // Remove excessive whitespace and normalize line breaks
+        $text = preg_replace('/\s+/', ' ', $text);
+        $text = preg_replace('/\n\s*\n/', "\n\n", $text);
+        
+        // Remove page numbers that might interfere with parsing
+        $text = preg_replace('/^\s*\d+\s*$/m', '', $text);
+        
+        // Clean up common PDF extraction artifacts
+        $text = preg_replace('/\f/', "\n", $text); // Form feed to newline
+        $text = preg_replace('/\r\n/', "\n", $text); // Windows line endings
+        $text = preg_replace('/\r/', "\n", $text); // Mac line endings
+        
+        // Remove excessive blank lines
+        $text = preg_replace('/\n{3,}/', "\n\n", $text);
+        
+        return trim($text);
+    }
+    
+    /**
+     * Extract text from DOCX file with enhanced multi-page support
      */
     private function extractFromDocx(string $filePath): string
     {
         try {
             $phpWord = IOFactory::load($filePath);
             $text = '';
+            $pageCount = 0;
             
-            foreach ($phpWord->getSections() as $section) {
+            Log::info('DOCX extraction started', [
+                'file_path' => $filePath
+            ]);
+            
+            foreach ($phpWord->getSections() as $sectionIndex => $section) {
+                $sectionText = '';
+                
                 foreach ($section->getElements() as $element) {
                     if (method_exists($element, 'getText')) {
-                        $text .= $element->getText() . "\n";
+                        $elementText = $element->getText();
+                        if (!empty(trim($elementText))) {
+                            $sectionText .= $elementText . "\n";
+                        }
                     } elseif (method_exists($element, 'getElements')) {
                         foreach ($element->getElements() as $childElement) {
                             if (method_exists($childElement, 'getText')) {
-                                $text .= $childElement->getText() . "\n";
+                                $childText = $childElement->getText();
+                                if (!empty(trim($childText))) {
+                                    $sectionText .= $childText . "\n";
+                                }
                             }
                         }
                     }
                 }
+                
+                if (!empty(trim($sectionText))) {
+                    $pageCount++;
+                    $text .= "=== SECTION " . $pageCount . " ===\n" . $sectionText . "\n\n";
+                }
             }
             
+            // Clean up the extracted text
+            $text = $this->cleanExtractedText($text);
+            
+            Log::info('DOCX extraction completed', [
+                'text_length' => strlen($text),
+                'section_count' => $pageCount
+            ]);
+            
             return $text;
+            
         } catch (\Exception $e) {
-            Log::error('DOCX parsing failed: ' . $e->getMessage());
+            Log::error('DOCX parsing failed: ' . $e->getMessage(), [
+                'file_path' => $filePath,
+                'trace' => $e->getTraceAsString()
+            ]);
             throw new \Exception('Failed to parse DOCX file: ' . $e->getMessage());
         }
     }
@@ -347,20 +552,31 @@ class ResumeParsingService
             'hobbies' => []
         ];
         
-        // Clean and normalize text
+        // Enhanced multi-page text processing
         $text = $this->cleanText($text);
         $lines = explode("\n", $text);
         
-        // Enhanced section detection with priority-based approach
+        // Detect if this is a multi-page document
+        $isMultiPage = $this->isMultiPageDocument($text);
+        $pageContext = $this->buildPageContext($text);
+        
+        Log::info('Starting structured data parsing', [
+            'is_multi_page' => $isMultiPage,
+            'total_lines' => count($lines),
+            'page_count' => count($pageContext),
+            'text_length' => strlen($text)
+        ]);
+        
+        // Enhanced section detection with page-aware approach
         $sections = $this->detectSectionsWithPriority($text);
         
-        // Extract data from each detected section
+        // Extract data from each detected section with page context
         foreach ($sections as $sectionName => $sectionData) {
-            $data = $this->processSectionData($data, $sectionName, $sectionData, $text);
+            $data = $this->processSectionDataWithPageContext($data, $sectionName, $sectionData, $text, $pageContext);
         }
         
-        // Fallback extraction for sections not detected by headings
-        $data = $this->extractFallbackData($data, $text);
+        // Enhanced fallback extraction with page awareness
+        $data = $this->extractFallbackDataWithPageContext($data, $text, $pageContext);
 
         // Prefer AI-structured parse if available; otherwise heuristics only
         $llmData = $this->tryLlmParse($text, $data);
@@ -369,8 +585,8 @@ class ResumeParsingService
             $data = $this->mergePreferAi($data, $llmData);
         }
 
-        // Drop hallucinated/unsupported info and deep-clean strings
-        $data = $this->applyEvidenceFilter($data, $text);
+        // Enhanced evidence filtering with page context
+        $data = $this->applyEvidenceFilterWithPageContext($data, $text, $pageContext);
         $data = $this->deepCleanStrings($data);
         
         // Post-process and organize data for better template mapping
@@ -379,9 +595,291 @@ class ResumeParsingService
         // Apply field mapping normalization
         $data = $this->normalizeFieldMappings($data);
         
-        // Enhanced data validation and cleaning
-        $data = $this->validateAndCleanData($data);
+        // Enhanced data validation and cleaning with page awareness
+        $data = $this->validateAndCleanDataWithPageContext($data, $pageContext);
 
+        Log::info('Structured data parsing completed', [
+            'sections_found' => array_keys($sections),
+            'contact_complete' => !empty($data['contact']['email']),
+            'experiences_count' => count($data['experiences']),
+            'education_count' => count($data['education']),
+            'skills_count' => count($data['skills'])
+        ]);
+
+        return $data;
+    }
+    
+    /**
+     * Check if the document is multi-page
+     */
+    private function isMultiPageDocument(string $text): bool
+    {
+        $pageMarkers = [
+            '=== PAGE',
+            '=== SECTION',
+            'Page ',
+            'page '
+        ];
+        
+        foreach ($pageMarkers as $marker) {
+            if (strpos($text, $marker) !== false) {
+                return true;
+            }
+        }
+        
+        // Check for multiple page numbers
+        $pageNumbers = preg_match_all('/^\s*\d+\s*$/m', $text);
+        return $pageNumbers > 1;
+    }
+    
+    /**
+     * Build page context for multi-page documents
+     */
+    private function buildPageContext(string $text): array
+    {
+        $pageContext = [];
+        $lines = explode("\n", $text);
+        $currentPage = 1;
+        $currentPageContent = [];
+        
+        foreach ($lines as $lineNum => $line) {
+            $trimmedLine = trim($line);
+            
+            // Check for page boundary markers
+            if (preg_match('/=== (?:PAGE|SECTION) (\d+) ===/', $trimmedLine, $matches)) {
+                // Save previous page content
+                if (!empty($currentPageContent)) {
+                    $pageContext[$currentPage] = [
+                        'content' => implode("\n", $currentPageContent),
+                        'line_start' => $lineNum - count($currentPageContent),
+                        'line_end' => $lineNum - 1
+                    ];
+                }
+                
+                $currentPage = (int)$matches[1];
+                $currentPageContent = [];
+            } elseif (preg_match('/^\d+$/', $trimmedLine) && $lineNum > 0 && $lineNum < count($lines) - 1) {
+                // Standalone page number
+                if (!empty($currentPageContent)) {
+                    $pageContext[$currentPage] = [
+                        'content' => implode("\n", $currentPageContent),
+                        'line_start' => $lineNum - count($currentPageContent),
+                        'line_end' => $lineNum - 1
+                    ];
+                }
+                
+                $currentPage++;
+                $currentPageContent = [];
+            } else {
+                $currentPageContent[] = $line;
+            }
+        }
+        
+        // Save last page
+        if (!empty($currentPageContent)) {
+            $pageContext[$currentPage] = [
+                'content' => implode("\n", $currentPageContent),
+                'line_start' => count($lines) - count($currentPageContent),
+                'line_end' => count($lines) - 1
+            ];
+        }
+        
+        return $pageContext;
+    }
+    
+    /**
+     * Process section data with page context awareness
+     */
+    private function processSectionDataWithPageContext(array $data, string $sectionName, array $sectionData, string $text, array $pageContext): array
+    {
+        // Add page context to section data
+        $sectionData['page_context'] = $this->getSectionPageContext($sectionName, $sectionData, $pageContext);
+        
+        return $this->processSectionData($data, $sectionName, $sectionData, $text);
+    }
+    
+    /**
+     * Get page context for a section
+     */
+    private function getSectionPageContext(string $sectionName, array $sectionData, array $pageContext): array
+    {
+        $context = [];
+        
+        foreach ($pageContext as $pageNum => $pageInfo) {
+            if (isset($sectionData['content']) && is_string($sectionData['content'])) {
+                if (strpos($pageInfo['content'], $sectionData['content']) !== false) {
+                    $context[] = $pageNum;
+                }
+            }
+        }
+        
+        return $context;
+    }
+    
+    /**
+     * Extract fallback data with page context
+     */
+    private function extractFallbackDataWithPageContext(array $data, string $text, array $pageContext): array
+    {
+        // If we don't have contact info, try to extract it from all pages
+        if (empty($data['contact']) || empty($data['contact']['email'])) {
+            $contactInfo = $this->extractContactInfo($text);
+            
+            // If still no contact info, try page by page
+            if (empty($contactInfo['email'])) {
+                foreach ($pageContext as $pageNum => $pageInfo) {
+                    $pageContact = $this->extractContactInfo($pageInfo['content']);
+                    if (!empty($pageContact['email'])) {
+                        $contactInfo = array_merge($contactInfo, $pageContact);
+                        break;
+                    }
+                }
+            }
+            
+            $data['contact'] = $contactInfo;
+        }
+        
+        // Similar approach for other sections
+        if (empty($data['experiences'])) {
+            $experiences = $this->extractWorkExperience($text);
+            if (empty($experiences)) {
+                foreach ($pageContext as $pageNum => $pageInfo) {
+                    $pageExperiences = $this->extractWorkExperience($pageInfo['content']);
+                    $experiences = array_merge($experiences, $pageExperiences);
+                }
+            }
+            $data['experiences'] = $experiences;
+        }
+        
+        if (empty($data['education'])) {
+            $education = $this->extractEducation($text);
+            if (empty($education)) {
+                foreach ($pageContext as $pageNum => $pageInfo) {
+                    $pageEducation = $this->extractEducation($pageInfo['content']);
+                    $education = array_merge($education, $pageEducation);
+                }
+            }
+            $data['education'] = $education;
+        }
+        
+        if (empty($data['skills'])) {
+            $skills = $this->extractSkills($text);
+            if (empty($skills)) {
+                foreach ($pageContext as $pageNum => $pageInfo) {
+                    $pageSkills = $this->extractSkills($pageInfo['content']);
+                    $skills = array_merge($skills, $pageSkills);
+                }
+            }
+            $data['skills'] = $skills;
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Apply evidence filter with page context
+     */
+    private function applyEvidenceFilterWithPageContext(array $data, string $text, array $pageContext): array
+    {
+        // Apply standard evidence filter first
+        $data = $this->applyEvidenceFilter($data, $text);
+        
+        // Additional page-aware filtering
+        foreach ($data as $sectionName => $sectionData) {
+            if (is_array($sectionData)) {
+                $data[$sectionName] = $this->filterSectionWithPageContext($sectionName, $sectionData, $pageContext);
+            }
+        }
+        
+        return $data;
+    }
+    
+    /**
+     * Filter section data with page context
+     */
+    private function filterSectionWithPageContext(string $sectionName, array $sectionData, array $pageContext): array
+    {
+        // Remove duplicate entries that might appear across pages
+        if (in_array($sectionName, ['experiences', 'education', 'skills', 'certifications', 'awards'])) {
+            $sectionData = $this->removeDuplicateEntries($sectionData);
+        }
+        
+        return $sectionData;
+    }
+    
+    /**
+     * Remove duplicate entries from section data
+     */
+    private function removeDuplicateEntries(array $entries): array
+    {
+        $unique = [];
+        $seen = [];
+        
+        foreach ($entries as $entry) {
+            if (is_array($entry)) {
+                $key = $this->generateEntryKey($entry);
+                if (!isset($seen[$key])) {
+                    $seen[$key] = true;
+                    $unique[] = $entry;
+                }
+            }
+        }
+        
+        return $unique;
+    }
+    
+    /**
+     * Generate a unique key for an entry
+     */
+    private function generateEntryKey(array $entry): string
+    {
+        $keyFields = [];
+        
+        if (isset($entry['jobTitle']) && isset($entry['company'])) {
+            $keyFields[] = strtolower($entry['jobTitle'] . '|' . $entry['company']);
+        } elseif (isset($entry['school']) && isset($entry['degree'])) {
+            $keyFields[] = strtolower($entry['school'] . '|' . $entry['degree']);
+        } elseif (isset($entry['name'])) {
+            $keyFields[] = strtolower($entry['name']);
+        } elseif (isset($entry['title'])) {
+            $keyFields[] = strtolower($entry['title']);
+        }
+        
+        return implode('|', $keyFields);
+    }
+    
+    /**
+     * Validate and clean data with page context
+     */
+    private function validateAndCleanDataWithPageContext(array $data, array $pageContext): array
+    {
+        // Apply standard validation first
+        $data = $this->validateAndCleanData($data);
+        
+        // Additional page-aware validation
+        $data = $this->validateCrossPageConsistency($data, $pageContext);
+        
+        return $data;
+    }
+    
+    /**
+     * Validate cross-page consistency
+     */
+    private function validateCrossPageConsistency(array $data, array $pageContext): array
+    {
+        // Check for contact info consistency across pages
+        if (!empty($data['contact']['email'])) {
+            $email = $data['contact']['email'];
+            foreach ($pageContext as $pageNum => $pageInfo) {
+                if (strpos($pageInfo['content'], $email) === false) {
+                    Log::debug('Email not found on page', [
+                        'page' => $pageNum,
+                        'email' => $email
+                    ]);
+                }
+            }
+        }
+        
         return $data;
     }
     
@@ -457,14 +955,30 @@ class ResumeParsingService
         $lines = explode("\n", $text);
         $currentSection = null;
         $currentContent = [];
+        $pageMarkers = [];
         
-        // First pass: identify section boundaries and classify content
+        // Enhanced multi-page awareness: detect page boundaries
+        $pageBoundaries = $this->detectPageBoundaries($text);
+        
+        Log::info('Multi-page section detection started', [
+            'total_lines' => count($lines),
+            'page_boundaries' => $pageBoundaries,
+            'has_page_markers' => strpos($text, '=== PAGE') !== false || strpos($text, '=== SECTION') !== false
+        ]);
+        
+        // First pass: identify section boundaries and classify content with page awareness
         foreach ($lines as $lineNum => $line) {
             $trimmedLine = trim($line);
             if (empty($trimmedLine)) continue;
             
-            // Detect section headers
-            $detectedSection = $this->detectSectionHeader($trimmedLine);
+            // Check if this is a page boundary marker
+            if ($this->isPageBoundaryMarker($trimmedLine)) {
+                $pageMarkers[] = $lineNum;
+                continue;
+            }
+            
+            // Detect section headers with enhanced multi-page logic
+            $detectedSection = $this->detectSectionHeaderWithPageContext($trimmedLine, $lineNum, $pageBoundaries);
             
             if ($detectedSection) {
                 // Save previous section if exists
@@ -474,6 +988,12 @@ class ResumeParsingService
                 
                 $currentSection = $detectedSection;
                 $currentContent = [];
+                
+                Log::debug('Section header detected', [
+                    'section' => $detectedSection,
+                    'line_number' => $lineNum,
+                    'line_content' => $trimmedLine
+                ]);
             } else {
                 // Add content to current section
                 if ($currentSection) {
@@ -493,10 +1013,219 @@ class ResumeParsingService
             $sections[$currentSection] = $this->classifyAndCleanSectionContent($currentSection, $currentContent);
         }
         
-        // Post-process sections to fix misclassifications
-        $sections = $this->postProcessSections($sections);
+        // Enhanced post-processing for multi-page resumes
+        $sections = $this->postProcessSectionsWithPageAwareness($sections, $pageBoundaries);
+        
+        // Merge sections that might be split across pages
+        $sections = $this->mergeSectionsAcrossPages($sections);
+        
+        Log::info('Multi-page section detection completed', [
+            'sections_found' => array_keys($sections),
+            'page_markers' => $pageMarkers,
+            'total_sections' => count($sections)
+        ]);
         
         return $sections;
+    }
+    
+    /**
+     * Detect page boundaries in multi-page documents
+     */
+    private function detectPageBoundaries(string $text): array
+    {
+        $boundaries = [];
+        $lines = explode("\n", $text);
+        
+        foreach ($lines as $lineNum => $line) {
+            $trimmedLine = trim($line);
+            
+            // Look for explicit page markers
+            if (preg_match('/=== (?:PAGE|SECTION) \d+ ===/', $trimmedLine)) {
+                $boundaries[] = $lineNum;
+            }
+            
+            // Look for page numbers at the beginning or end of lines
+            if (preg_match('/^\d+$/', $trimmedLine) && $lineNum > 0 && $lineNum < count($lines) - 1) {
+                $boundaries[] = $lineNum;
+            }
+        }
+        
+        return $boundaries;
+    }
+    
+    /**
+     * Check if a line is a page boundary marker
+     */
+    private function isPageBoundaryMarker(string $line): bool
+    {
+        return preg_match('/=== (?:PAGE|SECTION) \d+ ===/', $line) || 
+               preg_match('/^\d+$/', $line);
+    }
+    
+    /**
+     * Detect section headers with page context awareness
+     */
+    private function detectSectionHeaderWithPageContext(string $line, int $lineNum, array $pageBoundaries): ?string
+    {
+        $detectedSection = $this->detectSectionHeader($line);
+        
+        if ($detectedSection) {
+            // Check if this section header appears near a page boundary
+            $nearPageBoundary = false;
+            foreach ($pageBoundaries as $boundary) {
+                if (abs($lineNum - $boundary) <= 3) {
+                    $nearPageBoundary = true;
+                    break;
+                }
+            }
+            
+            if ($nearPageBoundary) {
+                Log::debug('Section header near page boundary', [
+                    'section' => $detectedSection,
+                    'line_number' => $lineNum,
+                    'near_boundary' => true
+                ]);
+            }
+        }
+        
+        return $detectedSection;
+    }
+    
+    /**
+     * Post-process sections with page awareness
+     */
+    private function postProcessSectionsWithPageAwareness(array $sections, array $pageBoundaries): array
+    {
+        // Apply standard post-processing first
+        $sections = $this->postProcessSections($sections);
+        
+        // Additional multi-page specific processing
+        foreach ($sections as $sectionName => $sectionData) {
+            // Check for section continuations across pages
+            if (isset($sectionData['content']) && is_array($sectionData['content'])) {
+                $sectionData['content'] = $this->mergeContentAcrossPages($sectionData['content']);
+                $sections[$sectionName] = $sectionData;
+            }
+        }
+        
+        return $sections;
+    }
+    
+    /**
+     * Merge content that might be split across pages
+     */
+    private function mergeContentAcrossPages(array $content): array
+    {
+        $merged = [];
+        $currentItem = '';
+        
+        foreach ($content as $line) {
+            $trimmedLine = trim($line);
+            
+            // If this looks like the start of a new item (bullet point, date, etc.)
+            if ($this->isNewItemMarker($trimmedLine)) {
+                if (!empty($currentItem)) {
+                    $merged[] = $currentItem;
+                }
+                $currentItem = $trimmedLine;
+            } else {
+                // Continue the current item
+                if (!empty($currentItem)) {
+                    $currentItem .= ' ' . $trimmedLine;
+                } else {
+                    $currentItem = $trimmedLine;
+                }
+            }
+        }
+        
+        if (!empty($currentItem)) {
+            $merged[] = $currentItem;
+        }
+        
+        return $merged;
+    }
+    
+    /**
+     * Check if a line is a marker for a new item
+     */
+    private function isNewItemMarker(string $line): bool
+    {
+        // Common patterns for new items
+        $patterns = [
+            '/^\d{4}/', // Year at start
+            '/^[A-Z][a-z]+ \d{4}/', // Month Year
+            '/^•/', // Bullet point
+            '/^[-*]/', // Dash or asterisk
+            '/^[A-Z][A-Za-z\s]+:$/', // Section-like header
+        ];
+        
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $line)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Merge sections that might be split across pages
+     */
+    private function mergeSectionsAcrossPages(array $sections): array
+    {
+        $merged = [];
+        $sectionGroups = [];
+        
+        // Group similar sections
+        foreach ($sections as $sectionName => $sectionData) {
+            $baseName = $this->getBaseSectionName($sectionName);
+            if (!isset($sectionGroups[$baseName])) {
+                $sectionGroups[$baseName] = [];
+            }
+            $sectionGroups[$baseName][] = $sectionData;
+        }
+        
+        // Merge grouped sections
+        foreach ($sectionGroups as $baseName => $group) {
+            if (count($group) > 1) {
+                $merged[$baseName] = $this->mergeSectionGroup($group);
+            } else {
+                $merged[$baseName] = $group[0];
+            }
+        }
+        
+        return $merged;
+    }
+    
+    /**
+     * Get base section name (remove page-specific suffixes)
+     */
+    private function getBaseSectionName(string $sectionName): string
+    {
+        // Remove page-specific suffixes
+        $baseName = preg_replace('/_\d+$/', '', $sectionName);
+        $baseName = preg_replace('/_page_\d+$/', '', $baseName);
+        
+        return $baseName;
+    }
+    
+    /**
+     * Merge a group of similar sections
+     */
+    private function mergeSectionGroup(array $group): array
+    {
+        $merged = $group[0];
+        
+        for ($i = 1; $i < count($group); $i++) {
+            if (isset($group[$i]['content']) && is_array($group[$i]['content'])) {
+                if (!isset($merged['content'])) {
+                    $merged['content'] = [];
+                }
+                $merged['content'] = array_merge($merged['content'], $group[$i]['content']);
+            }
+        }
+        
+        return $merged;
     }
     
     /**
@@ -556,7 +1285,21 @@ class ResumeParsingService
             // Fallback to basic section detection
             $basicSections = [
                 'contact' => ['contact', 'personal', 'details'],
-                'summary' => ['summary', 'profile', 'objective'],
+                'summary' => [
+                    'summary', 'profile', 'objective', 'overview', 'about', 'introduction', 'executive summary',
+                    'profile summary', 'resume summary', 'professional summary', 'career summary', 'personal summary',
+                    'career objective', 'professional objective', 'personal objective', 'job objective',
+                    'career profile', 'professional profile', 'personal profile', 'candidate profile',
+                    'career overview', 'professional overview', 'personal overview', 'candidate overview',
+                    'about me', 'about myself', 'personal statement', 'professional statement',
+                    'career statement', 'mission statement', 'value proposition', 'elevator pitch',
+                    'bio', 'biography', 'professional bio', 'personal bio', 'career bio',
+                    'background', 'professional background', 'career background', 'personal background',
+                    'experience summary', 'work summary', 'employment summary', 'career highlights',
+                    'key qualifications', 'core competencies', 'professional highlights', 'career achievements',
+                    'summary of qualifications', 'qualifications summary', 'professional qualifications',
+                    'career focus', 'professional focus', 'areas of expertise', 'expertise summary'
+                ],
                 'experience' => ['experience', 'work', 'employment'],
                 'education' => ['education', 'academic', 'qualifications'],
                 'skills' => ['skills', 'competencies', 'expertise']
@@ -1527,60 +2270,284 @@ class ResumeParsingService
     {
         $experiences = [];
         
-        // Look for experience section
-        $experienceSection = $this->extractSection($text, [
+        // Enhanced multi-page experience extraction
+        $experienceSections = $this->extractMultiPageSections($text, [
             'experience', 'work experience', 'employment', 'professional experience', 
-            'work history', 'career'
+            'work history', 'career', 'professional background'
         ]);
         
-        if (!$experienceSection) return $experiences;
-        
-        // Parse individual experience entries
-        $entries = $this->parseExperienceEntries($experienceSection);
-        
-        foreach ($entries as $index => $entry) {
-            $experiences[] = [
-                'id' => $index + 1,
-                'jobTitle' => $entry['title'] ?? '',
-                'company' => $entry['company'] ?? '',
-                'location' => $entry['location'] ?? '',
-                'startDate' => $entry['startDate'] ?? '',
-                'endDate' => $entry['endDate'] ?? '',
-                'description' => $entry['description'] ?? ''
-            ];
+        if (empty($experienceSections)) {
+            // Fallback: try to extract experiences from the entire text
+            $experienceSections = [$text];
         }
+        
+        Log::info('Extracting work experience', [
+            'sections_found' => count($experienceSections),
+            'text_length' => strlen($text)
+        ]);
+        
+        // Process each experience section (could be from different pages)
+        foreach ($experienceSections as $sectionIndex => $experienceSection) {
+            // Parse individual experience entries from this section
+            $entries = $this->parseExperienceEntries($experienceSection);
+            
+            foreach ($entries as $index => $entry) {
+                $experience = [
+                    'id' => count($experiences) + 1,
+                    'jobTitle' => $entry['title'] ?? '',
+                    'company' => $entry['company'] ?? '',
+                    'location' => $entry['location'] ?? '',
+                    'startDate' => $entry['startDate'] ?? '',
+                    'endDate' => $entry['endDate'] ?? '',
+                    'description' => $entry['description'] ?? ''
+                ];
+                
+                // Only add if it's not a duplicate
+                if (!$this->isDuplicateExperience($experience, $experiences)) {
+                    $experiences[] = $experience;
+                }
+            }
+        }
+        
+        // Sort experiences by date (most recent first)
+        $experiences = $this->sortExperiencesByDate($experiences);
+        
+        Log::info('Work experience extraction completed', [
+            'total_experiences' => count($experiences),
+            'unique_experiences' => count($experiences)
+        ]);
         
         return $experiences;
     }
     
     /**
-     * Extract education information
+     * Extract sections that might span multiple pages
+     */
+    private function extractMultiPageSections(string $text, array $sectionKeywords): array
+    {
+        $sections = [];
+        $lines = explode("\n", $text);
+        $currentSection = null;
+        $currentContent = [];
+        
+        foreach ($lines as $lineNum => $line) {
+            $trimmedLine = trim($line);
+            
+            // Skip page markers
+            if ($this->isPageBoundaryMarker($trimmedLine)) {
+                continue;
+            }
+            
+            // Check if this line is a section header
+            $isSectionHeader = false;
+            foreach ($sectionKeywords as $keyword) {
+                if (stripos($trimmedLine, $keyword) !== false && 
+                    (strlen($trimmedLine) < 50 || preg_match('/^' . preg_quote($keyword, '/') . '/i', $trimmedLine))) {
+                    $isSectionHeader = true;
+                    break;
+                }
+            }
+            
+            if ($isSectionHeader) {
+                // Save previous section if exists
+                if ($currentSection && !empty($currentContent)) {
+                    $sections[] = implode("\n", $currentContent);
+                }
+                
+                $currentSection = $trimmedLine;
+                $currentContent = [];
+            } else {
+                // Add content to current section
+                if ($currentSection) {
+                    $currentContent[] = $line;
+                }
+            }
+        }
+        
+        // Save last section
+        if ($currentSection && !empty($currentContent)) {
+            $sections[] = implode("\n", $currentContent);
+        }
+        
+        return $sections;
+    }
+    
+    /**
+     * Check if an experience is a duplicate
+     */
+    private function isDuplicateExperience(array $newExperience, array $existingExperiences): bool
+    {
+        foreach ($existingExperiences as $existing) {
+            $titleMatch = !empty($newExperience['jobTitle']) && 
+                         !empty($existing['jobTitle']) && 
+                         strtolower($newExperience['jobTitle']) === strtolower($existing['jobTitle']);
+            
+            $companyMatch = !empty($newExperience['company']) && 
+                           !empty($existing['company']) && 
+                           strtolower($newExperience['company']) === strtolower($existing['company']);
+            
+            if ($titleMatch && $companyMatch) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Sort experiences by date (most recent first)
+     */
+    private function sortExperiencesByDate(array $experiences): array
+    {
+        usort($experiences, function($a, $b) {
+            $dateA = $this->parseDateForSorting($a['startDate'] ?? '');
+            $dateB = $this->parseDateForSorting($b['startDate'] ?? '');
+            
+            // If both have dates, sort by date
+            if ($dateA && $dateB) {
+                return $dateB <=> $dateA; // Most recent first
+            }
+            
+            // If only one has a date, prioritize it
+            if ($dateA && !$dateB) return -1;
+            if (!$dateA && $dateB) return 1;
+            
+            // If neither has a date, maintain original order
+            return 0;
+        });
+        
+        return $experiences;
+    }
+    
+    /**
+     * Parse date for sorting purposes
+     */
+    private function parseDateForSorting(string $dateString): ?int
+    {
+        if (empty($dateString)) return null;
+        
+        // Handle "Present" or "Current"
+        if (stripos($dateString, 'present') !== false || stripos($dateString, 'current') !== false) {
+            return time(); // Current timestamp for "Present"
+        }
+        
+        // Try to parse various date formats
+        $formats = [
+            'Y-m-d', 'Y-m', 'Y', 'M Y', 'F Y', 'm/Y', 'm/Y/d'
+        ];
+        
+        foreach ($formats as $format) {
+            $date = \DateTime::createFromFormat($format, $dateString);
+            if ($date !== false) {
+                return $date->getTimestamp();
+            }
+        }
+        
+        // Try strtotime as fallback
+        $timestamp = strtotime($dateString);
+        return $timestamp !== false ? $timestamp : null;
+    }
+    
+    /**
+     * Extract education information with enhanced multi-page support
      */
     private function extractEducation(string $text): array
     {
         $education = [];
         
-        // Look for education section
-        $educationSection = $this->extractSection($text, [
-            'education', 'academic background', 'qualifications', 'degrees'
+        // Enhanced multi-page education extraction
+        $educationSections = $this->extractMultiPageSections($text, [
+            'education', 'academic background', 'qualifications', 'degrees', 
+            'academic', 'academics', 'schooling', 'academic background'
         ]);
         
-        if (!$educationSection) return $education;
-        
-        // Parse individual education entries
-        $entries = $this->parseEducationEntries($educationSection);
-        
-        foreach ($entries as $index => $entry) {
-            $education[] = [
-                'id' => $index + 1,
-                'school' => $entry['school'] ?? '',
-                'location' => $entry['location'] ?? '',
-                'degree' => $entry['degree'] ?? '',
-                'startDate' => $entry['startDate'] ?? '',
-                'endDate' => $entry['endDate'] ?? '',
-                'description' => $entry['description'] ?? ''
-            ];
+        if (empty($educationSections)) {
+            // Fallback: try to extract education from the entire text
+            $educationSections = [$text];
         }
+        
+        Log::info('Extracting education', [
+            'sections_found' => count($educationSections),
+            'text_length' => strlen($text)
+        ]);
+        
+        // Process each education section (could be from different pages)
+        foreach ($educationSections as $sectionIndex => $educationSection) {
+            // Parse individual education entries from this section
+            $entries = $this->parseEducationEntries($educationSection);
+            
+            foreach ($entries as $index => $entry) {
+                $educationEntry = [
+                    'id' => count($education) + 1,
+                    'school' => $entry['school'] ?? '',
+                    'location' => $entry['location'] ?? '',
+                    'degree' => $entry['degree'] ?? '',
+                    'startDate' => $entry['startDate'] ?? '',
+                    'endDate' => $entry['endDate'] ?? '',
+                    'description' => $entry['description'] ?? ''
+                ];
+                
+                // Only add if it's not a duplicate
+                if (!$this->isDuplicateEducation($educationEntry, $education)) {
+                    $education[] = $educationEntry;
+                }
+            }
+        }
+        
+        // Sort education by date (most recent first)
+        $education = $this->sortEducationByDate($education);
+        
+        Log::info('Education extraction completed', [
+            'total_education' => count($education),
+            'unique_education' => count($education)
+        ]);
+        
+        return $education;
+    }
+    
+    /**
+     * Check if an education entry is a duplicate
+     */
+    private function isDuplicateEducation(array $newEducation, array $existingEducation): bool
+    {
+        foreach ($existingEducation as $existing) {
+            $schoolMatch = !empty($newEducation['school']) && 
+                          !empty($existing['school']) && 
+                          strtolower($newEducation['school']) === strtolower($existing['school']);
+            
+            $degreeMatch = !empty($newEducation['degree']) && 
+                          !empty($existing['degree']) && 
+                          strtolower($newEducation['degree']) === strtolower($existing['degree']);
+            
+            if ($schoolMatch && $degreeMatch) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Sort education by date (most recent first)
+     */
+    private function sortEducationByDate(array $education): array
+    {
+        usort($education, function($a, $b) {
+            $dateA = $this->parseDateForSorting($a['endDate'] ?? $a['startDate'] ?? '');
+            $dateB = $this->parseDateForSorting($b['endDate'] ?? $b['startDate'] ?? '');
+            
+            // If both have dates, sort by date
+            if ($dateA && $dateB) {
+                return $dateB <=> $dateA; // Most recent first
+            }
+            
+            // If only one has a date, prioritize it
+            if ($dateA && !$dateB) return -1;
+            if (!$dateA && $dateB) return 1;
+            
+            // If neither has a date, maintain original order
+            return 0;
+        });
         
         return $education;
     }
@@ -1707,22 +2674,42 @@ class ResumeParsingService
      */
     private function extractSummary(string $text): string
     {
-        $summarySection = $this->extractSection($text, [
-            'summary', 'profile', 'objective', 'about', 'overview', 
-            'professional summary', 'career objective'
-        ]);
+        // Enhanced summary section detection with comprehensive headings
+        $summaryHeadings = [
+            'summary', 'profile', 'objective', 'overview', 'about', 'introduction', 'executive summary',
+            'profile summary', 'resume summary', 'professional summary', 'career summary', 'personal summary',
+            'career objective', 'professional objective', 'personal objective', 'job objective',
+            'career profile', 'professional profile', 'personal profile', 'candidate profile',
+            'career overview', 'professional overview', 'personal overview', 'candidate overview',
+            'about me', 'about myself', 'personal statement', 'professional statement',
+            'career statement', 'mission statement', 'value proposition', 'elevator pitch',
+            'bio', 'biography', 'professional bio', 'personal bio', 'career bio',
+            'background', 'professional background', 'career background', 'personal background',
+            'experience summary', 'work summary', 'employment summary', 'career highlights',
+            'key qualifications', 'core competencies', 'professional highlights', 'career achievements',
+            'summary of qualifications', 'qualifications summary', 'professional qualifications',
+            'career focus', 'professional focus', 'areas of expertise', 'expertise summary'
+        ];
+        
+        $summarySection = $this->extractSection($text, $summaryHeadings);
         if ($summarySection) {
             return trim($summarySection);
         }
 
-        // Fallback: detect an unlabeled opening paragraph that looks like a summary
+        // Enhanced fallback: detect an unlabeled opening paragraph that looks like a summary
         $fallbackSummary = $this->extractUnlabeledSummaryFromText($text);
         if (!empty($fallbackSummary)) {
             return $fallbackSummary;
         }
         
         // Enhanced fallback: look for professional narrative near the top
-        return $this->extractProfessionalNarrative($text);
+        $professionalNarrative = $this->extractProfessionalNarrative($text);
+        if (!empty($professionalNarrative)) {
+            return $professionalNarrative;
+        }
+        
+        // Additional fallback: look for summary-like content in the first few paragraphs
+        return $this->extractSummaryFromEarlyContent($text);
     }
     
     /**
@@ -1768,6 +2755,155 @@ class ResumeParsingService
     }
     
     /**
+     * Extract summary from early content in the resume
+     */
+    private function extractSummaryFromEarlyContent(string $text): string
+    {
+        $lines = explode("\n", $text);
+        $summaryLines = [];
+        $foundContact = false;
+        $contactLines = 0;
+        
+        // Look for the first substantial paragraph after contact info
+        for ($i = 0; $i < min(15, count($lines)); $i++) {
+            $line = trim($lines[$i]);
+            if (empty($line)) continue;
+            
+            // Skip contact information (usually first few lines)
+            if ($this->isContactInfo($line) || $this->containsDatePatterns($line) || 
+                preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', $line) ||
+                preg_match('/\+?\d[\d\s().-]{7,}\d/', $line)) {
+                $foundContact = true;
+                $contactLines++;
+                continue;
+            }
+            
+            // Skip section headers
+            if ($this->isSectionHeader($line)) {
+                continue;
+            }
+            
+            // Look for summary-like content after contact info
+            if ($foundContact && $contactLines >= 2 && $this->looksLikeSummaryContent($line)) {
+                $summaryLines[] = $line;
+                
+                // Continue collecting related lines
+                for ($j = $i + 1; $j < min($i + 8, count($lines)); $j++) {
+                    $nextLine = trim($lines[$j]);
+                    if (empty($nextLine)) break;
+                    
+                    // Stop if we hit another section header
+                    if ($this->isSectionHeader($nextLine)) {
+                        break;
+                    }
+                    
+                    if ($this->looksLikeSummaryContent($nextLine)) {
+                        $summaryLines[] = $nextLine;
+                    } else {
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+        
+        return !empty($summaryLines) ? implode(' ', $summaryLines) : '';
+    }
+    
+    /**
+     * Check if a line looks like summary content
+     */
+    private function looksLikeSummaryContent(string $line): bool
+    {
+        // Skip very short lines
+        if (strlen($line) < 30) return false;
+        
+        // Skip lines that look like job titles, company names, or dates
+        if ($this->isLikelyJobTitle($line) || $this->isLikelyCompany($line) || $this->isLikelyDateEnhanced($line)) {
+            return false;
+        }
+        
+        // Skip lines that look like skills or technical lists
+        if (preg_match('/^[A-Z][a-z]+\s*[,;]/', $line) || preg_match('/\b(programming|software|tools|technologies|skills)\b/i', $line)) {
+            return false;
+        }
+        
+        // Look for professional summary indicators
+        $summaryKeywords = [
+            'experienced', 'professional', 'skilled', 'dedicated', 'passionate', 'motivated',
+            'years of experience', 'expertise', 'specialized', 'proficient', 'background',
+            'develop', 'create', 'implement', 'manage', 'lead', 'coordinate', 'design', 'build',
+            'team', 'project', 'system', 'application', 'solution', 'service', 'industry',
+            'strong', 'proven', 'track record', 'successful', 'accomplished', 'results',
+            'seeking', 'looking for', 'interested in', 'passionate about', 'committed to',
+            'expertise in', 'specialized in', 'focused on', 'dedicated to', 'experienced in',
+            'proven ability', 'strong background', 'extensive experience', 'comprehensive knowledge'
+        ];
+        
+        $lineLower = strtolower($line);
+        $keywordCount = 0;
+        
+        foreach ($summaryKeywords as $keyword) {
+            if (strpos($lineLower, $keyword) !== false) {
+                $keywordCount++;
+            }
+        }
+        
+        // Check for professional language patterns
+        $hasProfessionalLanguage = $keywordCount >= 2 || 
+            preg_match('/\b(experienced|professional|skilled|dedicated|passionate|motivated)\b/i', $line) ||
+            preg_match('/\b(years? of experience|expertise|specialized|proficient)\b/i', $line) ||
+            preg_match('/\b(develop|create|implement|manage|lead|coordinate|design|build)\b/i', $line);
+        
+        // Check for sentence structure
+        $hasSentenceStructure = preg_match('/[.!?]$/', $line) || 
+            preg_match('/\b(and|or|but|with|for|in|on|at|by|to|from|of|the|a|an)\b/', $line);
+        
+        // Check length (not too short, not too long) - increased limit for longer descriptions
+        $appropriateLength = strlen($line) >= 50 && strlen($line) <= 1000;
+        
+        return $hasProfessionalLanguage && $hasSentenceStructure && $appropriateLength;
+    }
+    
+    /**
+     * Check if a line looks like a section header
+     */
+    private function isSectionHeader(string $line): bool
+    {
+        $line = trim($line);
+        
+        // Check for common section headers
+        $sectionHeaders = [
+            'experience', 'work experience', 'employment', 'professional experience', 'career', 'work history', 'positions',
+            'education', 'academic', 'academics', 'qualifications', 'degrees', 'schooling', 'academic background',
+            'skills', 'technical skills', 'competencies', 'expertise', 'capabilities', 'proficiencies',
+            'languages', 'language skills', 'bilingual', 'multilingual',
+            'certifications', 'certificates', 'credentials', 'accreditations', 'licenses',
+            'awards', 'honors', 'achievements', 'recognition', 'accolades',
+            'projects', 'portfolio', 'work samples', 'case studies',
+            'references', 'referees', 'testimonials',
+            'activities', 'involvement', 'extracurricular', 'volunteer', 'community',
+            'interests', 'hobbies', 'personal interests'
+        ];
+        
+        $lineLower = strtolower($line);
+        
+        // Check if line matches section headers
+        foreach ($sectionHeaders as $header) {
+            if ($lineLower === $header || strpos($lineLower, $header) === 0) {
+                return true;
+            }
+        }
+        
+        // Check for header-like patterns (all caps, short, with colons)
+        if (preg_match('/^[A-Z\s]{2,30}:?$/', $line) && strlen($line) < 30) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
      * Check if a line looks like professional narrative
      */
     private function looksLikeProfessionalNarrative(string $line): bool
@@ -1806,17 +2942,28 @@ class ResumeParsingService
         foreach ($paragraphs as $p) {
             $pTrim = trim($p);
             if ($pTrim === '') continue;
+            
             // Skip contact-like lines
             if (preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', $pTrim)) continue;
             if (preg_match('/\+?\d[\d\s().-]{7,}\d/', $pTrim)) continue;
             if (stripos($pTrim, 'linkedin.com') !== false || stripos($pTrim, 'github.com') !== false) continue;
+            
             // Skip if it looks like a heading or list
             if (preg_match('/^(education|experience|work experience|skills|projects|certifications|awards|languages|references)\b/i', $pTrim)) continue;
             if (preg_match('/^[•\-\*]/', $pTrim)) continue;
+            
+            // Skip if it looks like job titles, company names, or dates
+            if ($this->isLikelyJobTitle($pTrim) || $this->isLikelyCompany($pTrim) || $this->isLikelyDateEnhanced($pTrim)) continue;
+            
+            // Skip if it looks like skills or technical lists
+            if (preg_match('/^[A-Z][a-z]+\s*[,;]/', $pTrim) || preg_match('/\b(programming|software|tools|technologies|skills)\b/i', $pTrim)) continue;
+            
             $len = mb_strlen($pTrim);
-            if ($len >= 80 && $len <= 900) {
-                // Looks like a narrative sentence/paragraph
-                return $pTrim;
+            if ($len >= 50 && $len <= 800) {
+                // Check if it looks like summary content
+                if ($this->looksLikeSummaryContent($pTrim)) {
+                    return $pTrim;
+                }
             }
         }
         return '';
@@ -2447,15 +3594,19 @@ class ResumeParsingService
     }
     
     /**
-     * Parse experience entries
+     * Parse experience entries with enhanced bulleted description support
+     * Improved to better handle multiple bullets and pool them together
      */
     private function parseExperienceEntries(string $text): array
     {
         $entries = [];
         
-        // Split by job entries (basic heuristic)
+        // Split by job entries (enhanced heuristic)
         $lines = explode("\n", $text);
         $currentEntry = [];
+        $descriptionLines = [];
+        $inDescription = false;
+        $hasStartedDescription = false;
         
         foreach ($lines as $line) {
             $line = trim($line);
@@ -2463,22 +3614,43 @@ class ResumeParsingService
             
             // Check if this looks like a job title or company
             if ($this->isLikelyJobTitle($line)) {
+                // Save previous entry if exists
                 if (!empty($currentEntry)) {
+                    $currentEntry['description'] = $this->processDescriptionLines($descriptionLines);
                     $entries[] = $currentEntry;
                 }
                 $currentEntry = ['title' => $line];
+                $descriptionLines = [];
+                $inDescription = false;
+                $hasStartedDescription = false;
             } elseif (isset($currentEntry['title']) && !isset($currentEntry['company'])) {
                 $currentEntry['company'] = $line;
             } elseif (isset($currentEntry['company']) && $this->isLikelyDateEnhanced($line)) {
                 $dates = $this->parseDateRange($line);
                 $currentEntry['startDate'] = $dates['start'];
                 $currentEntry['endDate'] = $dates['end'];
-            } else {
-                $currentEntry['description'] = ($currentEntry['description'] ?? '') . ' ' . $line;
+                $inDescription = true; // Start collecting description after dates
+                $hasStartedDescription = true;
+            } elseif ($inDescription || isset($currentEntry['company'])) {
+                // Check if this line looks like it could be part of a bulleted description
+                $isBulletLine = $this->isBulletLine($line);
+                $isLikelyDescription = $this->isLikelyDescriptionLine($line);
+                
+                // If we've started collecting description or this looks like a bullet/description
+                if ($hasStartedDescription || $isBulletLine || $isLikelyDescription) {
+                    $descriptionLines[] = $line;
+                    $inDescription = true;
+                    $hasStartedDescription = true;
+                } elseif ($inDescription) {
+                    // Continue collecting if we're already in description mode
+                    $descriptionLines[] = $line;
+                }
             }
         }
         
+        // Save last entry
         if (!empty($currentEntry)) {
+            $currentEntry['description'] = $this->processDescriptionLines($descriptionLines);
             $entries[] = $currentEntry;
         }
         
@@ -2486,39 +3658,678 @@ class ResumeParsingService
     }
     
     /**
-     * Parse education entries
+     * Parse education entries with enhanced bulleted description support
+     * Improved to better handle multiple bullets and pool them together
      */
     private function parseEducationEntries(string $text): array
     {
         $entries = [];
         
-        // Similar to experience parsing but for education
+        // Enhanced education parsing with bulleted description support
         $lines = explode("\n", $text);
         $currentEntry = [];
+        $descriptionLines = [];
+        $inDescription = false;
+        $hasStartedDescription = false;
         
         foreach ($lines as $line) {
             $line = trim($line);
             if (empty($line)) continue;
             
             if ($this->isLikelyDegree($line)) {
+                // Save previous entry if exists
                 if (!empty($currentEntry)) {
+                    $currentEntry['description'] = $this->processDescriptionLines($descriptionLines);
                     $entries[] = $currentEntry;
                 }
                 $currentEntry = ['degree' => $line];
+                $descriptionLines = [];
+                $inDescription = false;
+                $hasStartedDescription = false;
             } elseif (isset($currentEntry['degree']) && !isset($currentEntry['school'])) {
                 $currentEntry['school'] = $line;
             } elseif (isset($currentEntry['school']) && $this->isLikelyDateEnhanced($line)) {
                 $dates = $this->parseDateRange($line);
                 $currentEntry['startDate'] = $dates['start'];
                 $currentEntry['endDate'] = $dates['end'];
+                $inDescription = true; // Start collecting description after dates
+                $hasStartedDescription = true;
+            } elseif ($inDescription || isset($currentEntry['school'])) {
+                // Check if this line looks like it could be part of a bulleted description
+                $isBulletLine = $this->isBulletLine($line);
+                $isLikelyDescription = $this->isLikelyEducationDescriptionLine($line);
+                
+                // If we've started collecting description or this looks like a bullet/description
+                if ($hasStartedDescription || $isBulletLine || $isLikelyDescription) {
+                    $descriptionLines[] = $line;
+                    $inDescription = true;
+                    $hasStartedDescription = true;
+                } elseif ($inDescription) {
+                    // Continue collecting if we're already in description mode
+                    $descriptionLines[] = $line;
+                }
             }
         }
         
+        // Save last entry
         if (!empty($currentEntry)) {
+            $currentEntry['description'] = $this->processDescriptionLines($descriptionLines);
             $entries[] = $currentEntry;
         }
         
         return $entries;
+    }
+    
+    /**
+     * Process description lines to handle bulleted content properly
+     * Enhanced to automatically detect and add asterisks to bullet-like content
+     */
+    private function processDescriptionLines(array $descriptionLines): string
+    {
+        if (empty($descriptionLines)) {
+            return '';
+        }
+        
+        $processedLines = [];
+        $hasBullets = false;
+        $bulletCount = 0;
+        
+        // First pass: detect if we have any explicit bullets
+        $hasExplicitBullets = false;
+        $explicitBulletCount = 0;
+        foreach ($descriptionLines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            if ($this->isBulletLine($line)) {
+                $hasExplicitBullets = true;
+                $explicitBulletCount++;
+            }
+        }
+        
+        // If we have some explicit bullets but not many, try to enhance with auto-detection
+        if ($hasExplicitBullets && $explicitBulletCount < 3) {
+            $descriptionLines = $this->enhanceWithAutoDetection($descriptionLines);
+        } elseif (!$hasExplicitBullets) {
+            // If no explicit bullets, try to detect bullet-like content and add asterisks
+            $descriptionLines = $this->autoDetectAndAddBullets($descriptionLines);
+        }
+        
+        foreach ($descriptionLines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Check if line starts with bullet points (various formats)
+            if ($this->isBulletLine($line)) {
+                $content = $this->extractBulletContent($line);
+                if (!empty($content)) {
+                    // Check if this single bullet contains multiple sentences that should be split
+                    $splitBullets = $this->splitLongBulletIntoMultiple($content);
+                    foreach ($splitBullets as $bullet) {
+                        $processedLines[] = '• ' . $bullet;
+                        $bulletCount++;
+                    }
+                    $hasBullets = true;
+                }
+            } else {
+                // Regular text line - only add if we don't have bullets yet
+                // or if it's clearly not part of a bullet list
+                if (!$hasBullets || $bulletCount === 0) {
+                    $processedLines[] = $line;
+                } else {
+                    // If we already have bullets, treat this as a continuation
+                    // of the last bullet point
+                    if (!empty($processedLines)) {
+                        $lastIndex = count($processedLines) - 1;
+                        $processedLines[$lastIndex] .= ' ' . $line;
+                    } else {
+                        $processedLines[] = $line;
+                    }
+                }
+            }
+        }
+        
+        // If we have bullets, join with newlines to preserve structure
+        if ($hasBullets && $bulletCount > 0) {
+            return implode("\n", $processedLines);
+        } else {
+            // If no bullets, join with spaces for regular paragraph
+            return implode(' ', $processedLines);
+        }
+    }
+    
+    /**
+     * Enhance existing bullet list with auto-detection for missing bullets
+     */
+    private function enhanceWithAutoDetection(array $descriptionLines): array
+    {
+        if (empty($descriptionLines)) {
+            return $descriptionLines;
+        }
+        
+        $processedLines = [];
+        $bulletLikeCount = 0;
+        $totalLines = count($descriptionLines);
+        
+        foreach ($descriptionLines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                $processedLines[] = $line;
+                continue;
+            }
+            
+            // Check if line already has a bullet
+            if ($this->isBulletLine($line)) {
+                $processedLines[] = $line;
+                $bulletLikeCount++;
+            } else {
+                // Check if this line looks like it should be a bullet point
+                if ($this->isLikelyBulletContent($line)) {
+                    $bulletLikeCount++;
+                    // Add asterisk to the beginning
+                    $processedLines[] = '* ' . $line;
+                } else {
+                    $processedLines[] = $line;
+                }
+            }
+        }
+        
+        // Only return processed lines if we detected at least 2 bullet-like items
+        // or if more than 50% of lines look like bullets
+        if ($bulletLikeCount >= 2 || ($totalLines > 0 && $bulletLikeCount / $totalLines > 0.5)) {
+            return $processedLines;
+        }
+        
+        // Otherwise, return original lines
+        return $descriptionLines;
+    }
+    
+    /**
+     * Automatically detect bullet-like content and add asterisks to sentences
+     * that look like they should be bullet points
+     */
+    private function autoDetectAndAddBullets(array $descriptionLines): array
+    {
+        if (empty($descriptionLines)) {
+            return $descriptionLines;
+        }
+        
+        $processedLines = [];
+        $bulletLikeCount = 0;
+        $totalLines = count($descriptionLines);
+        
+        foreach ($descriptionLines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                $processedLines[] = $line;
+                continue;
+            }
+            
+            // Check if this line looks like it should be a bullet point
+            if ($this->isLikelyBulletContent($line)) {
+                $bulletLikeCount++;
+                // Add asterisk to the beginning
+                $processedLines[] = '* ' . $line;
+            } else {
+                $processedLines[] = $line;
+            }
+        }
+        
+        // Only return processed lines if we detected at least 2 bullet-like items
+        // or if more than 50% of lines look like bullets
+        if ($bulletLikeCount >= 2 || ($totalLines > 0 && $bulletLikeCount / $totalLines > 0.5)) {
+            return $processedLines;
+        }
+        
+        // Otherwise, return original lines
+        return $descriptionLines;
+    }
+    
+    /**
+     * Check if a line looks like it should be a bullet point
+     */
+    private function isLikelyBulletContent(string $line): bool
+    {
+        $line = trim($line);
+        
+        // Skip very short lines
+        if (strlen($line) < 8) {
+            return false;
+        }
+        
+        // Skip lines that look like dates, locations, or other structured data
+        if ($this->isLikelyDateEnhanced($line)) {
+            return false;
+        }
+        
+        // Skip lines that look like names or titles (all caps, short)
+        if (preg_match('/^[A-Z\s]{2,30}$/', $line) && strlen($line) < 30) {
+            return false;
+        }
+        
+        // Skip lines that look like contact information
+        if (preg_match('/^[\w\.-]+@[\w\.-]+\.\w+$/', $line) || 
+            preg_match('/^\+?[\d\s\-\(\)]{10,}$/', $line) ||
+            preg_match('/^https?:\/\//', $line)) {
+            return false;
+        }
+        
+        // Skip lines that look like addresses or locations
+        if (preg_match('/^\d+\s+[A-Za-z\s]+(?:Street|St|Avenue|Ave|Road|Rd|Drive|Dr|Lane|Ln|Boulevard|Blvd)/', $line)) {
+            return false;
+        }
+        
+        // Check for action words that typically start bullet points
+        $actionWords = [
+            'managed', 'led', 'developed', 'implemented', 'designed', 'created', 'built', 'improved',
+            'optimized', 'increased', 'reduced', 'achieved', 'delivered', 'collaborated', 'mentored',
+            'trained', 'supervised', 'analyzed', 'researched', 'maintained', 'supported', 'configured',
+            'deployed', 'integrated', 'automated', 'streamlined', 'enhanced', 'established', 'ensures',
+            'defines', 'manages', 'responsible', 'oversaw', 'coordinated', 'facilitated', 'executed',
+            'administered', 'monitored', 'evaluated', 'planned', 'organized', 'directed', 'handled',
+            'processed', 'generated', 'produced', 'completed', 'accomplished', 'performed', 'conducted',
+            'assisted', 'helped', 'contributed', 'participated', 'involved', 'engaged', 'worked',
+            'operated', 'utilized', 'leveraged', 'applied', 'employed', 'used', 'adopted', 'spearheaded',
+            'initiated', 'launched', 'established', 'founded', 'co-founded', 'coached', 'guided',
+            'instructed', 'taught', 'presented', 'demonstrated', 'exhibited', 'showcased', 'highlighted',
+            'emphasized', 'focused', 'specialized', 'concentrated', 'dedicated', 'committed', 'devoted',
+            'solved', 'resolved', 'addressed', 'tackled', 'overcame', 'conquered', 'mastered', 'excelled',
+            'exceeded', 'surpassed', 'outperformed', 'dominated', 'led', 'headed', 'chaired', 'presided',
+            'governed', 'controlled', 'regulated', 'supervised', 'oversaw', 'managed', 'administered'
+        ];
+        
+        $lineLower = strtolower($line);
+        
+        // Check if line starts with an action word
+        foreach ($actionWords as $actionWord) {
+            if (strpos($lineLower, $actionWord) === 0) {
+                return true;
+            }
+        }
+        
+        // Check for common bullet patterns
+        // Lines that start with capital letters and contain action-like content
+        if (preg_match('/^[A-Z][a-z]+.*(?:ed|ing|s|tion|sion|ment|ance|ence)\b/', $line)) {
+            return true;
+        }
+        
+        // Lines that contain colons (common in job descriptions)
+        if (strpos($line, ':') !== false && strlen($line) > 15) {
+            return true;
+        }
+        
+        // Lines that contain numbers or percentages (achievements)
+        if (preg_match('/\d+%|\d+\+|\d+x|\$\d+|\d+\s*(?:years?|months?|days?|hours?|times?|fold)/', $line)) {
+            return true;
+        }
+        
+        // Lines that contain technology keywords
+        $techKeywords = [
+            'api', 'database', 'framework', 'library', 'tool', 'software', 'system', 'platform',
+            'application', 'website', 'mobile', 'web', 'cloud', 'server', 'client', 'frontend',
+            'backend', 'full-stack', 'devops', 'agile', 'scrum', 'methodology', 'process',
+            'workflow', 'pipeline', 'deployment', 'testing', 'quality', 'security', 'performance',
+            'javascript', 'python', 'java', 'php', 'react', 'angular', 'vue', 'node', 'sql',
+            'mysql', 'postgresql', 'mongodb', 'redis', 'docker', 'kubernetes', 'aws', 'azure',
+            'gcp', 'git', 'github', 'gitlab', 'jenkins', 'ci/cd', 'rest', 'graphql', 'microservices'
+        ];
+        
+        foreach ($techKeywords as $keyword) {
+            if (strpos($lineLower, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        // Lines that contain business/achievement keywords
+        $businessKeywords = [
+            'revenue', 'profit', 'sales', 'growth', 'efficiency', 'productivity', 'cost', 'budget',
+            'roi', 'kpi', 'metrics', 'analytics', 'reporting', 'dashboard', 'insights', 'strategy',
+            'planning', 'execution', 'implementation', 'rollout', 'launch', 'campaign', 'project',
+            'initiative', 'program', 'team', 'department', 'organization', 'company', 'client',
+            'customer', 'user', 'stakeholder', 'vendor', 'partner', 'collaboration', 'cooperation'
+        ];
+        
+        foreach ($businessKeywords as $keyword) {
+            if (strpos($lineLower, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        // Lines that are reasonably long and contain sentence-like structure - increased limit
+        if (strlen($line) > 25 && strlen($line) < 800) {
+            // Check if it contains sentence-like structure
+            if (preg_match('/[.!?]$/', $line) || 
+                preg_match('/\b(and|or|but|with|for|in|on|at|by|to|from|of|the|a|an)\b/', $line) ||
+                preg_match('/\b(that|which|who|where|when|how|why|what)\b/', $line)) {
+                return true;
+            }
+        }
+        
+        // Lines that start with common bullet-like patterns
+        if (preg_match('/^(Responsible|Duties|Tasks|Key|Main|Primary|Secondary|Additional|Other)/i', $line)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Split a long bullet point into multiple bullets based on sentence structure
+     */
+    private function splitLongBulletIntoMultiple(string $content): array
+    {
+        // If the content is short, don't split it
+        if (strlen($content) < 80) {
+            return [$content];
+        }
+        
+        $bullets = [];
+        
+        // First, try to split on colons (common pattern for job descriptions)
+        // Look for patterns like "Designs Applications: Creates applications..."
+        if (preg_match_all('/([A-Z][^:]*):\s*([^.!?]*[.!?]?)/', $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $title = trim($match[1]);
+                $description = trim($match[2]);
+                if (!empty($description)) {
+                    $bullets[] = $title . ': ' . $description;
+                }
+            }
+            // If we found colon splits, return them
+            if (!empty($bullets)) {
+                return $bullets;
+            }
+        }
+        
+        // Try to split on semicolons (common in long bullet points)
+        if (strpos($content, ';') !== false) {
+            $parts = explode(';', $content);
+            $cleanParts = [];
+            foreach ($parts as $part) {
+                $part = trim($part);
+                if (!empty($part) && strlen($part) > 10) {
+                    $cleanParts[] = $part;
+                }
+            }
+            if (count($cleanParts) > 1) {
+                return $cleanParts;
+            }
+        }
+        
+        // Try to split on sentence boundaries with action words
+        $actionWords = [
+            'managed', 'led', 'developed', 'implemented', 'designed', 'created', 'built', 'improved', 
+            'optimized', 'increased', 'reduced', 'achieved', 'delivered', 'collaborated', 'mentored', 
+            'trained', 'supervised', 'analyzed', 'researched', 'maintained', 'supported', 'configured', 
+            'deployed', 'integrated', 'automated', 'streamlined', 'enhanced', 'established', 'ensures',
+            'defines', 'manages', 'responsible', 'oversaw', 'coordinated', 'facilitated', 'executed',
+            'administered', 'monitored', 'evaluated', 'planned', 'organized', 'directed', 'handled',
+            'processed', 'generated', 'produced', 'completed', 'accomplished', 'performed', 'conducted',
+            'assisted', 'helped', 'contributed', 'participated', 'involved', 'engaged', 'worked',
+            'operated', 'utilized', 'leveraged', 'applied', 'employed', 'used', 'adopted', 'spearheaded',
+            'initiated', 'launched', 'established', 'founded', 'co-founded', 'coached', 'guided',
+            'instructed', 'taught', 'presented', 'demonstrated', 'exhibited', 'showcased', 'highlighted'
+        ];
+        
+        // Look for patterns like "Action Word: Description" or "Action Word Description"
+        $pattern = '/(' . implode('|', $actionWords) . ')[:\s]+([^.!?]*[.!?]?)/i';
+        if (preg_match_all($pattern, $content, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $action = trim($match[1]);
+                $description = trim($match[2]);
+                if (!empty($description) && strlen($description) > 10) {
+                    $bullets[] = ucfirst($action) . ': ' . $description;
+                }
+            }
+            if (!empty($bullets)) {
+                return $bullets;
+            }
+        }
+        
+        // Try to split on common conjunctions and transitions
+        $splitPatterns = [
+            '/\s+and\s+(?=[A-Z])/i',  // Split on "and" followed by capital letter
+            '/\s+or\s+(?=[A-Z])/i',   // Split on "or" followed by capital letter
+            '/\s+but\s+(?=[A-Z])/i',  // Split on "but" followed by capital letter
+            '/\s+also\s+(?=[A-Z])/i', // Split on "also" followed by capital letter
+            '/\s+additionally\s+(?=[A-Z])/i', // Split on "additionally" followed by capital letter
+            '/\s+furthermore\s+(?=[A-Z])/i',  // Split on "furthermore" followed by capital letter
+        ];
+        
+        foreach ($splitPatterns as $pattern) {
+            if (preg_match($pattern, $content)) {
+                $parts = preg_split($pattern, $content);
+                $cleanParts = [];
+                foreach ($parts as $part) {
+                    $part = trim($part);
+                    if (!empty($part) && strlen($part) > 15) {
+                        $cleanParts[] = $part;
+                    }
+                }
+                if (count($cleanParts) > 1) {
+                    return $cleanParts;
+                }
+            }
+        }
+        
+        // Try to split on sentence boundaries
+        $sentences = preg_split('/([.!?])\s+/', $content, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (count($sentences) > 2) {
+            $bullets = [];
+            for ($i = 0; $i < count($sentences); $i += 2) {
+                $sentence = trim($sentences[$i]);
+                if ($i + 1 < count($sentences)) {
+                    $sentence .= $sentences[$i + 1]; // Add the punctuation
+                }
+                if (!empty($sentence) && strlen($sentence) > 20) {
+                    $bullets[] = $sentence;
+                }
+            }
+            if (count($bullets) > 1) {
+                return $bullets;
+            }
+        }
+        
+        // If all else fails, return the original content as a single bullet
+        return [$content];
+    }
+    
+    /**
+     * Check if a line looks like a bullet point
+     */
+    private function isBulletLine(string $line): bool
+    {
+        $line = trim($line);
+        return preg_match('/^[•\-\*]\s+/u', $line) ||
+               preg_match('/^\d+\.\s+/', $line) ||
+               preg_match('/^[a-z]\)\s+/i', $line) ||
+               preg_match('/^[ivx]+\)\s+/i', $line) ||
+               preg_match('/^[A-Z][\.\)]\s+/', $line) ||
+               preg_match('/^\s+[•\-\*]\s+/u', $line) ||
+               preg_match('/^\s+\d+\.\s+/', $line) ||
+               preg_match('/^\s+[a-z]\)\s+/i', $line) ||
+               preg_match('/^\s+[A-Z][\.\)]\s+/', $line) ||
+               preg_match('/^\s+[ivx]+\)\s+/i', $line) ||
+               preg_match('/^[▪▫▸▹▻▽▼]\s+/u', $line) ||
+               preg_match('/^\s+[▪▫▸▹▻▽▼]\s+/u', $line);
+    }
+    
+    /**
+     * Extract content after bullet point
+     */
+    private function extractBulletContent(string $line): string
+    {
+        // Remove bullet point and return content
+        return trim(preg_replace('/^[•\-\*]\s+/', '', 
+                preg_replace('/^\d+\.\s+/', '', 
+                preg_replace('/^[a-z]\)\s+/i', '', 
+                preg_replace('/^[A-Z][\.\)]\s+/', '', 
+                preg_replace('/^[ivx]+\)\s+/i', '', 
+                preg_replace('/^\s+[•\-\*]\s+/', '', 
+                preg_replace('/^\s+\d+\.\s+/', '', 
+                preg_replace('/^\s+[a-z]\)\s+/i', '', 
+                preg_replace('/^\s+[A-Z][\.\)]\s+/', '', 
+                preg_replace('/^\s+[ivx]+\)\s+/i', '', 
+                preg_replace('/^[▪▫▸▹▻▽▼]\s+/', '', 
+                preg_replace('/^\s+[▪▫▸▹▻▽▼]\s+/', '', $line)))))))))))));
+    }
+    
+    /**
+     * Check if a line looks like it could be part of a description
+     */
+    private function isLikelyDescriptionLine(string $line): bool
+    {
+        $line = trim($line);
+        
+        // Skip very short lines
+        if (strlen($line) < 8) return false;
+        
+        // Skip lines that look like dates, locations, or other structured data
+        if ($this->isLikelyDateEnhanced($line)) return false;
+        if (preg_match('/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/', $line)) return false; // Likely company/school name
+        
+        // Skip contact information
+        if (preg_match('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', $line)) return false;
+        if (preg_match('/\+?\d[\d\s().-]{7,}\d/', $line)) return false;
+        
+        // Look for action words that suggest job responsibilities
+        $actionWords = [
+            'developed', 'created', 'built', 'implemented', 'designed', 'managed', 'led', 'coordinated',
+            'improved', 'optimized', 'increased', 'reduced', 'achieved', 'delivered', 'collaborated',
+            'mentored', 'trained', 'supervised', 'analyzed', 'researched', 'maintained', 'supported',
+            'configured', 'deployed', 'integrated', 'automated', 'streamlined', 'enhanced', 'established',
+            'spearheaded', 'initiated', 'launched', 'founded', 'co-founded', 'coached', 'guided',
+            'instructed', 'taught', 'presented', 'demonstrated', 'exhibited', 'showcased', 'highlighted',
+            'solved', 'resolved', 'addressed', 'tackled', 'overcame', 'conquered', 'mastered', 'excelled',
+            'exceeded', 'surpassed', 'outperformed', 'dominated', 'headed', 'chaired', 'presided',
+            'governed', 'controlled', 'regulated', 'administered', 'monitored', 'evaluated', 'planned',
+            'organized', 'directed', 'handled', 'processed', 'generated', 'produced', 'completed',
+            'accomplished', 'performed', 'conducted', 'assisted', 'helped', 'contributed', 'participated',
+            'involved', 'engaged', 'worked', 'operated', 'utilized', 'leveraged', 'applied', 'employed',
+            'used', 'adopted', 'responsible', 'oversaw', 'facilitated', 'executed'
+        ];
+        
+        $lineLower = strtolower($line);
+        foreach ($actionWords as $action) {
+            if (strpos($lineLower, $action) === 0) {
+                return true;
+            }
+        }
+        
+        // Look for common description patterns
+        if (preg_match('/^(responsibilities|duties|achievements|accomplishments|projects?|key|main|primary|secondary|additional|other):/i', $line)) {
+            return true;
+        }
+        
+        // Look for lines that contain professional keywords
+        $professionalKeywords = [
+            'team', 'project', 'system', 'application', 'solution', 'service', 'industry',
+            'client', 'customer', 'user', 'stakeholder', 'vendor', 'partner', 'collaboration',
+            'revenue', 'profit', 'sales', 'growth', 'efficiency', 'productivity', 'cost', 'budget',
+            'roi', 'kpi', 'metrics', 'analytics', 'reporting', 'dashboard', 'insights', 'strategy',
+            'planning', 'execution', 'implementation', 'rollout', 'launch', 'campaign', 'initiative',
+            'program', 'department', 'organization', 'company', 'technology', 'software', 'hardware',
+            'database', 'framework', 'library', 'tool', 'platform', 'cloud', 'server', 'client',
+            'frontend', 'backend', 'full-stack', 'devops', 'agile', 'scrum', 'methodology', 'process'
+        ];
+        
+        $keywordCount = 0;
+        foreach ($professionalKeywords as $keyword) {
+            if (strpos($lineLower, $keyword) !== false) {
+                $keywordCount++;
+            }
+        }
+        
+        // If line contains professional keywords and has reasonable length - increased limit
+        if ($keywordCount >= 1 && strlen($line) >= 20 && strlen($line) <= 800) {
+            return true;
+        }
+        
+        // Look for lines that contain numbers or percentages (achievements)
+        if (preg_match('/\d+%|\d+\+|\d+x|\$\d+|\d+\s*(?:years?|months?|days?|hours?|times?|fold)/', $line)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if a line looks like it could be part of an education description
+     */
+    private function isLikelyEducationDescriptionLine(string $line): bool
+    {
+        $line = trim($line);
+        
+        // Skip very short lines
+        if (strlen($line) < 8) return false;
+        
+        // Skip lines that look like dates, locations, or other structured data
+        if ($this->isLikelyDateEnhanced($line)) return false;
+        if (preg_match('/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/', $line)) return false; // Likely school name
+        
+        // Look for education-related action words and patterns
+        $educationWords = [
+            'graduated', 'completed', 'studied', 'major', 'minor', 'concentration', 'specialization',
+            'gpa', 'grade point average', 'honors', 'dean\'s list', 'magna cum laude', 'summa cum laude',
+            'relevant coursework', 'thesis', 'dissertation', 'research', 'project', 'internship',
+            'scholarship', 'award', 'certificate', 'diploma', 'degree', 'bachelor', 'master', 'phd'
+        ];
+        
+        $lineLower = strtolower($line);
+        foreach ($educationWords as $word) {
+            if (strpos($lineLower, $word) !== false) {
+                return true;
+            }
+        }
+        
+        // Look for common education description patterns
+        if (preg_match('/^(relevant coursework|honors|awards|projects?|research|thesis):/i', $line)) {
+            return true;
+        }
+        
+        // Look for GPA patterns
+        if (preg_match('/gpa[:\s]*\d+\.\d+/i', $line)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Check if a line looks like a certification
+     */
+    private function isLikelyCertificationLine(string $line): bool
+    {
+        $line = trim($line);
+        
+        // Skip very short lines
+        if (strlen($line) < 5) return false;
+        
+        // Skip lines that look like dates, locations, or other structured data
+        if ($this->isLikelyDateEnhanced($line)) return false;
+        if (preg_match('/^[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*$/', $line)) return false; // Likely name
+        
+        // Look for certification-specific keywords
+        $certKeywords = [
+            'certificate', 'certification', 'certified', 'license', 'licensed', 'credential', 
+            'accreditation', 'diploma', 'badge', 'issued by', 'expires', 'valid until',
+            'aws', 'azure', 'google', 'microsoft', 'ibm', 'oracle', 'cisco', 'comptia',
+            'pmp', 'scrum', 'agile', 'six sigma', 'lean', 'itil', 'cissp', 'ceh'
+        ];
+        
+        $lineLower = strtolower($line);
+        foreach ($certKeywords as $keyword) {
+            if (strpos($lineLower, $keyword) !== false) {
+                return true;
+            }
+        }
+        
+        // Check for common certification patterns
+        if (preg_match('/\b[A-Z]{2,}\b/', $line)) return true; // Contains acronyms (AWS, IBM, etc.)
+        if (preg_match('/\d+\.\d+/', $line)) return true; // Contains version numbers
+        if (preg_match('/\b(professional|associate|expert|foundation|essentials|practitioner)\b/i', $line)) return true;
+        
+        return true; // Default to true for certification lines
     }
     
     /**
@@ -2549,12 +4360,50 @@ class ResumeParsingService
     
     /**
      * Parse certifications list
+     * Enhanced to automatically detect and add asterisks to bullet-like content
      */
     private function parseCertificationsList(string $text): array
     {
-        return array_filter(explode("\n", $text), function($cert) {
-            return !empty(trim($cert));
-        });
+        $lines = explode("\n", $text);
+        $certifications = [];
+        
+        // First pass: detect if we have any explicit bullets
+        $hasExplicitBullets = false;
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            if ($this->isBulletLine($line)) {
+                $hasExplicitBullets = true;
+                break;
+            }
+        }
+        
+        // If no explicit bullets, try to detect bullet-like content and add asterisks
+        if (!$hasExplicitBullets) {
+            $lines = $this->autoDetectAndAddBullets($lines);
+        }
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Check if this line contains bulleted content
+            if ($this->isBulletLine($line)) {
+                // Extract content after bullet
+                $content = $this->extractBulletContent($line);
+                if (!empty($content)) {
+                    $certifications[] = $content;
+                }
+            } else {
+                // Regular line - could be a certification or description
+                if ($this->isLikelyCertificationLine($line)) {
+                    $certifications[] = $line;
+                }
+            }
+        }
+        
+        return $certifications;
     }
     
     /**
@@ -2833,14 +4682,19 @@ class ResumeParsingService
                      "- Do not invent or hallucinate information. Extract only what is clearly present in the resume.\n" .
                      "- For dates, preserve the original format (e.g., 'Jan 2020', '2021', 'Present')\n" .
                      "- For skills, extract both the skill name and proficiency level if available\n" .
-                     "- For experiences and education, extract all available details including descriptions\n" .
+                     "- For experiences and education, extract ALL available details including descriptions\n" .
+                     "- CRITICAL: For experience and education descriptions, preserve ALL bullet points and list items exactly as they appear\n" .
+                     "- If descriptions contain bullet points (•, -, *, numbers, letters), preserve the complete structure\n" .
+                     "- Do not truncate or cut off bullet point lists - include ALL items in the description field\n" .
+                     "- For summary section, look for various headings like 'Profile Summary', 'Resume Summary', 'Professional Summary', 'Career Objective', 'About Me', 'Personal Statement', etc.\n" .
+                     "- Extract the complete summary content even if it spans multiple paragraphs or lines\n" .
                      "- If a section is not present, omit it from the output\n" .
                      "- Ensure all text is properly cleaned and formatted\n\n" .
                      "Resume text to analyze:\n\n" . $cleanText;
             
             $response = $this->gemini->generateText($prompt, $model, [
                 'response_mime_type' => 'application/json',
-                'maxOutputTokens' => config('resume.parsing.ai_parsing.max_output_tokens', 4096),
+                'maxOutputTokens' => config('resume.parsing.ai_parsing.max_output_tokens', 8192),
                 'temperature' => config('resume.parsing.ai_parsing.temperature', 0.1),
                 'topP' => config('resume.parsing.ai_parsing.top_p', 0.1),
             ]);
@@ -3916,9 +5770,9 @@ class ResumeParsingService
         // Remove excessive whitespace and normalize
         $summary = preg_replace('/\s+/', ' ', $summary);
         
-        // Ensure it's not too long for template
-        if (strlen($summary) > 500) {
-            $summary = substr($summary, 0, 500) . '...';
+        // Increased limit to allow longer summaries (was 500, now 1000)
+        if (strlen($summary) > 1000) {
+            $summary = substr($summary, 0, 1000) . '...';
         }
         
         return $summary;
@@ -4002,29 +5856,50 @@ class ResumeParsingService
             $model = config('services.gemini.parser_model', 'gemini-1.5-flash');
             $schema = '{contact:{firstName,lastName,desiredJobTitle,phone,email,country,city,address,postCode},experiences:[{jobTitle,company,location,startDate,endDate,description}],education:[{school,location,degree,startDate,endDate,description}],skills:[{name,level}],summary,languages:[{name,proficiency}],certifications:[{title}],awards:[{title}],websites:[{label,url}],references:[{name,relationship,contactInfo}],hobbies:[string],full_text:string}';
             
-            $prompt = "You are a professional resume parser. Analyze the provided resume file and extract structured information.\n\n" .
+            $prompt = "You are a professional resume parser specialized in multi-page document analysis. Analyze the provided resume file and extract structured information with enhanced accuracy for complex, multi-page resumes.\n\n" .
+                     "Multi-Page Analysis Guidelines:\n" .
+                     "- Read and analyze ALL pages of the resume document completely\n" .
+                     "- Maintain context and continuity across pages when organizing information\n" .
+                     "- Pay special attention to section headers that may span across pages\n" .
+                     "- Look for continuation of sections (e.g., 'Experience' continued on next page)\n" .
+                     "- Identify and properly merge information that appears across multiple pages\n" .
+                     "- Be aware that contact information might appear in headers/footers on multiple pages\n" .
+                     "- Recognize that skills, education, or experience sections may be split across pages\n\n" .
                      "Output rules:\n" .
                      "- Output ONLY valid JSON conforming to this schema: $schema\n" .
                      "- Do not invent or hallucinate information. Extract only what is clearly present in the resume.\n" .
                      "- For dates, preserve the original format (e.g., 'Jan 2020', '2021', 'Present')\n" .
                      "- For skills, extract both the skill name and proficiency level if available\n" .
-                     "- For experiences and education, extract all available details including descriptions\n" .
+                     "- For experiences and education, extract ALL available details including descriptions\n" .
+                     "- CRITICAL: For experience and education descriptions, preserve ALL bullet points and list items exactly as they appear\n" .
+                     "- If descriptions contain bullet points (•, -, *, numbers, letters), preserve the complete structure\n" .
+                     "- Do not truncate or cut off bullet point lists - include ALL items in the description field\n" .
+                     "- Pay special attention to bullet points that may be split across pages\n" .
+                     "- For summary section, look for various headings like 'Profile Summary', 'Resume Summary', 'Professional Summary', 'Career Objective', 'About Me', 'Personal Statement', etc.\n" .
+                     "- Extract the complete summary content even if it spans multiple paragraphs or lines\n" .
                      "- If a section is not present, omit it from the output\n" .
                      "- Ensure all text is properly cleaned and formatted\n" .
-                     "- Include the full_text field containing the complete, recognized text from the resume for validation purposes\n\n" .
-                     "Content Classification Rules:\n" .
+                     "- Include the full_text field containing the complete, recognized text from ALL pages of the resume for validation purposes\n\n" .
+                     "Enhanced Content Classification Rules:\n" .
                      "- NEVER put email addresses, phone numbers, or contact info in skills section\n" .
                      "- Skills should only contain technical abilities, programming languages, tools, or professional competencies\n" .
                      "- Education terms (like 'Junior-Senior High', 'University', 'College') belong in education section\n" .
                      "- Job titles and company names belong in experience section\n" .
-                     "- Contact information should be properly categorized in contact section\n" .
-                     "- Summary should contain professional overview, not contact details\n\n" .
+                     "- Contact information should be properly categorized in contact section (check headers/footers on all pages)\n" .
+                     "- Summary should contain professional overview, not contact details\n" .
+                     "- When sections span multiple pages, ensure complete information is captured\n" .
+                     "- Pay attention to page breaks and section continuations\n\n" .
+                     "Quality Assurance:\n" .
+                     "- Verify that all relevant information from every page is included\n" .
+                     "- Check for duplicate information that might appear on multiple pages\n" .
+                     "- Ensure chronological order is maintained for experiences and education\n" .
+                     "- Validate that section headers are properly recognized across page boundaries\n\n" .
                      "Resume file to analyze:";
             
             // Use Gemini's file processing capabilities
             $response = $this->gemini->generateFromFile($prompt, $fileContent, $mimeType, $model, [
                 'response_mime_type' => 'application/json',
-                'maxOutputTokens' => config('resume.parsing.ai_parsing.max_output_tokens', 4096),
+                'maxOutputTokens' => config('resume.parsing.ai_parsing.max_output_tokens', 8192),
                 'temperature' => config('resume.parsing.ai_parsing.temperature', 0.1),
                 'topP' => config('resume.parsing.ai_parsing.top_p', 0.1),
             ]);
@@ -4697,9 +6572,9 @@ class ResumeParsingService
         // Remove bullet points at the beginning
         $description = preg_replace('/^[•\-\*]\s*/u', '', $description);
         
-        // Limit length
-        if (strlen($description) > 500) {
-            $description = substr($description, 0, 500) . '...';
+        // Increased limit to allow longer descriptions (was 500, now 2000)
+        if (strlen($description) > 2000) {
+            $description = substr($description, 0, 2000) . '...';
         }
         
         return $description;
@@ -4928,9 +6803,9 @@ class ResumeParsingService
         // Remove bullet points and list markers
         $summary = preg_replace('/^[•\-\*]\s*/u', '', $summary);
         
-        // Ensure it's not too long for template
-        if (strlen($summary) > 500) {
-            $summary = substr($summary, 0, 500) . '...';
+        // Increased limit to allow longer summaries (was 500, now 1000)
+        if (strlen($summary) > 1000) {
+            $summary = substr($summary, 0, 1000) . '...';
         }
         
         return $summary;
@@ -4942,6 +6817,11 @@ class ResumeParsingService
     private function validateAndFilterSkills(array $skills): array
     {
         $validSkills = [];
+        $seenSkills = [];
+        
+        Log::info('Validating and filtering skills', [
+            'total_skills' => count($skills)
+        ]);
         
         foreach ($skills as $skill) {
             $skillName = is_array($skill) ? ($skill['name'] ?? '') : (string)$skill;
@@ -4949,10 +6829,43 @@ class ResumeParsingService
             
             if (empty($skillName)) continue;
             
+            // Check for duplicates across pages
+            $skillKey = strtolower($skillName);
+            if (isset($seenSkills[$skillKey])) {
+                Log::debug('Duplicate skill filtered out', [
+                    'skill' => $skillName
+                ]);
+                continue;
+            }
+            
             if ($this->isValidSkillContent($skillName)) {
+                $seenSkills[$skillKey] = true;
                 $validSkills[] = is_array($skill) ? $skill : ['id' => count($validSkills) + 1, 'name' => $skillName, 'level' => ''];
+            } else {
+                Log::debug('Invalid skill content filtered out', [
+                    'skill' => $skillName
+                ]);
             }
         }
+        
+        // Sort skills alphabetically for better organization
+        usort($validSkills, function($a, $b) {
+            $nameA = is_array($a) ? ($a['name'] ?? '') : (string)$a;
+            $nameB = is_array($b) ? ($b['name'] ?? '') : (string)$b;
+            return strcasecmp($nameA, $nameB);
+        });
+        
+        // Re-assign IDs after sorting
+        foreach ($validSkills as $index => &$skill) {
+            if (is_array($skill)) {
+                $skill['id'] = $index + 1;
+            }
+        }
+        
+        Log::info('Skills validation completed', [
+            'valid_skills' => count($validSkills),
+            'filtered_out' => count($skills) - count($validSkills)
+        ]);
         
         return $validSkills;
     }
@@ -5125,16 +7038,56 @@ class ResumeParsingService
     private function validateAndFilterExperiences(array $experiences): array
     {
         $validExperiences = [];
+        $seenExperiences = [];
+        
+        Log::info('Validating and filtering experiences', [
+            'total_experiences' => count($experiences)
+        ]);
         
         foreach ($experiences as $exp) {
             if (!$this->isValidExperienceEntry($exp)) {
+                Log::debug('Invalid experience entry filtered out', [
+                    'jobTitle' => $exp['jobTitle'] ?? '',
+                    'company' => $exp['company'] ?? ''
+                ]);
                 continue;
             }
             
+            // Check for duplicates across pages
+            $experienceKey = $this->generateExperienceKey($exp);
+            if (isset($seenExperiences[$experienceKey])) {
+                Log::debug('Duplicate experience entry filtered out', [
+                    'jobTitle' => $exp['jobTitle'] ?? '',
+                    'company' => $exp['company'] ?? ''
+                ]);
+                continue;
+            }
+            
+            $seenExperiences[$experienceKey] = true;
             $validExperiences[] = $exp;
         }
         
+        // Sort by date to ensure proper chronological order
+        $validExperiences = $this->sortExperiencesByDate($validExperiences);
+        
+        Log::info('Experience validation completed', [
+            'valid_experiences' => count($validExperiences),
+            'filtered_out' => count($experiences) - count($validExperiences)
+        ]);
+        
         return $validExperiences;
+    }
+    
+    /**
+     * Generate a unique key for experience deduplication
+     */
+    private function generateExperienceKey(array $exp): string
+    {
+        $title = strtolower(trim($exp['jobTitle'] ?? ''));
+        $company = strtolower(trim($exp['company'] ?? ''));
+        $location = strtolower(trim($exp['location'] ?? ''));
+        
+        return md5($title . '|' . $company . '|' . $location);
     }
     
     /**
@@ -5188,21 +7141,61 @@ class ResumeParsingService
     }
     
     /**
-     * Enhanced education validation and filtering
+     * Enhanced education validation and filtering with multi-page support
      */
     private function validateAndFilterEducation(array $education): array
     {
         $validEducation = [];
+        $seenEducation = [];
+        
+        Log::info('Validating and filtering education', [
+            'total_education' => count($education)
+        ]);
         
         foreach ($education as $edu) {
             if (!$this->isValidEducationEntry($edu)) {
+                Log::debug('Invalid education entry filtered out', [
+                    'school' => $edu['school'] ?? '',
+                    'degree' => $edu['degree'] ?? ''
+                ]);
                 continue;
             }
             
+            // Check for duplicates across pages
+            $educationKey = $this->generateEducationKey($edu);
+            if (isset($seenEducation[$educationKey])) {
+                Log::debug('Duplicate education entry filtered out', [
+                    'school' => $edu['school'] ?? '',
+                    'degree' => $edu['degree'] ?? ''
+                ]);
+                continue;
+            }
+            
+            $seenEducation[$educationKey] = true;
             $validEducation[] = $edu;
         }
         
+        // Sort by date to ensure proper chronological order
+        $validEducation = $this->sortEducationByDate($validEducation);
+        
+        Log::info('Education validation completed', [
+            'valid_education' => count($validEducation),
+            'filtered_out' => count($education) - count($validEducation)
+        ]);
+        
         return $validEducation;
+    }
+    
+    /**
+     * Generate a unique key for education deduplication
+     */
+    private function generateEducationKey(array $edu): string
+    {
+        $school = strtolower(trim($edu['school'] ?? ''));
+        $degree = strtolower(trim($edu['degree'] ?? ''));
+        $location = strtolower(trim($edu['location'] ?? ''));
+        
+        return md5($school . '|' . $degree . '|' . $location);
     }
     
     /**

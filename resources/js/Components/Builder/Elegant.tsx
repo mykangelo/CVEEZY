@@ -1,6 +1,7 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
 import Placeholder from "./Placeholder";
+import { processBulletedDescription, getBulletTexts } from "@/utils/bulletProcessor";
 
 type Props = {
   resumeData: ResumeData;
@@ -144,7 +145,38 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
                       <p className="text-[12px] font-semibold break-words"><Placeholder value={edu.degree} placeholder="Degree in Field of study" /></p>
                       <p className="text-[12px] break-words"><Placeholder value={`${edu.school}${edu.location ? ` — ${edu.location}` : ""}`} placeholder="School Name — Location" /></p>
                       <p className="text-[10px] text-gray-600 break-words"><Placeholder value={`${formatMonthYear(edu.startDate)}${edu.endDate ? ` - ${formatMonthYear(edu.endDate)}` : ""}`} placeholder="2017 — 2020" /></p>
-                      {edu.description && <p className="mt-1 text-[13px] break-words">{edu.description}</p>}
+                      {(() => {
+                        const isPlaceholder = !(edu.description && String(edu.description).trim().length > 0);
+                        
+                        if (isPlaceholder) {
+                          return null;
+                        }
+
+                        const processedBullets = processBulletedDescription(edu.description || '');
+                        
+                        if (processedBullets.length === 0) {
+                          return null;
+                        }
+
+                        // Check if we have bullets or just regular text
+                        const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                        
+                        if (hasBullets) {
+                          return (
+                            <ul className="mt-1 text-[13px] break-words list-disc pl-5 space-y-1">
+                              {getBulletTexts(processedBullets).map((text, index) => (
+                                <li key={index}>{text}</li>
+                              ))}
+                            </ul>
+                          );
+                        } else {
+                          return (
+                            <p className="mt-1 text-[13px] break-words">
+                              {processedBullets[0]?.text}
+                            </p>
+                          );
+                        }
+                      })()}
                     </div>
                   ))}
               </div>
@@ -205,7 +237,8 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
             <h3 className="elegant-section-title mb-2">Work Experience</h3>
             <div className="space-y-3.5">
               {(experiences.length > 0 ? experiences : [{ id: -1, company: 'Company', jobTitle: 'Job Title', location: 'Location', startDate: 'Sep 2017', endDate: 'May 2020', description: 'Responsibilities\nResponsibilities' }] as any[]).map((exp: any) => {
-                  const lines = (exp.description || "").split(/\r?\n/).filter(Boolean);
+                  const processedBullets = processBulletedDescription(exp.description || '');
+                  const hasBullets = processedBullets.some(bullet => bullet.isBullet);
                   return (
                     <div key={exp.id}>
                       <div className="flex justify-between items-baseline mb-1">
@@ -215,11 +248,17 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
                         </p>
                       </div>
                       <p className="text-[12px] mb-1.5 break-words"><Placeholder value={`${exp.jobTitle}${exp.location ? ` – ${exp.location}` : ""}`} placeholder="Job Title – Location" /></p>
-                      <ul className="list-disc pl-5 text-[12px] space-y-1">
-                        {(lines.length > 0 ? lines : ['Responsibilities', 'Responsibilities']).map((item: string, idx: number) => (
-                          <li key={idx} className="break-words">{item}</li>
-                        ))}
-                      </ul>
+                      {hasBullets ? (
+                        <ul className="list-disc pl-5 text-[12px] space-y-1">
+                          {getBulletTexts(processedBullets).map((text, idx) => (
+                            <li key={idx} className="break-words">{text}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[12px] break-words">
+                          {processedBullets[0]?.text || 'Responsibilities'}
+                        </p>
+                      )}
                     </div>
                   );
                 })}
@@ -246,9 +285,30 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
                 <div className="mb-3.5">
                   <p className="elegant-section-title mb-2">Certifications</p>
                   <ul className="list-disc pl-5 text-[12px] space-y-1">
-                    {certifications.map((cert) => (
-                      <li key={cert.id} className="break-words">{cert.title}</li>
-                    ))}
+                    {certifications.map((cert) => {
+                      const processedBullets = processBulletedDescription(cert.title || '');
+                      const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                      
+                      if (hasBullets) {
+                        return getBulletTexts(processedBullets).map((text, index) => (
+                          <li key={`${cert.id}-${index}`} className="break-words">{text}</li>
+                        ));
+                      } else {
+                        // If no bullets detected, try to split long certification strings by commas
+                        const certTitle = cert.title || '';
+                        if (certTitle.length > 100 && certTitle.includes(',')) {
+                          // Split by commas and treat each as a bullet
+                          const certItems = certTitle.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                          return certItems.map((item, index) => (
+                            <li key={`${cert.id}-${index}`} className="break-words">{item}</li>
+                          ));
+                        } else {
+                          return (
+                            <li key={cert.id} className="break-words">{cert.title}</li>
+                          );
+                        }
+                      }
+                    })}
                   </ul>
                 </div>
               )}

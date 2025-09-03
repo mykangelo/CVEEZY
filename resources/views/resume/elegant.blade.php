@@ -1,23 +1,13 @@
+@php
+use App\Helpers\BulletProcessor;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Resume</title>
     <style>
-        @font-face {
-            font-family: 'Elegant Grotesk';
-            src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskRegular.ttf') format('truetype');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Elegant Grotesk';
-            src: url('/fonts/alte_haas_grotesk/AlteHaasGroteskBold.ttf') format('truetype');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
+        /* Using system fonts for better PDF compatibility */
         
         @page {
             margin: 0.4in 0.3in 0.3in 0.3in;
@@ -35,7 +25,7 @@
             line-height: 1.4;
             color: #333333;
             background: #ffffff;
-            padding: 24px 32px;
+            padding: 16px;
             max-width: 100%;
             margin: 0 auto;
             font-feature-settings: "kern" 1;
@@ -79,6 +69,8 @@
             font-size: 32px;
             font-weight: 800;
             letter-spacing: 0.18em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             line-height: 1.1;
             position: relative;
             z-index: 1;
@@ -89,6 +81,8 @@
             margin-top: 2px;
             font-size: 11px;
             font-weight: 700;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             text-transform: uppercase;
             letter-spacing: 0.35em;
             position: relative;
@@ -281,9 +275,56 @@
         .additional-section { margin-bottom: 10px; }
         .additional-section:last-child { margin-bottom: 0; }
 
-        .experience-item, .education-item, .skill-item { page-break-inside: avoid; }
-        h1, h2, h3, .section-title { page-break-after: avoid; }
-        table { page-break-inside: auto; }
+        /* Smart page break handling for multi-page content */
+        .experience-item, .education-item { 
+            page-break-inside: avoid; 
+            break-inside: avoid;
+        }
+        .skill-item { 
+            page-break-inside: auto; 
+            break-inside: auto;
+        }
+        h1, h2, h3, .section-title { 
+            page-break-after: avoid; 
+            break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        table { 
+            page-break-inside: auto; 
+            break-inside: auto;
+        }
+        
+        /* Ensure clean page breaks for multi-page content */
+        .grid {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+        
+        /* Print-specific overrides for compact layout */
+        @media print {
+            body {
+                padding: 8px !important;
+            }
+            
+            /* Ensure clean page breaks for multi-page content */
+            .experience-item, .education-item {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            .skill-item, .grid {
+                page-break-inside: auto !important;
+                break-inside: auto !important;
+            }
+            
+            h1, h2, h3, .section-title {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
         
         p, li, span, div {
             word-wrap: break-word;
@@ -340,6 +381,30 @@
         .content-wrapper .experience-date,
         .content-wrapper .small { font-size: 9px; }
 
+    </style>
+    @php
+        $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+        $sec = $design['sectionSpacing'] ?? null;
+        $para = $design['paragraphSpacing'] ?? null;
+        $lp = $design['lineSpacing'] ?? null;
+        $lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+        $fontStyle = $design['fontStyle'] ?? null;
+    @endphp
+    <style>
+        @if(!is_null($sec))
+        .content-wrapper .subdivider, .content-wrapper .experience-item, .content-wrapper .education-item, .additional-section { margin-bottom: {{ (int)$sec }}px !important; }
+        @endif
+        @if(!is_null($para))
+        .profile-summary, .education-description, .experience-title, .experience-company, .experience-title + ul li, .skills-container .skill-item, .contact-item { margin-bottom: {{ (int)$para }}px !important; }
+        @endif
+        @if(!is_null($lh))
+        body, .profile-summary, .education-description, .experience-title + ul li, li { line-height: {{ $lh }} !important; }
+        @endif
+        @if($fontStyle==='small')
+        body { font-size: 11px !important; }
+        @elseif($fontStyle==='large')
+        body { font-size: 15px !important; }
+        @endif
     </style>
 </head>
 <body style="font-family: DejaVu Sans, Arial, sans-serif;">
@@ -494,7 +559,32 @@
                                             @endif
                                         </div>
                                         @if(!empty($edu['description']))
-                                            <div class="mt-1">{{ $edu['description'] }}</div>
+                                            @php 
+                                                $lines = preg_split('/\r\n|\r|\n/', (string)$edu['description']);
+                                                $hasBullets = false;
+                                                foreach ($lines as $line) {
+                                                    if (preg_match('/^[•\-–\*]\s*/u', trim($line))) {
+                                                        $hasBullets = true;
+                                                        break;
+                                                    }
+                                                }
+                                            @endphp
+                                            @if ($hasBullets)
+                                                <ul style="margin: 4px 0; padding-left: 16px;">
+                                                    @foreach ($lines as $line)
+                                                        @php $t = trim($line); @endphp
+                                                        @if ($t !== '')
+                                                            @if (preg_match('/^([•\-–\*])\s*(.+)$/u', $t, $matches))
+                                                                <li style="margin-bottom: 2px; font-size: 12px; line-height: 1.3;">{{ trim($matches[2]) }}</li>
+                                                            @else
+                                                                <li style="margin-bottom: 2px; font-size: 12px; line-height: 1.3;">{{ $t }}</li>
+                                                            @endif
+                                                        @endif
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <div class="mt-1">{{ $edu['description'] }}</div>
+                                            @endif
                                         @endif
                                     </div>
                                 @endforeach
@@ -651,13 +741,54 @@
                     @if ($hasValidCertifications)
                         <div class="additional-section">
                             <div class="section-title">CERTIFICATIONS</div>
-                            <ul>
-                                @foreach ($certifications as $cert)
-                                    @if(!empty($cert['title']) && trim($cert['title']) !== '')
-                                        <li>{{ $cert['title'] }}</li>
-                                    @endif
-                                @endforeach
-                            </ul>
+                            @php 
+                                $allCertTexts = array_map(fn($c)=>$c['title'] ?? '', $certifications);
+                                $processedBullets = array_map(function($title) {
+                                    return BulletProcessor::processBulletedDescription($title);
+                                }, $allCertTexts);
+                                $hasAnyBullets = false;
+                                foreach ($processedBullets as $bullets) {
+                                    if (BulletProcessor::hasBullets($bullets)) {
+                                        $hasAnyBullets = true;
+                                        break;
+                                    }
+                                }
+                                
+                                if (!$hasAnyBullets) {
+                                    $certsLine = implode(', ', $allCertTexts);
+                                    // If no bullets detected, try to split long certification strings by commas
+                                    if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
+                                        $certItems = array_map('trim', explode(',', $certsLine));
+                                        $certItems = array_filter($certItems, function($item) { return !empty($item); });
+                                        $hasLongCertList = true;
+                                    } else {
+                                        $hasLongCertList = false;
+                                    }
+                                }
+                            @endphp
+                            @if ($hasAnyBullets)
+                                <ul>
+                                    @foreach ($processedBullets as $bullets)
+                                        @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
+                                            <li>{{ $text }}</li>
+                                        @endforeach
+                                    @endforeach
+                                </ul>
+                            @elseif ($hasLongCertList)
+                                <ul>
+                                    @foreach ($certItems as $cert)
+                                        <li>{{ $cert }}</li>
+                                    @endforeach
+                                </ul>
+                            @else
+                                <ul>
+                                    @foreach ($certifications as $cert)
+                                        @if(!empty($cert['title']) && trim($cert['title']) !== '')
+                                            <li>{{ $cert['title'] }}</li>
+                                        @endif
+                                    @endforeach
+                                </ul>
+                            @endif
                         </div>
                     @endif
                     
