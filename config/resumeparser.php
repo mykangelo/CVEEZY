@@ -181,5 +181,36 @@ return [
         'min_summary_length' => 30,
         'max_name_length' => 50,
         'min_name_length' => 3
+    ],
+
+    'multi_page_processing' => [
+        'enabled' => true,
+        'page_boundary_detection' => [
+            'explicit_markers' => ['=== PAGE', '=== SECTION'],
+            'implicit_markers' => ['Page ', 'page '],
+            'number_only_lines' => true,
+        ],
+        'section_merging' => [
+            'enabled' => true,
+            'similarity_threshold' => 0.85,
+            'max_merge_distance' => 5, // Maximum lines between sections to merge
+        ],
+        'duplicate_removal' => [
+            'enabled' => true,
+            'experience_similarity' => 0.9,
+            'education_similarity' => 0.9,
+            'skill_similarity' => 0.95,
+        ],
+        'content_organization' => [
+            'sort_experiences_by_date' => true,
+            'sort_education_by_date' => true,
+            'sort_skills_alphabetically' => true,
+            'maintain_chronological_order' => true,
+        ],
+        'validation_rules' => [
+            'cross_page_consistency' => true,
+            'contact_info_validation' => true,
+            'section_completeness_check' => true,
+        ]
     ]
 ];

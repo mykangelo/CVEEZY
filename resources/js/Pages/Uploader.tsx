@@ -82,8 +82,11 @@ const Uploader: React.FC<UploaderProps> = ({
   const [parsedData, setParsedData] = useState<ParsedData | null>(null);
   const [qualityAssessment, setQualityAssessment] = useState<QualityAssessment | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [templateName, setTemplateName] = useState<string>('classic');
+  // Get template name from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const [templateName, setTemplateName] = useState<string>(urlParams.get('template') || 'classic');
   const [activeTab, setActiveTab] = useState<string>('overview');
+  const [showTemplateSelection, setShowTemplateSelection] = useState<boolean>(false);
   
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -180,8 +183,8 @@ const Uploader: React.FC<UploaderProps> = ({
       const result = await response.json();
 
       if (result.success) {
-        // Redirect to template selection page with the new resume
-        router.visit(`/choose-template?resume=${result.resume_id}&imported=true`);
+        // Redirect directly to builder with the new resume and selected template
+        router.visit(`/builder?resume=${result.resume_id}&template=${templateName}`);
       } else {
         setUploadError(result.error || 'Failed to create resume');
       }
@@ -472,17 +475,32 @@ const Uploader: React.FC<UploaderProps> = ({
 
 
       <main className="flex-grow">
-        {/* Clean Blue Button Style */}
+        {/* Clean Blue Button Style with Template Info */}
         <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 lg:py-10 xl:py-12">
-          <Link
-            href="/choose-resume-maker"
-            className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-full transition-all duration-300 mb-6 sm:mb-8 lg:mb-10 text-xs sm:text-sm lg:text-base font-bold shadow-md hover:shadow-lg group"
-          >
-            <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Choose Option
-          </Link>
+          <div className="flex items-center justify-between mb-6 sm:mb-8 lg:mb-10">
+            <Link
+              href="/choose-resume-maker"
+              className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-full transition-all duration-300 text-xs sm:text-sm lg:text-base font-bold shadow-md hover:shadow-lg group"
+            >
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Choose Option
+            </Link>
+            
+            {/* Selected Template Display */}
+            <div className="flex items-center gap-2 bg-white/90 backdrop-blur-sm border border-[#354eab]/20 rounded-full px-3 sm:px-4 py-2 shadow-sm">
+              <div className="w-5 h-5 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center">
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <span className="text-sm sm:text-base font-medium text-gray-700">
+                <span className="text-gray-500">Template:</span>
+                <span className="ml-1 text-[#354eab] font-semibold capitalize">{templateName}</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* Warning for pending payments */}
@@ -514,6 +532,8 @@ const Uploader: React.FC<UploaderProps> = ({
             </p>
           </div>
         </div>
+
+
 
         {/* Upload Section */}
         <div className="flex items-center justify-center pb-8 sm:pb-12 lg:pb-16 xl:pb-20">
@@ -619,17 +639,23 @@ const Uploader: React.FC<UploaderProps> = ({
             {/* Compact File Info */}
             {selectedFile && (
               <div className="bg-gray-50 border-b border-gray-200 px-4 py-1">
-                <div className="flex items-center gap-2 text-xs text-gray-600">
-                  <div className="w-3 h-3 bg-[#354eab] rounded flex items-center justify-center">
-                    <svg className="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs text-gray-600">
+                    <div className="w-3 h-3 bg-[#354eab] rounded flex items-center justify-center">
+                      <svg className="w-1.5 h-1.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <span className="font-medium text-gray-700">{selectedFile.name}</span>
+                    <span>•</span>
+                    <span>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</span>
+                    <span>•</span>
+                    <span>{selectedFile.type}</span>
                   </div>
-                  <span className="font-medium text-gray-700">{selectedFile.name}</span>
-                  <span>•</span>
-                  <span>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</span>
-                  <span>•</span>
-                  <span>{selectedFile.type}</span>
+                  <div className="flex items-center gap-1 text-xs">
+                    <span className="text-gray-500">Template:</span>
+                    <span className="font-semibold text-[#354eab] capitalize">{templateName}</span>
+                  </div>
                 </div>
               </div>
             )}

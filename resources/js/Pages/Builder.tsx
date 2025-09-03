@@ -1376,6 +1376,23 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
       setShowSuggestionModal(true);
       
       // Only send meaningful, validated data to avoid AI fabrication
+      // Normalize experience descriptions by stripping bullets and collapsing whitespace
+      const normalizeDesc = (text: string) => {
+        if (!text) return '';
+        const lines = String(text).split(/\r\n|\r|\n/);
+        const cleaned: string[] = [];
+        for (const raw of lines) {
+          let l = raw.trim();
+          if (!l) continue;
+          l = l.replace(/^([•\-*]|\d+\.|[a-zA-Z][\.)]|[ivx]+\))\s+/u, '');
+          l = l.replace(/\s+/g, ' ');
+          cleaned.push(l);
+        }
+        let s = cleaned.join('. ');
+        if (s && !/[.!?]$/.test(s)) s += '.';
+        return s;
+      };
+
       const requestData = {
         job_title: jobTitle || null,
         skills: skillNames.filter(skill => skill.trim().length > 0), // Only non-empty skills
@@ -1386,7 +1403,7 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary, setSummary, er
           .map(e => ({
             jobTitle: e.jobTitle.trim(),
             company: e.company || e.employer || '',
-            description: e.description.trim()
+            description: normalizeDesc(e.description.trim())
           })),
         // Only include education with meaningful data
         education: (educations || [])
@@ -2164,7 +2181,7 @@ const Builder: React.FC<BuilderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   
   // Preview zoom and scroll states
-  const [zoomLevel, setZoomLevel] = useState(1); // Default to 100%
+  const [zoomLevel, setZoomLevel] = useState(0.9); // Default to 90% for more editor space
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
 
@@ -3005,7 +3022,7 @@ const Builder: React.FC<BuilderProps> = ({
       {/* Main Content */}
       {!isLoading && (
         <LayoutGroup>
-        <div className="flex flex-col md:flex-row flex-1 overflow-visible items-start gap-0 mt-16 md:mt-20">
+        <div className="flex flex-col md:flex-row flex-1 overflow-visible items-start gap-0 mt-10 md:mt-12">
           {/* Sidebar + Form (Left) */}
           <div className="w-full md:w-5/12 flex flex-col items-stretch md:-mr-5 ml-5 md:ml-10">
             {/* Back Button - Positioned above the fields container */}
@@ -3018,6 +3035,7 @@ const Builder: React.FC<BuilderProps> = ({
             </div>
             
             <div className="flex w-full bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-[#354eab]">
+            <div className="flex-shrink-0 h-[74vh]">
             <VerticalSectionNav
               currentSection={currentStep.toString()}
               sections={(() => {
@@ -3057,7 +3075,8 @@ const Builder: React.FC<BuilderProps> = ({
               })()}
               onSectionChange={(id) => setCurrentStep(parseInt(id))}
             />
-            <div className="flex-1 min-w-0 p-3 md:p-5 overflow-auto relative h-[68vh]">
+            </div>
+            <div className="flex-1 min-w-0 p-3 md:p-5 overflow-auto relative h-[74vh]">
               {/* Removed active section chip overlay */}
               {/* Resume Score Display */}
               {currentStep === 5 && (

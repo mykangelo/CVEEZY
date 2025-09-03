@@ -1,3 +1,6 @@
+@php
+use App\Helpers\BulletProcessor;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,123 +13,115 @@
             box-sizing: border-box;
         }
 
-        body {
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
             font-family: DejaVu Sans, Arial, sans-serif;
-            margin: 0;
             font-size: 14px;
             color: #333;
             background: white;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
-
-        .resume-container {
-            max-width: 210mm;
-            margin: 0 auto;
-            background: white;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            padding: 32px;
+        
+        /* Ensure no top spacing from any source */
+        body > *:first-child {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
         }
 
-        /* Header Section - Use table layout for better PDF support */
+        .resume-container {
+            max-width: 896px; /* max-w-4xl equivalent */
+            margin: 0 auto;
+            background: white;
+            box-shadow: none;
+            padding: 0;
+        }
+
+        /* Header Section - Exact match to JSX */
         .header-section {
-            display: table;
+            display: flex;
             width: 100%;
-            table-layout: fixed;
-            margin-bottom: 24px; 
+            max-width: 100%;
         }
 
         .header-left {
-            display: table-cell;
+            width: 60%;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .header-left-content {
             background-color: #000;
             color: white;
             padding: 32px;
-            vertical-align: middle;
-            width: 53%;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
         }
 
         .header-left h1 {
-            font-size: 24px;
+            font-size: 30px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 0.05em;
             margin-bottom: 8px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
             color: white;
         }
 
         .header-left .job-title {
-            font-size: 16px;
+            font-size: 18px;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: #ccc;
+            letter-spacing: 0.1em;
+            color: #d1d5db;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .header-right {
-            display: table-cell;
             background: white;
-            padding: 20px 32px;
-            vertical-align: middle;
-            width: 47%;
+            padding: 32px;
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 16px;
+            padding-top: 20px;
         }
 
         .contact-item {
-            margin-bottom: 16px;
-            position: relative;
-            padding-left: 60px;
             display: flex;
-            align-items: center; /* Back to center for proper alignment */
-            min-height: 45px;
-        }
-
-        .contact-item:last-child {
-            margin-bottom: 0;
+            align-items: center;
+            gap: 12px;
         }
 
         .contact-icon {
-            position: absolute;
-            left: 0;
-            top: 0; /* Keep at top for consistent positioning */
-            width: 45px;
-            height: 45px;
+            width: 32px;
+            height: 32px;
             border: 1px solid #000;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: normal;
-            color: #000;
             flex-shrink: 0;
+            font-size: 14px;
         }
 
         .contact-icon.phone::before {
             content: '☎';
-            font-size: 16px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            line-height: 1; /* Remove extra line height */
+            font-size: 14px;
+            color: #000;
         }
 
         .contact-icon.email::before {
             content: '✉';
-            font-size: 16px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #000;
         }
 
         .contact-icon.location::before {
             content: '⚲';
-            font-size: 16px;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #000;
         }
 
         .contact-text {
@@ -135,111 +130,50 @@
             line-height: 1.4;
             word-break: break-word;
             overflow-wrap: break-word;
-            hyphens: auto;
             flex: 1;
             min-width: 0;
-            margin: 0;
-            /* Removed padding-top to use flexbox centering instead */
         }
 
-        /* Main Content - Improved spacing */
-        .main-content {
-            padding: 0;
-        }
-
+        /* Main Content - Two Column Layout */
         .content-section {
-            display: table;
-            width: 100%;
             border-top: 1px solid #000;
-            padding: 12px 0; /* Reduced padding */
-            table-layout: fixed;
-            page-break-inside: avoid; /* Prevent breaking sections */
-        }
-        h1, h2, h3 { page-break-after: avoid; }
-
-        /* Enhanced page break and overflow prevention */
-        .content-section, .experience-item, .education-item, .skill-item, .hobby-item, .website-item, .reference-item {
-            page-break-inside: avoid;
-            break-inside: avoid;
-        }
-        
-        /* Ensure proper page breaks for all elements */
-        h1, h2, h3, .section-title {
-            page-break-after: avoid;
-            break-after: avoid;
-        }
-        
-        /* Prevent text overflow and ensure proper wrapping */
-        p, li, .job-title, .company, .degree, .school, .skill-name, .hobby-name, .website-label, .reference-name {
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            hyphens: auto;
-        }
-        
-        /* Force page breaks when content exceeds page height */
-        .content-section:last-child {
-            page-break-inside: auto;
-        }
-
-        /* Dynamic section spacing based on content */
-        .content-section.compact {
-            padding: 8px 0;
-        }
-
-        .content-section.standard {
-            padding: 12px 0;
-        }
-
-        .content-section.extended {
-            padding: 16px 0;
+            padding: 24px 0;
+            display: flex;
         }
 
         .section-title {
-            display: table-cell;
             width: 25%;
-            padding-right: 32px;
-            vertical-align: top;
         }
 
         .section-title h2 {
             font-size: 14px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.1em;
             color: #000;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }
 
         .section-content {
-            display: table-cell;
             width: 75%;
-            vertical-align: top;
         }
 
         .section-content p {
-            color: #333;
+            color: #1f2937;
             font-size: 14px;
             line-height: 1.6;
             margin: 0;
+            white-space: pre-line;
         }
 
-        /* Experience Items - Improved spacing */
+        /* Experience Items */
         .experience-item {
-            padding: 12px 0; /* Reduced padding */
-            border-top: 1px solid #ddd;
-        }
-
-        .experience-item:first-child {
-            border-top: none;
-            padding-top: 0;
+            margin-bottom: 24px;
         }
 
         .experience-item:last-child {
-            padding-bottom: 0;
-        }
-
-        /* Single experience item gets less spacing */
-        .experience-single .experience-item {
-            padding: 8px 0;
+            margin-bottom: 0;
         }
 
         .experience-header {
@@ -253,265 +187,202 @@
         }
 
         .experience-title {
-            color: #555;
+            color: #374151;
             font-size: 14px;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
+        }
+
+        .experience-location {
+            color: #6b7280;
+            font-size: 12px;
+            font-style: italic;
         }
 
         .experience-description {
-            color: #333;
+            color: #1f2937;
             font-size: 14px;
             line-height: 1.6;
         }
 
-        /* Education Layout - Improved spacing */
+        /* Education Layout */
         .education-item {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            padding: 12px 0; /* Reduced padding */
-            border-top: 1px solid #ddd;
-        }
-
-        .education-item:first-child {
-            border-top: none;
-            padding-top: 0;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
         }
 
         .education-item:last-child {
-            padding-bottom: 0;
-        }
-
-        /* Single education item gets less spacing */
-        .education-single .education-item {
-            padding: 8px 0;
+            margin-bottom: 0;
         }
 
         .education-left {
-            display: table-cell;
             width: 50%;
-            padding-right: 16px;
-            vertical-align: top;
         }
 
         .education-right {
-            display: table-cell;
             width: 50%;
-            vertical-align: top;
+            margin-left: -12px;
         }
 
         .education-date {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             margin-bottom: 4px;
         }
 
         .education-school {
-            font-size: 14px;
-            color: #555;
+            font-size: 12px;
+            color: #374151;
             margin-bottom: 4px;
         }
 
         .education-degree {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
         }
 
         .education-description {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.5;
+            font-size: 12px;
+            color: #1f2937;
+            line-height: 1.6;
         }
 
-        /* Skills - Updated to match React component behavior */
+        /* Skills */
         .skills-grid {
-            display: table;
-            width: 100%;
-        }
-
-        .skills-row {
-            display: table-row;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px 8px;
         }
 
         .skill-item {
-            display: table-cell;
-            width: 50%;
-            padding-right: 32px;
-            padding-bottom: 12px; /* Reduced padding */
-            vertical-align: top;
-        }
-
-        .skill-item:last-child {
-            padding-right: 0;
-        }
-
-        .skill-content {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .skill-name {
-            display: table-cell;
             font-size: 14px;
-            color: #333;
-            font-weight: normal; /* Changed from 500 to normal to match other text */
-            width: auto;
-            white-space: nowrap;
-            padding-right: 8px;
+            color: #1f2937;
+            font-weight: 500;
         }
 
         .skill-bullets {
-            display: table-cell;
-            width: auto;
-            vertical-align: middle;
+            display: flex;
+            align-items: center;
+            gap: 2px;
         }
 
         .skill-bullet {
-            display: inline-block;
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background-color: #ccc;
-            margin-left: 2px;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            background-color: #d1d5db;
         }
 
         .skill-bullet.active {
             background-color: #000;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
         }
 
-        /* Skills without level display - Updated to match React grid layout */
+        /* Skills without level display */
         .skills-simple-grid {
-            display: table;
-            width: 100%;
-        }
-
-        .skills-simple-row {
-            display: table-row;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px 4px;
         }
 
         .skills-simple-item {
-            display: table-cell;
-            width: 50%;
-            padding-right: 32px;
-            padding-bottom: 4px;
-            vertical-align: top;
             font-size: 14px;
-            color: #333;
+            color: #1f2937;
         }
 
-        .skills-simple-item:last-child {
-            padding-right: 0;
-        }
-
-        /* Additional Sections - More compact */
+        /* Additional Sections - 3 Column Grid */
         .additional-sections {
             border-top: 1px solid #000;
-            padding: 12px 0 0 0; /* Reduced padding */
+            padding: 24px 0;
         }
 
         .sections-grid {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-        }
-
-        .sections-row {
-            display: table-row;
-        }
-
-        .sections-row:not(:first-child) .additional-section {
-            padding-top: 12px; /* Reduced padding */
-        }
-
-        .additional-section {
-            display: table-cell;
-            width: 33.33%;
-            padding-right: 24px;
-            vertical-align: top;
-        }
-
-        .additional-section:last-child {
-            padding-right: 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
         }
 
         .additional-section h3 {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
-            margin-bottom: 8px; /* Reduced margin */
-            color: #333;
+            margin-bottom: 12px;
+            color: #1f2937;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.1em;
         }
 
-        /* Language Bars - More compact */
+        /* Language Bars */
         .language-item {
-            display: table;
-            width: 100%;
-            table-layout: fixed;
-            margin-bottom: 8px; /* Reduced margin */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .language-item:last-child {
+            margin-bottom: 0;
         }
 
         .language-name {
-            font-size: 14px;
-            font-weight: normal; /* Changed from 500 to normal to match other text */
-            width: auto;
-            white-space: nowrap;
+            font-size: 12px;
+            font-weight: 500;
         }
 
         .language-bars {
-            display: table-cell;
-            width: auto;
+            display: flex;
+            gap: 2px;
         }
 
         .language-bar {
-            display: inline-block;
             width: 8px;
             height: 2px;
-            background-color: #ccc;
-            margin-left: 2px;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            background-color: #d1d5db;
         }
 
         .language-bar.active {
             background-color: #000;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
         }
 
-        /* Bullet Lists - More compact */
+        /* Bullet Lists */
         .bullet-list {
             list-style: none;
         }
 
         .bullet-list li {
-            font-size: 14px;
-            margin-bottom: 3px; /* Reduced margin */
-            position: relative;
-            padding-left: 12px;
+            font-size: 12px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: flex-start;
         }
 
         .bullet-list li::before {
-            content: '•';
-            position: absolute;
-            left: 0;
-            color: #000;
-            font-weight: bold;
+            content: '';
+            width: 4px;
+            height: 4px;
+            background-color: #000;
+            border-radius: 50%;
+            margin-top: 6px;
+            margin-right: 8px;
+            flex-shrink: 0;
         }
 
         /* Website Links */
         .website-item {
-            margin-bottom: 6px; /* Reduced margin */
+            margin-bottom: 4px;
+        }
+
+        .website-item:last-child {
+            margin-bottom: 0;
         }
 
         .website-label {
-            font-size: 14px;
-            font-weight: normal; /* Changed from 500 to normal to match other text */
+            font-size: 12px;
+            font-weight: 500;
             margin-bottom: 2px;
         }
 
@@ -522,139 +393,111 @@
             word-break: break-all;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            hyphens: auto;
             line-height: 1.3;
             display: block;
-            max-width: 100%;
         }
 
-        /* References - More compact */
+        /* References */
         .reference-item {
-            margin-bottom: 10px; /* Reduced margin */
-            font-size: 14px;
+            margin-bottom: 12px;
+            font-size: 12px;
+        }
+
+        .reference-item:last-child {
+            margin-bottom: 0;
         }
 
         .reference-name {
             font-weight: bold;
-            color: #333;
+            color: #1f2937;
         }
 
         .reference-relationship {
-            color: #555;
-            font-size: 14px;
+            color: #6b7280;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.1em;
             margin: 4px 0;
         }
 
         .reference-contact {
-            color: #555;
-        }
-
-        .reference-contact .label {
-            font-weight: normal; /* Changed from 500 to normal to match other text */
+            color: #374151;
         }
 
         /* Custom Sections */
         .custom-content {
-            color: #333;
+            color: #1f2937;
             font-size: 14px;
             line-height: 1.6;
             white-space: pre-line;
         }
 
-        /* Responsive adjustments for content length */
-        .content-short {
-            margin-bottom: 16px;
-        }
-
-        .content-medium {
-            margin-bottom: 20px;
-        }
-
-        .content-long {
-            margin-bottom: 24px;
-        }
-
-        /* Print-specific overrides */
+                /* Print-specific overrides */
         @media print {
-            body {
+            html, body {
+                margin: 0 !important;
+                padding: 0 !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
             
             .resume-container {
                 box-shadow: none !important;
-                max-width: none !important;
-                padding: 16px !important; /* More compact for print */
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
             
-            .header-left {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                background-color: #000 !important;
-            }
-            
-            .skill-bullet.active,
-            .language-bar.active {
-                background-color: #000 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            .website-url {
-                word-break: break-all !important;
-                overflow-wrap: break-word !important;
-                hyphens: auto !important;
-                font-size: 11px !important;
-            }
-
-            .contact-icon::before {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color: #000 !important;
-            }
-
-            /* More aggressive spacing reduction for print */
-            .content-section {
-                padding: 8px 0 !important;
-                page-break-inside: avoid !important;
-            }
-
-            .experience-item {
-                padding: 8px 0 !important;
-            }
-
-            .education-item {
-                padding: 8px 0 !important;
-            }
-
-            .additional-sections {
-                padding: 8px 0 0 0 !important;
-            }
-
             .header-section {
-                margin-bottom: 16px !important;
-            }
-
-            .contact-text {
-                word-break: break-word !important;
-                overflow-wrap: break-word !important;
-                hyphens: auto !important;
-            }
-        }
-
-        /* Media queries for different content scenarios */
-        @media screen and (max-height: 800px) {
-            .content-section {
-                padding: 10px 0;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
             }
             
-            .experience-item,
-            .education-item {
-                padding: 10px 0;
+            .header-left-content {
+                padding: 24px !important;
+            }
+            
+            .header-right {
+                padding: 24px !important;
+            }
+            
+            .content-section {
+                padding: 24px 0 !important;
+            }
+            
+            .additional-sections {
+                padding: 24px 0 !important;
+            }
+            
+            .sections-grid {
+                gap: 24px !important;
             }
         }
+    </style>
+    @php
+        $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+        $sec = $design['sectionSpacing'] ?? null;
+        $para = $design['paragraphSpacing'] ?? null;
+        $lp = $design['lineSpacing'] ?? null;
+        $lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+        $fontStyle = $design['fontStyle'] ?? null;
+    @endphp
+    <style>
+        @if(!is_null($sec))
+        .content-section, .section, .additional-sections { margin-bottom: {{ (int)$sec }}px !important; }
+        @endif
+        @if(!is_null($para))
+        .section-content p, .experience-description, .education-description, .bullet-list li, .contact-text, .custom-content { margin-bottom: {{ (int)$para }}px !important; }
+        @endif
+        @if(!is_null($lh))
+        body, .section-content p, .experience-description, .education-description, .bullet-list li, .contact-text, .custom-content { line-height: {{ $lh }} !important; }
+        @endif
+        @if($fontStyle==='small')
+        body { font-size: 13px !important; }
+        @elseif($fontStyle==='large')
+        body { font-size: 16px !important; }
+        @endif
     </style>
 </head>
 <body>
@@ -663,8 +506,10 @@
         <div class="header-section">
             {{-- Left Column --}}
             <div class="header-left">
+                <div class="header-left-content">
                 <h1>{{ $resume['contact']['firstName'] ?? '' }} {{ $resume['contact']['lastName'] ?? '' }}</h1>
                 <p class="job-title">{{ $resume['contact']['desiredJobTitle'] ?? '' }}</p>
+                </div>
             </div>
 
             {{-- Right Column --}}
@@ -701,11 +546,9 @@
             </div>
         </div>
 
-        {{-- Main Content --}}
-        <div class="main-content">
             {{-- About Me / Summary --}}
             @if (!empty($resume['summary']) && trim($resume['summary']) !== '')
-                <div class="content-section compact">
+            <div class="content-section">
                     <div class="section-title">
                         <h2>ABOUT ME</h2>
                     </div>
@@ -720,7 +563,6 @@
                 $validExperiences = [];
                 if (!empty($resume['experiences']) && is_array($resume['experiences'])) {
                     foreach ($resume['experiences'] as $exp) {
-                        // Check if experience has any meaningful content
                         if (!empty($exp) && (
                             !empty($exp['company'] ?? '') ||
                             !empty($exp['jobTitle'] ?? '') ||
@@ -735,15 +577,11 @@
             @endphp
 
             @if (!empty($validExperiences))
-                @php
-                    $expClass = count($validExperiences) === 1 ? 'experience-single' : '';
-                    $sectionClass = count($validExperiences) === 1 ? 'compact' : 'standard';
-                @endphp
-                <div class="content-section {{ $sectionClass }}">
+            <div class="content-section">
                     <div class="section-title">
                         <h2>EXPERIENCE</h2>
                     </div>
-                    <div class="section-content {{ $expClass }}">
+                <div class="section-content">
                         @foreach ($validExperiences as $exp)
                             <div class="experience-item">
                                 <div class="experience-header">
@@ -751,12 +589,24 @@
                                     @if (!empty($exp['jobTitle']))
                                         <p class="experience-title">{{ $exp['jobTitle'] }}</p>
                                     @endif
-                                </div>
                                 @if (!empty($exp['location']))
-                                    <p class="experience-title" style="color:#666; font-style: italic; margin-top:-4px;">{{ $exp['location'] }}</p>
+                                    <p class="experience-location">{{ $exp['location'] }}</p>
                                 @endif
+                            </div>
                                 @if (!empty($exp['description']))
-                                    <p class="experience-description">{{ $exp['description'] }}</p>
+                                    @php 
+                                        $processedBullets = BulletProcessor::processBulletedDescription($exp['description']);
+                                        $hasBullets = BulletProcessor::hasBullets($processedBullets);
+                                    @endphp
+                                    @if ($hasBullets)
+                                    <ul class="bullet-list">
+                                            @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                                            <li class="experience-description">{{ $text }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @else
+                                        <p class="experience-description">{{ $exp['description'] }}</p>
+                                    @endif
                                 @endif
                             </div>
                         @endforeach
@@ -769,7 +619,6 @@
                 $validEducation = [];
                 if (!empty($resume['education']) && is_array($resume['education'])) {
                     foreach ($resume['education'] as $edu) {
-                        // Check if education has any meaningful content
                         if (!empty($edu) && (
                             !empty($edu['school'] ?? '') ||
                             !empty($edu['degree'] ?? '') ||
@@ -784,15 +633,11 @@
             @endphp
 
             @if (!empty($validEducation))
-                @php
-                    $eduClass = count($validEducation) === 1 ? 'education-single' : '';
-                    $sectionClass = count($validEducation) === 1 ? 'compact' : 'standard';
-                @endphp
-                <div class="content-section {{ $sectionClass }}">
+            <div class="content-section">
                     <div class="section-title">
                         <h2>EDUCATION</h2>
                     </div>
-                    <div class="section-content {{ $eduClass }}">
+                <div class="section-content">
                         @foreach ($validEducation as $edu)
                             <div class="education-item">
                                 <div class="education-left">
@@ -815,7 +660,32 @@
                                 </div>
                                 <div class="education-right">
                                     @if (!empty($edu['description']))
-                                        <p class="education-description">{{ $edu['description'] }}</p>
+                                        @php 
+                                            $lines = preg_split('/\r\n|\r|\n/', (string)$edu['description']);
+                                            $hasBullets = false;
+                                            foreach ($lines as $line) {
+                                                if (preg_match('/^[•\-–\*]\s*/u', trim($line))) {
+                                                    $hasBullets = true;
+                                                    break;
+                                                }
+                                            }
+                                        @endphp
+                                        @if ($hasBullets)
+                                        <ul class="bullet-list">
+                                                @foreach ($lines as $line)
+                                                    @php $t = trim($line); @endphp
+                                                    @if ($t !== '')
+                                                        @if (preg_match('/^([•\-–\*])\s*(.+)$/u', $t, $matches))
+                                                        <li class="education-description">{{ trim($matches[2]) }}</li>
+                                                        @else
+                                                        <li class="education-description">{{ $t }}</li>
+                                                        @endif
+                                                    @endif
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <p class="education-description">{{ $edu['description'] }}</p>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -824,47 +694,35 @@
                 </div>
             @endif
 
-            {{-- Skills - Updated to match React component --}}
+        {{-- Skills --}}
             @php
                 $validSkills = [];
                 if (!empty($resume['skills']) && is_array($resume['skills'])) {
                     foreach ($resume['skills'] as $skill) {
-                        // Check if skill has a name
                         if (!empty($skill['name'] ?? '') && trim($skill['name']) !== '') {
                             $validSkills[] = $skill;
                         }
                     }
                 }
                 
-                // Check if showExperienceLevel is enabled
                 $showExperienceLevel = $resume['showExperienceLevel'] ?? false;
             @endphp
 
             @if (!empty($validSkills))
-                @php
-                    $sectionClass = count($validSkills) <= 4 ? 'compact' : 'standard';
-                @endphp
-                <div class="content-section {{ $sectionClass }}">
+            <div class="content-section">
                     <div class="section-title">
                         <h2>SKILLS</h2>
                     </div>
                     <div class="section-content">
                         @if ($showExperienceLevel)
-                            {{-- Grid layout with skill level bullets --}}
                             <div class="skills-grid">
-                                @php
-                                    $skillChunks = array_chunk($validSkills, 2);
-                                @endphp
-                                @foreach ($skillChunks as $skillPair)
-                                    <div class="skills-row">
-                                        @foreach ($skillPair as $skill)
+                            @foreach ($validSkills as $skill)
                                             <div class="skill-item">
-                                                <div class="skill-content">
                                                     <span class="skill-name">{{ $skill['name'] }}</span>
                                                     <div class="skill-bullets">
                                                         @php
                                                             $level = strtolower(trim($skill['level'] ?? ''));
-                                                            $bulletCount = 1; // default
+                                            $bulletCount = 1;
                                                             
                                                             if (str_contains($level, 'expert')) {
                                                                 $bulletCount = 5;
@@ -881,34 +739,15 @@
                                                         @for ($i = 1; $i <= 5; $i++)
                                                             <div class="skill-bullet {{ $i <= $bulletCount ? 'active' : '' }}"></div>
                                                         @endfor
-                                                    </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
-                                        {{-- Fill empty cell if odd number of skills --}}
-                                        @if (count($skillPair) == 1)
-                                            <div class="skill-item"></div>
-                                        @endif
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            {{-- Simple grid layout without level indicators --}}
                             <div class="skills-simple-grid">
-                                @php
-                                    $skillChunks = array_chunk($validSkills, 2);
-                                @endphp
-                                @foreach ($skillChunks as $skillPair)
-                                    <div class="skills-simple-row">
-                                        @foreach ($skillPair as $skill)
+                            @foreach ($validSkills as $skill)
                                             <div class="skills-simple-item">
                                                 {{ $skill['name'] }}
-                                            </div>
-                                        @endforeach
-                                        {{-- Fill empty cell if odd number of skills --}}
-                                        @if (count($skillPair) == 1)
-                                            <div class="skills-simple-item"></div>
-                                        @endif
                                     </div>
                                 @endforeach
                             </div>
@@ -1001,19 +840,12 @@
                         $additionalSections[] = ['id' => 'references', 'title' => 'References', 'content' => $validReferences];
                     }
                 }
-                
-                $sectionCount = count($additionalSections);
             @endphp
 
             @if (!empty($additionalSections))
                 <div class="additional-sections">
                     <div class="sections-grid">
-                        @php
-                            $sectionChunks = array_chunk($additionalSections, 3);
-                        @endphp
-                        @foreach ($sectionChunks as $sectionRow)
-                            <div class="sections-row">
-                                @foreach ($sectionRow as $section)
+                    @foreach ($additionalSections as $section)
                                     <div class="additional-section">
                                         <h3>{{ $section['title'] }}</h3>
                                         
@@ -1021,7 +853,6 @@
                                             @foreach ($section['content'] as $lang)
                                                 <div class="language-item">
                                                     <span class="language-name">{{ $lang['name'] }}</span>
-                                                    <span class="language-spacing"></span>
                                                     <div class="language-bars">
                                                         @php
                                                             $proficiency = strtolower($lang['proficiency'] ?? '');
@@ -1071,6 +902,54 @@
                                                 </div>
                                             @endforeach
                                             
+                                        @elseif ($section['id'] == 'certifications')
+                                            @php 
+                                                $allCertTexts = array_map(function($item) {
+                                                    return is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item;
+                                                }, $section['content']);
+                                                $processedBullets = array_map(function($title) {
+                                                    return BulletProcessor::processBulletedDescription($title);
+                                                }, $allCertTexts);
+                                                $hasAnyBullets = false;
+                                                foreach ($processedBullets as $bullets) {
+                                                    if (BulletProcessor::hasBullets($bullets)) {
+                                                        $hasAnyBullets = true;
+                                                        break;
+                                                    }
+                                                }
+                                                
+                                                if (!$hasAnyBullets) {
+                                                    $certsLine = implode(', ', $allCertTexts);
+                                                    if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
+                                                        $certItems = array_map('trim', explode(',', $certsLine));
+                                                        $certItems = array_filter($certItems, function($item) { return !empty($item); });
+                                                        $hasLongCertList = true;
+                                                    } else {
+                                                        $hasLongCertList = false;
+                                                    }
+                                                }
+                                            @endphp
+                                            @if ($hasAnyBullets)
+                                                <ul class="bullet-list">
+                                                    @foreach ($processedBullets as $bullets)
+                                                        @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
+                                                            <li>{{ $text }}</li>
+                                                        @endforeach
+                                                    @endforeach
+                                                </ul>
+                                            @elseif ($hasLongCertList)
+                                                <ul class="bullet-list">
+                                                    @foreach ($certItems as $cert)
+                                                        <li>{{ $cert }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            @else
+                                                <ul class="bullet-list">
+                                                    @foreach ($section['content'] as $item)
+                                                        <li>{{ is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            @endif
                                         @else
                                             <ul class="bullet-list">
                                                 @foreach ($section['content'] as $item)
@@ -1080,13 +959,6 @@
                                         @endif
                                     </div>
                                 @endforeach
-                                
-                                {{-- Fill empty cells for proper table layout --}}
-                                @for ($i = count($sectionRow); $i < 3; $i++)
-                                    <div class="additional-section"></div>
-                                @endfor
-                            </div>
-                        @endforeach
                     </div>
                 </div>
             @endif
@@ -1106,7 +978,7 @@
 
             @if (!empty($validCustomSections))
                 @foreach ($validCustomSections as $custom)
-                    <div class="content-section compact">
+                <div class="content-section">
                         <div class="section-title">
                             <h2>{{ strtoupper($custom['title']) }}</h2>
                         </div>
@@ -1116,7 +988,6 @@
                     </div>
                 @endforeach
             @endif
-        </div>
     </div>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import React from "react";
 import { ResumeData } from "@/types/resume";
 import Placeholder from "./Placeholder";
+import { processBulletedDescription, getBulletTexts } from "@/utils/bulletProcessor";
 
 type Props = {
   resumeData: ResumeData;
@@ -51,36 +52,36 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
     <div className="space-y-4 text-gray-800 ">
     {/* Contact Info - Always visible with placeholders */}
     <div>
-      <h2 className="text-3xl font-bold text-center">
+      <h2 className="text-3xl font-bold text-center break-words">
         
         <Placeholder className="font-bold" value={`${(contact.firstName || '').trim()} ${(contact.lastName || '').trim()}`.trim()} placeholder="FIRSTNAME LASTNAME" />
       </h2>
 
-      <p className="text-lg text-gray-800 mt-2 text-center">
+      <p className="text-lg text-gray-800 mt-2 text-center break-words">
         <span className="font-bold">
           <Placeholder className="font-bold" value={contact.desiredJobTitle} placeholder="JOB TITLE" />
         </span>
       </p>
       <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
 
-      <div className="space-x-2 text-center">
-        <span>
+      <div className="space-x-2 text-center break-words">
+        <span className="break-all">
           <Placeholder
             value={[contact.address, contact.city, contact.country, contact.postCode].filter(Boolean).join(", ")}
             placeholder="123 Anywhere St, Any City | 12345"
           />
         </span>
         <span>|</span>
-        <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
+        <span className="break-all"><Placeholder value={contact.email} placeholder="email@example.com" /></span>
         <span>|</span>
-        <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
+        <span className="break-all"><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
       </div>
       <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
     </div>
 
       {/* Summary Section - Always rendered */}
       <div>
-        <p className="text-sm text-gray-800 whitespace-pre-line -mt-2">
+        <p className="text-sm text-gray-800 whitespace-pre-line -mt-2 break-words">
           <Placeholder
             value={summary}
             placeholder={"Motivated professional with a background in [field]. Eager to apply skills in [areas] and grow within a dynamic organization."}
@@ -92,7 +93,7 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
       
     {/* Skills Section - Always rendered with placeholders */}
     <div>
-      <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7">
+      <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7 break-words">
         AREA OF EXPERTISE
       </h3>
       <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
@@ -105,7 +106,7 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
             ]
         ).map((skill: any, index: number) => (
           <div key={index} className="flex items-center gap-1">
-            <span className="text-sm text-gray-800 font-medium">
+            <span className="text-sm text-gray-800 font-medium break-words">
               <Placeholder value={skill.name} placeholder="Sample Skill" />
             </span>
             {skill.name && skill.level && showExperienceLevel && (
@@ -150,9 +151,47 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
               <p className="text-sm text-gray-800 italic">
                 <Placeholder value={exp.company || exp.location ? `${exp.company}${exp.location ? ` — ${exp.location}` : ''}` : ''} placeholder="Company — Employer" />
               </p>
-              <li className="text-sm mt-1 ml-4">
-                <Placeholder value={exp.description} placeholder="Describe impact and achievements" />
-              </li>
+              {(() => {
+                const isPlaceholder = !(exp.description && String(exp.description).trim().length > 0);
+                
+                if (isPlaceholder) {
+                  return (
+                    <li className="text-sm mt-1 ml-4 text-gray-400 italic">
+                      Describe impact and achievements
+                    </li>
+                  );
+                }
+
+                const processedBullets = processBulletedDescription(exp.description || '');
+                
+                if (processedBullets.length === 0) {
+                  return (
+                    <li className="text-sm mt-1 ml-4">
+                      Describe impact and achievements
+                    </li>
+                  );
+                }
+
+                // Check if we have bullets or just regular text
+                const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                
+                if (hasBullets) {
+                  return (
+                    <ul className="text-sm mt-1 ml-4 space-y-1 list-disc list-inside">
+                      {getBulletTexts(processedBullets).map((text, index) => (
+                        <li key={index}>{text}</li>
+                      ))}
+                    </ul>
+                  );
+                } else {
+                  // Single paragraph or non-bulleted content
+                  return (
+                    <li className="text-sm mt-1 ml-4">
+                      {processedBullets[0]?.text || 'Describe impact and achievements'}
+                    </li>
+                  );
+                }
+              })()}
             </div>
           ))}
         </div>
@@ -161,7 +200,7 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
       {/* Education Section - Always rendered */}
       <div>
         <>
-          <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7">
+          <h3 className="text-lg font-semibold -mb-1 text-gray-800 ml-4 mt-7 break-words">
             EDUCATION
           </h3>
           <hr className="border-t border-b-[1.5px] border-gray-900 my-2" />
@@ -169,17 +208,55 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
             {(education.length > 0 ? education : [{ id: -1, degree: 'Degree', school: 'University Name', location: '', startDate: '2016', endDate: '2020', description: 'Relevant coursework or achievements' } as any]).map((edu: any) => (
               <div key={edu.id}>
                 <div className="flex justify-between items-center">
-                  <h4 className="font-bold"><Placeholder value={edu.degree} placeholder="Degree" /></h4>
-                  <span className="text-sm text-gray-800 font-semibold">
+                  <h4 className="font-bold break-words"><Placeholder value={edu.degree} placeholder="Degree" /></h4>
+                  <span className="text-sm text-gray-800 font-semibold break-words">
                     <Placeholder value={`${edu.startDate} - ${edu.endDate}`} placeholder="2016 - 2020" />
                   </span>
                 </div>
-                <p className="text-sm text-gray-800 italic">
+                <p className="text-sm text-gray-800 italic break-words">
                   <Placeholder value={edu.school || edu.location ? `${edu.school}${edu.location ? ` — ${edu.location}` : ''}` : ''} placeholder="University — Location" />
                 </p>
-                <li className="text-sm mt-1 ml-4">
-                  <Placeholder value={edu.description} placeholder="Relevant coursework or achievements" />
-                </li>
+                {(() => {
+                  const isPlaceholder = !(edu.description && String(edu.description).trim().length > 0);
+                  
+                  if (isPlaceholder) {
+                    return (
+                      <li className="text-sm mt-1 ml-4 text-gray-400 italic">
+                        Relevant coursework or achievements
+                      </li>
+                    );
+                  }
+
+                  const processedBullets = processBulletedDescription(edu.description || '');
+                  
+                  if (processedBullets.length === 0) {
+                    return (
+                      <li className="text-sm mt-1 ml-4">
+                        Relevant coursework or achievements
+                      </li>
+                    );
+                  }
+
+                  // Check if we have bullets or just regular text
+                  const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                  
+                  if (hasBullets) {
+                    return (
+                      <ul className="text-sm mt-1 ml-4 space-y-1 list-disc list-inside">
+                        {getBulletTexts(processedBullets).map((text, index) => (
+                          <li key={index} className="break-words">{text}</li>
+                        ))}
+                      </ul>
+                    );
+                  } else {
+                    // Single paragraph or non-bulleted content
+                    return (
+                      <li className="text-sm mt-1 ml-4 break-words">
+                        {processedBullets[0]?.text || 'Relevant coursework or achievements'}
+                      </li>
+                    );
+                  }
+                })()}
               </div>
             ))}
           </div>
@@ -270,11 +347,55 @@ const Classic: React.FC<Props> = ({ resumeData }) => {
         </li>
 
         <li className="text-sm text-gray-800 ml-4">
-          <span className="font-semibold">Certification:</span>{" "}
-          <Placeholder
-            value={certifications && certifications.length ? certifications.map(c => c.title).join(', ') : ''}
-            placeholder="Professional Design Engineer (PDE), Project Management Tech (PMT), Structural Process Design (SPD)"
-          />
+          <span className="font-semibold">Certification:</span>
+          {(() => {
+            const isPlaceholder = !(certifications && certifications.length > 0);
+            
+            if (isPlaceholder) {
+              return (
+                <span className="text-gray-400 italic ml-1">
+                  Professional Design Engineer (PDE), Project Management Tech (PMT), Structural Process Design (SPD)
+                </span>
+              );
+            }
+
+            // Process each certification title for potential bullet splitting
+            const allCertTexts = certifications.map(cert => cert.title || '');
+            const processedBullets = allCertTexts.map(title => processBulletedDescription(title));
+            const hasAnyBullets = processedBullets.some(bullets => bullets.some(bullet => bullet.isBullet));
+            
+            if (hasAnyBullets) {
+              return (
+                <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                  {processedBullets.flatMap((bullets, certIndex) => 
+                    bullets.map((bullet, bulletIndex) => (
+                      <li key={`${certIndex}-${bulletIndex}`}>{bullet.text}</li>
+                    ))
+                  )}
+                </ul>
+              );
+            } else {
+              // If no bullets detected, try to split long certification strings by commas
+              const allCerts = allCertTexts.join(', ');
+              if (allCerts.length > 100 && allCerts.includes(',')) {
+                // Split by commas and treat each as a bullet
+                const certItems = allCerts.split(',').map(cert => cert.trim()).filter(cert => cert.length > 0);
+                return (
+                  <ul className="list-disc list-inside ml-4 mt-1 space-y-1">
+                    {certItems.map((cert, index) => (
+                      <li key={index}>{cert}</li>
+                    ))}
+                  </ul>
+                );
+              } else {
+                return (
+                  <span className="ml-1">
+                    {allCertTexts.join(', ')}
+                  </span>
+                );
+              }
+            }
+          })()}
         </li>
 
         <li className="text-sm text-gray-800 ml-4">

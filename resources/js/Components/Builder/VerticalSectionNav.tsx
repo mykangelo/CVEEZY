@@ -84,7 +84,7 @@ export const VerticalSectionNav: React.FC<VerticalSectionNavProps> = ({
       </div>
 
       {/* Desktop Sidebar - icon only, fixed width to avoid layout shifts */}
-      <aside className="hidden md:flex flex-col items-center w-17 flex-none shrink-0 bg-[#354eab] text-white border-r border-white/10 rounded-l-3xl m-0 shadow-2xl overflow-hidden h-[68vh]">
+      <aside className="hidden md:flex flex-col items-center w-17 flex-none shrink-0 bg-[#354eab] text-white border-r border-white/10 rounded-l-3xl m-0 shadow-2xl overflow-hidden h-full">
         {NavList}
       </aside>
 

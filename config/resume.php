@@ -15,11 +15,27 @@ return [
         'supported_formats' => ['pdf', 'doc', 'docx', 'txt', 'html', 'htm'],
         'ai_parsing' => [
             'enabled' => true,
-            'max_output_tokens' => 4096,
+            'max_output_tokens' => 8192, // Increased for multi-page resumes
             'temperature' => 0.1,
             'top_p' => 0.1,
-            'timeout' => 30,
+            'timeout' => 120, // Increased from 30 to 120 seconds for multi-page processing
             'max_retries' => 3,
+        ],
+        'multi_page' => [
+            'enabled' => true,
+            'max_pages' => 10, // Maximum number of pages to process
+            'page_detection' => [
+                'markers' => ['=== PAGE', '=== SECTION', 'Page ', 'page '],
+                'number_patterns' => ['/^\d+$/', '/^Page \d+$/i'],
+            ],
+            'section_continuation' => [
+                'enabled' => true,
+                'merge_threshold' => 0.8, // Similarity threshold for merging sections
+            ],
+            'duplicate_detection' => [
+                'enabled' => true,
+                'similarity_threshold' => 0.9, // Threshold for detecting duplicates
+            ],
         ],
         'confidence_threshold' => 0.7,
         'max_file_size' => 10240, // 10MB

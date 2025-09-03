@@ -117,9 +117,12 @@ class ResumeParsingController extends Controller
     public function getParsingPreview(Request $request)
     {
         try {
-                    $validator = Validator::make($request->all(), [
-            'resume_file' => 'required|file|mimes:' . implode(',', config('resume.parsing.supported_formats', ['pdf', 'doc', 'docx', 'txt', 'html', 'htm'])) . '|max:' . config('resume.uploads.max_file_size', 10240)
-        ]);
+            // Set a reasonable timeout for preview (shorter than full parsing)
+            set_time_limit(60); // 60 seconds for preview
+            
+            $validator = Validator::make($request->all(), [
+                'resume_file' => 'required|file|mimes:' . implode(',', config('resume.parsing.supported_formats', ['pdf', 'doc', 'docx', 'txt', 'html', 'htm'])) . '|max:' . config('resume.uploads.max_file_size', 10240)
+            ]);
             
             if ($validator->fails()) {
                 return response()->json([
@@ -131,18 +134,35 @@ class ResumeParsingController extends Controller
             
             $file = $request->file('resume_file');
             
+            Log::info('Resume preview started', [
+                'file_name' => $file->getClientOriginalName(),
+                'file_size' => $file->getSize(),
+                'user_id' => Auth::id()
+            ]);
+            
             // Parse without creating resume record
             $parsingResult = $this->parsingService->parseResume($file);
             
             if (!$parsingResult['success']) {
+                Log::warning('Resume preview failed', [
+                    'error' => $parsingResult['error'],
+                    'file_name' => $file->getClientOriginalName()
+                ]);
+                
                 return response()->json([
                     'success' => false,
-                    'error' => 'Failed to preview resume: ' . $parsingResult['error']
+                    'error' => 'Failed to preview resume: ' . $parsingResult['error'],
+                    'suggestions' => $parsingResult['confidence']['suggestions'] ?? []
                 ], 400);
             }
             
             // Return preview data with parsing quality assessment
             $qualityAssessment = $this->assessParsingQuality($parsingResult['data']);
+            
+            Log::info('Resume preview completed successfully', [
+                'sections_found' => array_keys($parsingResult['data']),
+                'quality_score' => $qualityAssessment['overall_score']
+            ]);
             
             return response()->json([
                 'success' => true,
@@ -152,11 +172,24 @@ class ResumeParsingController extends Controller
             ], 200, [], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_IGNORE);
             
         } catch (\Exception $e) {
-            Log::error('Resume preview error: ' . $e->getMessage());
+            // Check if it's a timeout error
+            $isTimeoutError = strpos($e->getMessage(), 'Maximum execution time') !== false || 
+                             strpos($e->getMessage(), 'timeout') !== false;
+            
+            Log::error('Resume preview error: ' . $e->getMessage(), [
+                'is_timeout_error' => $isTimeoutError,
+                'file_name' => $request->file('resume_file')?->getClientOriginalName(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $errorMessage = 'Failed to preview resume';
+            if ($isTimeoutError) {
+                $errorMessage = 'Resume preview timed out. The file may be too large or complex.';
+            }
             
             return response()->json([
                 'success' => false,
-                'error' => 'Failed to preview resume'
+                'error' => $errorMessage
             ], 500);
         }
     }

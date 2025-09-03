@@ -72,7 +72,7 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 transform transition-all duration-300 scale-100 opacity-100">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-4 md:mx-6 lg:mx-8 transform transition-all duration-300 scale-100 opacity-100 flex flex-col max-h-[85vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ const SuggestionModal: React.FC<SuggestionModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {loading ? (
             <div className="text-center py-12">
               {/* Loading Animation */}

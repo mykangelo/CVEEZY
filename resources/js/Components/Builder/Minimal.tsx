@@ -1,6 +1,7 @@
 import React from "react";
 import { ResumeData, Website } from "@/types/resume";
 import Placeholder from "./Placeholder";
+import { processBulletedDescription, getBulletTexts } from "@/utils/bulletProcessor";
 
 type Props = {
   resumeData: ResumeData;
@@ -67,20 +68,20 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
     <div className="max-w-4xl mx-auto p-8 bg-white text-black font-sans">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-[#383741] mb-2 tracking-wide">
+        <h1 className="text-4xl font-bold text-[#383741] mb-2 tracking-wide break-words">
           <Placeholder value={`${(contact.firstName||'').toUpperCase()} ${(contact.lastName||'').toUpperCase()}`.trim()} placeholder="YOUR NAME" />
         </h1>
-        <p className="text-xl font-bold text-black mb-3">
+        <p className="text-xl font-bold text-black mb-3 break-words">
           <Placeholder value={contact.desiredJobTitle} placeholder="JOB TITLE" />
         </p>
-        <div className="text-sm text-black space-x-4">
-          <span>
+        <div className="text-sm text-black space-x-4 break-words">
+          <span className="break-all">
             <Placeholder value={[contact.address, contact.city, contact.country, contact.postCode].filter(Boolean).join(", ")} placeholder="123 Anywhere St, Any City | 12345" />
           </span>
           <span className="mx-1">|</span>
-          <span><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
+          <span className="break-all"><Placeholder value={contact.phone} placeholder="(123) 456-7890" /></span>
           <span className="mx-1">|</span>
-          <span><Placeholder value={contact.email} placeholder="email@example.com" /></span>
+          <span className="break-all"><Placeholder value={contact.email} placeholder="email@example.com" /></span>
           {/* Websites */}
           {websites && websites.length > 0 && (
             <>
@@ -125,7 +126,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {/* Summary */}
       <div className="mb-6">
         <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-          <h2 className="text-lg font-semibold italic" style={{color: '#383741'}}>SUMMARY</h2>
+          <h2 className="text-lg font-semibold italic break-words" style={{color: '#383741'}}>SUMMARY</h2>
         </div>
         <p className="text-sm text-[#383741] leading-relaxed break-words">
           <Placeholder value={summary} placeholder={"Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills."} />
@@ -135,12 +136,12 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
        {/* Skills */}
        <div className="mb-6" style={{fontFamily: 'sans-serif'}}>
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic" style={{color: '#383741', fontFamily: 'sans-serif'}}>TECHNICAL SKILLS</h2>
+            <h2 className="text-lg font-semibold italic break-words" style={{color: '#383741', fontFamily: 'sans-serif'}}>TECHNICAL SKILLS</h2>
           </div>
           <div className="grid grid-cols-3 gap-x-8 gap-y-2" style={{fontFamily: 'sans-serif'}}>
             {(skills.length > 0 ? skills : [{ id: -1, name: 'Skill 1', level: 'Experienced' }, { id: -2, name: 'Skill 2', level: 'Experienced' }, { id: -3, name: 'Skill 3', level: 'Experienced' }] as any[]).map((skill: any, index: number) => (
               <div key={index} className="flex items-center gap-1" style={{fontFamily: 'sans-serif'}}>
-                <span className="text-sm text-[#383741] font-medium" style={{fontFamily: 'sans-serif'}}><Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} /></span>
+                <span className="text-sm text-[#383741] font-medium break-words" style={{fontFamily: 'sans-serif'}}><Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} /></span>
                 {showExperienceLevel && (
                   <div className="flex items-center gap-0.5" style={{fontFamily: 'sans-serif'}}>
                     {Array.from({ length: 5 }, (_, i) => (
@@ -156,7 +157,7 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
       {/* Experience */}
       <div className="mb-6">
           <div className="bg-gray-200 px-4 py-2 mb-3 rounded-full">
-            <h2 className="text-lg font-semibold italic" style={{color: '#383741'}}>PROFESSIONAL EXPERIENCE</h2>
+            <h2 className="text-lg font-semibold italic break-words" style={{color: '#383741'}}>PROFESSIONAL EXPERIENCE</h2>
           </div>
           <div className="space-y-4">
             {(experiences.length > 0 ? experiences : [{ id: -1, jobTitle: 'Job Title', company: 'Company', location: 'Location', startDate: '2017', endDate: '2020', description: 'Responsibilities\nResponsibilities' }] as any[]).map((exp: any) => (
@@ -167,12 +168,63 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
                 </div>
                 <p className="text-sm text-black mb-3"><Placeholder value={exp.location} placeholder="Location" /></p>
                 <div className="text-sm text-black space-y-2">
-                  {((exp.description && exp.description.trim() !== '') ? exp.description : 'Responsibilities\nResponsibilities').split('\n').map((line: string, i: number) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
-                      <p className="break-words leading-relaxed min-w-0 text-[#383741]">{line}</p>
-                    </div>
-                  ))}
+                  {(() => {
+                    const isPlaceholder = !(exp.description && String(exp.description).trim().length > 0);
+                    
+                    if (isPlaceholder) {
+                      return (
+                        <>
+                          <div className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <p className="break-words leading-relaxed min-w-0 text-[#383741] text-gray-400 italic">Responsibilities</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <p className="break-words leading-relaxed min-w-0 text-[#383741] text-gray-400 italic">Responsibilities</p>
+                          </div>
+                        </>
+                      );
+                    }
+
+                    const processedBullets = processBulletedDescription(exp.description || '');
+                    
+                    if (processedBullets.length === 0) {
+                      return (
+                        <>
+                          <div className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <p className="break-words leading-relaxed min-w-0 text-[#383741]">Responsibilities</p>
+                          </div>
+                          <div className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <p className="break-words leading-relaxed min-w-0 text-[#383741]">Responsibilities</p>
+                          </div>
+                        </>
+                      );
+                    }
+
+                    // Check if we have bullets or just regular text
+                    const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                    
+                    if (hasBullets) {
+                      return getBulletTexts(processedBullets).map((text, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                          <p className="break-words leading-relaxed min-w-0 text-[#383741]">{text}</p>
+                        </div>
+                      ));
+                    } else {
+                      // Single paragraph or non-bulleted content
+                      return (
+                        <div className="flex items-start gap-2">
+                          <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                          <p className="break-words leading-relaxed min-w-0 text-[#383741]">
+                            {processedBullets[0]?.text || 'Responsibilities'}
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
             ))}
@@ -193,16 +245,44 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
                 </div>
                 <p className="text-sm text-black mb-2"><Placeholder value={edu.school} placeholder="School Name" /></p>
                 <p className="text-sm text-black mb-2"><Placeholder value={edu.location} placeholder="Location" /></p>
-                {edu.description && (
-                  <div className="text-sm text-black">
-                    {edu.description.trim() !== '' ? (
-                      <div className="flex items-start gap-2">
-                        <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
-                        <p className="break-words text-[#383741] min-w-0">{edu.description.trim()}</p>
+                {(() => {
+                  const isPlaceholder = !(edu.description && String(edu.description).trim().length > 0);
+                  
+                  if (isPlaceholder) {
+                    return null;
+                  }
+
+                  const processedBullets = processBulletedDescription(edu.description || '');
+                  
+                  if (processedBullets.length === 0) {
+                    return null;
+                  }
+
+                  // Check if we have bullets or just regular text
+                  const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                  
+                  if (hasBullets) {
+                    return (
+                      <div className="text-sm text-black space-y-2">
+                        {getBulletTexts(processedBullets).map((text, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <p className="break-words text-[#383741] min-w-0">{text}</p>
+                          </div>
+                        ))}
                       </div>
-                    ) : null}
-                  </div>
-                )}
+                    );
+                  } else {
+                    return (
+                      <div className="text-sm text-black">
+                        <div className="flex items-start gap-2">
+                          <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                          <p className="break-words text-[#383741] min-w-0">{processedBullets[0]?.text}</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                })()}
               </div>
             ))}
           </div>
@@ -227,11 +307,43 @@ const Minimal: React.FC<Props> = ({ resumeData }) => {
 
             {/* Certifications */}
             {certifications && certifications.length > 0 && (
-              <div className="flex flex-wrap items-start gap-1">
-                <span className="text-sm text-black flex-shrink-0">• <span className="font-semibold">Certifications:</span> </span>
-                <span className="text-sm text-[#383741] break-all min-w-0 flex-1" style={{wordBreak: 'break-all', overflowWrap: 'anywhere', wordWrap: 'break-word'}}>
-                  {certifications.map(cert => cert.title).join(', ')}
-                </span>
+              <div className="space-y-2">
+                <span className="text-sm text-black flex-shrink-0">• <span className="font-semibold">Certifications:</span></span>
+                <div className="ml-4 space-y-1">
+                  {certifications.map((cert) => {
+                    const processedBullets = processBulletedDescription(cert.title || '');
+                    const hasBullets = processedBullets.some(bullet => bullet.isBullet);
+                    
+                    if (hasBullets) {
+                      return getBulletTexts(processedBullets).map((text, index) => (
+                        <div key={`${cert.id}-${index}`} className="flex items-start gap-2">
+                          <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                          <span className="text-sm text-[#383741] break-words">{text}</span>
+                        </div>
+                      ));
+                    } else {
+                      // If no bullets detected, try to split long certification strings by commas
+                      const certTitle = cert.title || '';
+                      if (certTitle.length > 100 && certTitle.includes(',')) {
+                        // Split by commas and treat each as a bullet
+                        const certItems = certTitle.split(',').map(item => item.trim()).filter(item => item.length > 0);
+                        return certItems.map((item, index) => (
+                          <div key={`${cert.id}-${index}`} className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <span className="text-sm text-[#383741] break-words">{item}</span>
+                          </div>
+                        ));
+                      } else {
+                        return (
+                          <div key={cert.id} className="flex items-start gap-2">
+                            <span className="text-black font-bold mt-0.5 flex-shrink-0">•</span>
+                            <span className="text-sm text-[#383741] break-words">{cert.title}</span>
+                          </div>
+                        );
+                      }
+                    }
+                  })}
+                </div>
               </div>
             )}
 

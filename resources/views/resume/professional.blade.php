@@ -1,3 +1,6 @@
+@php
+use App\Helpers\BulletProcessor;
+@endphp
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,9 +20,9 @@
   .container { width: 100%; }
 
   /* Header */
-  h1 { font-size: 30px; font-weight: 800; margin: 0; }   /* text-3xl */
-  .role { font-size: 18px; margin-top: 2px; }            /* text-lg */
-  .contact { font-size: 10px; color: #374151; margin-top: 6px; }
+  h1 { font-size: 30px; font-weight: 800; margin: 0; word-wrap: break-word; overflow-wrap: break-word; }   /* text-3xl */
+  .role { font-size: 18px; margin-top: 2px; word-wrap: break-word; overflow-wrap: break-word; }            /* text-lg */
+  .contact { font-size: 10px; color: #374151; margin-top: 6px; word-wrap: break-word; overflow-wrap: break-word; }
 
   /* Divider */
   .divider { border-top: 1px solid #c2410c; margin: 10px 0; }
@@ -32,17 +35,19 @@
     text-transform: uppercase;
     margin: 6px 0 4px 0;
     page-break-after: avoid;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   /* Tables for left/right alignment */
   .row-table { width: 100%; border-collapse: collapse; }
   .row-table td { vertical-align: top; }
-  .cell-left { width: 70%; font-size: 14px; font-weight: 600; }
-  .cell-right { width: 30%; text-align: right; font-size: 14px; font-weight: 600; }
+  .cell-left { width: 70%; font-size: 14px; font-weight: 600; word-wrap: break-word; overflow-wrap: break-word; }
+  .cell-right { width: 30%; text-align: right; font-size: 14px; font-weight: 600; word-wrap: break-word; overflow-wrap: break-word; }
 
   /* Lists */
   ul { margin: 4px 0 8px 18px; padding: 0; font-size: 14px; }
-  li { margin-bottom: 2px; }
+  li { margin-bottom: 2px; word-wrap: break-word; overflow-wrap: break-word; }
 
   /* Skills */
   .skills-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -66,6 +71,30 @@
 
   /* Prevent text overflow */
   p, li, .contact { word-wrap: break-word; overflow-wrap: break-word; }
+</style>
+@php
+  $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
+  $sec = $design['sectionSpacing'] ?? null;
+  $para = $design['paragraphSpacing'] ?? null;
+  $lp = $design['lineSpacing'] ?? null;
+  $lh = $lp ? max(1.0, min(2.2, $lp/100)) : null;
+  $fontStyle = $design['fontStyle'] ?? null;
+@endphp
+<style>
+  @if(!is_null($sec))
+  .divider { margin: {{ (int)$sec }}px 0 !important; }
+  @endif
+  @if(!is_null($para))
+  p, li { margin-bottom: {{ (int)$para }}px !important; }
+  @endif
+  @if(!is_null($lh))
+  body, p, li { line-height: {{ $lh }} !important; }
+  @endif
+  @if($fontStyle==='small')
+  body { font-size: 13px !important; }
+  @elseif($fontStyle==='large')
+  body { font-size: 16px !important; }
+  @endif
 </style>
 </head>
 <body>
@@ -188,13 +217,21 @@
           <div style="font-size:12px;color:#6b7280;font-style:italic;margin-top:2px;">{{ $exp['location'] }}</div>
         @endif
         @if (!empty($exp['description']))
-          @php $points = array_filter(array_map('trim', explode("\n", (string)$exp['description']))); @endphp
-          @if (!empty($points))
-            <ul>
-              @foreach ($points as $p)
-                <li>{{ $p }}</li>
+          @php 
+            $processedBullets = BulletProcessor::processBulletedDescription($exp['description']);
+            $hasBullets = BulletProcessor::hasBullets($processedBullets);
+          @endphp
+          @if ($hasBullets)
+            <ul style="margin: 4px 0; padding-left: 16px;">
+              @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                <li style="margin-bottom: 2px; font-size: 11px; line-height: 1.3;">{{ $text }}</li>
               @endforeach
             </ul>
+          @else
+            @php $desc = trim($exp['description']); @endphp
+            @if($desc !== '')
+              <p style="margin: 4px 0; font-size: 11px; line-height: 1.3;">{{ $desc }}</p>
+            @endif
           @endif
         @endif
       </div>
@@ -247,7 +284,22 @@
           <div style="font-size:12px;color:#6b7280;margin:2px 0;">{{ $edu['location'] }}</div>
         @endif
         @if (!empty($edu['description']))
-          <p>{{ $edu['description'] }}</p>
+          @php 
+            $processedBullets = BulletProcessor::processBulletedDescription($edu['description']);
+            $hasBullets = BulletProcessor::hasBullets($processedBullets);
+          @endphp
+          @if ($hasBullets)
+            <ul style="margin: 4px 0; padding-left: 16px;">
+              @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
+                <li style="margin-bottom: 2px; font-size: 11px; line-height: 1.3;">{{ $text }}</li>
+              @endforeach
+            </ul>
+          @else
+            @php $desc = trim($edu['description']); @endphp
+            @if($desc !== '')
+              <p style="margin: 4px 0; font-size: 11px; line-height: 1.3;">{{ $desc }}</p>
+            @endif
+          @endif
         @endif
       </div>
     @endforeach
@@ -403,8 +455,51 @@
         <p><strong>Languages:</strong> {{ $languagesLine }}</p>
       @endif
       @if (!empty($certifications))
-        @php $certsLine = implode(', ', array_map(fn($c)=>$c['title'] ?? '', $certifications)); @endphp
-        <p><strong>Certifications:</strong> {{ $certsLine }}</p>
+        @php 
+          $allCertTexts = array_map(fn($c)=>$c['title'] ?? '', $certifications);
+          $processedBullets = array_map(function($title) {
+            return BulletProcessor::processBulletedDescription($title);
+          }, $allCertTexts);
+          $hasAnyBullets = false;
+          foreach ($processedBullets as $bullets) {
+            if (BulletProcessor::hasBullets($bullets)) {
+              $hasAnyBullets = true;
+              break;
+            }
+          }
+        @endphp
+        @if ($hasAnyBullets)
+          <div><strong>Certifications:</strong></div>
+          <ul style="margin: 4px 0; padding-left: 16px;">
+            @foreach ($processedBullets as $bullets)
+              @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
+                <li style="margin-bottom: 2px; font-size: 11px; line-height: 1.3;">{{ $text }}</li>
+              @endforeach
+            @endforeach
+          </ul>
+        @else
+          @php 
+            $certsLine = implode(', ', $allCertTexts);
+            // If no bullets detected, try to split long certification strings by commas
+            if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
+              $certItems = array_map('trim', explode(',', $certsLine));
+              $certItems = array_filter($certItems, function($item) { return !empty($item); });
+              $hasLongCertList = true;
+            } else {
+              $hasLongCertList = false;
+            }
+          @endphp
+          @if ($hasLongCertList)
+            <div><strong>Certifications:</strong></div>
+            <ul style="margin: 4px 0; padding-left: 16px;">
+              @foreach ($certItems as $cert)
+                <li style="margin-bottom: 2px; font-size: 11px; line-height: 1.3;">{{ $cert }}</li>
+              @endforeach
+            </ul>
+          @else
+            <p><strong>Certifications:</strong> {{ $certsLine }}</p>
+          @endif
+        @endif
       @endif
       @if (!empty($awards))
         @php $awardsLine = implode(', ', array_map(fn($a)=>$a['title'] ?? '', $awards)); @endphp

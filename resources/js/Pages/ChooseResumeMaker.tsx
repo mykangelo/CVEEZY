@@ -37,13 +37,13 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
       <main className="flex-1 px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 relative z-10">
         {/* Clean Blue Button Style */}
         <Link
-          href="/choose-template"
+          href="/dashboard"
           className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 py-3 rounded-full transition-all duration-300 mb-8 text-sm font-bold shadow-md hover:shadow-lg group"
         >
           <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Templates
+          Back to Dashboard
         </Link>
 
         {/* Compact Title Section */}
@@ -88,9 +88,9 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
             onClick={() => {
               if (hasPendingPayments) return;
               if (user) {
-                router.visit("/uploader");
+                router.visit(`/uploader?template=${templateName}`);
               } else {
-                router.visit("/login?redirect=/uploader");
+                router.visit(`/login?redirect=/uploader?template=${templateName}`);
               }
             }}
             tabIndex={0}
@@ -100,9 +100,9 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
               if (e.key === 'Enter' || e.key === ' ') {
                 if (hasPendingPayments) return;
                 if (user) {
-                  router.visit('/uploader');
+                  router.visit(`/uploader?template=${templateName}`);
                 } else {
-                  router.visit('/login?redirect=/uploader');
+                  router.visit(`/login?redirect=/uploader?template=${templateName}`);
                 }
               }
             }}

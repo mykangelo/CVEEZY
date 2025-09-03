@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { X, Upload, FileText, CheckCircle, AlertCircle, Clock, Download } from 'lucide-react';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -233,147 +234,250 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, resumeId, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Payment Proof Upload
-          </h2>
-          <p className="text-gray-600">
-            Upload your payment proof for review
-          </p>
-        </div>
-
-        {/* Resume Info */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold mb-2">Resume: {resumeName || 'My Resume'}</h3>
-          <p className="text-sm text-gray-600">
-            Please upload a screenshot or receipt of your payment. Our admin team will review it within 24 hours.
-          </p>
-        </div>
-
-        {/* Payment Status Display */}
-        {paymentStatus && (
-          <div className={`p-4 rounded-lg mb-6 ${
-            statusInfo.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-            statusInfo.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
-            statusInfo.type === 'warning' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-            'bg-blue-50 text-blue-700 border border-blue-200'
-          }`}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">{statusInfo.icon}</div>
-                <div>
-                  <p className="font-semibold mb-1">
-                    {paymentStatus === 'approved' ? 'Payment Approved' :
-                     paymentStatus === 'rejected' ? 'Payment Rejected' :
-                     'Payment Under Review'}
-                  </p>
-                  <p className="text-sm">{statusInfo.message}</p>
-                </div>
-              </div>
-              {statusInfo.showDownload && (
-                <button
-                  onClick={() => {
-                    window.open(`/resumes/${resumeId}/download`, '_blank');
-                    handleClose();
-                  }}
-                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold text-sm"
-                >
-                  Download PDF
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Accepted Formats */}
-        <div className="bg-blue-50 rounded-lg p-4 mb-6">
-          <h4 className="font-semibold mb-2 text-blue-800">Accepted formats:</h4>
-          <ul className="text-sm text-blue-700 space-y-1">
-            <li>📄 Screenshots (PNG, JPG)</li>
-            <li>📄 Receipt images</li>
-            <li>📄 PDF documents</li>
-            <li>📄 Transaction confirmations</li>
-          </ul>
-        </div>
-
-        {/* File Upload Section - Only show if no payment or payment was rejected */}
-        {(!paymentStatus || paymentStatus === 'rejected') && (
-          <>
-            <div className="mb-6">
-              <label className="block font-semibold mb-3">
-                Payment Proof File
-              </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50 cursor-pointer hover:border-blue-400 transition-colors">
-                <input
-                  type="file"
-                  onChange={handleFileSelect}
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  className="hidden"
-                  id="payment-proof-file"
-                />
-                <label htmlFor="payment-proof-file" className="cursor-pointer">
-                  <div className="text-4xl mb-3">📁</div>
-                  <p className="text-gray-600 mb-2">
-                    {selectedFile ? `Selected: ${selectedFile.name}` : "Click to upload or drag and drop"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    PNG, JPG, JPEG, PDF up to 2MB
-                  </p>
-                </label>
-              </div>
-            </div>
-
-            {/* Status Message */}
-            {uploadMessage && (
-              <div className={`p-4 rounded-lg mb-6 ${
-                uploadStatus === 'error' ? 'bg-red-50 text-red-700 border border-red-200' :
-                uploadStatus === 'success' ? 'bg-green-50 text-green-700 border border-green-200' :
-                'bg-blue-50 text-blue-700 border border-blue-200'
-              }`}>
-                {uploadMessage}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Enhanced Backdrop with blur effect */}
+      <div 
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+        onClick={onClose}
+      />
+      
+      {/* Modal Container with modern styling */}
+      <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 opacity-100">
+        {/* Enhanced Header with gradient background */}
+        <div className="relative bg-gradient-to-r from-[#354eab] via-[#4a5fc7] to-[#5b6fd8] rounded-t-2xl p-6 text-white">
           <button
-            onClick={handleClose}
-            className="flex-1 py-3 px-6 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+            onClick={onClose}
+            className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-lg transition-colors duration-200"
           >
-            {uploadStatus === 'success' || paymentStatus ? 'Close' : 'Cancel'}
+            <X className="w-5 h-5" />
           </button>
           
-          {(!paymentStatus || paymentStatus === 'rejected') && uploadStatus !== 'success' && (
-            <button
-              onClick={handlePaymentUpload}
-              disabled={uploadStatus === 'uploading' || !selectedFile}
-              className={`flex-1 py-3 px-6 rounded-lg font-semibold text-white transition-colors ${
-                uploadStatus === 'uploading' || !selectedFile
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#354eab] hover:bg-[#4a5fc7]'
-              }`}
-            >
-              {uploadStatus === 'uploading' ? 'Uploading...' : 'Upload Payment'}
-            </button>
-          )}
+          <div className="text-center">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Upload className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">
+              Payment Proof Upload
+            </h2>
+            <p className="text-white/90 text-sm">
+              Upload your payment proof for review
+            </p>
+          </div>
         </div>
 
-        {/* Review Process Info */}
-        <div className="mt-6 text-xs text-gray-500 text-center">
-          <p className="mb-2">
-            <strong>Review Process:</strong>
-          </p>
-          <ol className="text-left space-y-1">
-            <li>1. Upload your payment proof</li>
-            <li>2. Admin reviews within 24 hours</li>
-            <li>3. You'll be notified of approval/rejection</li>
-            <li>4. Download PDF once approved</li>
-          </ol>
+        {/* Enhanced Resume Info Card */}
+        <div className="p-6">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 mb-2 text-lg">
+                  Resume: {resumeName || 'My Resume'}
+                </h3>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Please upload a screenshot or receipt of your payment. Our admin team will review it within 24 hours.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Payment Status Display */}
+          {paymentStatus && (
+            <div className={`rounded-xl p-5 mb-6 border-2 ${
+              statusInfo.type === 'success' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' :
+              statusInfo.type === 'error' ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200' :
+              statusInfo.type === 'warning' ? 'bg-gradient-to-r from-yellow-50 to-amber-50 border-yellow-200' :
+              'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+            }`}>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4">
+                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    statusInfo.type === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                    statusInfo.type === 'error' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+                    statusInfo.type === 'warning' ? 'bg-gradient-to-r from-yellow-500 to-amber-500' :
+                    'bg-gradient-to-r from-blue-500 to-indigo-500'
+                  }`}>
+                    {statusInfo.type === 'success' ? <CheckCircle className="w-6 h-6 text-white" /> :
+                     statusInfo.type === 'error' ? <AlertCircle className="w-6 h-6 text-white" /> :
+                     statusInfo.type === 'warning' ? <Clock className="w-6 h-6 text-white" /> :
+                     <CheckCircle className="w-6 h-6 text-white" />}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className={`font-semibold mb-2 text-lg ${
+                      statusInfo.type === 'success' ? 'text-green-800' :
+                      statusInfo.type === 'error' ? 'text-red-800' :
+                      statusInfo.type === 'warning' ? 'text-yellow-800' :
+                      'text-blue-800'
+                    }`}>
+                      {paymentStatus === 'approved' ? 'Payment Approved' :
+                       paymentStatus === 'rejected' ? 'Payment Rejected' :
+                       'Payment Under Review'}
+                    </h4>
+                    <p className={`text-sm leading-relaxed ${
+                      statusInfo.type === 'success' ? 'text-green-700' :
+                      statusInfo.type === 'error' ? 'text-red-700' :
+                      statusInfo.type === 'warning' ? 'text-yellow-700' :
+                      'text-blue-700'
+                    }`}>
+                      {statusInfo.message}
+                    </p>
+                  </div>
+                </div>
+                {statusInfo.showDownload && (
+                  <button
+                    onClick={() => {
+                      window.open(`/resumes/${resumeId}/download`, '_blank');
+                      handleClose();
+                    }}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white px-5 py-2.5 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download PDF
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Accepted Formats */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 mb-6">
+            <h4 className="font-semibold mb-3 text-blue-800 text-lg">Accepted formats:</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                Screenshots (PNG, JPG)
+              </div>
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                Receipt images
+              </div>
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                PDF documents
+              </div>
+              <div className="flex items-center gap-2 text-sm text-blue-700">
+                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                Transaction confirmations
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced File Upload Section */}
+          {(!paymentStatus || paymentStatus === 'rejected') && (
+            <>
+              <div className="mb-6">
+                <label className="block font-semibold mb-4 text-gray-900 text-lg">
+                  Payment Proof File
+                </label>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center bg-gradient-to-br from-gray-50 to-gray-100 cursor-pointer hover:border-[#354eab] hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 transition-all duration-300 group">
+                  <input
+                    type="file"
+                    onChange={handleFileSelect}
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    className="hidden"
+                    id="payment-proof-file"
+                  />
+                  <label htmlFor="payment-proof-file" className="cursor-pointer">
+                    <div className="w-16 h-16 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                      <Upload className="w-8 h-8 text-white" />
+                    </div>
+                    <p className="text-gray-700 mb-2 font-medium">
+                      {selectedFile ? `Selected: ${selectedFile.name}` : "Click to upload or drag and drop"}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      PNG, JPG, JPEG, PDF up to 2MB
+                    </p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Enhanced Status Message */}
+              {uploadMessage && (
+                <div className={`rounded-xl p-5 mb-6 border-2 ${
+                  uploadStatus === 'error' ? 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200' :
+                  uploadStatus === 'success' ? 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200' :
+                  'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+                }`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      uploadStatus === 'error' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+                      uploadStatus === 'success' ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                      'bg-gradient-to-r from-blue-500 to-indigo-500'
+                    }`}>
+                      {uploadStatus === 'error' ? <AlertCircle className="w-4 h-4 text-white" /> :
+                       uploadStatus === 'success' ? <CheckCircle className="w-4 h-4 text-white" /> :
+                       <Clock className="w-4 h-4 text-white" />}
+                    </div>
+                    <p className={`text-sm font-medium ${
+                      uploadStatus === 'error' ? 'text-red-700' :
+                      uploadStatus === 'success' ? 'text-green-700' :
+                      'text-blue-700'
+                    }`}>
+                      {uploadMessage}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Enhanced Action Buttons */}
+          <div className="flex gap-4 px-6 pb-6">
+            <button
+              onClick={handleClose}
+              className="flex-1 py-3 px-6 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+            >
+              {uploadStatus === 'success' || paymentStatus ? 'Close' : 'Cancel'}
+            </button>
+            
+            {(!paymentStatus || paymentStatus === 'rejected') && uploadStatus !== 'success' && (
+              <button
+                onClick={handlePaymentUpload}
+                disabled={uploadStatus === 'uploading' || !selectedFile}
+                className={`flex-1 py-3 px-6 rounded-xl font-semibold text-white transition-all duration-200 ${
+                  uploadStatus === 'uploading' || !selectedFile
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-[#354eab] to-[#4a5fc7] hover:from-[#2d3f8f] hover:to-[#3a4fb0] shadow-md hover:shadow-lg'
+                }`}
+              >
+                {uploadStatus === 'uploading' ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Uploading...
+                  </div>
+                ) : (
+                  'Upload Payment'
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* Enhanced Review Process Info */}
+          <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-t border-gray-200 rounded-b-2xl p-6">
+            <div className="text-center">
+              <h4 className="font-semibold text-gray-800 mb-4 text-lg">Review Process</h4>
+              <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center text-white text-xs font-bold">1</div>
+                  Upload your payment proof
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center text-white text-xs font-bold">2</div>
+                  Admin reviews within 24 hours
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center text-white text-xs font-bold">3</div>
+                  You'll be notified of approval/rejection
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 bg-gradient-to-r from-[#354eab] to-[#4a5fc7] rounded-full flex items-center justify-center text-white text-xs font-bold">4</div>
+                  Download PDF once approved
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
