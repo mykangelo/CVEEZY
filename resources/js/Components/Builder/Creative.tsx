@@ -54,7 +54,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                     <h1 className="text-2xl font-bold uppercase tracking-[2px] mb-2">
                         <Placeholder
                             value={`${contact.firstName} ${contact.lastName}`.trim()}
-                            placeholder="DAPHNE LAUREN PINEDA"
+                            placeholder="JOHN DOE"
                         />
                     </h1>
                     <p className="text-base uppercase tracking-[1.5px] text-gray-300">
@@ -77,7 +77,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                         <span className="text-sm text-white">
                             <Placeholder
                                 value={contact.phone}
-                                placeholder="+968 541 9533"
+                                placeholder="+123 456 7890"
                             />
                         </span>
                     </div>
@@ -92,7 +92,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                         <span className="text-sm text-white">
                             <Placeholder
                                 value={contact.email}
-                                placeholder="daphnepineda18@gmail.com"
+                                placeholder="email@example.com"
                             />
                         </span>
                     </div>
