@@ -7,473 +7,486 @@ use App\Helpers\BulletProcessor;
     <meta charset="UTF-8">
     <title>Resume</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            font-family: DejaVu Sans, Arial, sans-serif;
-            font-size: 14px;
-            color: #333;
-            background: white;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+        @page {
+            margin: 0.4in 0.3in 0.3in 0.3in;
+            size: A4;
         }
         
-        /* Ensure no top spacing from any source */
-        body > *:first-child {
-            margin-top: 0 !important;
-            padding-top: 0 !important;
+        * {
+            box-sizing: border-box;
         }
-
-        .resume-container {
-            max-width: 896px; /* max-w-4xl equivalent */
-            margin: 0 auto;
-            background: white;
-            box-shadow: none;
+        
+        body {
+            margin: 0;
             padding: 0;
-        }
-
-        /* Header Section - Exact match to JSX */
-        .header-section {
-            display: flex;
-            width: 100%;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000000;
+            background: #ffffff;
             max-width: 100%;
+            margin: 0 auto;
+            font-feature-settings: "kern" 1;
+            text-rendering: optimizeLegibility;
+            font-family: DejaVu Sans, Arial, sans-serif;
         }
 
+        h1, h2, h3, p {
+            margin: 0;
+            padding: 0;
+            font-weight: inherit;
+        }
+
+        /* Header Section - Black background with white text */
+        .header {
+            background: #000000;
+            color: #ffffff;
+            padding: 40px 50px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-content {
+            width: 100%;
+            position: relative;
+        }
+        
         .header-left {
             width: 60%;
-            display: flex;
-            align-items: flex-start;
+            float: left;
         }
 
-        .header-left-content {
-            background-color: #000;
-            color: white;
-            padding: 32px;
-        }
-
-        .header-left h1 {
-            font-size: 30px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            color: white;
-        }
-
-        .header-left .job-title {
-            font-size: 18px;
-            text-transform: uppercase;
+        .name {
+            font-size: 36px;
+            font-weight: 800;
             letter-spacing: 0.1em;
-            color: #d1d5db;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            line-height: 1.1;
+            margin-bottom: 8px;
+            display: block;
+            text-transform: uppercase;
         }
 
-        .header-right {
-            background: white;
-            padding: 32px;
-            width: 40%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 16px;
-            padding-top: 20px;
+        .title {
+            font-size: 14px;
+            font-weight: 400;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Contact Info - Right side of header */
+        .contact-info {
+            width: 35%;
+            float: right;
+            margin-top: 0;
         }
 
         .contact-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 11px;
+            line-height: 1.3;
+            overflow: hidden;
+            min-height: 24px;
         }
 
         .contact-icon {
-            width: 32px;
-            height: 32px;
-            border: 1px solid #000;
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 10px;
+            margin-top: 2px;
+            border: 1px solid #ffffff;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 14px;
+            font-size: 8px;
+            text-align: center;
+            line-height: 14px;
+            position: relative;
         }
 
-        .contact-icon.phone::before {
-            content: '☎';
-            font-size: 14px;
-            color: #000;
-        }
-
-        .contact-icon.email::before {
-            content: '✉';
-            font-size: 14px;
-            color: #000;
-        }
-
-        .contact-icon.location::before {
-            content: '⚲';
-            font-size: 14px;
-            color: #000;
+        .contact-icon::before {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .contact-text {
-            font-size: 14px;
-            color: #000;
-            line-height: 1.4;
-            word-break: break-word;
-            overflow-wrap: break-word;
-            flex: 1;
-            min-width: 0;
-        }
-
-        /* Main Content - Two Column Layout */
-        .content-section {
-            border-top: 1px solid #000;
-            padding: 24px 0;
-            display: flex;
-        }
-
-        .section-title {
-            width: 25%;
-        }
-
-        .section-title h2 {
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #000;
+            display: block;
+            margin-left: 28px;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            word-break: break-word;
+            padding-top: 1px;
         }
 
-        .section-content {
-            width: 75%;
+        .phone-icon::before { content: "☎"; }
+        .email-icon::before { content: "✉"; }
+        .location-icon::before { content: "⚲"; }
+
+        .header::after {
+            content: "";
+            display: table;
+            clear: both;
         }
 
-        .section-content p {
-            color: #1f2937;
-            font-size: 14px;
-            line-height: 1.6;
-            margin: 0;
-            white-space: pre-line;
+        /* Main Content Area */
+        .main-content {
+            background: #ffffff;
+            color: #000000;
+            padding: 40px 50px;
         }
 
-        /* Experience Items */
+        /* Section Headers */
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #000000;
+        }
+
+    /* Enhanced Skills - Better PDF compatibility and visual appeal */
+    .skills-grid {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .skills-row {
+        display: table-row;
+    }
+
+    .skill-item {
+        display: table-cell;
+        width: 50%;
+        padding-right: 32px;
+        padding-bottom: 8px;
+        vertical-align: top;
+    }
+
+    .skill-item:last-child {
+        padding-right: 0;
+    }
+
+    .skill-content {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .skill-name-enhanced {
+        display: table-cell;
+        font-size: 12px;
+        color: #000000;
+        font-weight: normal;
+        width: auto;
+        white-space: nowrap;
+        padding-right: 8px;
+    }
+
+    .skill-bullets-enhanced {
+        display: table-cell;
+        width: auto;
+        vertical-align: middle;
+    }
+
+    .skill-bullet-enhanced {
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #d1d5db;
+        margin-left: 2px;
+    }
+
+    .skill-bullet-enhanced.active {
+        background-color: #000000;
+    }
+
+    /* Skills without level display */
+    .skills-simple-grid {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .skills-simple-row {
+        display: table-row;
+    }
+
+    .skills-simple-item {
+        display: table-cell;
+        width: 50%;
+        padding-right: 32px;
+        padding-bottom: 4px;
+        vertical-align: top;
+        font-size: 12px;
+        color: #000000;
+    }
+
+    .skills-simple-item:last-child {
+        padding-right: 0;
+    }
+
+    /* Print overrides for enhanced skills */
+    @media print {
+        .skill-bullet-enhanced.active {
+            background-color: #000000 !important;
+        }
+    }
+
+        /* All Other Sections */
+        .section-row {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        /* Experience Section - Match React format */
+        .experience-section {
+            margin-bottom: 12px;
+        }
+
         .experience-item {
-            margin-bottom: 24px;
+            margin-bottom: 12px;
+            padding-top: 12px;
         }
 
-        .experience-item:last-child {
-            margin-bottom: 0;
+        .experience-item:first-child {
+            border-top: none;
+            padding-top: 0;
         }
 
-        .experience-header {
-            margin-bottom: 4px;
-        }
-
-        .experience-header h3 {
-            font-weight: bold;
-            font-size: 14px;
-            color: #000;
+        .experience-company {
+            font-size: 12px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 8px;
         }
 
         .experience-title {
-            color: #374151;
-            font-size: 14px;
-            margin-bottom: 4px;
+            font-size: 12px;
+            color: #666666;
+            margin-bottom: 8px;
         }
 
         .experience-location {
-            color: #6b7280;
             font-size: 12px;
+            color: #666666;
             font-style: italic;
+            margin-top: -4px;
+            margin-bottom: 8px;
         }
 
-        .experience-description {
-            color: #1f2937;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        /* Education Layout */
+        /* Education Section - Match Experience format */
         .education-item {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #d1d5db;
         }
 
-        .education-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .education-left {
-            width: 50%;
-        }
-
-        .education-right {
-            width: 50%;
-            margin-left: -12px;
-        }
-
-        .education-date {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 4px;
+        .education-item:first-child {
+            border-top: none;
+            padding-top: 0;
         }
 
         .education-school {
             font-size: 12px;
-            color: #374151;
-            margin-bottom: 4px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 8px;
         }
 
         .education-degree {
             font-size: 12px;
-            font-weight: bold;
+            color: #666666;
+            margin-bottom: 8px;
         }
 
-        .education-description {
-            font-size: 12px;
-            color: #1f2937;
-            line-height: 1.6;
-        }
-
-        /* Skills */
-        .skills-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px 8px;
-        }
-
-        .skill-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .skill-name {
-            font-size: 14px;
-            color: #1f2937;
-            font-weight: 500;
-        }
-
-        .skill-bullets {
-            display: flex;
-            align-items: center;
-            gap: 2px;
-        }
-
-        .skill-bullet {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background-color: #d1d5db;
-        }
-
-        .skill-bullet.active {
-            background-color: #000;
-        }
-
-        /* Skills without level display */
-        .skills-simple-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 32px 4px;
-        }
-
-        .skills-simple-item {
-            font-size: 14px;
-            color: #1f2937;
-        }
-
-        /* Additional Sections - 3 Column Grid */
-        .additional-sections {
-            border-top: 1px solid #000;
-            padding: 24px 0;
-        }
-
-        .sections-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 24px;
-        }
-
-        .additional-section h3 {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: #1f2937;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        /* Language Bars */
-        .language-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .language-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .language-name {
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .language-bars {
-            display: flex;
-            gap: 2px;
-        }
-
-        .language-bar {
-            width: 8px;
-            height: 2px;
-            background-color: #d1d5db;
-        }
-
-        .language-bar.active {
-            background-color: #000;
-        }
-
-        /* Bullet Lists */
-        .bullet-list {
+        /* FIXED: Custom bullet points - PDF compatible */
+        .custom-bullet-list {
             list-style: none;
+            padding: 0;
+            margin: 0;
         }
 
-        .bullet-list li {
-            font-size: 12px;
+        .custom-bullet-item {
             margin-bottom: 4px;
-            display: flex;
-            align-items: flex-start;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow: hidden;
         }
 
-        .bullet-list li::before {
-            content: '';
+        .custom-bullet {
             width: 4px;
             height: 4px;
-            background-color: #000;
+            background-color: #000000;
             border-radius: 50%;
+            float: left;
+            margin-right: 12px;
             margin-top: 6px;
-            margin-right: 8px;
-            flex-shrink: 0;
         }
 
-        /* Website Links */
+        .custom-bullet-text {
+            display: block;
+            margin-left: 16px;
+        }
+
+        /* FIXED: Language items - PDF compatible */
+        .language-item {
+            margin-bottom: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow: hidden;
+        }
+
+        .language-bullet {
+            width: 4px;
+            height: 4px;
+            background-color: #000000;
+            border-radius: 50%;
+            float: left;
+            margin-right: 12px;
+            margin-top: 6px;
+        }
+
+        .language-text {
+            display: block;
+            margin-left: 16px;
+            font-weight: normal;
+        }
+
+        /* Website section styling */
         .website-item {
-            margin-bottom: 4px;
-        }
-
-        .website-item:last-child {
-            margin-bottom: 0;
+            margin-bottom: 6px;
         }
 
         .website-label {
             font-size: 12px;
-            font-weight: 500;
+            font-weight: normal;
             margin-bottom: 2px;
         }
 
         .website-url {
-            font-size: 12px;
+            font-size: 10px;
             color: #2563eb;
             text-decoration: underline;
             word-break: break-all;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            line-height: 1.3;
+            line-height: 1.2;
             display: block;
         }
 
-        /* References */
-        .reference-item {
-            margin-bottom: 12px;
-            font-size: 12px;
+        /* Small text */
+        .small {
+            font-size: 10px;
+            color: #666666;
+            line-height: 1.3;
+        }
+        
+        .bold {
+            font-weight: 600;
         }
 
-        .reference-item:last-child {
-            margin-bottom: 0;
+        /* Profile Summary */
+        .profile-summary {
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        /* Utility classes */
+        .mb-1 { margin-bottom: 5px; }
+        .mb-2 { margin-bottom: 10px; }
+        .mb-3 { margin-bottom: 15px; }
+        .mt-1 { margin-top: 5px; }
+
+        /* Page break handling */
+        .experience-item, .education-item { 
+            page-break-inside: avoid; 
+            break-inside: avoid;
+        }
+
+        h1, h2, h3, .section-title { 
+            page-break-after: avoid; 
+            break-after: avoid;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+
+        /* Print specific styles */
+        @media print {
+            body {
+                padding: 0 !important;
+            }
+            
+            .experience-item, .education-item {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+            
+            h1, h2, h3, .section-title {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+        }
+
+        p, li, span, div {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+            hyphens: auto;
+        }
+
+        .no-underline { 
+            text-decoration: none; 
+            color: inherit; 
+        }
+        
+        a { 
+            text-decoration: none; 
+            color: inherit; 
+        }
+        
+        a:hover { 
+            text-decoration: none; 
+            color: inherit; 
+        }
+
+        /* Reference section styling - match React */
+        .reference-item {
+            margin-bottom: 10px;
         }
 
         .reference-name {
-            font-weight: bold;
-            color: #1f2937;
+            font-size: 12px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 4px;
         }
 
         .reference-relationship {
-            color: #6b7280;
             font-size: 12px;
+            color: #666666;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            margin: 4px 0;
+            margin-top: 4px;
+            margin-bottom: 4px;
         }
 
         .reference-contact {
-            color: #374151;
+            font-size: 12px;
+            color: #666666;
+            margin-top: 4px;
         }
 
-        /* Custom Sections */
-        .custom-content {
-            color: #1f2937;
-            font-size: 14px;
-            line-height: 1.6;
-            white-space: pre-line;
-        }
-
-                /* Print-specific overrides */
-        @media print {
-            html, body {
-                margin: 0 !important;
-                padding: 0 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            
-            .resume-container {
-                box-shadow: none !important;
-                max-width: 100% !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-            
-            .header-section {
-                margin: 0 !important;
-                padding: 0 !important;
-                max-width: 100% !important;
-            }
-            
-            .header-left-content {
-                padding: 24px !important;
-            }
-            
-            .header-right {
-                padding: 24px !important;
-            }
-            
-            .content-section {
-                padding: 24px 0 !important;
-            }
-            
-            .additional-sections {
-                padding: 24px 0 !important;
-            }
-            
-            .sections-grid {
-                gap: 24px !important;
-            }
-        }
     </style>
     @php
         $design = $settings['design'] ?? ($resume['settings']['design'] ?? null);
@@ -485,509 +498,462 @@ use App\Helpers\BulletProcessor;
     @endphp
     <style>
         @if(!is_null($sec))
-        .content-section, .section, .additional-sections { margin-bottom: {{ (int)$sec }}px !important; }
+        .experience-item, .education-item, .reference-item { margin-bottom: {{ (int)$sec }}px !important; }
         @endif
         @if(!is_null($para))
-        .section-content p, .experience-description, .education-description, .bullet-list li, .contact-text, .custom-content { margin-bottom: {{ (int)$para }}px !important; }
+        .profile-summary, .education-degree, .experience-company, .experience-title, li { margin-bottom: {{ (int)$para }}px !important; }
         @endif
         @if(!is_null($lh))
-        body, .section-content p, .experience-description, .education-description, .bullet-list li, .contact-text, .custom-content { line-height: {{ $lh }} !important; }
+        body, .profile-summary, li { line-height: {{ $lh }} !important; }
         @endif
         @if($fontStyle==='small')
-        body { font-size: 13px !important; }
+        body { font-size: 11px !important; }
         @elseif($fontStyle==='large')
-        body { font-size: 16px !important; }
+        body { font-size: 15px !important; }
         @endif
     </style>
 </head>
 <body>
-    <div class="resume-container">
-        {{-- Header Section --}}
-        <div class="header-section">
-            {{-- Left Column --}}
+    @php
+        $formatMonthYear = function ($value) {
+            if (empty($value)) return '';
+            $ts = strtotime($value);
+            if ($ts === false) { return $value; }
+            return date('M Y', $ts);
+        };
+        
+        $contact = $resume['contact'] ?? [];
+        $experiences = $resume['experiences'] ?? [];
+        $education = $resume['education'] ?? [];
+        $skills = $resume['skills'] ?? [];
+        $languages = $resume['languages'] ?? [];
+        $hobbies = $resume['hobbies'] ?? [];
+        $certifications = $resume['certifications'] ?? [];
+        $awards = $resume['awards'] ?? [];
+        $websites = $resume['websites'] ?? [];
+        $references = $resume['references'] ?? [];
+        $customSections = $resume['customSections'] ?? [];
+        $summary = $resume['summary'] ?? '';
+        
+        $locationParts = array_filter([
+            $contact['address'] ?? null,
+            $contact['city'] ?? null,
+            $contact['country'] ?? null,
+            $contact['postCode'] ?? null,
+        ]);
+        
+        // Helper function to check if array has meaningful content
+        $hasContent = function($array, $fields) {
+            if (empty($array)) return false;
+            return count(array_filter($array, function($item) use ($fields) {
+                if (empty($item) || !is_array($item)) return false;
+                foreach ($fields as $field) {
+                    if (!empty($item[$field]) && trim($item[$field]) !== '') {
+                        return true;
+                    }
+                }
+                return false;
+            })) > 0;
+        };
+        
+        // Check for meaningful content in each section
+        $hasValidExperiences = $hasContent($experiences, ['company', 'jobTitle', 'description']);
+        $hasValidEducation = $hasContent($education, ['school', 'degree', 'description']);
+        $hasValidCertifications = $hasContent($certifications, ['title', 'name']);
+        $hasValidAwards = $hasContent($awards, ['title', 'name']);
+        $hasValidReferences = $hasContent($references, ['name', 'relationship', 'contactInfo']);
+        $hasValidCustomSections = $hasContent($customSections, ['title', 'content']);
+        $hasValidLanguages = $hasContent($languages, ['name', 'language']);
+        $hasValidWebsites = $hasContent($websites, ['url', 'label']);
+        
+        // Skills validation
+        $hasValidSkills = !empty($skills) && count(array_filter($skills, function($skill) {
+            $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+            return !empty($skillName) && trim($skillName) !== '';
+        })) > 0;
+        
+        // Hobbies validation  
+        $hasValidHobbies = !empty($hobbies) && count(array_filter($hobbies, function($hobby) {
+            $hobbyName = is_array($hobby) ? ($hobby['name'] ?? '') : $hobby;
+            return !empty($hobbyName) && trim($hobbyName) !== '';
+        })) > 0;
+    @endphp
+
+    <!-- Header Section -->
+    <div class="header">
+        <div class="header-content">
             <div class="header-left">
-                <div class="header-left-content">
-                <h1>{{ $resume['contact']['firstName'] ?? '' }} {{ $resume['contact']['lastName'] ?? '' }}</h1>
-                <p class="job-title">{{ $resume['contact']['desiredJobTitle'] ?? '' }}</p>
+                <div class="name">
+                    @if(!empty($contact['firstName']) || !empty($contact['lastName']))
+                        {{ ($contact['firstName'] ?? '') }} {{ ($contact['lastName'] ?? '') }}
+                    @else
+                        Your Name
+                    @endif
                 </div>
+                @if(!empty($contact['desiredJobTitle']))
+                    <div class="title">{{ $contact['desiredJobTitle'] }}</div>
+                @endif
             </div>
-
-            {{-- Right Column --}}
-            <div class="header-right">
-                @if (!empty($resume['contact']['phone']))
+            
+            <!-- Contact Information -->
+            <div class="contact-info">
+                @if (!empty($contact['phone']))
                     <div class="contact-item">
-                        <div class="contact-icon phone"></div>
-                        <span class="contact-text">{{ $resume['contact']['phone'] }}</span>
+                        <span class="contact-icon phone-icon"></span>
+                        <span class="contact-text">{{ $contact['phone'] }}</span>
                     </div>
                 @endif
-
-                @if (!empty($resume['contact']['email']))
+                @if (!empty($contact['email']))
                     <div class="contact-item">
-                        <div class="contact-icon email"></div>
-                        <span class="contact-text">{{ $resume['contact']['email'] }}</span>
+                        <span class="contact-icon email-icon"></span>
+                        <span class="contact-text">{{ $contact['email'] }}</span>
                     </div>
                 @endif
-
-                @php
-                    $locationParts = array_filter([
-                        $resume['contact']['address'] ?? '',
-                        $resume['contact']['city'] ?? '',
-                        $resume['contact']['country'] ?? '',
-                        $resume['contact']['postCode'] ?? ''
-                    ]);
-                @endphp
-
                 @if (!empty($locationParts))
                     <div class="contact-item">
-                        <div class="contact-icon location"></div>
+                        <span class="contact-icon location-icon"></span>
                         <span class="contact-text">{{ implode(', ', $locationParts) }}</span>
                     </div>
                 @endif
             </div>
         </div>
+    </div>
 
-            {{-- About Me / Summary --}}
-            @if (!empty($resume['summary']) && trim($resume['summary']) !== '')
-            <div class="content-section">
-                    <div class="section-title">
-                        <h2>ABOUT ME</h2>
-                    </div>
-                    <div class="section-content">
-                        <p>{{ $resume['summary'] }}</p>
-                    </div>
-                </div>
-            @endif
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- About Me Section - Only show if summary exists -->
+        @if(!empty($summary) && trim($summary) !== '')
+        <div class="section-title">ABOUT ME</div>
+        <div class="profile-summary">
+            {!! nl2br(e($summary)) !!}
+        </div>
+        @endif
 
-            {{-- Experience --}}
-            @php
-                $validExperiences = [];
-                if (!empty($resume['experiences']) && is_array($resume['experiences'])) {
-                    foreach ($resume['experiences'] as $exp) {
-                        if (!empty($exp) && (
-                            !empty($exp['company'] ?? '') ||
-                            !empty($exp['jobTitle'] ?? '') ||
-                            !empty($exp['description'] ?? '') ||
-                            !empty($exp['startDate'] ?? '') ||
-                            !empty($exp['endDate'] ?? '')
-                        )) {
-                            $validExperiences[] = $exp;
-                        }
-                    }
-                }
-            @endphp
-
-            @if (!empty($validExperiences))
-            <div class="content-section">
-                    <div class="section-title">
-                        <h2>EXPERIENCE</h2>
-                    </div>
-                <div class="section-content">
-                        @foreach ($validExperiences as $exp)
-                            <div class="experience-item">
-                                <div class="experience-header">
-                                    <h3>{{ $exp['company'] ?? '' }} {{ $exp['startDate'] ?? '' }}{{ ($exp['startDate'] ?? '') && ($exp['endDate'] ?? '') ? ' - ' : '' }}{{ $exp['endDate'] ?? '' }}</h3>
-                                    @if (!empty($exp['jobTitle']))
-                                        <p class="experience-title">{{ $exp['jobTitle'] }}</p>
-                                    @endif
-                                @if (!empty($exp['location']))
-                                    <p class="experience-location">{{ $exp['location'] }}</p>
+        <!-- Experience Section - Match React format exactly -->
+        @if($hasValidExperiences)
+        <div class="experience-section">
+            <div class="section-title">EXPERIENCE</div>
+            @foreach ($experiences as $exp)
+                @if(!empty($exp['company']) || !empty($exp['jobTitle']) || !empty($exp['description']))
+                    @php
+                        $desc = $exp['description'] ?? '';
+                        $items = array_values(array_filter(preg_split("/(\r\n|\n|\r)/", $desc)));
+                    @endphp
+                    <div class="experience-item">
+                        <div class="experience-company">
+                            {{ $exp['company'] ?? 'Company Name' }} 
+                            @if(!empty($exp['startDate']))
+                                {{ $formatMonthYear($exp['startDate']) }} - 
+                                @if(!empty($exp['endDate'])){{ $formatMonthYear($exp['endDate']) }}@endif
+                            @endif
+                        </div>
+                        @if(!empty($exp['jobTitle']))
+                            <div class="experience-title">{{ $exp['jobTitle'] }}</div>
+                        @endif
+                        @if(!empty($exp['location']))
+                            <div class="experience-location">{{ $exp['location'] }}</div>
+                        @endif
+                        @if(count($items) > 0)
+                            @foreach ($items as $line)
+                                @if(trim($line) !== '')
+                                    <div style="font-size: 12px; color: #000000; line-height: 1.5; margin-bottom: 2px;">{{ $line }}</div>
                                 @endif
-                            </div>
-                                @if (!empty($exp['description']))
-                                    @php 
-                                        $processedBullets = BulletProcessor::processBulletedDescription($exp['description']);
-                                        $hasBullets = BulletProcessor::hasBullets($processedBullets);
-                                    @endphp
-                                    @if ($hasBullets)
-                                    <ul class="bullet-list">
-                                            @foreach (BulletProcessor::getBulletTexts($processedBullets) as $text)
-                                            <li class="experience-description">{{ $text }}</li>
-                                            @endforeach
-                                        </ul>
-                                    @else
-                                        <p class="experience-description">{{ $exp['description'] }}</p>
-                                    @endif
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-            {{-- Education --}}
-            @php
-                $validEducation = [];
-                if (!empty($resume['education']) && is_array($resume['education'])) {
-                    foreach ($resume['education'] as $edu) {
-                        if (!empty($edu) && (
-                            !empty($edu['school'] ?? '') ||
-                            !empty($edu['degree'] ?? '') ||
-                            !empty($edu['description'] ?? '') ||
-                            !empty($edu['startDate'] ?? '') ||
-                            !empty($edu['endDate'] ?? '')
-                        )) {
-                            $validEducation[] = $edu;
-                        }
-                    }
-                }
-            @endphp
-
-            @if (!empty($validEducation))
-            <div class="content-section">
-                    <div class="section-title">
-                        <h2>EDUCATION</h2>
-                    </div>
-                <div class="section-content">
-                        @foreach ($validEducation as $edu)
-                            <div class="education-item">
-                                <div class="education-left">
-                                    @if (!empty($edu['startDate']) || !empty($edu['endDate']))
-                                        <p class="education-date">{{ $edu['startDate'] ?? '' }}{{ ($edu['startDate'] ?? '') && ($edu['endDate'] ?? '') ? ' - ' : '' }}{{ $edu['endDate'] ?? '' }}</p>
-                                    @endif
-                                    @if (!empty($edu['school']) || !empty($edu['location']))
-                                        <p class="education-school">
-                                            {{ $edu['school'] ?? '' }}
-                                            @if (!empty($edu['location']) && !empty($edu['school']))
-                                                — {{ $edu['location'] }}
-                                            @elseif (!empty($edu['location']))
-                                                {{ $edu['location'] }}
-                                            @endif
-                                        </p>
-                                    @endif
-                                    @if (!empty($edu['degree']))
-                                        <h4 class="education-degree">{{ $edu['degree'] }}</h4>
-                                    @endif
-                                </div>
-                                <div class="education-right">
-                                    @if (!empty($edu['description']))
-                                        @php 
-                                            $lines = preg_split('/\r\n|\r|\n/', (string)$edu['description']);
-                                            $hasBullets = false;
-                                            foreach ($lines as $line) {
-                                                if (preg_match('/^[•\-–\*]\s*/u', trim($line))) {
-                                                    $hasBullets = true;
-                                                    break;
-                                                }
-                                            }
-                                        @endphp
-                                        @if ($hasBullets)
-                                        <ul class="bullet-list">
-                                                @foreach ($lines as $line)
-                                                    @php $t = trim($line); @endphp
-                                                    @if ($t !== '')
-                                                        @if (preg_match('/^([•\-–\*])\s*(.+)$/u', $t, $matches))
-                                                        <li class="education-description">{{ trim($matches[2]) }}</li>
-                                                        @else
-                                                        <li class="education-description">{{ $t }}</li>
-                                                        @endif
-                                                    @endif
-                                                @endforeach
-                                            </ul>
-                                        @else
-                                            <p class="education-description">{{ $edu['description'] }}</p>
-                                        @endif
-                                    @endif
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
-        {{-- Skills --}}
-            @php
-                $validSkills = [];
-                if (!empty($resume['skills']) && is_array($resume['skills'])) {
-                    foreach ($resume['skills'] as $skill) {
-                        if (!empty($skill['name'] ?? '') && trim($skill['name']) !== '') {
-                            $validSkills[] = $skill;
-                        }
-                    }
-                }
-                
-                $showExperienceLevel = $resume['showExperienceLevel'] ?? false;
-            @endphp
-
-            @if (!empty($validSkills))
-            <div class="content-section">
-                    <div class="section-title">
-                        <h2>SKILLS</h2>
-                    </div>
-                    <div class="section-content">
-                        @if ($showExperienceLevel)
-                            <div class="skills-grid">
-                            @foreach ($validSkills as $skill)
-                                            <div class="skill-item">
-                                                    <span class="skill-name">{{ $skill['name'] }}</span>
-                                                    <div class="skill-bullets">
-                                                        @php
-                                                            $level = strtolower(trim($skill['level'] ?? ''));
-                                            $bulletCount = 1;
-                                                            
-                                                            if (str_contains($level, 'expert')) {
-                                                                $bulletCount = 5;
-                                                            } elseif (str_contains($level, 'experienced')) {
-                                                                $bulletCount = 4;
-                                                            } elseif (str_contains($level, 'skillful')) {
-                                                                $bulletCount = 3;
-                                                            } elseif (str_contains($level, 'beginner')) {
-                                                                $bulletCount = 2;
-                                                            } elseif (str_contains($level, 'novice')) {
-                                                                $bulletCount = 1;
-                                                            }
-                                                        @endphp
-                                                        @for ($i = 1; $i <= 5; $i++)
-                                                            <div class="skill-bullet {{ $i <= $bulletCount ? 'active' : '' }}"></div>
-                                                        @endfor
-                                                </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="skills-simple-grid">
-                            @foreach ($validSkills as $skill)
-                                            <div class="skills-simple-item">
-                                                {{ $skill['name'] }}
-                                    </div>
-                                @endforeach
-                            </div>
+                            @endforeach
+                        @elseif(!empty($desc) && trim($desc) !== '')
+                            <div style="font-size: 12px; color: #000000; line-height: 1.5;">{{ $desc }}</div>
                         @endif
                     </div>
+                @endif
+            @endforeach
+        </div>
+        @endif
+
+        <!-- Education Section - Match Experience format -->
+        @if($hasValidEducation)
+        <div class="section-title">EDUCATION</div>
+        @foreach ($education as $edu)
+            @if(!empty($edu['school']) || !empty($edu['degree']) || !empty($edu['description']))
+                <div class="education-item">
+                    @if(!empty($edu['school']))
+                        <div class="education-school">
+                            {{ $edu['school'] }}
+                            @if(!empty($edu['startDate']))
+                                {{ $formatMonthYear($edu['startDate']) }} - 
+                                @if(!empty($edu['endDate'])){{ $formatMonthYear($edu['endDate']) }}@endif
+                            @endif
+                        </div>
+                    @endif
+                    @if(!empty($edu['degree']))
+                        <div class="education-degree">{{ $edu['degree'] }}</div>
+                    @endif
+                    @if(!empty($edu['location']))
+                        <div class="experience-location">{{ $edu['location'] }}</div>
+                    @endif
+                    @if(!empty($edu['description']) && trim($edu['description']) !== '')
+                        <div style="font-size: 12px; color: #000000; line-height: 1.5;">{{ $edu['description'] }}</div>
+                    @endif
                 </div>
             @endif
+        @endforeach
+        @endif
 
-            {{-- Additional Sections --}}
-            @php
-                $additionalSections = [];
-                
-                // Languages
-                if (!empty($resume['languages']) && is_array($resume['languages'])) {
-                    $validLanguages = [];
-                    foreach ($resume['languages'] as $lang) {
-                        if (!empty($lang['name'] ?? '') && trim($lang['name']) !== '') {
-                            $validLanguages[] = $lang;
-                        }
-                    }
-                    if (!empty($validLanguages)) {
-                        $additionalSections[] = ['id' => 'languages', 'title' => 'Languages', 'content' => $validLanguages];
-                    }
-                }
-                
-                // Certifications
-                if (!empty($resume['certifications']) && is_array($resume['certifications'])) {
-                    $validCertifications = [];
-                    foreach ($resume['certifications'] as $cert) {
-                        $certName = is_array($cert) ? ($cert['title'] ?? $cert['name'] ?? '') : $cert;
-                        if (!empty($certName) && trim($certName) !== '') {
-                            $validCertifications[] = $cert;
-                        }
-                    }
-                    if (!empty($validCertifications)) {
-                        $additionalSections[] = ['id' => 'certifications', 'title' => 'Certifications', 'content' => $validCertifications];
-                    }
-                }
-                
-                // Awards
-                if (!empty($resume['awards']) && is_array($resume['awards'])) {
-                    $validAwards = [];
-                    foreach ($resume['awards'] as $award) {
-                        $awardName = is_array($award) ? ($award['title'] ?? $award['name'] ?? '') : $award;
-                        if (!empty($awardName) && trim($awardName) !== '') {
-                            $validAwards[] = $award;
-                        }
-                    }
-                    if (!empty($validAwards)) {
-                        $additionalSections[] = ['id' => 'awards', 'title' => 'Awards', 'content' => $validAwards];
-                    }
-                }
-                
-                // Websites
-                if (!empty($resume['websites']) && is_array($resume['websites'])) {
-                    $validWebsites = [];
-                    foreach ($resume['websites'] as $site) {
-                        if (!empty($site['url'] ?? '') && trim($site['url']) !== '') {
-                            $validWebsites[] = $site;
-                        }
-                    }
-                    if (!empty($validWebsites)) {
-                        $additionalSections[] = ['id' => 'websites', 'title' => 'Websites', 'content' => $validWebsites];
-                    }
-                }
-                
-                // Hobbies/Interests
-                if (!empty($resume['hobbies']) && is_array($resume['hobbies'])) {
-                    $validHobbies = [];
-                    foreach ($resume['hobbies'] as $hobby) {
-                        $hobbyName = is_array($hobby) ? ($hobby['title'] ?? $hobby['name'] ?? '') : $hobby;
-                        if (!empty($hobbyName) && trim($hobbyName) !== '') {
-                            $validHobbies[] = $hobby;
-                        }
-                    }
-                    if (!empty($validHobbies)) {
-                        $additionalSections[] = ['id' => 'hobbies', 'title' => 'Interests', 'content' => $validHobbies];
-                    }
-                }
-                
-                // References
-                if (!empty($resume['references']) && is_array($resume['references'])) {
-                    $validReferences = [];
-                    foreach ($resume['references'] as $ref) {
-                        if (!empty($ref['name'] ?? '') && trim($ref['name']) !== '') {
-                            $validReferences[] = $ref;
-                        }
-                    }
-                    if (!empty($validReferences)) {
-                        $additionalSections[] = ['id' => 'references', 'title' => 'References', 'content' => $validReferences];
-                    }
-                }
-            @endphp
+        {{-- Enhanced Skills Section HTML - Replace your existing skills section --}}
+@if($hasValidSkills)
+<div class="section-title">SKILLS</div>
+@php
+    // Filter valid skills with enhanced validation
+    $validSkills = array_filter($skills, function($skill) {
+        $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+        return !empty($skillName) && trim($skillName) !== '';
+    });
+    
+    $totalSkills = count($validSkills);
+    $showExperienceLevel = $resume['showExperienceLevel'] ?? false;
+    
+    // Enhanced skill level mapping function
+    $getSkillLevelBullets = function($level) {
+        if (empty($level)) return 3; // Default to 3 for better visual balance
+        $levelLower = strtolower(trim($level));
+        
+        // More comprehensive level mapping
+        if (str_contains($levelLower, 'expert') || str_contains($levelLower, 'master')) return 5;
+        if (str_contains($levelLower, 'experienced') || str_contains($levelLower, 'advanced')) return 4;
+        if (str_contains($levelLower, 'skillful') || str_contains($levelLower, 'intermediate')) return 3;
+        if (str_contains($levelLower, 'beginner') || str_contains($levelLower, 'basic')) return 2;
+        if (str_contains($levelLower, 'novice') || str_contains($levelLower, 'learning')) return 1;
+        
+        return 3; // Default fallback
+    };
+    
+    // Calculate optimal grid distribution
+    if ($totalSkills > 0) {
+        if ($totalSkills <= 2) {
+            $firstSkillsCount = $totalSkills;
+            $secondSkillsCount = 0;
+        } else {
+            $firstSkillsCount = ceil($totalSkills / 2);
+            $secondSkillsCount = $totalSkills - $firstSkillsCount;
+        }
+        
+        $firstSkills = array_slice($validSkills, 0, $firstSkillsCount);
+        $secondSkills = $secondSkillsCount > 0 ? array_slice($validSkills, $firstSkillsCount, $secondSkillsCount) : [];
+    }
+@endphp
 
-            @if (!empty($additionalSections))
-                <div class="additional-sections">
-                    <div class="sections-grid">
-                    @foreach ($additionalSections as $section)
-                                    <div class="additional-section">
-                                        <h3>{{ $section['title'] }}</h3>
-                                        
-                                        @if ($section['id'] == 'languages')
-                                            @foreach ($section['content'] as $lang)
-                                                <div class="language-item">
-                                                    <span class="language-name">{{ $lang['name'] }}</span>
-                                                    <div class="language-bars">
-                                                        @php
-                                                            $proficiency = strtolower($lang['proficiency'] ?? '');
-                                                            $barCount = 3;
-                                                            
-                                                            if (str_contains($proficiency, 'beginner') || str_contains($proficiency, 'basic')) {
-                                                                $barCount = 1;
-                                                            } elseif (str_contains($proficiency, 'intermediate')) {
-                                                                $barCount = 2;
-                                                            } elseif (str_contains($proficiency, 'advanced')) {
-                                                                $barCount = 3;
-                                                            } elseif (str_contains($proficiency, 'fluent')) {
-                                                                $barCount = 4;
-                                                            } elseif (str_contains($proficiency, 'native') || str_contains($proficiency, 'expert')) {
-                                                                $barCount = 5;
-                                                            }
-                                                        @endphp
-                                                        @for ($i = 1; $i <= 5; $i++)
-                                                            <div class="language-bar {{ $i <= $barCount ? 'active' : '' }}"></div>
-                                                        @endfor
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                            
-                                        @elseif ($section['id'] == 'websites')
-                                            @foreach ($section['content'] as $site)
-                                                <div class="website-item">
-                                                    @if (!empty($site['label']))
-                                                        <div class="website-label">{{ $site['label'] }}</div>
-                                                    @endif
-                                                    <a href="{{ $site['url'] }}" class="website-url">{{ $site['url'] }}</a>
-                                                </div>
-                                            @endforeach
-                                            
-                                        @elseif ($section['id'] == 'references')
-                                            @foreach ($section['content'] as $ref)
-                                                <div class="reference-item">
-                                                    <div class="reference-name">{{ $ref['name'] }}</div>
-                                                    @if (!empty($ref['relationship']))
-                                                        <div class="reference-relationship">{{ $ref['relationship'] }}</div>
-                                                    @endif
-                                                    @if (!empty($ref['contactInfo']))
-                                                        <div class="reference-contact">
-                                                            <div>{{ $ref['contactInfo'] }}</div>
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                            
-                                        @elseif ($section['id'] == 'certifications')
-                                            @php 
-                                                $allCertTexts = array_map(function($item) {
-                                                    return is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item;
-                                                }, $section['content']);
-                                                $processedBullets = array_map(function($title) {
-                                                    return BulletProcessor::processBulletedDescription($title);
-                                                }, $allCertTexts);
-                                                $hasAnyBullets = false;
-                                                foreach ($processedBullets as $bullets) {
-                                                    if (BulletProcessor::hasBullets($bullets)) {
-                                                        $hasAnyBullets = true;
-                                                        break;
-                                                    }
-                                                }
-                                                
-                                                if (!$hasAnyBullets) {
-                                                    $certsLine = implode(', ', $allCertTexts);
-                                                    if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
-                                                        $certItems = array_map('trim', explode(',', $certsLine));
-                                                        $certItems = array_filter($certItems, function($item) { return !empty($item); });
-                                                        $hasLongCertList = true;
-                                                    } else {
-                                                        $hasLongCertList = false;
-                                                    }
-                                                }
-                                            @endphp
-                                            @if ($hasAnyBullets)
-                                                <ul class="bullet-list">
-                                                    @foreach ($processedBullets as $bullets)
-                                                        @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
-                                                            <li>{{ $text }}</li>
-                                                        @endforeach
-                                                    @endforeach
-                                                </ul>
-                                            @elseif ($hasLongCertList)
-                                                <ul class="bullet-list">
-                                                    @foreach ($certItems as $cert)
-                                                        <li>{{ $cert }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <ul class="bullet-list">
-                                                    @foreach ($section['content'] as $item)
-                                                        <li>{{ is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            @endif
-                                        @else
-                                            <ul class="bullet-list">
-                                                @foreach ($section['content'] as $item)
-                                                    <li>{{ is_array($item) ? ($item['title'] ?? $item['name'] ?? '') : $item }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @endif
-                                    </div>
-                                @endforeach
-                    </div>
+@if($totalSkills > 0)
+    @if($showExperienceLevel)
+        {{-- Enhanced Skills Grid with Level Bullets --}}
+        <div class="skills-grid">
+            <div class="skills-row">
+                <div class="skill-item">
+                    @foreach ($firstSkills as $skill)
+                        @php
+                            $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+                            $skillLevel = is_array($skill) ? ($skill['level'] ?? 'Intermediate') : 'Intermediate';
+                            $bullets = $getSkillLevelBullets($skillLevel);
+                        @endphp
+                        <div class="skill-content" style="margin-bottom: 8px;">
+                            <span class="skill-name-enhanced">{{ $skillName }}</span>
+                            <div class="skill-bullets-enhanced">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <div class="skill-bullet-enhanced {{ $i <= $bullets ? 'active' : '' }}"></div>
+                                @endfor
+                            </div>
+                        </div>
+                    @endforeach
                 </div>
-            @endif
-
-            {{-- Custom Sections --}}
-            @php
-                $validCustomSections = [];
-                if (!empty($resume['customSections']) && is_array($resume['customSections'])) {
-                    foreach ($resume['customSections'] as $custom) {
-                        if (!empty($custom['title'] ?? '') && !empty($custom['content'] ?? '') && 
-                            trim($custom['title']) !== '' && trim($custom['content']) !== '') {
-                            $validCustomSections[] = $custom;
-                        }
-                    }
-                }
-            @endphp
-
-            @if (!empty($validCustomSections))
-                @foreach ($validCustomSections as $custom)
-                <div class="content-section">
-                        <div class="section-title">
-                            <h2>{{ strtoupper($custom['title']) }}</h2>
+                
+                <div class="skill-item">
+                    @foreach ($secondSkills as $skill)
+                        @php
+                            $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+                            $skillLevel = is_array($skill) ? ($skill['level'] ?? 'Intermediate') : 'Intermediate';
+                            $bullets = $getSkillLevelBullets($skillLevel);
+                        @endphp
+                        <div class="skill-content" style="margin-bottom: 8px;">
+                            <span class="skill-name-enhanced">{{ $skillName }}</span>
+                            <div class="skill-bullets-enhanced">
+                                @for ($i = 1; $i <= 5; $i++)
+                                    <div class="skill-bullet-enhanced {{ $i <= $bullets ? 'active' : '' }}"></div>
+                                @endfor
+                            </div>
                         </div>
-                        <div class="section-content">
-                            <p class="custom-content">{{ $custom['content'] }}</p>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @else
+        {{-- Simple Skills Grid without Level Indicators --}}
+        <div class="skills-simple-grid">
+            <div class="skills-simple-row">
+                <div class="skills-simple-item">
+                    @foreach ($firstSkills as $skill)
+                        @php
+                            $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+                        @endphp
+                        <div style="margin-bottom: 4px;">{{ $skillName }}</div>
+                    @endforeach
+                </div>
+                
+                <div class="skills-simple-item">
+                    @foreach ($secondSkills as $skill)
+                        @php
+                            $skillName = is_array($skill) ? ($skill['name'] ?? '') : $skill;
+                        @endphp
+                        <div style="margin-bottom: 4px;">{{ $skillName }}</div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+@endif
+@endif
+
+        <!-- Languages Section - FIXED for PDF compatibility -->
+        @if($hasValidLanguages)
+        <div class="section-row">
+            <div class="section-title">LANGUAGES</div>
+            @foreach ($languages as $lang)
+                @if(!empty($lang) && is_array($lang))
+                    @php
+                        $langName = $lang['name'] ?? $lang['language'] ?? '';
+                    @endphp
+                    @if(!empty($langName) && trim($langName) !== '')
+                        <div class="language-item">
+                            <div class="language-bullet"></div>
+                            <div class="language-text">
+                                {{ htmlspecialchars($langName) }} 
+                                @if(!empty($lang['proficiency']) && trim($lang['proficiency']) !== '')
+                                    <span style="color: #666666;">({{ htmlspecialchars($lang['proficiency']) }})</span>
+                                @endif
+                            </div>
                         </div>
-                    </div>
+                    @endif
+                @endif
+            @endforeach
+        </div>
+        @endif
+
+        <!-- Certifications Section - FIXED for PDF compatibility -->
+        @if($hasValidCertifications)
+        <div class="section-row">
+            <div class="section-title">CERTIFICATIONS</div>
+            <ul class="custom-bullet-list">
+                @foreach ($certifications as $cert)
+                    @if(!empty($cert) && is_array($cert))
+                        @php
+                            $certTitle = $cert['title'] ?? $cert['name'] ?? '';
+                        @endphp
+                        @if(!empty($certTitle) && trim($certTitle) !== '')
+                            <li class="custom-bullet-item">
+                                <div class="custom-bullet"></div>
+                                <div class="custom-bullet-text">{{ htmlspecialchars($certTitle) }}</div>
+                            </li>
+                        @endif
+                    @endif
                 @endforeach
-            @endif
+            </ul>
+        </div>
+        @endif
+
+        <!-- Awards Section - FIXED for PDF compatibility -->
+        @if($hasValidAwards)
+        <div class="section-row">
+            <div class="section-title">AWARDS</div>
+            <ul class="custom-bullet-list">
+                @foreach ($awards as $award)
+                    @if(!empty($award) && is_array($award))
+                        @php
+                            $awardTitle = $award['title'] ?? $award['name'] ?? '';
+                        @endphp
+                        @if(!empty($awardTitle) && trim($awardTitle) !== '')
+                            <li class="custom-bullet-item">
+                                <div class="custom-bullet"></div>
+                                <div class="custom-bullet-text">{{ htmlspecialchars($awardTitle) }}</div>
+                            </li>
+                        @endif
+                    @endif
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        <!-- Websites Section - Match React format -->
+        @if($hasValidWebsites)
+        <div class="section-row">
+            <div class="section-title">WEBSITES</div>
+            @foreach ($websites as $site)
+                @if(!empty($site) && is_array($site) && !empty($site['url']) && trim($site['url']) !== '')
+                    <div class="website-item">
+                        <div class="website-label">
+                            {{ !empty($site['label']) && trim($site['label']) !== '' ? htmlspecialchars($site['label']) : 'Website' }}
+                        </div>
+                        <a href="{{ htmlspecialchars($site['url']) }}" class="website-url" target="_blank" rel="noopener noreferrer">
+                            {{ htmlspecialchars($site['url']) }}
+                        </a>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+        @endif
+
+        <!-- Interests Section - FIXED for PDF compatibility -->
+        @if($hasValidHobbies)
+        <div class="section-row">
+            <div class="section-title">INTERESTS</div>
+            <ul class="custom-bullet-list">
+                @foreach ($hobbies as $hobby)
+                    @php
+                        $hobbyName = is_array($hobby) ? ($hobby['name'] ?? '') : $hobby;
+                    @endphp
+                    @if(!empty($hobbyName) && trim($hobbyName) !== '')
+                        <li class="custom-bullet-item">
+                            <div class="custom-bullet"></div>
+                            <div class="custom-bullet-text">{{ htmlspecialchars($hobbyName) }}</div>
+                        </li>
+                    @endif
+                @endforeach
+            </ul>
+        </div>
+        @endif
+
+        <!-- References Section - Match React format -->
+        @if($hasValidReferences)
+        <div class="section-row">
+            <div class="section-title">REFERENCES</div>
+            @foreach ($references as $ref)
+                @if(!empty($ref) && is_array($ref))
+                    @if((!empty($ref['name']) && trim($ref['name']) !== '') || 
+                        (!empty($ref['relationship']) && trim($ref['relationship']) !== '') || 
+                        (!empty($ref['contactInfo']) && trim($ref['contactInfo']) !== ''))
+                        <div class="reference-item">
+                            @if(!empty($ref['name']) && trim($ref['name']) !== '')
+                                <div class="reference-name">{{ htmlspecialchars($ref['name']) }}</div>
+                            @endif
+                            @if(!empty($ref['relationship']) && trim($ref['relationship']) !== '')
+                                <div class="reference-relationship">{{ htmlspecialchars($ref['relationship']) }}</div>
+                            @endif
+                            @if(!empty($ref['contactInfo']) && trim($ref['contactInfo']) !== '')
+                                <div class="reference-contact">{{ htmlspecialchars($ref['contactInfo']) }}</div>
+                            @endif
+                        </div>
+                    @endif
+                @endif
+            @endforeach
+        </div>
+        @endif
+
+        <!-- Custom Sections - Match React format -->
+        @if($hasValidCustomSections)
+            @foreach ($customSections as $custom)
+                @if((!empty($custom['title']) && trim($custom['title']) !== '') || (!empty($custom['content']) && trim($custom['content']) !== ''))
+                    <div class="section-row">
+                        <div class="section-title">{{ strtoupper($custom['title'] ?? 'CUSTOM SECTION') }}</div>
+                        <div style="font-size: 12px; color: #000000; line-height: 1.5; margin-bottom: 8px;">{!! nl2br(e($custom['content'] ?? '')) !!}</div>
+                    </div>
+                @endif
+            @endforeach
+        @endif
     </div>
 </body>
 </html>
