@@ -51,6 +51,11 @@ use App\Helpers\BulletProcessor;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
+        /* Modifier when no job title */
+        .contact-name--nojob {
+            margin-bottom: -6px; /* tighter spacing */
+        }
+
         .contact-jobtitle {
             font-size: 18px;
             font-weight: 700;
@@ -60,7 +65,8 @@ use App\Helpers\BulletProcessor;
             word-wrap: break-word;
             overflow-wrap: break-word;
         }
-        .contact-details {
+
+                .contact-details {
             font-size: 12px;
             text-align: center;
             color: #111827;
@@ -341,63 +347,61 @@ use App\Helpers\BulletProcessor;
 
 
     {{-- Contact Info --}}
-    @php
-        $firstName = trim($resume['contact']['firstName'] ?? '');
-        $lastName = trim($resume['contact']['lastName'] ?? '');
-        $jobTitle = trim($resume['contact']['desiredJobTitle'] ?? '');
-        $email = trim($resume['contact']['email'] ?? '');
-        $phone = trim($resume['contact']['phone'] ?? '');
+    {{-- Contact Info --}}
+        @php
+            $firstName = trim($resume['contact']['firstName'] ?? '');
+            $lastName = trim($resume['contact']['lastName'] ?? '');
+            $jobTitle = trim($resume['contact']['desiredJobTitle'] ?? '');
+            $email = trim($resume['contact']['email'] ?? '');
+            $phone = trim($resume['contact']['phone'] ?? '');
 
-        $locationInfo = collect([
-            $resume['contact']['address'] ?? null,
-            $resume['contact']['city'] ?? null,
-            $resume['contact']['country'] ?? null,
-            $resume['contact']['postCode'] ?? null
-        ])->filter()->implode(', ');
+            $locationInfo = collect([
+                $resume['contact']['address'] ?? null,
+                $resume['contact']['city'] ?? null,
+                $resume['contact']['country'] ?? null,
+                $resume['contact']['postCode'] ?? null
+            ])->filter()->implode(', ');
 
-        $hasContactInfo = $firstName || $lastName || $jobTitle || $email || $phone || $locationInfo;
-        $hasContactDetails = $locationInfo || $email || $phone;
-        $hasNameOrJob = $firstName || $lastName || $jobTitle;
-    @endphp
+            // check if ANY info is present
+            $hasContactInfo = $firstName || $lastName || $jobTitle || $email || $phone || $locationInfo;
+        @endphp
 
-    @if($hasContactInfo)
-        <div>
-            {{-- Name + Job Title Group --}}
-            @if($hasNameOrJob)
-                <div class="name-jobgroup">
-                    @if($firstName || $lastName)
-                        <h2 class="contact-name">
-                            {{ $firstName }} {{ $lastName }}
-                        </h2>
-                    @endif
+        @if($hasContactInfo)
+            <div>
+                @if($firstName || $lastName)
+                    <h2 class="contact-name {{ empty($jobTitle) ? 'contact-name--nojob' : '' }}">
+                        {{ $firstName }} {{ $lastName }}
+                    </h2>
+                @endif
 
-                    {{-- Job title (padding even if empty) --}}
-                    <div class="contact-jobtitle" style="padding: 4px 0;">
-                        {{ $jobTitle ?: '' }}
+                @if($jobTitle)
+                    <div class="contact-jobtitle">
+                        {{ $jobTitle }}
                     </div>
-                </div>
-                <hr class="section-divider-thin" />
-            @endif
+                @endif
 
-            {{-- Contact details --}}
-            @if($hasContactDetails)
-                <div class="contact-details">
-                    @if($locationInfo)
-                        {{ $locationInfo }}
-                    @endif
-                    @if($locationInfo && $email) | @endif
-                    @if($email)
-                        {{ $email }}
-                    @endif
-                    @if(($locationInfo || $email) && $phone) | @endif
-                    @if($phone)
-                        {{ $phone }}
-                    @endif
-                </div>
                 <hr class="section-divider-thin" />
-            @endif
-        </div>
-    @endif
+
+                @if($locationInfo || $email || $phone)
+                    <div class="contact-details">
+                        @if($locationInfo)
+                            {{ $locationInfo }}
+                        @endif
+                        @if($locationInfo && $email) | @endif
+                        @if($email)
+                            {{ $email }}
+                        @endif
+                        @if(($locationInfo || $email) && $phone) | @endif
+                        @if($phone)
+                            {{ $phone }}
+                        @endif
+                    </div>
+
+                    <hr class="section-divider-thin" />
+                @endif
+            </div>
+        @endif
+
 
     {{-- Summary --}}
     @if(!empty($resume['summary']))
@@ -411,13 +415,12 @@ use App\Helpers\BulletProcessor;
     {{-- Skills --}}
     @php
         $validSkills = collect($resume['skills'] ?? [])->filter(function($skill) {
-            return isset($skill['name'], $skill['level'])
-                ? trim($skill['name']) !== '' || trim($skill['level']) !== ''
-                : false;
+            return isset($skill['name']) && trim($skill['name']) !== ''
+                || isset($skill['level']) && trim($skill['level']) !== '';
         })->values();
     @endphp
 
-    @if($validSkills->count() > 0)
+    @if($validSkills->isNotEmpty())
         <div>
             <h3 class="skills-title">AREA OF EXPERTISE</h3>
             <hr class="section-divider-thin" />
@@ -427,7 +430,10 @@ use App\Helpers\BulletProcessor;
                     <tr>
                         @foreach($row as $skill)
                             <td>
-                                <span class="skill-name">{{ $skill['name'] }}</span>
+                                @if(!empty($skill['name']))
+                                    <span class="skill-name">{{ $skill['name'] }}</span>
+                                @endif
+
                                 @if(!empty($skill['level']) && !empty($resume['showExperienceLevel']))
                                     <span>
                                         @php
@@ -438,7 +444,7 @@ use App\Helpers\BulletProcessor;
                                                 'Experienced' => 4,
                                                 'Expert' => 5
                                             ];
-                                            $filled = $levelMap[$skill['level']] ?? 1;
+                                            $filled = $levelMap[$skill['level']] ?? 0;
                                         @endphp
                                         @for($i = 0; $i < 5; $i++)
                                             <span style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:2px;{{ $i < $filled ? 'background-color:#000;' : 'background-color:#d1d5db;' }}"></span>
@@ -455,7 +461,6 @@ use App\Helpers\BulletProcessor;
             </table>
         </div>
     @endif
-
 
 
     {{-- Experience --}}
