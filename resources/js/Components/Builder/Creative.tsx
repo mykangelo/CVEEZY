@@ -114,7 +114,7 @@ const Creative: React.FC<Props> = ({ resumeData }) => {
                                 ]
                                     .filter(Boolean)
                                     .join(", ")}
-                                placeholder="142 Sinagtala St., Brgy. Batasan Hills, Quezon City, Philippines. 1234"
+                                placeholder="123 Main St., New York, United States, 10001"
                             />
                         </span>
                     </div>
