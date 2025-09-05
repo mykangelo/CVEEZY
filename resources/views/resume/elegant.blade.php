@@ -98,15 +98,21 @@ use App\Helpers\BulletProcessor;
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
+            /* Prevent layout jumping by stabilizing table dimensions */
+            min-height: 200px;
         }
         
         .grid td {
             vertical-align: top;
             padding: 0;
+            /* Prevent content shifting during dynamic loading */
+            position: relative;
         }
         
         .grid tr {
             page-break-inside: avoid;
+            /* Reserve minimum height to prevent jumping */
+            min-height: 50px;
         }
         
         .grid tr + tr td {
@@ -117,16 +123,24 @@ use App\Helpers\BulletProcessor;
             width: 33.33%;
             padding: 16px 0;
             border-right: 1px solid #D1D5DB;
+            /* Stabilize left column width and prevent reflow */
+            min-height: 100px;
+            box-sizing: border-box;
         }
         
         .cell-right {
             width: 66.67%;
             padding: 16px 0 16px 20px;
+            /* Stabilize right column and prevent content jumping */
+            min-height: 100px;
+            box-sizing: border-box;
         }
         
         .inner {
             padding-left: 8px;
             overflow: hidden;
+            /* Prevent content reflow during section loading */
+            min-height: 50px;
         }
 
         .section-title {
@@ -135,6 +149,9 @@ use App\Helpers\BulletProcessor;
             text-transform: uppercase;
             letter-spacing: 0.25em;
             margin-bottom: 8px;
+            /* Anchor positioning for smooth scrolling */
+            scroll-margin-top: 20px;
+            position: relative;
         }
 
         .subdivider {
@@ -148,6 +165,8 @@ use App\Helpers\BulletProcessor;
             list-style: none;
             padding: 0;
             margin: 0;
+            /* Reserve space for contact items */
+            min-height: 80px;
         }
 
         .contact-item {
@@ -219,7 +238,12 @@ use App\Helpers\BulletProcessor;
             line-height: 1.4;
         }
 
-        .skills-container { margin-top: 3px; }
+        .skills-container { 
+            margin-top: 3px;
+            /* Stabilize skills section to prevent reflow */
+            min-height: 40px;
+            contain: layout;
+        }
 
         /* === NEW BULLETPROOF FIX USING TABLE DISPLAY === */
         .skill-item {
@@ -254,7 +278,12 @@ use App\Helpers\BulletProcessor;
         .skill-dot.filled { background-color: #333333; }
         .skill-dot.empty { background-color: #D1D5DB; }
 
-        .experience-item { margin-bottom: 12px; }
+        .experience-item { 
+            margin-bottom: 12px;
+            /* Prevent layout shift during content loading */
+            min-height: 40px;
+            contain: layout;
+        }
         .experience-header {
             display: flex;
             justify-content: space-between;
@@ -265,14 +294,29 @@ use App\Helpers\BulletProcessor;
         .experience-date { font-size: 10px; color: #666666; }
         .experience-title { font-size: 12px; margin-bottom: 4px; }
 
-        .education-item { margin-bottom: 8px; }
+        .education-item { 
+            margin-bottom: 8px;
+            /* Stabilize education section height */
+            min-height: 30px;
+            contain: layout;
+        }
         .education-degree { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
         .education-school { font-size: 12px; margin-bottom: 2px; }
         .education-date { font-size: 10px; color: #666666; }
 
-        .profile-summary { font-size: 12px; line-height: 1.4; }
+        .profile-summary { 
+            font-size: 12px; 
+            line-height: 1.4;
+            /* Reserve space for profile content */
+            min-height: 60px;
+        }
 
-        .additional-section { margin-bottom: 10px; }
+        .additional-section { 
+            margin-bottom: 10px;
+            /* Prevent blogs/vlogs section from causing jumps */
+            min-height: 30px;
+            contain: layout;
+        }
         .additional-section:last-child { margin-bottom: 0; }
 
         /* Smart page break handling for multi-page content */
@@ -301,10 +345,34 @@ use App\Helpers\BulletProcessor;
             break-inside: auto;
         }
         
+        /* Layout stability improvements */
+        .content-wrapper {
+            /* Prevent entire wrapper from shifting */
+            contain: layout style;
+            will-change: auto;
+        }
+        
+        /* Smooth transitions without causing reflow */
+        .grid, .cell-left, .cell-right {
+            transition: none; /* Disable transitions that cause jumping */
+        }
+        
+        /* Prevent font loading from causing layout shifts */
+        body {
+            font-display: swap;
+        }
+        
         /* Print-specific overrides for compact layout */
         @media print {
             body {
                 padding: 8px !important;
+            }
+            
+            /* Remove min-heights for print to save space */
+            .grid, .cell-left, .cell-right, .inner, 
+            .contact-list, .skills-container, .profile-summary,
+            .experience-item, .education-item, .additional-section {
+                min-height: auto !important;
             }
             
             /* Ensure clean page breaks for multi-page content */
@@ -349,12 +417,15 @@ use App\Helpers\BulletProcessor;
          * Compact the body content without affecting the top header
          * (signature, name, position). All overrides are scoped under
          * `.content-wrapper` so the header remains unchanged.
+         * Layout stability: Maintain min-heights even in compact mode
          */
         .content-wrapper .cell-left {
             padding: 12px 0;
+            min-height: 80px; /* Maintain stability */
         }
         .content-wrapper .cell-right {
             padding: 12px 0 12px 14px;
+            min-height: 80px; /* Maintain stability */
         }
         .content-wrapper .subdivider {
             margin: 10px -16px 0 0;
@@ -366,11 +437,24 @@ use App\Helpers\BulletProcessor;
         .content-wrapper .profile-summary {
             font-size: 11px;
             line-height: 1.35;
+            min-height: 40px; /* Prevent jumping */
         }
-        .content-wrapper .experience-item { margin-bottom: 8px; }
-        .content-wrapper .education-item { margin-bottom: 6px; }
-        .content-wrapper .skills-container .skill-item { margin-bottom: 1px; }
-        .content-wrapper .section-title { margin-bottom: 6px; letter-spacing: 0.22em; }
+        .content-wrapper .experience-item { 
+            margin-bottom: 8px;
+            min-height: 30px; /* Maintain item stability */
+        }
+        .content-wrapper .education-item { 
+            margin-bottom: 6px;
+            min-height: 25px; /* Maintain item stability */
+        }
+        .content-wrapper .skills-container .skill-item { 
+            margin-bottom: 1px;
+        }
+        .content-wrapper .section-title { 
+            margin-bottom: 6px; 
+            letter-spacing: 0.22em;
+            scroll-margin-top: 15px; /* Compact scroll positioning */
+        }
         .content-wrapper li,
         .content-wrapper .skill-name,
         .content-wrapper .experience-company,
@@ -435,9 +519,6 @@ use App\Helpers\BulletProcessor;
         if (!empty($contact['lastName'])) {
             $initials .= strtoupper(substr($contact['lastName'], 0, 1));
         }
-        if (empty($initials)) {
-            $initials = 'YN';
-        }
         
         $locationParts = array_filter([
             $contact['address'] ?? null,
@@ -446,7 +527,41 @@ use App\Helpers\BulletProcessor;
             $contact['postCode'] ?? null,
         ]);
         
-        // Improved logic to check for meaningful content
+        // Comprehensive validation functions for all sections
+        $hasValidContact = (!empty($contact['phone']) && trim($contact['phone']) !== '') ||
+                          (!empty($contact['email']) && trim($contact['email']) !== '') ||
+                          !empty($locationParts) ||
+                          (!empty($websites) && count(array_filter($websites, function($site) {
+                              return !empty($site['url']) && trim($site['url']) !== '';
+                          })) > 0);
+        
+        $hasValidSummary = !empty($summary) && trim($summary) !== '';
+        
+        $hasValidExperiences = !empty($experiences) && count(array_filter($experiences, function($exp) {
+            return (!empty($exp['company']) && trim($exp['company']) !== '') ||
+                   (!empty($exp['jobTitle']) && trim($exp['jobTitle']) !== '') ||
+                   (!empty($exp['description']) && trim($exp['description']) !== '');
+        })) > 0;
+        
+        $hasValidEducation = !empty($education) && count(array_filter($education, function($edu) {
+            return (!empty($edu['degree']) && trim($edu['degree']) !== '') ||
+                   (!empty($edu['school']) && trim($edu['school']) !== '') ||
+                   (!empty($edu['description']) && trim($edu['description']) !== '');
+        })) > 0;
+        
+        $hasValidSkills = !empty($skills) && count(array_filter($skills, function($skill) {
+            return !empty($skill['name']) && trim($skill['name']) !== '';
+        })) > 0;
+        
+        $hasValidLanguages = !empty($languages) && count(array_filter($languages, function($lang) {
+            return !empty($lang['name']) && trim($lang['name']) !== '';
+        })) > 0;
+        
+        $hasValidHobbies = !empty($hobbies) && count(array_filter($hobbies, function($hobby) {
+            $hobbyName = is_array($hobby) ? ($hobby['name'] ?? '') : $hobby;
+            return !empty($hobbyName) && trim($hobbyName) !== '';
+        })) > 0;
+        
         $hasValidCertifications = !empty($certifications) && count(array_filter($certifications, function($cert) {
             return !empty($cert['title']) && trim($cert['title']) !== '';
         })) > 0;
@@ -467,23 +582,45 @@ use App\Helpers\BulletProcessor;
         })) > 0;
         
         $hasAdditionalContent = $hasValidCertifications || $hasValidAwards || $hasValidReferences || $hasValidCustomSections;
+        
+        // Check if left column has any content
+        $hasLeftColumnContent = $hasValidContact || $hasValidEducation || $hasValidSkills || $hasValidLanguages || $hasValidHobbies;
+        
+        // Check if right column has any content
+        $hasRightColumnContent = $hasValidSummary || $hasValidExperiences || $hasAdditionalContent;
+        
+        // Check if there's any content at all (including header content)
+        $hasAnyContent = $hasLeftColumnContent || $hasRightColumnContent || 
+                        (!empty($initials)) || 
+                        (!empty(trim(($contact['firstName'] ?? '') . ' ' . ($contact['lastName'] ?? '')))) || 
+                        (!empty($contact['desiredJobTitle']));
     @endphp
 
+    @if($hasAnyContent)
     <div class="header-top-separator"></div>
 
     <div class="header">
-        <div class="signature">{{ $initials }}</div>
-        <div class="name">{{ ($contact['firstName'] ?? '') }} {{ ($contact['lastName'] ?? '') }}</div>
+        @if(!empty($initials))
+            <div class="signature">{{ $initials }}</div>
+        @endif
+        @if(!empty(trim(($contact['firstName'] ?? '') . ' ' . ($contact['lastName'] ?? ''))))
+            <div class="name">{{ ($contact['firstName'] ?? '') }} {{ ($contact['lastName'] ?? '') }}</div>
+        @endif
         @if(!empty($contact['desiredJobTitle']))
             <div class="title">{{ $contact['desiredJobTitle'] }}</div>
         @endif
     </div>
+    @endif
 
+    @if($hasLeftColumnContent || $hasRightColumnContent)
     <div class="content-wrapper">
         <table class="grid">
+            @if($hasLeftColumnContent || $hasRightColumnContent)
             <tr>
+                @if($hasLeftColumnContent)
                 <td class="cell-left">
                     <div class="inner">
+                        @if($hasValidContact)
                         <div class="section-title">CONTACT</div>
                         <ul class="contact-list">
                             @if (!empty($contact['phone']))
@@ -506,6 +643,7 @@ use App\Helpers\BulletProcessor;
                             @endif
                             @if (!empty($websites))
                                 @foreach ($websites as $site)
+                                    @if(!empty($site['url']) && trim($site['url']) !== '')
                                     <li class="contact-item">
                                         <span class="contact-icon">모</span>
                                         <span class="contact-text">
@@ -518,147 +656,168 @@ use App\Helpers\BulletProcessor;
                                             @endif
                                         </span>
                                     </li>
+                                    @endif
                                 @endforeach
                             @endif
                         </ul>
+                        @endif
                     </div>
                 </td>
+                @else
+                <td class="cell-left"></td>
+                @endif
+                @if($hasRightColumnContent)
                 <td class="cell-right">
                     <div style="padding-left: 20px;">
+                        @if($hasValidSummary)
                         <div class="section-title">PROFILE SUMMARY</div>
                         <div class="profile-summary">
-                            @if(!empty($summary))
-                                {!! nl2br(e($summary)) !!}
-                            @else
-                                Use this section to give recruiters a quick glimpse of your professional profile. In just 3–4 lines, highlight your background, education and main skills.
-                            @endif
+                            {!! nl2br(e($summary)) !!}
                         </div>
+                        @endif
                     </div>
                 </td>
+                @else
+                <td class="cell-right"></td>
+                @endif
             </tr>
+            @endif
 
+            @if($hasLeftColumnContent && ($hasValidEducation || $hasValidSkills || $hasValidLanguages || $hasValidHobbies))
             <tr>
+                @if($hasLeftColumnContent)
                 <td class="cell-left">
                     <div class="inner">
+                        @if($hasValidEducation)
                         <div class="section-title">EDUCATION</div>
                         <div class="mt-1">
-                            @if(!empty($education))
-                                @foreach ($education as $edu)
-                                    <div class="education-item">
-                                        <div class="education-degree">{{ $edu['degree'] ?? 'Degree in Field of study' }}</div>
-                                        <div class="education-school">
-                                            {{ $edu['school'] ?? 'School Name' }}
-                                            @if(!empty($edu['location']))
-                                                — {{ $edu['location'] }}
-                                            @endif
-                                        </div>
-                                        <div class="education-date">
-                                            {{ $formatMonthYear($edu['startDate'] ?? '2017') }}
-                                            @if(!empty($edu['endDate']) || empty($edu['startDate']))
-                                                — {{ $formatMonthYear($edu['endDate'] ?? '2020') }}
-                                            @endif
-                                        </div>
-                                        @if(!empty($edu['description']))
-                                            @php 
-                                                $lines = preg_split('/\r\n|\r|\n/', (string)$edu['description']);
-                                                $hasBullets = false;
-                                                foreach ($lines as $line) {
-                                                    if (preg_match('/^[•\-–\*]\s*/u', trim($line))) {
-                                                        $hasBullets = true;
-                                                        break;
-                                                    }
-                                                }
-                                            @endphp
-                                            @if ($hasBullets)
-                                                <ul style="margin: 4px 0; padding-left: 16px;">
-                                                    @foreach ($lines as $line)
-                                                        @php $t = trim($line); @endphp
-                                                        @if ($t !== '')
-                                                            @if (preg_match('/^([•\-–\*])\s*(.+)$/u', $t, $matches))
-                                                                <li style="margin-bottom: 2px; font-size: 12px; line-height: 1.3;">{{ trim($matches[2]) }}</li>
-                                                            @else
-                                                                <li style="margin-bottom: 2px; font-size: 12px; line-height: 1.3;">{{ $t }}</li>
-                                                            @endif
-                                                        @endif
-                                                    @endforeach
-                                                </ul>
-                                            @else
-                                                <div class="mt-1">{{ $edu['description'] }}</div>
-                                            @endif
+                            @foreach ($education as $edu)
+                                @if((!empty($edu['degree']) && trim($edu['degree']) !== '') || (!empty($edu['school']) && trim($edu['school']) !== '') || (!empty($edu['description']) && trim($edu['description']) !== ''))
+                                <div class="education-item">
+                                    @if(!empty($edu['degree']) && trim($edu['degree']) !== '')
+                                    <div class="education-degree">{{ $edu['degree'] }}</div>
+                                    @endif
+                                    @if(!empty($edu['school']) && trim($edu['school']) !== '')
+                                    <div class="education-school">
+                                        {{ $edu['school'] }}
+                                        @if(!empty($edu['location']))
+                                            — {{ $edu['location'] }}
                                         @endif
                                     </div>
-                                @endforeach
-                            @else
-                                <div class="education-item">
-                                    <div class="education-degree">Degree in Field of study</div>
-                                    <div class="education-school">School Name — Location</div>
-                                    <div class="education-date">2017 — 2020</div>
+                                    @endif
+                                    @if(!empty($edu['startDate']) || !empty($edu['endDate']))
+                                    <div class="education-date">
+                                        {{ $formatMonthYear($edu['startDate'] ?? '') }}
+                                        @if(!empty($edu['endDate']) || empty($edu['startDate']))
+                                            — {{ $formatMonthYear($edu['endDate'] ?? '') }}
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if(!empty($edu['description']) && trim($edu['description']) !== '')
+                                        @php 
+                                            $lines = preg_split('/\r\n|\r|\n/', (string)$edu['description']);
+                                            $hasBullets = false;
+                                            foreach ($lines as $line) {
+                                                if (preg_match('/^[•\-–\*]\s*/u', trim($line))) {
+                                                    $hasBullets = true;
+                                                    break;
+                                                }
+                                            }
+                                        @endphp
+                                        @if ($hasBullets)
+                                            <ul style="margin: 4px 0; padding-left: 16px;">
+                                                @foreach ($lines as $line)
+                                                    @php $t = trim($line); @endphp
+                                                    @if ($t !== '')
+                                                        @if (preg_match('/^([•\-–\*])\s*(.+)$/u', $t, $matches))
+                                                            <li style="margin-bottom: 2px; font-size: 12px; line-height: 1.3;">{{ trim($matches[2]) }}</li>
+                                                        @else
+                                                            <li style="margin-bottom: 2px; font-size: 12px; line-height: 1.3;">{{ $t }}</li>
+                                                        @endif
+                                                    @endif
+                                                @endforeach
+                                            </ul>
+                                        @else
+                                            <div class="mt-1">{{ $edu['description'] }}</div>
+                                        @endif
+                                    @endif
                                 </div>
-                            @endif
+                                @endif
+                            @endforeach
                         </div>
+                        @endif
 
+                        @if($hasValidEducation && ($hasValidSkills || $hasValidLanguages || $hasValidHobbies))
                         <hr class="subdivider" />
+                        @endif
 
+                        @if($hasValidSkills)
                         <div style="padding-top: 12px;">
                             <div class="section-title">SKILLS</div>
                             <div class="skills-container">
-                                @if(!empty($skills))
-                                    @foreach ($skills as $skill)
-                                        @php
-                                            $level = $skill['level'] ?? 'Experienced';
-                                            $dotCount = 4;
-                                            if ($level == 'Novice') $dotCount = 1;
-                                            elseif ($level == 'Beginner') $dotCount = 2;
-                                            elseif ($level == 'Skillful') $dotCount = 3;
-                                            elseif ($level == 'Experienced') $dotCount = 4;
-                                            elseif ($level == 'Expert') $dotCount = 5;
-                                        @endphp
-                                        <div class="skill-item">
-                                            <span class="skill-name">{{ $skill['name'] ?? 'Skill' }}</span>
+                                @php
+                                    $showExperienceLevel = $resume['showExperienceLevel'] ?? false;
+                                    $validSkills = array_filter($skills, function($skill) {
+                                        return !empty($skill['name']) && trim($skill['name']) !== '';
+                                    });
+                                @endphp
+                                @foreach ($validSkills as $skill)
+                                    @php
+                                        $level = $skill['level'] ?? 'Experienced';
+                                        $dotCount = 4;
+                                        if ($level == 'Novice') $dotCount = 1;
+                                        elseif ($level == 'Beginner') $dotCount = 2;
+                                        elseif ($level == 'Skillful') $dotCount = 3;
+                                        elseif ($level == 'Experienced') $dotCount = 4;
+                                        elseif ($level == 'Expert') $dotCount = 5;
+                                    @endphp
+                                    <div class="skill-item">
+                                        <span class="skill-name">{{ $skill['name'] }}</span>
+                                        @if($showExperienceLevel)
                                             <div class="skill-dots">
                                                 @for ($i = 0; $i < 5; $i++)
                                                     <span class="skill-dot {{ $i < $dotCount ? 'filled' : 'empty' }}"></span>
                                                 @endfor
                                             </div>
-                                        </div>
-                                    @endforeach
-                                @else
-                                    <div class="skill-item">
-                                        <span class="skill-name">Skill 1</span>
-                                        <div class="skill-dots">
-                                            @for ($i = 0; $i < 5; $i++)
-                                                <span class="skill-dot {{ $i < 4 ? 'filled' : 'empty' }}"></span>
-                                            @endfor
-                                        </div>
+                                        @endif
                                     </div>
-                                @endif
+                                @endforeach
                             </div>
                         </div>
+                        @endif
 
-                        @if (!empty($languages))
+                        @if($hasValidLanguages)
+                            @if($hasValidEducation || $hasValidSkills)
                             <hr class="subdivider" />
+                            @endif
                             <div style="padding-top: 12px;">
                                 <div class="section-title">LANGUAGES</div>
                                 <ul class="mt-1">
                                     @foreach ($languages as $lang)
+                                        @if(!empty($lang['name']) && trim($lang['name']) !== '')
                                         <li>{{ $lang['name'] }}
                                             @if(!empty($lang['proficiency']))
                                                 ({{ $lang['proficiency'] }})
                                             @endif
                                         </li>
+                                        @endif
                                     @endforeach
                                 </ul>
                             </div>
                         @endif
                         
-                        @if (!empty($hobbies))
+                        @if($hasValidHobbies)
+                            @if($hasValidEducation || $hasValidSkills || $hasValidLanguages)
                             <hr class="subdivider" />
+                            @endif
                             <div style="padding-top: 12px;">
                                 <div class="section-title">HOBBIES</div>
                                 <ul class="mt-1">
                                     @foreach ($hobbies as $hobby)
-                                        {{-- This handles hobbies as simple strings or as objects with a 'name' key --}}
-                                        <li>{{ is_array($hobby) ? ($hobby['name'] ?? '') : $hobby }}</li>
+                                        @php $hobbyName = is_array($hobby) ? ($hobby['name'] ?? '') : $hobby; @endphp
+                                        @if(!empty($hobbyName) && trim($hobbyName) !== '')
+                                        <li>{{ $hobbyName }}</li>
+                                        @endif
                                     @endforeach
                                 </ul>
                             </div>
@@ -666,62 +825,59 @@ use App\Helpers\BulletProcessor;
 
                     </div>
                 </td>
+                @else
+                <td class="cell-left"></td>
+                @endif
+                @if($hasRightColumnContent)
                 <td class="cell-right">
                     <div style="padding-left: 20px;">
+                        @if($hasValidExperiences)
                         <div class="section-title">WORK EXPERIENCE</div>
                         <div style="margin-top: 3px;">
-                            @if(!empty($experiences))
-                                @foreach ($experiences as $exp)
-                                    @php
-                                        $desc = $exp['description'] ?? '';
-                                        $items = array_values(array_filter(preg_split("/(\r\n|\n|\r)/", $desc)));
-                                    @endphp
-                                    <div class="experience-item">
-                                        <div class="experience-header">
-                                            <div class="experience-company">{{ $exp['company'] ?? 'Company' }}</div>
-                                            <div class="experience-date">
-                                                {{ $formatMonthYear($exp['startDate'] ?? 'Sep 2017') }} — {{ $formatMonthYear($exp['endDate'] ?? 'May 2020') }}
-                                            </div>
-                                        </div>
-                                        <div class="experience-title">
-                                            {{ $exp['jobTitle'] ?? 'Job Title' }}
-                                            @if(!empty($exp['location']))
-                                                – {{ $exp['location'] }}
-                                            @endif
-                                        </div>
-                                        @if(count($items) > 0)
-                                            <ul>
-                                                @foreach ($items as $line)
-                                                    <li>{{ $line }}</li>
-                                                @endforeach
-                                            </ul>
-                                        @elseif(!empty($desc))
-                                            <div>{{ $desc }}</div>
-                                        @else
-                                            <ul>
-                                                <li>Responsibilities</li>
-                                                <li>Responsibilities</li>
-                                            </ul>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            @else
+                            @foreach ($experiences as $exp)
+                                @if((!empty($exp['company']) && trim($exp['company']) !== '') || (!empty($exp['jobTitle']) && trim($exp['jobTitle']) !== '') || (!empty($exp['description']) && trim($exp['description']) !== ''))
+                                @php
+                                    $desc = $exp['description'] ?? '';
+                                    $items = array_values(array_filter(preg_split("/(\r\n|\n|\r)/", $desc)));
+                                @endphp
                                 <div class="experience-item">
                                     <div class="experience-header">
-                                        <div class="experience-company">Company</div>
-                                        <div class="experience-date">Sep 2017 — May 2020</div>
+                                        <div class="experience-company">{{ $exp['company'] ?? '' }}</div>
+                                        @if(!empty($exp['startDate']) || !empty($exp['endDate']))
+                                        <div class="experience-date">
+                                            {{ $formatMonthYear($exp['startDate'] ?? '') }} — {{ $formatMonthYear($exp['endDate'] ?? '') }}
+                                        </div>
+                                        @endif
                                     </div>
-                                    <div class="experience-title">Job Title – Location</div>
-                                    <ul>
-                                        <li>Responsibilities</li>
-                                        <li>Responsibilities</li>
-                                    </ul>
+                                    @if(!empty($exp['jobTitle']) && trim($exp['jobTitle']) !== '')
+                                    <div class="experience-title">
+                                        {{ $exp['jobTitle'] }}
+                                        @if(!empty($exp['location']))
+                                            – {{ $exp['location'] }}
+                                        @endif
+                                    </div>
+                                    @endif
+                                    @if(count($items) > 0)
+                                        <ul>
+                                            @foreach ($items as $line)
+                                                <li>{{ $line }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @elseif(!empty($desc) && trim($desc) !== '')
+                                        <div>{{ $desc }}</div>
+                                    @endif
                                 </div>
-                            @endif
+                                @endif
+                            @endforeach
                         </div>
+                        @endif
                     </div>
                 </td>
+                @else
+                <td class="cell-right"></td>
+                @endif
             </tr>
+            @endif
 
             @if ($hasAdditionalContent)
             <tr>
@@ -832,5 +988,6 @@ use App\Helpers\BulletProcessor;
             @endif
         </table>
     </div>
+    @endif
 </body>
 </html>
