@@ -72,7 +72,7 @@ use App\Helpers\BulletProcessor;
             display: flex;
             flex-direction: column;
             gap: 12px;
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         
         .section-header {
@@ -80,7 +80,7 @@ use App\Helpers\BulletProcessor;
             padding: 8px 16px;
             margin-bottom: 12px;
             border-radius: 6px;
-            page-break-after: avoid;
+            page-break-after: auto;
             border-radius: 9999px;
         }
         
@@ -111,8 +111,8 @@ use App\Helpers\BulletProcessor;
         
         .experience-item, .education-item {
             margin-bottom: 16px;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         .experience-header, .education-header {
@@ -230,7 +230,7 @@ use App\Helpers\BulletProcessor;
             align-items: center;
             gap: 6px;
             white-space: nowrap;
-            break-inside: avoid;
+            break-inside: auto;
         }
         
         .skill-dots {
@@ -264,7 +264,7 @@ use App\Helpers\BulletProcessor;
             }
             
             .section, .custom-section {
-                page-break-inside: avoid;
+                page-break-inside: auto;
             }
             
             .header {
@@ -311,8 +311,8 @@ use App\Helpers\BulletProcessor;
         
         /* Smart page break handling for multi-page content */
         .info-item, .references-item {
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         .custom-section, .skill-row {
@@ -322,10 +322,10 @@ use App\Helpers\BulletProcessor;
         
         /* Ensure proper page breaks for all elements */
         h1, h2, .section-title, .section-header {
-            page-break-after: avoid;
-            break-after: avoid;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            page-break-after: auto;
+            break-after: auto;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         
         /* Ensure clean page breaks for multi-page content */
@@ -374,41 +374,54 @@ use App\Helpers\BulletProcessor;
 <body>
     <div class="container">
         <!-- Header -->
-        <div class="header">
-            <h1 class="name">{{ strtoupper($resume['contact']['firstName'] ?? '') }} {{ strtoupper($resume['contact']['lastName'] ?? '') }}</h1>
-            <p class="job-title">{{ $resume['contact']['desiredJobTitle'] ?? '' }}</p>
-            <div class="contact-info">
-                @php
-                    $contactParts = [];
-                    // Address
-                    if (!empty($resume['contact']['address']) || !empty($resume['contact']['city']) || !empty($resume['contact']['country']) || !empty($resume['contact']['postCode'])) {
-                        $contactParts[] = collect([
-                            $resume['contact']['address'] ?? '',
-                            $resume['contact']['city'] ?? '',
-                            $resume['contact']['country'] ?? '',
-                            $resume['contact']['postCode'] ?? ''
-                        ])->filter()->implode(', ');
-                    }
-                    // Phone
-                    if (!empty($resume['contact']['phone'])) $contactParts[] = $resume['contact']['phone'];
-                    // Email
-                    if (!empty($resume['contact']['email'])) $contactParts[] = $resume['contact']['email'];
-                    // Websites
-                    if (!empty($resume['websites']) && is_array($resume['websites'])) {
-                        foreach ($resume['websites'] as $site) {
-                            if (!empty($site['url'])) $contactParts[] = '<a href="' . e($site['url']) . '" target="_blank" class="underline text-blue-700 hover:text-blue-900">' . e($site['label'] ?? $site['url']) . '</a>';
-                        }
-                    }
-                    // Socials
-                    if (!empty($resume['contact']['socials']) && is_array($resume['contact']['socials'])) {
-                        foreach ($resume['contact']['socials'] as $social) {
-                            if (!empty($social['url'])) $contactParts[] = '<a href="' . e($social['url']) . '" target="_blank" class="underline text-blue-700 hover:text-blue-900">' . e($social['label'] ?? $social['url']) . '</a>';
-                        }
-                    }
-                @endphp
-                {!! implode('<span class="contact-sep">|</span>', $contactParts) !!}
+        @php
+            $hasName = !empty($resume['contact']['firstName']) || !empty($resume['contact']['lastName']);
+            $hasJobTitle = !empty($resume['contact']['desiredJobTitle']);
+            $contactParts = [];
+
+            // Address
+            if (!empty($resume['contact']['address']) || !empty($resume['contact']['city']) || !empty($resume['contact']['country']) || !empty($resume['contact']['postCode'])) {
+                $contactParts[] = collect([
+                    $resume['contact']['address'] ?? '',
+                    $resume['contact']['city'] ?? '',
+                    $resume['contact']['country'] ?? '',
+                    $resume['contact']['postCode'] ?? ''
+                ])->filter()->implode(', ');
+            }
+            // Phone
+            if (!empty($resume['contact']['phone'])) $contactParts[] = $resume['contact']['phone'];
+            // Email
+            if (!empty($resume['contact']['email'])) $contactParts[] = $resume['contact']['email'];
+            // Websites
+            if (!empty($resume['websites']) && is_array($resume['websites'])) {
+                foreach ($resume['websites'] as $site) {
+                    if (!empty($site['url'])) $contactParts[] = '<a href="' . e($site['url']) . '" target="_blank">' . e($site['label'] ?? $site['url']) . '</a>';
+                }
+            }
+            // Socials
+            if (!empty($resume['contact']['socials']) && is_array($resume['contact']['socials'])) {
+                foreach ($resume['contact']['socials'] as $social) {
+                    if (!empty($social['url'])) $contactParts[] = '<a href="' . e($social['url']) . '" target="_blank">' . e($social['label'] ?? $social['url']) . '</a>';
+                }
+            }
+            $hasContact = count($contactParts) > 0;
+        @endphp
+
+        @if($hasName || $hasJobTitle || $hasContact)
+            <div class="header">
+                @if($hasName)
+                    <h1 class="name">{{ strtoupper($resume['contact']['firstName'] ?? '') }} {{ strtoupper($resume['contact']['lastName'] ?? '') }}</h1>
+                @endif
+                @if($hasJobTitle)
+                    <p class="job-title">{{ $resume['contact']['desiredJobTitle'] }}</p>
+                @endif
+                @if($hasContact)
+                    <div class="contact-info">
+                        {!! implode('<span class="contact-sep">|</span>', $contactParts) !!}
+                    </div>
+                @endif
             </div>
-        </div>
+        @endif
 
         <!-- Summary -->
         @if(!empty($resume['summary']))
@@ -421,15 +434,24 @@ use App\Helpers\BulletProcessor;
         @endif
 
         <!-- Skills -->
-        @if (!empty($resume['skills']))
+        @php
+            $validSkills = [];
+            if (!empty($resume['skills']) && is_array($resume['skills'])) {
+                foreach ($resume['skills'] as $skill) {
+                    if (!empty($skill['name'])) {
+                        $validSkills[] = $skill;
+                    }
+                }
+            }
+        @endphp
+        @if (count($validSkills) > 0)
             <div class="section">
                 <div class="section-header">
                     <h2 class="section-title">TECHNICAL SKILLS</h2>
                 </div>
                 <table class="skills-table">
                     <tbody>
-                        @php $skillsList = $resume['skills']; @endphp
-                        @foreach(array_chunk($skillsList, 3) as $skillsRow)
+                        @foreach(array_chunk($validSkills, 3) as $skillsRow)
                             <tr>
                                 @for ($col = 0; $col < 3; $col++)
                                     <td>
@@ -441,15 +463,14 @@ use App\Helpers\BulletProcessor;
                                                     <span class="skill-dots">
                                                         @php
                                                             $level = $skill['level'] ?? 'Novice';
-                                                            $bulletCount = 0;
-                                                            switch ($level) {
-                                                                case 'Novice': $bulletCount = 1; break;
-                                                                case 'Beginner': $bulletCount = 2; break;
-                                                                case 'Skillful': $bulletCount = 3; break;
-                                                                case 'Experienced': $bulletCount = 4; break;
-                                                                case 'Expert': $bulletCount = 5; break;
-                                                                default: $bulletCount = 1;
-                                                            }
+                                                            $bulletCount = match($level) {
+                                                                'Novice' => 1,
+                                                                'Beginner' => 2,
+                                                                'Skillful' => 3,
+                                                                'Experienced' => 4,
+                                                                'Expert' => 5,
+                                                                default => 1
+                                                            };
                                                         @endphp
                                                         @for ($i = 0; $i < 5; $i++)
                                                             <span class="skill-dot" style="background-color: {{ $i < $bulletCount ? '#000000' : '#cccccc' }};"></span>
@@ -467,18 +488,31 @@ use App\Helpers\BulletProcessor;
             </div>
         @endif
 
+
         <!-- Experience -->
-        @if(!empty($resume['experiences']) && is_array($resume['experiences']) && count($resume['experiences']) > 0)
+        @php
+            $validExperiences = [];
+            if (!empty($resume['experiences']) && is_array($resume['experiences'])) {
+                foreach ($resume['experiences'] as $exp) {
+                    if (!empty($exp['jobTitle']) || !empty($exp['company']) || !empty($exp['description'])) {
+                        $validExperiences[] = $exp;
+                    }
+                }
+            }
+        @endphp
+        @if (count($validExperiences) > 0)
             <div class="section">
                 <div class="section-header">
                     <h2 class="section-title">PROFESSIONAL EXPERIENCE</h2>
                 </div>
                 <div class="experience-container">
-                    @foreach($resume['experiences'] as $exp)
+                    @foreach($validExperiences as $exp)
                         <div class="experience-item">
                             <div class="experience-header">
                                 <h3 class="experience-title">{{ $exp['jobTitle'] ?? '' }}{{ isset($exp['company']) ? ', ' . $exp['company'] : '' }}    
-                                    <span class="dates">{{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }}</span>
+                                    @if(!empty($exp['startDate']) || !empty($exp['endDate']))
+                                        <span class="dates">{{ $exp['startDate'] ?? '' }} - {{ $exp['endDate'] ?? '' }}</span>
+                                    @endif
                                 </h3>
                             </div>
                             @if(!empty($exp['location']))
@@ -498,12 +532,10 @@ use App\Helpers\BulletProcessor;
                                             </div>
                                         @endforeach
                                     @else
-                                        @if(trim($exp['description']) !== '')
-                                            <div class="bullet-point">
-                                                <span class="bullet">•</span>
-                                                <span class="bullet-text">{{ trim($exp['description']) }}</span>
-                                            </div>
-                                        @endif
+                                        <div class="bullet-point">
+                                            <span class="bullet">•</span>
+                                            <span class="bullet-text">{{ trim($exp['description']) }}</span>
+                                        </div>
                                     @endif
                                 </div>
                             @endif
@@ -513,21 +545,36 @@ use App\Helpers\BulletProcessor;
             </div>
         @endif
 
+
         <!-- Education -->
-        @if(!empty($resume['education']) && is_array($resume['education']) && count($resume['education']) > 0)
+        @php
+            $validEducation = [];
+            if (!empty($resume['education']) && is_array($resume['education'])) {
+                foreach ($resume['education'] as $edu) {
+                    if (!empty($edu['degree']) || !empty($edu['school'])) {
+                        $validEducation[] = $edu;
+                    }
+                }
+            }
+        @endphp
+        @if (count($validEducation) > 0)
             <div class="section">
                 <div class="section-header">
                     <h2 class="section-title">EDUCATION</h2>
                 </div>
                 <div>
-                    @foreach($resume['education'] as $edu)
+                    @foreach($validEducation as $edu)
                         <div class="education-item">
                             <div class="education-header">
                                 <h3 class="education-title">{{ $edu['degree'] ?? '' }}
-                                    <span class="dates">{{ $edu['startDate'] ?? '' }} - {{ $edu['endDate'] ?? '' }}</span>
+                                    @if(!empty($edu['startDate']) || !empty($edu['endDate']))
+                                        <span class="dates">{{ $edu['startDate'] ?? '' }} - {{ $edu['endDate'] ?? '' }}</span>
+                                    @endif
                                 </h3>
                             </div>
-                            <p class="school">{{ $edu['school'] ?? '' }}</p>
+                            @if(!empty($edu['school']))
+                                <p class="school">{{ $edu['school'] }}</p>
+                            @endif
                             @if(!empty($edu['location']))
                                 <p class="location">{{ $edu['location'] }}</p>
                             @endif
@@ -545,12 +592,10 @@ use App\Helpers\BulletProcessor;
                                             </div>
                                         @endforeach
                                     @else
-                                        @if(trim($edu['description']) !== '')
-                                            <div class="bullet-point">
-                                                <span class="bullet">•</span>
-                                                <span class="bullet-text">{{ trim($edu['description']) }}</span>
-                                            </div>
-                                        @endif
+                                        <div class="bullet-point">
+                                            <span class="bullet">•</span>
+                                            <span class="bullet-text">{{ trim($edu['description']) }}</span>
+                                        </div>
                                     @endif
                                 </div>
                             @endif
@@ -574,75 +619,25 @@ use App\Helpers\BulletProcessor;
                 <div class="additional-info">
                     @if(!empty($resume['languages']) && is_array($resume['languages']) && count($resume['languages']) > 0)
                         <div class="info-item">
-                            <span class="info-content">• <span style="font-weight: bold;">Languages:</span> {{ collect($resume['languages'])->map(function($lang) { return isset($lang['proficiency']) ? $lang['name'] . ' (' . $lang['proficiency'] . ')' : $lang['name']; })->implode(', ') }}</span>
+                            <span class="info-content"><b>Languages:</b> {{ collect($resume['languages'])->map(fn($lang) => isset($lang['proficiency']) ? $lang['name'] . ' (' . $lang['proficiency'] . ')' : $lang['name'])->implode(', ') }}</span>
                         </div>
                     @endif
 
                     @if(!empty($resume['certifications']) && is_array($resume['certifications']) && count($resume['certifications']) > 0)
-                        @php 
-                            $allCertTexts = array_map(fn($c)=>$c['title'] ?? '', $resume['certifications']);
-                            $processedBullets = array_map(function($title) {
-                                return BulletProcessor::processBulletedDescription($title);
-                            }, $allCertTexts);
-                            $hasAnyBullets = false;
-                            foreach ($processedBullets as $bullets) {
-                                if (BulletProcessor::hasBullets($bullets)) {
-                                    $hasAnyBullets = true;
-                                    break;
-                                }
-                            }
-                            
-                            if (!$hasAnyBullets) {
-                                $certsLine = implode(', ', $allCertTexts);
-                                // If no bullets detected, try to split long certification strings by commas
-                                if (strlen($certsLine) > 100 && strpos($certsLine, ',') !== false) {
-                                    $certItems = array_map('trim', explode(',', $certsLine));
-                                    $certItems = array_filter($certItems, function($item) { return !empty($item); });
-                                    $hasLongCertList = true;
-                                } else {
-                                    $hasLongCertList = false;
-                                }
-                            }
-                        @endphp
                         <div class="info-item">
-                            @if ($hasAnyBullets)
-                                <div class="info-content">
-                                    <span style="font-weight: bold;">Certifications:</span>
-                                    <ul style="margin: 4px 0; padding-left: 16px;">
-                                        @foreach ($processedBullets as $bullets)
-                                            @foreach (BulletProcessor::getBulletTexts($bullets) as $text)
-                                                <li style="margin-bottom: 2px;">{{ $text }}</li>
-                                            @endforeach
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @elseif ($hasLongCertList)
-                                <div class="info-content">
-                                    <span style="font-weight: bold;">Certifications:</span>
-                                    <ul style="margin: 4px 0; padding-left: 16px;">
-                                        @foreach ($certItems as $cert)
-                                            <li style="margin-bottom: 2px;">{{ $cert }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @else
-                                <span class="info-content">
-                                    • <span style="font-weight: bold;">Certifications:</span> 
-                                    {{ collect($resume['certifications'])->pluck('title')->implode(', ') }}
-                                </span>
-                            @endif
+                            <span class="info-content"><b>Certifications:</b> {{ collect($resume['certifications'])->pluck('title')->implode(', ') }}</span>
                         </div>
                     @endif
 
                     @if(!empty($resume['awards']) && is_array($resume['awards']) && count($resume['awards']) > 0)
                         <div class="info-item">
-                            <span class="info-content">• <span style="font-weight: bold;">Awards/Activities:</span> {{ collect($resume['awards'])->pluck('title')->implode(', ') }}</span>
+                            <span class="info-content"><b>Awards/Activities:</b> {{ collect($resume['awards'])->pluck('title')->implode(', ') }}</span>
                         </div>
                     @endif
 
                     @if(!empty($resume['hobbies']) && is_array($resume['hobbies']) && count($resume['hobbies']) > 0)
                         <div class="info-item">
-                            <span class="info-content">• <span style="font-weight: bold;">Hobbies:</span> {{ collect($resume['hobbies'])->pluck('name')->implode(', ') }}</span>
+                            <span class="info-content"><b>Hobbies:</b> {{ collect($resume['hobbies'])->pluck('name')->implode(', ') }}</span>
                         </div>
                     @endif
                 </div>
@@ -657,15 +652,17 @@ use App\Helpers\BulletProcessor;
                 </div>
                 <div>
                     @foreach($resume['references'] as $ref)
-                        <div class="references-item">
-                            <span style="font-weight: bold;">{{ $ref['name'] ?? '' }}</span>
-                            @if(!empty($ref['relationship']))
-                                — {{ $ref['relationship'] }}
-                            @endif
-                            @if(!empty($ref['contactInfo']))
-                                <span class="text-gray-600"> — {{ $ref['contactInfo'] }}</span>
-                            @endif
-                        </div>
+                        @if(!empty($ref['name']))
+                            <div class="references-item">
+                                <span style="font-weight: bold;">{{ $ref['name'] }}</span>
+                                @if(!empty($ref['relationship']))
+                                    — {{ $ref['relationship'] }}
+                                @endif
+                                @if(!empty($ref['contactInfo']))
+                                    <span class="text-gray-600"> — {{ $ref['contactInfo'] }}</span>
+                                @endif
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             </div>
@@ -675,15 +672,20 @@ use App\Helpers\BulletProcessor;
         @if(!empty($resume['customSections']) && is_array($resume['customSections']) && count($resume['customSections']) > 0)
             <div class="space-y-6">
                 @foreach($resume['customSections'] as $custom)
-                    <div class="custom-section">
-                        <div class="section-header">
-                            <h2 class="section-title">{{ strtoupper($custom['title'] ?? '') }}</h2>
+                    @if(!empty($custom['title']) || !empty($custom['content']))
+                        <div class="custom-section">
+                            <div class="section-header">
+                                <h2 class="section-title">{{ strtoupper($custom['title'] ?? '') }}</h2>
+                            </div>
+                            @if(!empty($custom['content']))
+                                <p class="custom-section-content">{{ $custom['content'] }}</p>
+                            @endif
                         </div>
-                        <p class="custom-section-content">{{ $custom['content'] ?? '' }}</p>
-                    </div>
+                    @endif
                 @endforeach
             </div>
         @endif
     </div>
 </body>
+
 </html>
