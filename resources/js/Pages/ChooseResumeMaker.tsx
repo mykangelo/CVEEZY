@@ -38,9 +38,9 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
         {/* Clean Blue Button Style */}
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-6 py-3 rounded-full transition-all duration-300 mb-8 text-sm font-bold shadow-md hover:shadow-lg group"
+          className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-full transition-all duration-300 mb-8 text-xs sm:text-sm lg:text-base font-bold shadow-md hover:shadow-lg group"
         >
-          <svg className="w-4 h-4 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 transition-transform duration-300 group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Dashboard
@@ -49,13 +49,13 @@ const ChooseResumeMaker: React.FC<ChooseResumeMakerProps> = ({
         {/* Compact Title Section */}
         <div className="text-center mb-8 sm:mb-10 lg:mb-12">
           <div className="relative inline-block">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#354eab] mb-3 sm:mb-4 drop-shadow-sm">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-bold text-[#354eab] mb-4 sm:mb-6 lg:mb-8 drop-shadow-sm">
               How will you make your resume?
             </h1>
-            <h2 className="text-base sm:text-lg font-medium text-gray-700 mb-2 sm:mb-3">
+            <h2 className="text-base sm:text-lg font-medium text-gray-700 mb-1 sm:mb-2">
               Choose your preferred approach
             </h2>
-            <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto leading-relaxed px-4">
+            <p className="text-xs sm:text-sm text-gray-600 max-w-2xl mx-auto leading-tight px-4">
               Whether you have an existing resume to improve or want to start fresh, we've got you covered.
             </p>
           </div>

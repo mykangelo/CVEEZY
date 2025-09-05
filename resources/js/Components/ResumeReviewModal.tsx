@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ResumeReviewModalProps {
     isOpen: boolean;
@@ -15,16 +16,33 @@ const ResumeReviewModal: React.FC<ResumeReviewModalProps> = ({ isOpen, onClose }
     };
 
     return (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                {/* Background overlay */}
-                <div 
-                    className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity backdrop-blur-sm"
-                    onClick={onClose}
-                ></div>
+        <AnimatePresence>
+            {isOpen && (
+                <div className="fixed inset-0 z-50 overflow-y-auto">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        {/* Background overlay */}
+                        <motion.div 
+                            className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm"
+                            onClick={onClose}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                        ></motion.div>
 
-                {/* Modal content */}
-                <div className="relative transform overflow-hidden rounded-3xl bg-white px-8 pb-8 pt-8 text-left shadow-2xl transition-all duration-300 sm:my-8 sm:w-full sm:max-w-4xl sm:p-8 border-2 border-[#354eab]/30">
+                        {/* Modal content */}
+                        <motion.div 
+                            className="relative transform overflow-hidden rounded-3xl bg-white px-8 pb-8 pt-8 text-left shadow-2xl sm:my-8 sm:w-full sm:max-w-4xl sm:p-8 border-2 border-[#354eab]/30"
+                            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+                            transition={{ 
+                                duration: 0.4,
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30
+                            }}
+                        >
                     {/* Close button */}
                     <div className="absolute right-4 top-4 z-10">
                         <button
@@ -112,9 +130,11 @@ const ResumeReviewModal: React.FC<ResumeReviewModalProps> = ({ isOpen, onClose }
                             Get Resume Review
                         </button>
                     </div>
+                        </motion.div>
+                    </div>
                 </div>
-            </div>
-        </div>
+            )}
+        </AnimatePresence>
     );
 };
 

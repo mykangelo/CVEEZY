@@ -100,12 +100,12 @@ export default function Register() {
 
             {/* Main Content */}
             <main className="flex-1 flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-md space-y-4">
+                <div className="w-full max-w-md space-y-1">
                     {/* Logo */}
                     <img
                         src="/images/cveezyLOGO_C.png"
                         alt="CVeezy Logo"
-                        className="w-auto h-48 max-w-full mx-auto object-contain mb-0 -mb-10"
+                        className="w-auto max-w-full mx-auto object-contain h-16 sm:h-20 md:h-24 lg:h-32 mb-0"
                     />
 
                     {/* Container Card */}

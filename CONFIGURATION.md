@@ -66,7 +66,7 @@ GEMINI_PARSER_MODEL=gemini-1.5-pro
 ### LanguageTool
 
 ```bash
-LANGUAGETOOL_ENDPOINT=https://api.languagetool.org
+LANGUAGETOOL_ENDPOINT=https://api.languagetool.org/v2/check
 ```
 
 ## Resume-Specific Configuration

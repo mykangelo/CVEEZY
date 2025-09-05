@@ -35,6 +35,11 @@ MAIL_ADMIN_EMAIL="admin@cveezy.com"
 SESSION_DRIVER=database
 CACHE_STORE=redis
 QUEUE_CONNECTION=redis
+
+# Spell Check Configuration
+LANGUAGETOOL_VERIFY_SSL=true
+LANGUAGETOOL_TIMEOUT=10
+LANGUAGETOOL_ENDPOINT=https://api.languagetool.org/v2/check
 ```
 
 ## Pre-Deployment Checklist
@@ -68,6 +73,13 @@ QUEUE_CONNECTION=redis
 -   [ ] Set up uptime monitoring
 -   [ ] Configure email notifications
 -   [ ] Set up log rotation
+
+### ✅ Spell Check
+
+-   [ ] Set `LANGUAGETOOL_VERIFY_SSL=true` for production
+-   [ ] Test spell check functionality
+-   [ ] Configure custom CA bundle if needed (corporate environments)
+-   [ ] Monitor API usage and rate limits
 
 ## Production Commands
 

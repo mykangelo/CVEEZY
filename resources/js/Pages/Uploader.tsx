@@ -476,8 +476,8 @@ const Uploader: React.FC<UploaderProps> = ({
 
       <main className="flex-grow">
         {/* Clean Blue Button Style with Template Info */}
-        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-6 sm:py-8 lg:py-10 xl:py-12">
-          <div className="flex items-center justify-between mb-6 sm:mb-8 lg:mb-10">
+        <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2 sm:py-3 lg:py-4 xl:py-5">
+          <div className="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
             <Link
               href="/choose-resume-maker"
               className="inline-flex items-center gap-3 bg-[#354eab] hover:bg-[#4a5fc7] text-white px-4 sm:px-6 lg:px-8 py-2 sm:py-3 lg:py-4 rounded-full transition-all duration-300 text-xs sm:text-sm lg:text-base font-bold shadow-md hover:shadow-lg group"
@@ -505,8 +505,8 @@ const Uploader: React.FC<UploaderProps> = ({
 
         {/* Warning for pending payments */}
         {user && hasPendingPayments && (
-          <div className="mx-auto max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mb-6 sm:mb-8 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl shadow-xl shadow-yellow-200/20">
-            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+          <div className="mx-auto max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mb-4 sm:mb-6 lg:mb-8 xl:mb-10 p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-md border border-yellow-200/30 rounded-2xl shadow-xl shadow-yellow-200/20">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 lg:mb-4">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg">
                 <span className="text-white text-sm sm:text-lg">⚠️</span>
               </div>
@@ -519,7 +519,7 @@ const Uploader: React.FC<UploaderProps> = ({
         )}
 
         {/* Enhanced Title Section */}
-        <div className="text-center mb-6 sm:mb-8 lg:mb-12 xl:mb-16 relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
+        <div className="text-center -mb-2 sm:-mb-2 lg:-mb-1 xl:mb-0 relative z-10 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
           <div className="relative inline-block">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-[#354eab] mb-4 sm:mb-6 lg:mb-8 drop-shadow-sm">
               Improve Your Resume
@@ -527,7 +527,7 @@ const Uploader: React.FC<UploaderProps> = ({
             <h2 className="text-base sm:text-lg lg:text-xl xl:text-2xl font-semibold text-gray-700 mb-3 sm:mb-4 lg:mb-6">
               Upload your existing resume and let AI enhance it
             </h2>
-            <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto leading-relaxed">
+            <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl sm:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto leading-relaxed mb-4 sm:mb-5 lg:mb-6 xl:mb-8">
               Our AI-powered system will analyze your resume, extract key information, and help you create a professional, optimized version that stands out to employers.
             </p>
           </div>
@@ -536,11 +536,11 @@ const Uploader: React.FC<UploaderProps> = ({
 
 
         {/* Upload Section */}
-        <div className="flex items-center justify-center pb-8 sm:pb-12 lg:pb-16 xl:pb-20">
+        <div className="flex items-center justify-center pb-6 sm:pb-8 lg:pb-10 xl:pb-12 2xl:pb-16">
           <div className="w-full max-w-3xl sm:max-w-4xl lg:max-w-5xl xl:max-w-6xl 2xl:max-w-7xl px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16">
             {uploadError && (
-              <div className="mb-6 sm:mb-8 lg:mb-10 p-4 sm:p-6 lg:p-8 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl shadow-lg">
-                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+              <div className="mb-4 sm:mb-6 lg:mb-8 xl:mb-10 p-4 sm:p-6 lg:p-8 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl shadow-lg">
+                <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3 lg:mb-4">
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-red-400 to-red-500 rounded-full flex items-center justify-center shadow-lg">
                     <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -548,7 +548,7 @@ const Uploader: React.FC<UploaderProps> = ({
                   </div>
                   <span className="text-red-800 font-bold text-base sm:text-lg">Upload Error</span>
                 </div>
-                <p className="text-red-700 text-xs sm:text-sm leading-relaxed text-center mb-3 sm:mb-4">{uploadError}</p>
+                <p className="text-red-700 text-xs sm:text-sm leading-relaxed text-center mb-3 sm:mb-4 lg:mb-5">{uploadError}</p>
                 <button 
                   onClick={resetUpload}
                   className="bg-red-600 hover:bg-red-700 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all duration-300 text-xs sm:text-sm"
@@ -559,7 +559,7 @@ const Uploader: React.FC<UploaderProps> = ({
             )}
 
             <div
-              className={`border-2 border-dashed p-6 sm:p-8 lg:p-10 xl:p-12 rounded-2xl sm:rounded-3xl bg-white/95 backdrop-blur-sm shadow-lg text-center transition-all duration-300 ${
+              className={`border-2 border-dashed p-4 sm:p-6 lg:p-8 xl:p-10 2xl:p-12 rounded-2xl sm:rounded-3xl bg-white/95 backdrop-blur-sm shadow-lg text-center transition-all duration-300 ${
                 isUploading 
                   ? 'border-[#354eab] bg-blue-50/50' 
                   : 'border-[#bcd6f6] hover:shadow-2xl hover:cursor-pointer hover:border-[#9bc4f0] hover:bg-white/98'

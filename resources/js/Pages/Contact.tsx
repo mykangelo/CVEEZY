@@ -5,6 +5,8 @@ import Footer from "@/Components/Footer";
 import FAQ from "./ContactsFAQ";
 import Logo from "@/Components/Logo";
 import SidebarMenu from "@/Components/SidebarMenu";
+import InterviewPrepPopUp from "@/Components/InterviewPrepPopUp";
+import ResumeReviewModal from "@/Components/ResumeReviewModal";
 
 const supportData = [
   {
@@ -44,6 +46,19 @@ const Contact: React.FC<ContactProps> = ({
   const [submitted, setSubmitted] = useState(false);
   const [clientErrors, setClientErrors] = useState<{ name?: string; email?: string; message?: string }>({});
   const [touched, setTouched] = useState<{ name: boolean; email: boolean; message: boolean }>({ name: false, email: false, message: false });
+  
+  // Modal state management
+  const [isInterviewPrepOpen, setIsInterviewPrepOpen] = useState(false);
+  const [isResumeReviewOpen, setIsResumeReviewOpen] = useState(false);
+  
+  // Modal handlers
+  const handleResumeReviewClick = () => {
+    setIsResumeReviewOpen(true);
+  };
+  
+  const handleInterviewPrepClick = () => {
+    setIsInterviewPrepOpen(true);
+  };
 
   const { data, setData, post, processing, errors, reset } = useForm({
     name: "",
@@ -102,12 +117,12 @@ const Contact: React.FC<ContactProps> = ({
       {/* Sidebar Menu */}
       <SidebarMenu 
         user={user}
-        onResumeReviewClick={() => {}}
-        onInterviewPrepClick={() => {}}
+        onResumeReviewClick={handleResumeReviewClick}
+        onInterviewPrepClick={handleInterviewPrepClick}
       />
 
       {/* Main Content */}
-      <div className="flex-1 ml-72">
+      <div className="flex-1 ml-0 sm:ml-0 lg:ml-72">
         {/* Contact Section */}
         <section className="bg-gradient-to-b from-[#f4faff] to-[#eaf6ff] min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 xl:p-12 gap-4 sm:gap-6 lg:gap-8">
           {/* Heading */}
@@ -280,6 +295,16 @@ const Contact: React.FC<ContactProps> = ({
         <FAQ />
         <Footer />
       </div>
+      
+      {/* Modals */}
+      <InterviewPrepPopUp 
+        isOpen={isInterviewPrepOpen} 
+        onClose={() => setIsInterviewPrepOpen(false)} 
+      />
+      <ResumeReviewModal 
+        isOpen={isResumeReviewOpen} 
+        onClose={() => setIsResumeReviewOpen(false)} 
+      />
     </div>
   );
 };

@@ -2181,7 +2181,7 @@ const Builder: React.FC<BuilderProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   
   // Preview zoom and scroll states
-  const [zoomLevel, setZoomLevel] = useState(0.9); // Default to 90% for more editor space
+  const [zoomLevel, setZoomLevel] = useState(0.95); // Default to 90% for more editor space
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isZooming, setIsZooming] = useState(false);
 
@@ -3022,9 +3022,9 @@ const Builder: React.FC<BuilderProps> = ({
       {/* Main Content */}
       {!isLoading && (
         <LayoutGroup>
-        <div className="flex flex-col md:flex-row flex-1 overflow-visible items-start gap-0 mt-10 md:mt-12">
+        <div className="flex flex-col md:flex-row flex-1 overflow-hidden items-start gap-0 mt-6 md:mt-8">
           {/* Sidebar + Form (Left) */}
-          <div className="w-full md:w-5/12 flex flex-col items-stretch md:-mr-5 ml-5 md:ml-10">
+          <div className="w-full md:w-5/12 flex flex-col items-stretch md:-mr-5 ml-5 md:ml-10 relative z-10">
             {/* Back Button - Positioned above the fields container */}
             <div className="mb-3">
               <Link href="/choose-resume-maker" className="inline-flex items-center gap-2 text-white hover:text-blue-100 bg-[#354eab]/90 hover:bg-[#354eab] backdrop-blur-sm border border-white/20 rounded-xl px-4 py-2.5 shadow-lg hover:shadow-xl transition-all duration-200 group">
@@ -3208,73 +3208,88 @@ const Builder: React.FC<BuilderProps> = ({
           </div>
 
           {/* Right Panel - Clean Resume Preview */}
-          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-100' : 'md:w-7/12 w-full'} p-0 flex flex-col h-[84vh]`}>
+          <div className={`${isFullscreen ? 'fixed inset-0 z-50 bg-gray-100' : 'md:w-7/12 w-full'} p-0 flex flex-col h-[84vh] overflow-hidden`}>
             
             {/* Compact Control Panel */}
-            <div className="flex-shrink-0 -mt-6 md:-mt-8 mb-0 flex justify-center">
+            <div className="flex-shrink-0 mt-2 md:mt-4 mb-0 flex justify-center">
               {/* Unified Control Bar */}
               <motion.div
-                className="inline-flex items-center justify-between bg-white/80 transition-all duration-200 backdrop-blur-md border border-gray-200/70 rounded-full px-2.5 py-1.5 shadow-md"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                style={{ maxWidth: `${210 * 3.78}px`, width: '100%' }}
+                className="inline-flex items-center justify-between bg-gradient-to-r from-white/98 via-white/95 to-white/92 transition-all duration-500 backdrop-blur-xl border border-white/40 rounded-2xl px-3 py-2 shadow-2xl hover:shadow-3xl hover:scale-[1.02] relative overflow-hidden"
+                initial={{ opacity: 0, y: -15, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                style={{ maxWidth: 'min(100%, 794px)', width: '100%' }}
+                whileHover={{ 
+                  scale: 1.02,
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)"
+                }}
               >
+                {/* Subtle background pattern */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-indigo-500/5 rounded-2xl"></div>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)] rounded-2xl"></div>
                 {/* Left: Live Status */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-2 relative z-10">
                   <motion.div 
-                    className="w-1.5 h-1.5 bg-emerald-500 rounded-full"
+                    className="w-2 h-2 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full shadow-lg"
                     animate={{ 
-                      scale: [1, 1.1, 1],
-                      boxShadow: ["0 0 0 0 rgba(16, 185, 129, 0.4)", "0 0 0 3px rgba(16, 185, 129, 0.1)", "0 0 0 0 rgba(16, 185, 129, 0.4)"]
+                      scale: [1, 1.2, 1],
+                      boxShadow: [
+                        "0 0 0 0 rgba(16, 185, 129, 0.4)", 
+                        "0 0 0 4px rgba(16, 185, 129, 0.2)", 
+                        "0 0 0 0 rgba(16, 185, 129, 0.4)"
+                      ]
                     }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
-                  <span className="text-[10px] font-semibold text-gray-700">LIVE</span>
+                  <span className="text-[11px] font-bold text-gray-800 tracking-wider">LIVE</span>
                   <motion.div 
-                    className="flex items-center gap-1 ml-1"
+                    className="flex items-center gap-2 ml-2 relative z-10"
                     key={zoomLevel}
-                    initial={{ scale: 0.95 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.2 }}
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    <span className="text-xs font-mono font-bold text-slate-700" title={`Exact: ${zoomLevel.toFixed(2)}`}>
-                      {Math.round(zoomLevel * 100)}%
-                    </span>
-                    <div className="w-10 h-1 bg-gray-100 rounded-full overflow-hidden">
-                      <motion.div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
-                        style={{ width: `${Math.min((zoomLevel / 2) * 100, 100)}%` }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
-                      />
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-gray-50/80 to-gray-100/80 rounded-lg border border-gray-200/60">
+                      <span className="text-xs font-mono font-bold text-slate-800" title={`Exact: ${zoomLevel.toFixed(2)}`}>
+                        {Math.round(zoomLevel * 100)}%
+                      </span>
+                      <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+                        <motion.div 
+                          className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 rounded-full shadow-sm"
+                          style={{ width: `${Math.min((zoomLevel / 2) * 100, 100)}%` }}
+                          transition={{ duration: 0.4, ease: "easeOut" }}
+                        />
+                      </div>
                     </div>
                   </motion.div>
                 </div>
 
                 {/* Right: Control Groups */}
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-center gap-3 ml-auto relative z-10">
                   {/* Zoom Controls */}
-                  <div className="flex items-center bg-white/60 backdrop-blur rounded-full overflow-hidden border border-gray-200/70 shadow-sm">
+                  <div className="flex items-center bg-gradient-to-r from-white/90 via-gray-50/90 to-white/85 backdrop-blur-md rounded-2xl overflow-hidden border border-white/60 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105">
                     <motion.button
                       onClick={handleZoomOut}
                       disabled={zoomLevel <= 0.25}
-                      className="w-8 h-8 grid place-items-center rounded-full hover:bg-blue-500/10 hover:ring-1 hover:ring-blue-300/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
+                      className="w-7 h-7 grid place-items-center rounded-xl hover:bg-gradient-to-br hover:from-blue-500/20 hover:to-indigo-500/20 hover:ring-2 hover:ring-blue-400/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 group relative overflow-hidden"
                       title="Zoom Out"
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.1, y: -1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <ZoomOut className="w-4 h-4 text-slate-700 group-hover:text-blue-600 transition-colors" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <ZoomOut className="w-3.5 h-3.5 text-slate-700 group-hover:text-blue-600 transition-all duration-300 relative z-10" />
                     </motion.button>
-                    <div className="w-px h-4 bg-gray-300"></div>
+                    <div className="w-px h-4 bg-gradient-to-b from-gray-300 to-gray-400"></div>
                     <motion.button
                       onClick={handleZoomIn}
                       disabled={zoomLevel >= 2}
-                      className="w-8 h-8 grid place-items-center rounded-full hover:bg-blue-500/10 hover:ring-1 hover:ring-blue-300/60 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 group"
+                      className="w-7 h-7 grid place-items-center rounded-xl hover:bg-gradient-to-br hover:from-blue-500/20 hover:to-indigo-500/20 hover:ring-2 hover:ring-blue-400/40 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 group relative overflow-hidden"
                       title="Zoom In"
-                      whileHover={{ scale: 1.05 }}
+                      whileHover={{ scale: 1.1, y: -1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <ZoomIn className="w-4 h-4 text-slate-700 group-hover:text-blue-600 transition-colors" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <ZoomIn className="w-3.5 h-3.5 text-slate-700 group-hover:text-blue-600 transition-all duration-300 relative z-10" />
                     </motion.button>
                   </div>
 
@@ -3288,14 +3303,14 @@ const Builder: React.FC<BuilderProps> = ({
             {/* Enhanced Preview Container */}
             <div className="flex-1 overflow-auto relative mx-0 h-[calc(84vh-3rem)]">
               {/* Aligned preview container */}
-              <div className="min-h-full flex justify-center py-0 px-0 mt-2 md:mt-1">
+              <div className="min-h-full flex justify-center py-0 px-2 mt-4 md:mt-6">
                 {/* Premium Resume Document */}
                 <motion.div 
                   className="bg-white shadow-2xl border border-gray-100 relative rounded-lg overflow-hidden"
                   style={{ 
                     width: `${210 * 3.78}px`, // A4 width in pixels (210mm)
                     minHeight: `${297 * 3.78}px`, // A4 height in pixels (297mm)
-                    maxWidth: 'none',
+                    maxWidth: 'calc(100% - 16px)', // Ensure it doesn't overflow container
                     padding: '40px',
                     marginBottom: `${150 * zoomLevel}px`, // Dynamic bottom margin to ensure full visibility
                     boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8)',

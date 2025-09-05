@@ -81,6 +81,62 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         }
     }, [error, success]);
 
+    // Check for payment status from URL parameters (coming from payment page)
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const paymentApproved = urlParams.get('payment_approved');
+        const paymentRejected = urlParams.get('payment_rejected');
+        const resumeId = urlParams.get('resumeId');
+        
+        if (paymentApproved === 'true' && resumeId) {
+            // Check if we haven't already shown this notification for this resume
+            const key = `toastShown:${resumeId}:approved`;
+            try {
+                const already = sessionStorage.getItem(key);
+                if (!already) {
+                    sessionStorage.setItem(key, '1');
+                    
+                    // Show thank you notification
+                    addToast({
+                        type: 'success',
+                        title: '🎉 Payment Approved!',
+                        message: 'Thank you for your payment! Your resume is now ready for download.',
+                        duration: 10000
+                    });
+                    
+                    // Clean up URL parameters
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            } catch (error) {
+                console.error('Error handling payment approval notification:', error);
+            }
+        } else if (paymentRejected === 'true' && resumeId) {
+            // Check if we haven't already shown this notification for this resume
+            const key = `toastShown:${resumeId}:rejected`;
+            try {
+                const already = sessionStorage.getItem(key);
+                if (!already) {
+                    sessionStorage.setItem(key, '1');
+                    
+                    // Show payment rejected notification
+                    addToast({
+                        type: 'error',
+                        title: '❌ Payment Rejected',
+                        message: 'Your payment was rejected. Please check your email for details and upload a new payment proof.',
+                        duration: 10000
+                    });
+                    
+                    // Clean up URL parameters
+                    const newUrl = window.location.pathname;
+                    window.history.replaceState({}, document.title, newUrl);
+                }
+            } catch (error) {
+                console.error('Error handling payment rejection notification:', error);
+            }
+        }
+    }, []);
+
     // Update resume list when props change
     useEffect(() => {
         setResumeList(resumes);
@@ -165,18 +221,18 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
         if (status === 'approved') {
             addToast({
                 type: 'success',
-                title: 'Payment Approved!',
-                message: 'Your payment has been approved! You can now download your PDF resume.',
-                duration: 8000
+                title: '🎉 Payment Approved!',
+                message: 'Thank you for your payment! Your resume is now ready for download.',
+                duration: 10000
             });
             // Refresh dashboard data immediately when payment is approved
             refreshDashboardData();
         } else if (status === 'rejected') {
             addToast({
                 type: 'error',
-                title: 'Payment Rejected',
-                message: 'Your payment was rejected. Please upload a new payment proof.',
-                duration: 8000
+                title: '❌ Payment Rejected',
+                message: 'Your payment was rejected. Please check your email for details and upload a new payment proof.',
+                duration: 10000
             });
             // Refresh dashboard data immediately when payment is rejected
             refreshDashboardData();
@@ -354,7 +410,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
             />
 
             {/* Welcome Section */}
-            <div className="bg-gradient-to-br from-[#f8faff] via-white to-[#e8f2ff] border-b border-[#354eab]/20 ml-72 relative overflow-hidden">
+            <div className="bg-gradient-to-br from-[#f8faff] via-white to-[#e8f2ff] border-b border-[#354eab]/20 ml-0 sm:ml-0 lg:ml-72 relative overflow-hidden">
                 {/* Decorative background elements */}
                 <div className="absolute inset-0 overflow-hidden">
                     <div className="absolute -top-24 -right-24 w-96 h-96 bg-gradient-to-br from-[#354eab]/5 to-[#4a5fc7]/5 rounded-full blur-3xl"></div>
@@ -459,7 +515,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 </div>
             </div>
 
-            <div className="max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 sm:py-10 lg:py-12 xl:py-16 ml-0 sm:ml-0 lg:ml-72">
+            <div className="max-w-full sm:max-w-5xl md:max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-8 sm:py-10 lg:py-12 xl:py-16 ml-0 sm:ml-0 lg:ml-72">
                 {/* My Recent Resumes Section */}
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-200 mb-8 sm:mb-10 lg:mb-12 overflow-hidden">
                     <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
@@ -904,6 +960,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 onCloseToast={removeToast} 
             />
 
+
             {/* Confirmation Modal */}
             <ConfirmationModal
                 isOpen={confirmationModal.isOpen}
@@ -915,6 +972,7 @@ export default function Dashboard({ resumes = [], paymentProofs: initialPaymentP
                 cancelText="Cancel"
                 type="warning"
             />
+
         </div>
     );
 }

@@ -1,18 +1,45 @@
 import InputError from "@/Components/InputError";
 import { Head, useForm } from "@inertiajs/react";
-import { FormEventHandler } from "react";
+import { FormEventHandler, useState } from "react";
 import { Link } from "@inertiajs/react";
 import Footer from "@/Components/Footer";
 
 export default function ForgotPassword({ status }: { status?: string }) {
-    const { data, setData, post, processing, errors } = useForm({
+    const [clientError, setClientError] = useState<string>("");
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState<boolean>(false);
+    const [sentToEmail, setSentToEmail] = useState<string>("");
+    const { data, setData, post, processing, errors, reset } = useForm({
         email: "",
     });
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
+        setHasAttemptedSubmit(true);
 
-        post(route("password.email"));
+        const trimmed = data.email.trim();
+        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed);
+        const msg = !trimmed
+            ? "Email is required"
+            : !isValid
+            ? "Please enter a valid email address"
+            : "";
+
+        setClientError(msg);
+        if (msg) return;
+
+        post(route("password.email"), {
+            onSuccess: () => {
+                setHasAttemptedSubmit(false);
+                setClientError("");
+                setSentToEmail(trimmed);
+            },
+            onError: () => {
+                // Server errors are available in `errors.email`
+            },
+            onFinish: () => {
+                // no-op
+            },
+        });
     };
 
     return (
@@ -21,12 +48,12 @@ export default function ForgotPassword({ status }: { status?: string }) {
 
             {/* Main Content */}
             <main className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-md space-y-8 -mt-16">
+                <div className="w-full max-w-md space-y-1">
                     {/* Logo */}
                     <img
                         src="/images/cveezyLOGO_C.png"
                         alt="CVeezy Logo"
-                        className="w-auto h-64 max-w-full mx-auto object-contain mb-0 -mb-20"
+                        className="w-auto max-w-full mx-auto object-contain h-16 sm:h-20 md:h-24 lg:h-32 mb-0"
                     />
 
                     {/* Container Card */}
@@ -49,6 +76,12 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                 </p>
                             </div>
 
+                            {(status || sentToEmail) && (
+                                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+                                    {status ? status : `We sent a reset link to ${sentToEmail}. Please check your inbox.`}
+                                </div>
+                            )}
+
                             {/* Reset Form */}
                             <form onSubmit={submit} className="space-y-6">
                                 <div className="relative">
@@ -64,11 +97,20 @@ export default function ForgotPassword({ status }: { status?: string }) {
                                         id="email"
                                         type="email"
                                         value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
+                                        onChange={(e) => {
+                                            setData('email', e.target.value);
+                                            if (!hasAttemptedSubmit) {
+                                                setClientError("");
+                                            }
+                                        }}
                                         className="w-full pl-10 pr-4 py-3 border-2 border-gray-200/50 rounded-2xl bg-white/80 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#354eab]/20 focus:border-[#354eab] transition-all duration-300 hover:border-[#354eab]/50"
                                         placeholder="E-mail"
                                     />
                                 </div>
+
+                                {(clientError || (errors as any)?.email) && (
+                                    <InputError message={(clientError || (errors as any)?.email) as string} className="mt-1" />
+                                )}
 
                                 <button
                                     type="submit"

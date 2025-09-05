@@ -45,7 +45,10 @@ return [
 
     // LanguageTool configuration
     'languagetool' => [
-        'endpoint' => env('LANGUAGETOOL_ENDPOINT', 'https://api.languagetool.org'),
+        'endpoint' => env('LANGUAGETOOL_ENDPOINT', 'https://api.languagetool.org/v2/check'),
+        'verify_ssl' => env('LANGUAGETOOL_VERIFY_SSL', true), // Default to true for security
+        'timeout' => env('LANGUAGETOOL_TIMEOUT', 10),
+        'ca_bundle' => env('LANGUAGETOOL_CA_BUNDLE'), // Optional custom CA bundle path
     ],
 
     // Gemini AI configuration

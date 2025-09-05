@@ -119,6 +119,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
 
         {/* Main Content - Full Screen Gallery */}
         <div className="px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-4 sm:py-6 lg:py-8 xl:py-10 w-full overflow-hidden">
+          <div className="max-w-full sm:max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl mx-auto w-full">
           {/* Clean Blue Button Style */}
           <Link
             href={isImported ? "/uploader" : "/dashboard"}
@@ -178,7 +179,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
 
           {/* Responsive Card-Style Template Gallery */}
           <div className="flex justify-center px-4 overflow-x-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 w-full max-w-8xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-10 w-full max-w-full sm:max-w-6xl lg:max-w-7xl xl:max-w-8xl 2xl:max-w-9xl">
               {templates.map((template, index) => (
                 <div 
                   key={template.id} 
@@ -187,13 +188,22 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                 >
                   {/* Individual Card Design */}
                   <div 
-                    className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-xl 2xl:max-w-2xl aspect-[7/9] bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out hover:border hover:border-[#354eab]"
+                    className="relative w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl 2xl:max-w-3xl aspect-[7/9] bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out hover:border hover:border-[#354eab]"
                     onMouseEnter={() => setHoveredTemplate(template.id)}
                     onMouseLeave={() => setHoveredTemplate(null)}
+                    onClick={() => setHoveredTemplate(prev => prev === template.id ? null : template.id)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setHoveredTemplate(prev => prev === template.id ? null : template.id);
+                      }
+                    }}
                   >
                                          {/* Top Card Section - Template Image */}
                      <div 
-                       className="bg-white rounded-t-xl sm:rounded-t-2xl overflow-hidden h-[90%]"
+                       className="bg-white rounded-t-xl sm:rounded-t-2xl overflow-hidden h-[88%] sm:h-[90%] lg:h-[90%]"
                      >
                        <div className="w-full h-full flex items-center justify-center p-1">
                          <img
@@ -206,8 +216,10 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                     
                                          {/* Bottom Card Section - Template Info */}
                      <div 
-                       className={`bg-gradient-to-br from-[#354eab] via-[#4a5fc7] to-[#5a6fd7] rounded-b-2xl relative transition-all duration-300 ease-in-out shadow-lg ${
-                         hoveredTemplate === template.id ? 'h-[65%] -mt-[70%] shadow-2xl scale-[1.05]' : 'h-[20%] -mt-[10%]'
+                       className={`bg-gradient-to-br from-[#354eab] via-[#4a5fc7] to-[#5a6fd7] rounded-b-2xl relative transition-all duration-500 ease-in-out shadow-lg ${
+                         hoveredTemplate === template.id 
+                           ? 'h-[60%] sm:h-[62%] lg:h-[65%] -mt-[64%] sm:-mt-[64%] lg:-mt-[68%] shadow-2xl scale-[1.02]'
+                           : 'h-[15%] sm:h-[10%] lg:h-[20%] -mt-[10%] sm:-mt-[10%] lg:-mt-[10%]'
                        }`}
                        style={{ bottom: 0 }}
                      >
@@ -225,7 +237,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                        )}
                       
                       {/* Card Content */}
-                      <div className="pt-2 px-3 sm:px-4 flex flex-col justify-center items-center text-white h-full relative z-10">
+                      <div className="pt-2 px-3 sm:px-4 pb-3 sm:pb-4 flex flex-col justify-center items-center text-white h-full relative z-10">
                         <span className={`font-bold text-xl sm:text-2xl lg:text-3xl mb-2 text-center drop-shadow-sm transition-all duration-300 ${
                           hoveredTemplate === template.id ? 'text-2xl sm:text-3xl lg:text-4xl mb-2' : ''
                         }`}>
@@ -236,15 +248,15 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                         <div 
                           className={`transition-all duration-300 ease-in-out transform ${
                             hoveredTemplate === template.id 
-                              ? 'opacity-100 translate-y-0 max-h-28 sm:max-h-32 lg:max-h-40' 
+                              ? 'opacity-100 translate-y-0 max-h-20 sm:max-h-22 lg:max-h-24' 
                               : 'opacity-0 translate-y-2 max-h-0 overflow-hidden'
                           }`}
                         >
                           {/* Description */}
-                          <div className="mb-2 sm:mb-3 px-1">
-                            <div className="text-sm sm:text-base text-center opacity-90 leading-tight drop-shadow-sm">
+                          <div className="mb-1.5 sm:mb-2 px-1">
+                            <div className="text-xs sm:text-xs lg:text-sm text-center opacity-90 leading-tight drop-shadow-sm">
                               {template.description.split('\n').map((line, index) => (
-                                <div key={index} className="mb-1">
+                                <div key={index} className="mb-0.5">
                                   {line}
                                 </div>
                               ))}
@@ -256,7 +268,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
                             <div className="flex justify-center w-full">
                               <button
                                 onClick={() => handleTemplateSelect(template.name)}
-                                className="text-xs sm:text-sm font-medium text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-xl px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 hover:bg-white hover:text-[#354eab] transition-all duration-400 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-2xl hover:border-white/60"
+                                className="text-xs sm:text-sm font-medium text-white bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-lg px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 lg:py-2.5 hover:bg-white hover:text-[#354eab] transition-all duration-400 ease-in-out transform hover:scale-105 shadow-lg hover:shadow-2xl hover:border-white/60"
                               >
                                 {isImported ? 'Apply Template' : 'Use This Template'}
                               </button>
@@ -293,6 +305,7 @@ const ChooseTemplate: React.FC<ChooseTemplateProps> = ({
               </div>
             </div>
           )}
+          </div>
         </div>
 
         <Footer />

@@ -1,5 +1,6 @@
 import { PageProps } from '@/types';
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import DeleteUserForm from './Partials/DeleteUserForm';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm';
@@ -7,6 +8,8 @@ import EmailVerificationCard from './Partials/EmailVerificationCard';
 import ProfileNotification from '@/Components/ProfileNotification';
 import TabbedLayout from '@/Components/TabbedLayout';
 import SidebarMenu from '@/Components/SidebarMenu';
+import InterviewPrepPopUp from '@/Components/InterviewPrepPopUp';
+import ResumeReviewModal from '@/Components/ResumeReviewModal';
 import { usePage } from '@inertiajs/react';
 
 export default function Edit({
@@ -15,6 +18,19 @@ export default function Edit({
 }: PageProps<{ emailVerificationStatus: any; status?: string }>) {
     const { auth } = usePage().props as any;
     const user = auth.user;
+    
+    // Modal state management
+    const [isInterviewPrepOpen, setIsInterviewPrepOpen] = useState(false);
+    const [isResumeReviewOpen, setIsResumeReviewOpen] = useState(false);
+    
+    // Modal handlers
+    const handleResumeReviewClick = () => {
+        setIsResumeReviewOpen(true);
+    };
+    
+    const handleInterviewPrepClick = () => {
+        setIsInterviewPrepOpen(true);
+    };
     const tabs = [
         {
             id: 'overview',
@@ -128,14 +144,14 @@ export default function Edit({
             {/* Sidebar Menu */}
             <SidebarMenu 
                 user={user}
-                onResumeReviewClick={() => {}}
-                onInterviewPrepClick={() => {}}
+                onResumeReviewClick={handleResumeReviewClick}
+                onInterviewPrepClick={handleInterviewPrepClick}
             />
 
             {/* Status Notification */}
             <ProfileNotification status={status} />
 
-            <div className="ml-72">
+            <div className="ml-0 sm:ml-0 lg:ml-72">
                 <div className="max-w-7xl px-8 sm:px-10 lg:px-12 py-12">
                     {/* Enhanced Page Header */}
                     <div className="mb-8">
@@ -216,6 +232,16 @@ export default function Edit({
                     </div>
                 </div>
             </div>
+            
+            {/* Modals */}
+            <InterviewPrepPopUp 
+                isOpen={isInterviewPrepOpen} 
+                onClose={() => setIsInterviewPrepOpen(false)} 
+            />
+            <ResumeReviewModal 
+                isOpen={isResumeReviewOpen} 
+                onClose={() => setIsResumeReviewOpen(false)} 
+            />
         </div>
     );
 }
