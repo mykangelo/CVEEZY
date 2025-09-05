@@ -189,18 +189,20 @@ const Elegant: React.FC<Props> = ({ resumeData }) => {
                 {(skills.length > 0 ? skills : [{ id: -1, name: 'Skill 1', level: 'Experienced' }] as any[]).map((skill: any, index: number) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-[12px] min-w-0 flex-1 pr-2 break-words"><Placeholder value={skill.name} placeholder={`Skill ${index + 1}`} /></span>
-                    <div className="flex gap-1 flex-shrink-0">
-                      {[...Array(5)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            i < getSkillLevelBullets(skill.level || 'Novice')
-                              ? 'bg-[#333333]'
-                              : 'bg-gray-300'
-                          }`}
-                        />
-                      ))}
-                    </div>
+                    {showExperienceLevel && (
+                      <div className="flex gap-1 flex-shrink-0">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              i < getSkillLevelBullets(skill.level || 'Novice')
+                                ? 'bg-[#333333]'
+                                : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
